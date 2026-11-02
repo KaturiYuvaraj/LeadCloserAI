@@ -60,7 +60,7 @@ def test_database_crud():
         "lead_id": lead_id,
         "call_type": "web",
         "duration_seconds": 95,
-        "summary": "కస్టమర్ మొబైల్ యాప్ డెమో కోసం రేపు ఉదయం 11కి అంగీకరించారు.",
+        "summary": "Customer agreed to a mobile app demo tomorrow at 11:00 AM.",
         "sentiment": "positive",
         "deal_stage": "demo_scheduled",
         "extracted_budget": "₹60,000",
