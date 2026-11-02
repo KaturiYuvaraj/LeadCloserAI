@@ -1006,12 +1006,16 @@ Your registered phone / client phone will ring shortly.`);
       if (viewCrm) viewCrm.style.display = "block";
       const btnCrm = document.getElementById("tabBtnCrm");
       if (btnCrm) btnCrm.classList.add("active");
-      if (navLaunchCrmText) navLaunchCrmText.innerText = "← View Overview";
+      if (navLaunchCrmText) navLaunchCrmText.innerText = "← Overview";
+      const navCreditChip = document.getElementById("navCreditChip");
+      if (navCreditChip) navCreditChip.style.display = "inline-flex";
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       if (viewLanding) viewLanding.style.display = "block";
       if (viewCrm) viewCrm.style.display = "none";
-      if (navLaunchCrmText) navLaunchCrmText.innerText = "Launch CRM Station";
+      if (navLaunchCrmText) navLaunchCrmText.innerText = "Start Free Trial ↗";
+      const navCreditChip = document.getElementById("navCreditChip");
+      if (navCreditChip) navCreditChip.style.display = "none";
 
       if (targetSectionId === "voiceSection") {
         const btn = document.getElementById("tabBtnVoice");

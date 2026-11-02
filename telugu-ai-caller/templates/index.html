@@ -80,9 +80,9 @@
   /* Multi-layered Soft Shadows with subtle Sapphire glow */
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
-  --shadow-md: 0 8px 24px -4px rgba(37, 99, 235, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 16px 36px -6px rgba(37, 99, 235, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-  --shadow-glow: 0 0 25px rgba(37, 99, 235, 0.20);
+  --shadow-md: 0 8px 24px -4px rgba(234, 88, 12, 0.08), 0 2px 6px -1px rgba(24, 24, 27, 0.04);
+  --shadow-lg: 0 16px 36px -6px rgba(234, 88, 12, 0.12), 0 4px 12px -2px rgba(24, 24, 27, 0.04);
+  --shadow-glow: 0 0 25px rgba(234, 88, 12, 0.20);
 }
 
 * {
@@ -95,9 +95,9 @@
 body {
   background-color: var(--bg-app);
   background-image: 
-    radial-gradient(ellipse at 15% 0%, rgba(37, 99, 235, 0.07) 0%, rgba(251, 252, 253, 0) 55%),
-    radial-gradient(ellipse at 85% 15%, rgba(16, 185, 129, 0.06) 0%, rgba(251, 252, 253, 0) 50%),
-    radial-gradient(ellipse at 50% 90%, rgba(37, 99, 235, 0.04) 0%, rgba(251, 252, 253, 0) 60%);
+    radial-gradient(ellipse at 15% 0%, rgba(249, 115, 22, 0.06) 0%, rgba(250, 248, 245, 0) 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(234, 88, 12, 0.05) 0%, rgba(250, 248, 245, 0) 50%),
+    radial-gradient(ellipse at 50% 90%, rgba(249, 115, 22, 0.03) 0%, rgba(250, 248, 245, 0) 60%);
   color: var(--text-main);
   min-height: 100vh;
   display: flex;
@@ -2492,6 +2492,757 @@ body {
   }
 }
 
+/* ===================================================================
+   PIXEL-PERFECT OUTPERO LUXURY THEME (REFERENCE IMAGE 100% MATCH)
+   =================================================================== */
+
+:root {
+  --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  height: 72px !important;
+  padding: 0 48px !important;
+  background: rgba(250, 248, 245, 0.94) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  border-bottom: 1px solid rgba(236, 232, 223, 0.7) !important;
+}
+
+.brand-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.brand-logo-svg {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(234, 88, 12, 0.35));
+}
+
+.brand-title-text {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.16rem;
+  color: #18181b;
+  letter-spacing: -0.015em;
+  line-height: 1;
+}
+
+/* Nav links dropdowns */
+.nav-center-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 28px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.nav-link-item {
+  position: relative;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #27272a;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  transition: color 0.15s ease;
+  user-select: none;
+}
+
+.nav-link-item:hover {
+  color: var(--primary);
+}
+
+.nav-link-item svg {
+  transition: transform 0.2s ease;
+}
+
+.nav-link-item:hover svg {
+  transform: translateY(2px);
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: -12px;
+  min-width: 210px;
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 1100;
+}
+
+.nav-link-item:hover .nav-dropdown-menu {
+  display: flex;
+}
+
+.nav-dropdown-link {
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #27272a;
+  border-radius: 8px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.nav-dropdown-link:hover {
+  background: #fff7ed;
+  color: var(--primary);
+}
+
+/* Navbar Right */
+.nav-right-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-nav-login {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #18181b;
+  border-radius: 9999px;
+  padding: 8px 20px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.btn-nav-login:hover {
+  border-color: #d4d4d8;
+  background: #fafafa;
+}
+
+.btn-nav-trial {
+  background: #18181b;
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  padding: 8px 20px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 10px rgba(24, 24, 27, 0.22);
+}
+
+.btn-nav-trial:hover {
+  background: #27272a;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(24, 24, 27, 0.32);
+}
+
+/* Hero Section */
+.hero-wrapper {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 38px 36px 20px;
+}
+
+.hero-main-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.15fr;
+  align-items: center;
+  gap: 36px;
+  position: relative;
+}
+
+/* Left Hero */
+.hero-left-content {
+  text-align: left;
+  z-index: 5;
+}
+
+.hero-sales-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #27272a;
+  margin-bottom: 24px;
+}
+
+.hero-sales-pill .soundwave-icon {
+  color: #f97316;
+  width: 16px;
+  height: 16px;
+}
+
+.hero-h1-headline {
+  font-family: var(--font-heading);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  color: #18181b;
+  margin-bottom: 20px;
+}
+
+.hero-h1-headline .text-orange {
+  color: #ea580c;
+  display: inline;
+}
+
+.hero-sparkle-star {
+  display: inline-block;
+  color: #f97316;
+  font-size: 2.2rem;
+  vertical-align: middle;
+  animation: sparkleTwinkle 2.8s infinite ease-in-out;
+  margin-left: 2px;
+}
+
+@keyframes sparkleTwinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; }
+  50% { transform: scale(1.18) rotate(12deg); opacity: 1; filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.6)); }
+}
+
+.hero-desc-p {
+  font-family: var(--font-body);
+  font-size: 1.02rem;
+  line-height: 1.62;
+  color: #52525b;
+  margin-bottom: 28px;
+  max-width: 520px;
+}
+
+.hero-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.btn-hero-dark-pill {
+  background: #18181b;
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(24, 24, 27, 0.28);
+}
+
+.btn-hero-dark-pill:hover {
+  background: #27272a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(24, 24, 27, 0.36);
+}
+
+.btn-phone-orange-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.4);
+}
+
+.btn-hero-white-pill {
+  background: #ffffff;
+  color: #18181b;
+  border: 1.5px solid #e4e4e7;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.btn-hero-white-pill:hover {
+  border-color: #d4d4d8;
+  background: #fafafa;
+  transform: translateY(-1px);
+}
+
+.hero-checklist-row {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #52525b;
+}
+
+.check-orange {
+  color: #ea580c;
+  font-weight: 800;
+  margin-right: 4px;
+}
+
+/* Right Hero Visual Showcase */
+.hero-visual-col {
+  position: relative;
+  width: 100%;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-archway-backdrop {
+  width: 100%;
+  max-width: 580px;
+  border-radius: 28px;
+  display: block;
+  box-shadow: 0 20px 50px rgba(180, 140, 100, 0.14);
+}
+
+/* Floating Glass Calling Pod */
+.floating-calling-pod {
+  position: absolute;
+  left: 36%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 230px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 28px;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 20px 45px rgba(180, 130, 90, 0.20);
+  z-index: 10;
+  animation: floatPod 4.5s ease-in-out infinite alternate;
+}
+
+@keyframes floatPod {
+  0% { transform: translate(-50%, -50%) translateY(-5px); }
+  100% { transform: translate(-50%, -50%) translateY(5px); }
+}
+
+.pod-wave-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 38px;
+  margin-bottom: 12px;
+}
+
+.pod-wave-bar {
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+  animation: waveBarPulse 1.2s infinite ease-in-out alternate;
+}
+
+.pod-wave-bar:nth-child(1) { height: 14px; animation-delay: 0.1s; }
+.pod-wave-bar:nth-child(2) { height: 26px; animation-delay: 0.3s; }
+.pod-wave-bar:nth-child(3) { height: 36px; animation-delay: 0.0s; }
+.pod-wave-bar:nth-child(4) { height: 28px; animation-delay: 0.4s; }
+.pod-wave-bar:nth-child(5) { height: 18px; animation-delay: 0.2s; }
+.pod-wave-bar:nth-child(6) { height: 32px; animation-delay: 0.5s; }
+.pod-wave-bar:nth-child(7) { height: 12px; animation-delay: 0.25s; }
+
+@keyframes waveBarPulse {
+  0% { transform: scaleY(0.4); opacity: 0.7; }
+  100% { transform: scaleY(1.1); opacity: 1; }
+}
+
+.pod-agent-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #18181b;
+  margin-bottom: 2px;
+}
+
+.pod-agent-subtitle {
+  font-size: 0.78rem;
+  color: #71717a;
+  margin-bottom: 16px;
+}
+
+.pod-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.pod-action-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #27272a;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+
+.pod-action-circle:hover {
+  background: #fff7ed;
+  color: var(--primary);
+}
+
+.pod-hangup-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  transition: all 0.15s ease;
+  animation: callRingPulse 2s infinite;
+}
+
+@keyframes callRingPulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Floating 3D Cards Stack */
+.floating-3d-stack {
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%) perspective(1000px) rotateY(-8deg) rotateX(4deg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 15;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-3d-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 12px 18px;
+  box-shadow: 0 10px 25px rgba(180, 140, 100, 0.12);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+}
+
+.floating-3d-card:hover {
+  transform: translateX(-8px) scale(1.02);
+  box-shadow: 0 14px 32px rgba(234, 88, 12, 0.18);
+  background: #ffffff;
+}
+
+.float-card-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ea580c;
+  flex-shrink: 0;
+}
+
+.float-card-label {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #18181b;
+}
+
+/* KPI Capsule Ribbon */
+.kpi-ribbon-card {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #ede8de;
+  border-radius: 26px;
+  padding: 26px 42px;
+  box-shadow: 0 16px 40px -10px rgba(180, 140, 100, 0.12);
+  margin-top: 36px;
+  margin-bottom: 50px;
+}
+
+.kpi-metric-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kpi-metric-icon {
+  color: #ea580c;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.kpi-metric-val {
+  font-family: var(--font-heading);
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #18181b;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.kpi-metric-lbl {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #71717a;
+  margin-top: 4px;
+}
+
+/* Process Section */
+.process-section-wrap {
+  position: relative;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 36px;
+  align-items: center;
+  margin-bottom: 60px;
+}
+
+.process-corner-plant {
+  position: absolute;
+  left: -40px;
+  bottom: -40px;
+  width: 220px;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.process-heading-h2 {
+  font-family: var(--font-heading);
+  font-size: 2.3rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #18181b;
+  margin-bottom: 12px;
+}
+
+.process-desc-p {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #52525b;
+  margin-bottom: 22px;
+}
+
+.btn-explore-pill {
+  background: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 10px 20px;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-explore-pill:hover {
+  background: #fed7aa;
+  transform: translateY(-1px);
+}
+
+.process-cards-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  z-index: 2;
+}
+
+.process-dashed-line {
+  position: absolute;
+  top: 38px;
+  left: 40px;
+  right: 40px;
+  height: 2px;
+  border-top: 2px dashed #fdba74;
+  z-index: 1;
+}
+
+.process-step-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid #ede8de;
+  border-radius: 20px;
+  padding: 22px 18px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 4px 16px rgba(180, 150, 120, 0.08);
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.process-step-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(234, 88, 12, 0.14);
+}
+
+.process-step-card.glow-green { border-color: #bbf7d0; box-shadow: 0 4px 20px rgba(34, 197, 94, 0.12); }
+.process-step-card.glow-purple { border-color: #e9d5ff; box-shadow: 0 4px 20px rgba(168, 85, 247, 0.12); }
+.process-step-card.glow-blue { border-color: #bae6fd; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.12); }
+.process-step-card.glow-orange { border-color: #fed7aa; box-shadow: 0 4px 20px rgba(249, 115, 22, 0.14); }
+
+.step-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.badge-excel-green { background: #dcfce7; color: #16a34a; }
+.badge-purple-sound { background: #f3e8ff; color: #9333ea; }
+.badge-blue-chat { background: #e0f2fe; color: #0284c7; }
+.badge-orange-check { background: #ffedd5; color: #ea580c; }
+
+.step-card-title {
+  font-family: var(--font-heading);
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #18181b;
+  margin-bottom: 6px;
+}
+
+.step-card-subtext {
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: #71717a;
+}
+
+@media (max-width: 1024px) {
+  .hero-main-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .hero-left-content {
+    text-align: center;
+  }
+  .hero-desc-p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-actions-row, .hero-checklist-row {
+    justify-content: center;
+  }
+  .floating-3d-stack {
+    position: static;
+    transform: none;
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .kpi-ribbon-card {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 22px 24px;
+  }
+  .process-section-wrap {
+    grid-template-columns: 1fr;
+  }
+  .process-cards-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .process-dashed-line {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    padding: 0 16px !important;
+  }
+  .nav-center-menu {
+    display: none;
+  }
+  .hero-h1-headline {
+    font-size: 2.3rem;
+  }
+  .floating-3d-stack {
+    grid-template-columns: 1fr;
+  }
+  .kpi-ribbon-card {
+    grid-template-columns: 1fr;
+  }
+  .process-cards-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
   <link rel="stylesheet" href="/static/css/calling-station.css?v=1.5">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2503,94 +3254,102 @@ body {
   <!-- ================================================================= -->
   <!-- TOP NAVIGATION BAR (OUTPERO STYLE) -->
   <!-- ================================================================= -->
-    <header class="navbar">
-    <div class="navbar-left">
-      <div class="logo-wrap" onclick="window.switchMainTab('landing')" style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer;">
-        <svg class="logo-origami" viewBox="0 0 32 32" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="origamiGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#f97316" />
-              <stop offset="100%" stop-color="#ea580c" />
-            </linearGradient>
-            <linearGradient id="origamiGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#fb923c" />
-              <stop offset="100%" stop-color="#f97316" />
-            </linearGradient>
-            <linearGradient id="origamiGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ea580c" />
-              <stop offset="100%" stop-color="#c2410c" />
-            </linearGradient>
-          </defs>
-          <polygon points="16,2 29,11 16,16" fill="url(#origamiGrad2)" />
-          <polygon points="16,2 3,11 16,16" fill="url(#origamiGrad1)" />
-          <polygon points="3,11 16,30 16,16" fill="url(#origamiGrad3)" />
-          <polygon points="29,11 16,30 16,16" fill="url(#origamiGrad1)" />
-        </svg>
-        <div class="brand-text">
-          <div class="brand-title-wrap" style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: nowrap; white-space: nowrap;">
-            <span class="brand-title" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.08rem; color: #18181b; letter-spacing: -0.02em;">LEADCLOSER<span style="color: #ea580c;">.AI</span></span>
-            <span class="brand-tag" style="background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c; font-size: 0.62rem; font-weight: 800; border-radius: 9999px; padding: 2px 7px; white-space: nowrap;">SP ASSOCIATES</span>
-          </div>
-          <div class="brand-subtitle" style="font-size: 0.68rem; color: #78716c; font-weight: 500; margin-top: 2px; white-space: nowrap;">Autonomous Multilingual AI Telecaller</div>
-        </div>
-      </div>
+      <header class="navbar">
+    <div class="brand-wrap" onclick="window.switchMainTab('landing')">
+      <!-- Origami Diamond SVG Mark -->
+      <svg class="brand-logo-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navOriG1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f97316" />
+            <stop offset="100%" stop-color="#ea580c" />
+          </linearGradient>
+          <linearGradient id="navOriG2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fb923c" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+          <linearGradient id="navOriG3" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ea580c" />
+            <stop offset="100%" stop-color="#c2410c" />
+          </linearGradient>
+        </defs>
+        <polygon points="16,2 29,11 16,16" fill="url(#navOriG2)" />
+        <polygon points="16,2 3,11 16,16" fill="url(#navOriG1)" />
+        <polygon points="3,11 16,30 16,16" fill="url(#navOriG3)" />
+        <polygon points="29,11 16,30 16,16" fill="url(#navOriG1)" />
+      </svg>
+      <span class="brand-title-text">LEADCLOSER.AI</span>
     </div>
 
-    <!-- Navigation Tab Buttons -->
-    <nav class="nav-links-row">
-      <button class="nav-tab-btn active" id="tabBtnLanding" onclick="window.switchMainTab('landing')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        Overview
-      </button>
-      <button class="nav-tab-btn" id="tabBtnVoice" onclick="window.switchMainTab('landing', 'voiceSection')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-        Voice Agents
-      </button>
-      <button class="nav-tab-btn" id="tabBtnCrm" onclick="window.switchMainTab('crm')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        Live CRM
-      </button>
-      <button class="nav-tab-btn" id="tabBtnAnalytics" onclick="window.switchMainTab('analytics')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-        Analytics
-      </button>
-      <button class="nav-tab-btn" id="tabBtnApi" onclick="window.switchMainTab('landing', 'apiSection')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-        Developer API
-      </button>
-      <button class="nav-tab-btn" id="tabBtnEmployees" onclick="window.switchMainTab('landing', 'employeesSection')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-        AI Employees
-      </button>
-      <button class="nav-tab-btn" id="tabBtnPricing" onclick="window.switchMainTab('landing', 'pricingSection')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+    <!-- Center Navigation Links (Matching Image: Product ⌵, Solutions ⌵, Resources ⌵, Pricing) -->
+    <nav class="nav-center-menu">
+      <div class="nav-link-item">
+        <span>Product</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        <div class="nav-dropdown-menu">
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('crm')">
+            <i data-lucide="layout-dashboard" style="width: 15px; height: 15px;"></i> CRM Calling Station
+          </a>
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('landing', 'employeesSection')">
+            <i data-lucide="bot" style="width: 15px; height: 15px;"></i> AI Sales Employees
+          </a>
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('landing', 'voiceSection')">
+            <i data-lucide="audio-lines" style="width: 15px; height: 15px;"></i> Voice Agent Demos
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-link-item">
+        <span>Solutions</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        <div class="nav-dropdown-menu">
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('crm')">
+            <i data-lucide="phone" style="width: 15px; height: 15px;"></i> 30s Outbound Telephony
+          </a>
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.openDiscoverLeadsModal()">
+            <i data-lucide="search" style="width: 15px; height: 15px;"></i> Apollo & Apify Discovery
+          </a>
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('analytics')">
+            <i data-lucide="chart-column-increasing" style="width: 15px; height: 15px;"></i> Executive Analytics
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-link-item">
+        <span>Resources</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        <div class="nav-dropdown-menu">
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('landing', 'apiSection')">
+            <i data-lucide="code-xml" style="width: 15px; height: 15px;"></i> Developer REST API
+          </a>
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.openGenerateKeyModal()">
+            <i data-lucide="key-round" style="width: 15px; height: 15px;"></i> API Key Generator
+          </a>
+          <a href="/api/leads/template" class="nav-dropdown-link" download>
+            <i data-lucide="download" style="width: 15px; height: 15px;"></i> Excel Batch Template
+          </a>
+        </div>
+      </div>
+
+      <a href="javascript:void(0)" class="nav-link-item" onclick="window.scrollToSection('pricingSection')">
         Pricing
-      </button>
+      </a>
     </nav>
 
-    <!-- Top Right Actions & Live Credit Balance (Single Line) -->
-    <div class="navbar-right">
+    <!-- Right Actions (Matching Image: Login & Start Free Trial ↗) -->
+    <div class="nav-right-actions">
       <!-- Live API Balance Pill -->
-      <div class="credit-balance-chip" onclick="window.openCheckoutModal('Credit Top-Up', 1000)" title="Click to purchase additional talk-time API credits">
+      <div class="credit-balance-chip" id="navCreditChip" onclick="window.openCheckoutModal('Credit Top-Up', 1000)" title="Click to purchase additional talk-time API credits" style="display: none; height: 36px; padding: 0 12px;">
         <span>🪙 ₹<span id="navCreditBalance">{{ "%.2f"|format(primary_key.credits_inr if primary_key else 2500.0) }}</span></span>
         <span class="chip-mins" style="color: #92400e; font-weight: 600;">(~<span id="navMinutesBalance">{{ "%.0f"|format((primary_key.credits_inr if primary_key else 2500.0) / 5.0) }}</span>m)</span>
         <span class="add-icon" title="Add Credits">+</span>
       </div>
 
-      <!-- Quick Action Buttons -->
-      <button class="btn btn-outline" id="navGetApiKeyBtn" onclick="window.switchMainTab('landing', 'apiSection')" style="font-size: 0.76rem; font-weight: 700; height: 34px; padding: 0 12px; white-space: nowrap;">
-        ⚡ API Keys
+      <button class="btn-nav-login" onclick="window.openAdminSettingsModal()" title="System Architecture & Backend Telephony Config">
+        Login
       </button>
 
-      <button class="btn btn-dark" id="navLaunchCrmBtn" onclick="window.switchMainTab('crm')" style="font-size: 0.78rem; font-weight: 700; height: 34px; padding: 0 16px; white-space: nowrap;">
-        <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: #ffffff;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-        <span id="navLaunchCrmText">Launch CRM ↗</span>
-      </button>
-
-      <!-- Admin Console (Discreetly Gated for System Architecture & Providers) -->
-      <button class="btn btn-outline" id="adminSystemBtn" onclick="window.openAdminSettingsModal()" title="System Architecture & Backend Telephony Config" style="padding: 0 10px; height: 34px; font-size: 0.74rem; color: var(--text-secondary); white-space: nowrap;">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        <span style="font-weight:600;">System</span>
+      <button class="btn-nav-trial" onclick="window.switchMainTab('crm')">
+        <span id="navLaunchCrmText">Start Free Trial ↗</span>
       </button>
     </div>
   </header>
@@ -2602,195 +3361,209 @@ body {
   <div id="viewLanding" class="view-landing-wrapper">
     
     <!-- Hero Section (Warm Architectural Showcase) -->
-    <section class="hero-section">
-      <div class="hero-layout-grid">
-        <div class="hero-left-col">
-          <div class="hero-pill-badge">
-            <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: #ea580c; stroke: #ea580c; fill: none; flex-shrink: 0;">
-              <path d="M12 2v20M17 5v14M7 5v14M22 10v4M2 10v4" stroke-width="2.5" stroke-linecap="round"/>
-            </svg>
+        <!-- Hero Section (Pixel-Perfect Outpero Luxury Design) -->
+    <div class="hero-wrapper">
+      <div class="hero-main-grid">
+        
+        <!-- Left Column: Copy & Actions -->
+        <div class="hero-left-content">
+          <div class="hero-sales-pill">
+            <svg class="soundwave-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v20M17 5v14M7 5v14M22 10v4M2 10v4"/></svg>
             <span>AI Voice Sales Platform for Modern Businesses</span>
           </div>
 
-          <h1 class="hero-title">
+          <h1 class="hero-h1-headline">
             Turn Leads into<br>
-            Revenue with <span class="highlight-orange">AI Voice Employees</span> <span class="hero-sparkle">✦</span>
+            Revenue with <span class="text-orange">AI</span> <span class="hero-sparkle-star">✦</span><br>
+            Voice Employees
           </h1>
 
-          <p class="hero-subtitle">
+          <p class="hero-desc-p">
             Deploy human-like AI voice agents that call, qualify, follow up, and close deals — in Telugu, Hindi, and <strong>Indian English</strong>. Fully automated. CRM ready. Developer friendly.
           </p>
 
-          <div class="hero-cta-group">
-            <button class="btn-hero-dark" onclick="window.switchMainTab('crm')">
-              <span class="btn-phone-circle">
-                <svg viewBox="0 0 24 24" class="icon icon-sm" style="color: #ffffff; stroke: #ffffff; fill: #ffffff;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          <div class="hero-actions-row">
+            <button class="btn-hero-dark-pill" onclick="window.switchMainTab('crm')">
+              <span class="btn-phone-orange-circle">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
               </span>
               <span>Try Live AI Caller ↗</span>
             </button>
-            <button class="btn-hero-glass" onclick="window.playVoiceScenario('te', 1)">
-              <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: #ea580c; fill: #ea580c;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+
+            <button class="btn-hero-white-pill" onclick="window.playVoiceScenario('te', 1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#18181b"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
               <span>Watch Demo</span>
             </button>
           </div>
 
-          <div class="hero-trust-list">
-            <span><span class="orange-check">✓</span> No Setup Complexity</span>
-            <span><span class="orange-check">✓</span> Works with Your CRM</span>
-            <span><span class="orange-check">✓</span> Multilingual (TEL, HIN, EN)</span>
+          <div class="hero-checklist-row">
+            <span><span class="check-orange">✓</span> No Setup Complexity</span>
+            <span><span class="check-orange">✓</span> Works with Your CRM</span>
+            <span><span class="check-orange">✓</span> Multilingual (TEL, HIN, EN)</span>
           </div>
         </div>
 
-        <div class="hero-scene-wrap">
-          <!-- Archway Window with Sunset Mountain Scenery and Vines -->
-          <div class="archway-window">
-            <div class="archway-scenery"></div>
-            <div class="archway-mountains"></div>
-            <div class="archway-ivy"></div>
+        <!-- Right Column: 3D Architectural Scene with Floating Pod & Tilted Cards -->
+        <div class="hero-visual-col">
+          <!-- Realistic 3D Archway Render Backdrop -->
+          <img src="/static/img/hero-archway.jpg" alt="AI Voice Architecture" class="hero-archway-backdrop" />
 
-            <!-- Center Floating Frosted Glass Calling Pod -->
-            <div class="floating-pod-wrap">
-              <div class="calling-pod-card">
-                <div class="pod-wave-bars">
-                  <div class="pod-wave-bar"></div>
-                  <div class="pod-wave-bar"></div>
-                  <div class="pod-wave-bar"></div>
-                  <div class="pod-wave-bar"></div>
-                  <div class="pod-wave-bar"></div>
-                  <div class="pod-wave-bar"></div>
-                  <div class="pod-wave-bar"></div>
-                </div>
-                <div class="pod-title">AI Voice Agent</div>
-                <div class="pod-subtitle">Calling your leads...</div>
-                <div class="pod-controls-row">
-                  <button class="pod-btn-icon" title="Mute/Unmute Mic" onclick="window.switchMainTab('crm')">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-                  </button>
-                  <button class="pod-btn-end" title="End / Trigger Call" onclick="window.switchMainTab('crm')">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: #ffffff; fill: #ffffff;"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path><line x1="1" y1="1" x2="23" y2="23" stroke="#ffffff" stroke-width="2.5"></line></svg>
-                  </button>
-                  <button class="pod-btn-icon" title="Volume / Speaker" onclick="window.switchMainTab('crm')">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                  </button>
-                </div>
-              </div>
+          <!-- Center Floating Frosted Glass Calling Pod -->
+          <div class="floating-calling-pod">
+            <div class="pod-wave-container">
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+            </div>
+            <div class="pod-agent-title">AI Voice Agent</div>
+            <div class="pod-agent-subtitle">Calling your leads...</div>
+            <div class="pod-actions-row">
+              <button class="pod-action-circle" title="Mic status" onclick="window.switchMainTab('crm')">
+                <i data-lucide="mic" style="width: 15px; height: 15px;"></i>
+              </button>
+              <button class="pod-hangup-btn" title="End / Trigger Call" onclick="window.switchMainTab('crm')">
+                <i data-lucide="phone-off" style="width: 16px; height: 16px; stroke-width: 2.5;"></i>
+              </button>
+              <button class="pod-action-circle" title="Speaker volume" onclick="window.switchMainTab('crm')">
+                <i data-lucide="volume-2" style="width: 15px; height: 15px;"></i>
+              </button>
             </div>
           </div>
 
-          <!-- Floating 3D Cards Stack to the Right -->
-          <div class="floating-cards-stack">
-            <div class="feature-float-card" onclick="window.switchMainTab('crm')">
-              <span class="float-card-icon">📞</span>
-              <span class="float-card-text">Call Leads Instantly</span>
+          <!-- Floating 3D Perspective Cards Stack -->
+          <div class="floating-3d-stack">
+            <div class="floating-3d-card" onclick="window.switchMainTab('crm')">
+              <span class="float-card-badge">
+                <i data-lucide="phone" style="width: 14px; height: 14px;"></i>
+              </span>
+              <span class="float-card-label">Call Leads Instantly</span>
             </div>
-            <div class="feature-float-card" onclick="window.openCalendarModal()">
-              <span class="float-card-icon">📅</span>
-              <span class="float-card-text">Book Live Demos</span>
+
+            <div class="floating-3d-card" onclick="window.openCalendarModal()">
+              <span class="float-card-badge">
+                <i data-lucide="calendar-days" style="width: 14px; height: 14px;"></i>
+              </span>
+              <span class="float-card-label">Book Live Demos</span>
             </div>
-            <div class="feature-float-card" onclick="window.switchMainTab('crm')">
-              <span class="float-card-icon">🔄</span>
-              <span class="float-card-text">Sync with CRM</span>
+
+            <div class="floating-3d-card" onclick="window.switchMainTab('crm')">
+              <span class="float-card-badge">
+                <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+              </span>
+              <span class="float-card-label">Sync with CRM</span>
             </div>
-            <div class="feature-float-card" onclick="window.switchMainTab('crm')">
-              <span class="float-card-icon">✨</span>
-              <span class="float-card-text">Get Call Summaries</span>
+
+            <div class="floating-3d-card" onclick="window.switchMainTab('crm')">
+              <span class="float-card-badge">
+                <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+              </span>
+              <span class="float-card-label">Get Call Summaries</span>
             </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- KPI Capsule Floating Ribbon -->
+      <div class="kpi-ribbon-card">
+        <div class="kpi-metric-item">
+          <i data-lucide="zap" class="kpi-metric-icon" style="stroke-width: 2.5;"></i>
+          <div>
+            <div class="kpi-metric-val">30s</div>
+            <div class="kpi-metric-lbl">Lead Callback Speed</div>
+          </div>
+        </div>
+
+        <div class="kpi-metric-item">
+          <i data-lucide="layers" class="kpi-metric-icon" style="stroke-width: 2.2;"></i>
+          <div>
+            <div class="kpi-metric-val">₹5.00</div>
+            <div class="kpi-metric-lbl">Per Connected Talk-Time Min</div>
+          </div>
+        </div>
+
+        <div class="kpi-metric-item">
+          <i data-lucide="chart-column" class="kpi-metric-icon" style="stroke-width: 2.2;"></i>
+          <div>
+            <div class="kpi-metric-val">3.4x</div>
+            <div class="kpi-metric-lbl">Higher Demo Booking Rate</div>
+          </div>
+        </div>
+
+        <div class="kpi-metric-item">
+          <i data-lucide="target" class="kpi-metric-icon" style="stroke-width: 2.2;"></i>
+          <div>
+            <div class="kpi-metric-val">100%</div>
+            <div class="kpi-metric-lbl">English Executive CRM Summaries</div>
           </div>
         </div>
       </div>
-
-      <!-- Core Proof Points Floating Ribbon -->
-      <div class="kpi-capsule-ribbon">
-        <div class="kpi-item">
-          <div class="kpi-top">
-            <span class="kpi-icon-orange">⚡</span>
-            <span class="kpi-val">30s</span>
-          </div>
-          <div class="kpi-lbl">Lead Callback Speed</div>
-        </div>
-        <div class="kpi-item">
-          <div class="kpi-top">
-            <span class="kpi-icon-orange">🪙</span>
-            <span class="kpi-val">₹5.00</span>
-          </div>
-          <div class="kpi-lbl">Per Connected Talk-Time Min</div>
-        </div>
-        <div class="kpi-item">
-          <div class="kpi-top">
-            <span class="kpi-icon-orange">📊</span>
-            <span class="kpi-val">3.4x</span>
-          </div>
-          <div class="kpi-lbl">Higher Demo Booking Rate</div>
-        </div>
-        <div class="kpi-item">
-          <div class="kpi-top">
-            <span class="kpi-icon-orange">🎯</span>
-            <span class="kpi-val">100%</span>
-          </div>
-          <div class="kpi-lbl">English Executive CRM Summaries</div>
-        </div>
-      </div>
-    </section>
+    </div>
 
     <div class="saas-container">
 
       <!-- ============================================================= -->
-      <!-- FROM LEAD TO CLOSED DEAL (CONNECTED PROCESS CARDS) -->
+      <!-- "FROM LEAD TO CLOSED DEAL" CONNECTED PROCESS SECTION -->
       <!-- ============================================================= -->
-      <section class="deal-process-section">
-        <div class="deal-process-left">
-          <h2 class="deal-process-title">
+      <section class="process-section-wrap">
+        <!-- Corner Plant & Stones Asset (Matching Reference) -->
+        <img src="/static/img/corner-plant.jpg" alt="Botanical Corner Accent" class="process-corner-plant" />
+
+        <div style="z-index: 2;">
+          <h2 class="process-heading-h2">
             From Lead to<br>
-            <span class="highlight-orange">Closed Deal</span>
+            <span style="color: #ea580c;">Closed Deal</span>
           </h2>
-          <p class="deal-process-desc">
+          <p class="process-desc-p">
             A complete AI sales workforce that calls, engages, qualifies, and closes — while you focus on growth.
           </p>
-          <button class="btn-process-explore" onclick="window.scrollToSection('voiceSection')">
+          <button class="btn-explore-pill" onclick="window.scrollToSection('voiceSection')">
             Explore How It Works ↗
           </button>
         </div>
 
-        <div class="deal-process-right">
-          <div class="process-cards-track">
-            <!-- Connecting dashed line -->
-            <div class="process-track-line"></div>
+        <div class="process-cards-row">
+          <!-- Horizontal dashed connector line -->
+          <div class="process-dashed-line"></div>
 
-            <!-- Card 1 -->
-            <div class="process-card card-green-glow" onclick="window.openExcelModal()">
-              <div class="process-badge badge-excel">
-                <span>X</span>
-              </div>
-              <h3 class="process-card-title">Import Leads</h3>
-              <p class="process-card-sub">Upload from Excel or sync your CRM</p>
+          <!-- Step 1: Import Leads -->
+          <div class="process-step-card glow-green" onclick="window.openExcelModal()">
+            <div class="step-icon-badge badge-excel-green">
+              <span>X</span>
             </div>
+            <div class="step-card-title">Import Leads</div>
+            <div class="step-card-subtext">Upload from Excel or sync your CRM</div>
+          </div>
 
-            <!-- Card 2 -->
-            <div class="process-card card-purple-glow" onclick="window.switchMainTab('crm')">
-              <div class="process-badge badge-purple">
-                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M12 2v20M17 5v14M7 5v14M22 10v4M2 10v4"/></svg>
-              </div>
-              <h3 class="process-card-title">AI Calls & Qualifies</h3>
-              <p class="process-card-sub">Our AI agents talk, understand and collect key details</p>
+          <!-- Step 2: AI Calls & Qualifies -->
+          <div class="process-step-card glow-purple" onclick="window.switchMainTab('crm')">
+            <div class="step-icon-badge badge-purple-sound">
+              <i data-lucide="audio-lines" style="width: 18px; height: 18px;"></i>
             </div>
+            <div class="step-card-title">AI Calls & Qualifies</div>
+            <div class="step-card-subtext">Our AI agents talk, understand and collect key details</div>
+          </div>
 
-            <!-- Card 3 -->
-            <div class="process-card card-blue-glow" onclick="window.switchMainTab('landing', 'voiceSection')">
-              <div class="process-badge badge-blue">
-                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <h3 class="process-card-title">Handles Objections</h3>
-              <p class="process-card-sub">Answers questions, shares pricing and builds interest</p>
+          <!-- Step 3: Handles Objections -->
+          <div class="process-step-card glow-blue" onclick="window.switchMainTab('landing', 'voiceSection')">
+            <div class="step-icon-badge badge-blue-chat">
+              <i data-lucide="message-circle-more" style="width: 18px; height: 18px;"></i>
             </div>
+            <div class="step-card-title">Handles Objections</div>
+            <div class="step-card-subtext">Answers questions, shares pricing and builds interest</div>
+          </div>
 
-            <!-- Card 4 -->
-            <div class="process-card card-orange-glow" onclick="window.switchMainTab('crm')">
-              <div class="process-badge badge-orange">
-                <span>✓</span>
-              </div>
-              <h3 class="process-card-title">Closes & Updates</h3>
-              <p class="process-card-sub">Books demos, closes deals and logs everything in CRM</p>
+          <!-- Step 4: Closes & Updates -->
+          <div class="process-step-card glow-orange" onclick="window.switchMainTab('crm')">
+            <div class="step-icon-badge badge-orange-check">
+              <i data-lucide="circle-check" style="width: 18px; height: 18px;"></i>
             </div>
+            <div class="step-card-title">Closes & Updates</div>
+            <div class="step-card-subtext">Books demos, closes deals and logs everything in CRM</div>
           </div>
         </div>
       </section>
@@ -4631,5 +5404,7 @@ body {
     </div>
   </div>
 
+  <script src="/static/js/vendor/lucide.min.js"></script>
+  <script>if (window.lucide) { lucide.createIcons(); }</script>
 </body>
 </html>
