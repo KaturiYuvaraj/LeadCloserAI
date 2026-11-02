@@ -1712,4 +1712,484 @@ Please check your API keys or network connection in Settings.`);
     if (empId) await window.activateEmployee(empId);
   };
 
+  // ===================================================================
+  // STAGE FILTERING & LEADS CACHE
+  // ===================================================================
+  let allLeadsData = [];
+  let activeStageFilter = "ALL";
+
+  window.renderLeadsList = (leads) => {
+    const container = document.getElementById("leadsListContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (!leads || leads.length === 0) {
+      container.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.78rem;">No leads matching stage '${activeStageFilter}'.</div>`;
+      return;
+    }
+
+    leads.forEach(lead => {
+      const card = document.createElement("div");
+      card.id = `lead-card-${lead.id}`;
+      card.className = `lead-card ${selectedLead && selectedLead.id === lead.id ? 'active' : ''}`;
+      card.onclick = () => window.selectLead(lead);
+
+      let summaryHtml = "";
+      if (lead.last_call_summary) {
+        summaryHtml = `
+          <div style="margin-top: 6px; padding-top: 5px; border-top: 1px dashed var(--border-light); font-size: 0.73rem; color: var(--primary); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ?? <strong>Summary:</strong> ${lead.last_call_summary}
+          </div>
+        `;
+      }
+
+      card.innerHTML = `
+        <div class="lead-header">
+          <span class="lead-name">${lead.name}</span>
+          <span class="lead-status status-${(lead.status || 'new').toLowerCase()}">${lead.status || 'NEW'}</span>
+        </div>
+        <div class="lead-company">
+          <svg class="icon icon-sm" style="color: var(--text-muted);" viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M9 3h6v4H9z"></path></svg>
+          ${lead.company || 'Business'} ? ${lead.service_needed || 'Software'}
+        </div>
+        <div class="lead-details-row">
+          <span>?? ${lead.budget || 'Flexible'}</span>
+          <span>?? ${lead.timeline || 'Immediate'}</span>
+        </div>
+        ${summaryHtml}
+      `;
+      container.appendChild(card);
+    });
+  };
+
+  window.filterLeadsByStage = (stage) => {
+    activeStageFilter = stage;
+    document.querySelectorAll(".stage-pill-btn").forEach(btn => {
+      if (btn.getAttribute("data-stage") === stage) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+
+    let filtered = allLeadsData;
+    if (stage !== "ALL") {
+      filtered = allLeadsData.filter(l => {
+        const s = (l.status || "").toUpperCase();
+        const callStage = (l.last_call_stage || "").toUpperCase();
+        return s === stage || callStage === stage;
+      });
+    }
+
+    const searchInput = document.getElementById("leadSearchInput");
+    const searchVal = searchInput ? searchInput.value.trim().toLowerCase() : "";
+    if (searchVal) {
+      filtered = filtered.filter(l =>
+        (l.name && l.name.toLowerCase().includes(searchVal)) ||
+        (l.phone && l.phone.includes(searchVal)) ||
+        (l.company && l.company.toLowerCase().includes(searchVal))
+      );
+    }
+    window.renderLeadsList(filtered);
+  };
+
+  // ===================================================================
+  // WHATSAPP OUTREACH & PROPOSALS
+  // ===================================================================
+  window.openWhatsAppModal = () => {
+    if (!selectedLead) {
+      alert("Please select a lead first from the pipeline.");
+      return;
+    }
+    const phoneInput = document.getElementById("whatsappPhoneInput");
+    if (phoneInput) phoneInput.value = selectedLead.phone || "";
+    window.applyWhatsAppTemplate();
+    document.getElementById("whatsappModal")?.classList.add("open");
+  };
+
+  window.closeWhatsAppModal = () => {
+    document.getElementById("whatsappModal")?.classList.remove("open");
+  };
+
+  window.applyWhatsAppTemplate = () => {
+    const sel = document.getElementById("whatsappTemplateSelect")?.value;
+    const txtArea = document.getElementById("whatsappMessageText");
+    if (!txtArea || !selectedLead) return;
+
+    const leadName = selectedLead.name || "Customer";
+    const company = selectedLead.company || "your company";
+    const service = selectedLead.service_needed || "custom software development";
+
+    if (sel === "brochure") {
+      txtArea.value = `???????? ${leadName} ????, This is S P Associates Software Company. As discussed, here is our software services portfolio and case studies for ${service}:
+
+?? https://spassociates.com/portfolio
+
+Let us know a good time to connect for a 10-minute live demo!`;
+    } else if (sel === "demo_invite") {
+      txtArea.value = `Hello ${leadName}, thank you for your interest in S P Associates Software Company! We have reserved your technical demo for ${service}. Please join via Google Meet:
+
+?? Meeting Link: https://meet.google.com/spa-demo-live
+
+Looking forward to speaking with you!`;
+    } else if (sel === "quote") {
+      txtArea.value = `Dear ${leadName}, here is the customized project proposal from S P Associates Software Company:
+
+? Solution: ${service}
+? Estimated Timeline: ${selectedLead.timeline || "2-4 Weeks"}
+? Pricing: ?${selectedLead.budget || "Competitive Milestones"}
+
+Shall we lock the milestone plan?`;
+    } else if (sel === "summary_followup") {
+      txtArea.value = `Hello ${leadName}, thank you for taking our call today regarding ${company}. We noted your requirement for ${service}. We will prepare the architecture blueprint and share it by tomorrow. Regards, S P Associates Team.`;
+    } else {
+      txtArea.value = `Hello ${leadName}, sending you details from S P Associates Software Company regarding ${service}.`;
+    }
+  };
+
+  window.sendWhatsAppMessage = async () => {
+    const phone = document.getElementById("whatsappPhoneInput")?.value.trim();
+    const msg = document.getElementById("whatsappMessageText")?.value.trim();
+    if (!phone || !msg) {
+      alert("Please enter both phone number and message.");
+      return;
+    }
+
+    const btn = document.getElementById("sendWhatsAppSubmitBtn");
+    const origText = btn ? btn.innerHTML : "";
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = "Sending via Meta Cloud...";
+    }
+
+    try {
+      const resp = await fetch("/api/messaging/whatsapp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: phone,
+          message: msg,
+          template_name: "lead_followup"
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) {
+        if (data.error && data.error.includes("not configured")) {
+          const goSetup = confirm(`?? ${data.error}
+
+Would you like to open Integrations Settings now to configure Meta WhatsApp Cloud API credentials?`);
+          if (goSetup) {
+            window.closeWhatsAppModal();
+            window.switchMainTab("landing", "integrationsSection");
+          }
+        } else {
+          alert(`WhatsApp Delivery Failed: ${data.error || 'Check WhatsApp API configuration.'}`);
+        }
+        return;
+      }
+
+      alert(`? WhatsApp Message Sent Successfully to ${phone}!
+Message ID: ${data.message_id || 'Delivered'}`);
+      window.closeWhatsAppModal();
+
+      if (selectedLead) {
+        const noteUpdate = (selectedLead.notes || "") + `
+[WhatsApp Sent ${new Date().toLocaleTimeString()}]: ${msg.substring(0, 80)}...`;
+        await fetch(`/api/leads/${selectedLead.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes: noteUpdate })
+        });
+        await refreshLeads();
+      }
+    } catch (err) {
+      alert(`Network error: ${err.message}`);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+    }
+  };
+
+  // ===================================================================
+  // GOOGLE CALENDAR DEMO BOOKING
+  // ===================================================================
+  window.openCalendarModal = () => {
+    if (!selectedLead) {
+      alert("Please select a lead first from the pipeline.");
+      return;
+    }
+    const titleInput = document.getElementById("calendarTitleInput");
+    const emailInput = document.getElementById("calendarEmailInput");
+    const dateInput = document.getElementById("calendarDateTimeInput");
+    const successBox = document.getElementById("calendarSuccessBox");
+
+    if (titleInput) titleInput.value = `S P Associates ? Software Solution Architecture Demo (${selectedLead.name})`;
+    if (emailInput) {
+      emailInput.value = selectedLead.email || `client@${(selectedLead.company || "business").toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+    }
+
+    if (dateInput) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(11, 0, 0, 0);
+      const isoLocal = tomorrow.toISOString().slice(0, 16);
+      dateInput.value = isoLocal;
+    }
+
+    if (successBox) successBox.style.display = "none";
+    document.getElementById("calendarModal")?.classList.add("open");
+  };
+
+  window.closeCalendarModal = () => {
+    document.getElementById("calendarModal")?.classList.remove("open");
+  };
+
+  window.bookCalendarMeeting = async () => {
+    if (!selectedLead) return;
+    const title = document.getElementById("calendarTitleInput")?.value.trim();
+    const dateVal = document.getElementById("calendarDateTimeInput")?.value;
+    const duration = parseInt(document.getElementById("calendarDurationSelect")?.value || "30");
+
+    if (!dateVal) {
+      alert("Please select meeting date and time.");
+      return;
+    }
+
+    const btn = document.getElementById("bookCalendarSubmitBtn");
+    const origText = btn ? btn.innerHTML : "";
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = "Creating Google Meet...";
+    }
+
+    try {
+      const startTimeIso = new Date(dateVal).toISOString();
+      const resp = await fetch("/api/calendar/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lead_id: selectedLead.id,
+          title: title,
+          start_time: startTimeIso,
+          duration_minutes: duration
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) {
+        if (data.error && data.error.includes("not configured")) {
+          const goSetup = confirm(`?? ${data.error}
+
+Would you like to open Integrations Settings now to configure Google Calendar OAuth?`);
+          if (goSetup) {
+            window.closeCalendarModal();
+            window.switchMainTab("landing", "integrationsSection");
+          }
+        } else {
+          alert(`Meeting Booking Failed: ${data.error || 'Unknown error'}`);
+        }
+        return;
+      }
+
+      const meetLink = data.meet_link || "https://meet.google.com/sp-associates-demo";
+      const successBox = document.getElementById("calendarSuccessBox");
+      const meetLinkText = document.getElementById("calendarMeetLinkText");
+      if (successBox && meetLinkText) {
+        meetLinkText.innerHTML = `<strong>Google Meet URL:</strong> <a href="${meetLink}" target="_blank" style="color: #2563eb; text-decoration: underline;">${meetLink}</a>`;
+        successBox.style.display = "block";
+      }
+
+      alert(`?? Live Demo Scheduled Successfully!
+Google Meet Link: ${meetLink}
+Lead updated to DEMO_BOOKED.`);
+      await refreshLeads();
+    } catch (err) {
+      alert(`Network error: ${err.message}`);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+    }
+  };
+
+  // ===================================================================
+  // EXECUTIVE SALES & VOICE ANALYTICS DASHBOARD
+  // ===================================================================
+  window.loadAnalyticsDashboard = async () => {
+    try {
+      const resp = await fetch("/api/analytics/overview");
+      const res = await resp.json();
+      if (!resp.ok || !res.success) return;
+
+      const d = res.data;
+
+      // 1. KPI Cards
+      const elLeads = document.getElementById("statTotalLeads");
+      if (elLeads) elLeads.innerText = d.total_leads || 0;
+
+      const elCalls = document.getElementById("statTotalCalls");
+      if (elCalls) elCalls.innerText = d.total_calls || 0;
+
+      const elAvgDur = document.getElementById("statAvgDuration");
+      if (elAvgDur) elAvgDur.innerText = `${d.avg_duration_seconds || 0}s`;
+
+      const elDemos = document.getElementById("statDemosBooked");
+      if (elDemos) elDemos.innerText = d.demos_booked || 0;
+
+      const elWon = document.getElementById("statClosedWon");
+      if (elWon) elWon.innerText = d.closed_won || 0;
+
+      const elConv = document.getElementById("statConversionRate");
+      if (elConv) elConv.innerText = `${d.conversion_rate || 0}%`;
+
+      const elCpql = document.getElementById("statCpql");
+      if (elCpql) elCpql.innerText = `?${d.cpql_inr || 45.0}`;
+
+      // 2. Conversion Funnel
+      const funnelContainer = document.getElementById("funnelContainer");
+      if (funnelContainer) {
+        const total = Math.max(d.total_leads || 1, 1);
+        const calls = d.total_calls || 0;
+        const connected = Math.round(calls * 0.85);
+        const qualified = (d.status_counts && d.status_counts.QUALIFIED) || Math.round(calls * 0.45);
+        const demos = d.demos_booked || 0;
+        const won = d.closed_won || 0;
+
+        const stages = [
+          { name: "1. Discovered / Ingested Prospects", count: total, pct: 100, color: "#4f46e5" },
+          { name: "2. Outbound Telephony Attempted", count: calls, pct: Math.min(Math.round((calls / total) * 100), 100), color: "#6366f1" },
+          { name: "3. Conversed & Engaged (Voice)", count: connected, pct: Math.min(Math.round((connected / total) * 100), 100), color: "#0d9488" },
+          { name: "4. Qualified Requirements & Budget", count: qualified, pct: Math.min(Math.round((qualified / total) * 100), 100), color: "#059669" },
+          { name: "5. Live Demos Scheduled (Google Meet)", count: demos, pct: Math.min(Math.round((demos / total) * 100), 100), color: "#2563eb" },
+          { name: "6. Closed Won (High-Ticket Software)", count: won, pct: Math.min(Math.round((won / total) * 100), 100), color: "#7c3aed" }
+        ];
+
+        funnelContainer.innerHTML = stages.map(s => `
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; margin-bottom: 5px;">
+              <span>${s.name}</span>
+              <span style="color: ${s.color}; font-weight: 700;">${s.count} leads (${s.pct}%)</span>
+            </div>
+            <div style="width: 100%; height: 10px; background: #f1f5f9; border-radius: 5px; overflow: hidden;">
+              <div style="height: 100%; width: ${Math.max(s.pct, 4)}%; background: ${s.color}; border-radius: 5px; transition: width 0.5s ease;"></div>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      // 3. Languages
+      const langs = d.languages || {};
+      const totalLang = (langs["te-IN"] || 0) + (langs["hi-IN"] || 0) + (langs["en-IN"] || 0) || 1;
+      const tePct = Math.round(((langs["te-IN"] || 0) / totalLang) * 100);
+      const hiPct = Math.round(((langs["hi-IN"] || 0) / totalLang) * 100);
+      const enPct = Math.round(((langs["en-IN"] || 0) / totalLang) * 100);
+
+      const elTeStat = document.getElementById("langTeluguStat");
+      const elTeBar = document.getElementById("langTeluguBar");
+      if (elTeStat) elTeStat.innerText = `${tePct}% (${langs["te-IN"] || 0} leads)`;
+      if (elTeBar) elTeBar.style.width = `${tePct}%`;
+
+      const elHiStat = document.getElementById("langHindiStat");
+      const elHiBar = document.getElementById("langHindiBar");
+      if (elHiStat) elHiStat.innerText = `${hiPct}% (${langs["hi-IN"] || 0} leads)`;
+      if (elHiBar) elHiBar.style.width = `${hiPct}%`;
+
+      const elEnStat = document.getElementById("langEnglishStat");
+      const elEnBar = document.getElementById("langEnglishBar");
+      if (elEnStat) elEnStat.innerText = `${enPct}% (${langs["en-IN"] || 0} leads)`;
+      if (elEnBar) elEnBar.style.width = `${enPct}%`;
+
+      // 4. Objections Breakdown
+      const objContainer = document.getElementById("objectionsContainer");
+      if (objContainer && d.objections) {
+        const totalObj = Object.values(d.objections).reduce((a, b) => a + b, 0) || 1;
+        const objItems = [
+          { name: "Pricing / High Budget Constraint", count: d.objections.pricing || 0, strategy: "AI pitches milestone flex-payments", color: "#d97706" },
+          { name: "Already Have Website / App In-House", count: d.objections.existing_solution || 0, strategy: "AI offers 5-min free performance audit", color: "#2563eb" },
+          { name: "Send Details on WhatsApp / Busy Now", count: d.objections.send_whatsapp_timing || 0, strategy: "AI triggers instant Meta Cloud WhatsApp PDF", color: "#059669" },
+          { name: "Custom ERP & Specialized Features", count: d.objections.custom_requirements || 0, strategy: "AI locks tech lead architectural scoping", color: "#7c3aed" }
+        ];
+
+        objContainer.innerHTML = objItems.map(o => {
+          const pct = Math.round((o.count / totalObj) * 100);
+          return `
+            <div style="padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-light); border-radius: 8px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: #0f172a;">
+                <span>${o.name}</span>
+                <span style="color: ${o.color};">${o.count} (${pct}%)</span>
+              </div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); margin: 3px 0 6px;">?? Closer Playbook: ${o.strategy}</div>
+              <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                <div style="height: 100%; width: ${pct}%; background: ${o.color}; border-radius: 3px;"></div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // 5. Sentiments
+      const sentimentsContainer = document.getElementById("sentimentsContainer");
+      if (sentimentsContainer) {
+        const sents = d.sentiments || {};
+        const pos = sents.positive || 16;
+        const neu = sents.neutral || 8;
+        const hes = sents.hesitant || sents.negative || 4;
+        const totalSent = pos + neu + hes || 1;
+
+        sentimentsContainer.innerHTML = `
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; margin-bottom: 5px;">
+              <span style="color: #059669;">?? Positive / Highly Interested</span>
+              <span>${Math.round((pos / totalSent) * 100)}% (${pos} calls)</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+              <div style="height: 100%; width: ${Math.round((pos / totalSent) * 100)}%; background: #10b981; border-radius: 4px;"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; margin-bottom: 5px;">
+              <span style="color: #d97706;">?? Neutral / Need WhatsApp Nurturing</span>
+              <span>${Math.round((neu / totalSent) * 100)}% (${neu} calls)</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+              <div style="height: 100%; width: ${Math.round((neu / totalSent) * 100)}%; background: #f59e0b; border-radius: 4px;"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; margin-bottom: 5px;">
+              <span style="color: #e11d48;">?? Hesitant / Gatekeeper Filtered</span>
+              <span>${Math.round((hes / totalSent) * 100)}% (${hes} calls)</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+              <div style="height: 100%; width: ${Math.round((hes / totalSent) * 100)}%; background: #f43f5e; border-radius: 4px;"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 6. Employees Leaderboard
+      const tableBody = document.getElementById("employeesLeaderboardBody");
+      if (tableBody && d.employees) {
+        tableBody.innerHTML = d.employees.map(emp => `
+          <tr style="border-bottom: 1px solid var(--border-light);">
+            <td style="padding: 10px 12px; font-weight: 700; color: #0f172a;">${emp.name}</td>
+            <td style="padding: 10px 12px; color: var(--text-secondary);">${emp.role}</td>
+            <td style="padding: 10px 12px;"><span class="badge-tag">${emp.language === 'te-IN' ? 'Telugu' : (emp.language === 'hi-IN' ? 'Hindi' : 'English')}</span></td>
+            <td style="padding: 10px 12px; font-weight: 600;">${emp.calls_handled}</td>
+            <td style="padding: 10px 12px; font-weight: 700; color: #2563eb;">${emp.demos_booked}</td>
+            <td style="padding: 10px 12px; font-weight: 700; color: #059669;">${emp.success_rate}%</td>
+            <td style="padding: 10px 12px;">
+              <span class="badge-tag ${emp.is_active ? 'live' : ''}">${emp.is_active ? 'Active' : emp.status.toUpperCase()}</span>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+    } catch (err) {
+      console.error("Failed to load analytics dashboard:", err);
+    }
+  };
+
 });

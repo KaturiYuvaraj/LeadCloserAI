@@ -56,7 +56,8 @@ from database import (
     create_ai_employee,
     update_ai_employee,
     set_active_ai_employee,
-    delete_ai_employee
+    delete_ai_employee,
+    get_analytics_summary
 )
 from services.employee_builder import employee_builder
 from schemas.lead import UnifiedLead
@@ -413,6 +414,20 @@ async def api_delete_lead(lead_id: int):
 @app.get("/api/calls")
 async def api_get_calls():
     return {"calls": get_call_history(limit=50)}
+
+@app.get("/api/analytics/overview")
+async def api_get_analytics_overview():
+    """
+    Return executive-level sales metrics, conversion funnel, objections breakdown,
+    sentiment distributions, and AI employee leaderboard.
+    """
+    try:
+        data = get_analytics_summary()
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"Failed to generate analytics overview: {e}")
+        return {"success": False, "error": str(e)}
+
 
 
 @app.get("/api/profile")
