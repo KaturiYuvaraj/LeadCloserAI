@@ -392,6 +392,28 @@ def init_db():
             knowledge_base, working_hours, max_call_duration_seconds, status, is_active
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, seed_employees)
+    # Campaigns Table (Module 7: Persistent Multi-Channel Campaigns)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS campaigns (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        employee_id INTEGER DEFAULT 1,
+        lead_ids_json TEXT DEFAULT '[]',
+        mode TEXT DEFAULT 'telephony',
+        status TEXT DEFAULT 'draft',
+        total_leads INTEGER DEFAULT 0,
+        completed_leads INTEGER DEFAULT 0,
+        max_concurrency INTEGER DEFAULT 3,
+        retry_attempts INTEGER DEFAULT 2,
+        results_json TEXT DEFAULT '{}',
+        logs_json TEXT DEFAULT '[]',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (employee_id) REFERENCES ai_employees (id) ON DELETE SET NULL
+    );
+    """)
+
 
 
     # Seed default primary API key if api_keys table is empty
@@ -564,7 +586,7 @@ def update_lead(lead_id: int, updates: Dict[str, Any]) -> bool:
     fields = []
     values = []
     for k, v in updates.items():
-        if k in ["name", "phone", "email", "company", "service_needed", "budget", "timeline", "status", "priority", "notes", "preferred_language", "source", "designation", "industry", "location", "website", "enrichment_data"]:
+        if k in ["name", "phone", "email", "company", "service_needed", "budget", "timeline", "status", "priority", "notes", "preferred_language", "source", "designation", "industry", "location", "website", "enrichment_data", "action_items", "last_call_summary", "last_call_stage", "last_call_sentiment", "objections_noted"]:
             fields.append(f"{k} = ?")
             values.append(v)
 
@@ -1202,6 +1224,118 @@ def delete_ai_employee(emp_id: int) -> bool:
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM ai_employees WHERE id = ? AND is_active = 0", (emp_id,))
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
+
+
+# ---------------- CAMPAIGN MANAGEMENT CRUD (MODULE 7) ----------------
+
+def create_campaign(data: Dict[str, Any]) -> int:
+    """Create and persist a new sales campaign."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    lead_ids = data.get("lead_ids", [])
+    lead_ids_json = json.dumps(lead_ids) if isinstance(lead_ids, list) else str(lead_ids)
+
+    cursor.execute("""
+    INSERT INTO campaigns (
+        name, description, employee_id, lead_ids_json, mode, status,
+        total_leads, completed_leads, max_concurrency, retry_attempts, results_json
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data.get("name", "New Outbound Campaign"),
+        data.get("description", ""),
+        data.get("employee_id", 1),
+        lead_ids_json,
+        data.get("mode", "telephony"),
+        data.get("status", "draft"),
+        len(lead_ids) if isinstance(lead_ids, list) else int(data.get("total_leads", 0)),
+        0,
+        int(data.get("max_concurrency", 3)),
+        int(data.get("retry_attempts", 2)),
+        json.dumps(data.get("results", {"demo_scheduled": 0, "closed_won": 0, "follow_up": 0, "lost": 0, "failed": 0}))
+    ))
+    camp_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return camp_id
+
+
+def get_all_campaigns() -> List[Dict[str, Any]]:
+    """Fetch all persisted campaigns with progress metrics."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM campaigns ORDER BY updated_at DESC")
+    rows = []
+    for r in cursor.fetchall():
+        d = dict(r)
+        try:
+            d["lead_ids"] = json.loads(d.get("lead_ids_json") or "[]")
+            d["results"] = json.loads(d.get("results_json") or "{}")
+            d["logs"] = json.loads(d.get("logs_json") or "[]")
+        except Exception:
+            pass
+        rows.append(d)
+    conn.close()
+    return rows
+
+
+def get_campaign_by_id(camp_id: int) -> Optional[Dict[str, Any]]:
+    """Fetch a single campaign by ID."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM campaigns WHERE id = ?", (camp_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return None
+    d = dict(row)
+    try:
+        d["lead_ids"] = json.loads(d.get("lead_ids_json") or "[]")
+        d["results"] = json.loads(d.get("results_json") or "{}")
+        d["logs"] = json.loads(d.get("logs_json") or "[]")
+    except Exception:
+        pass
+    conn.close()
+    return d
+
+
+def update_campaign_status(camp_id: int, status: str, completed: Optional[int] = None, results: Optional[Dict[str, Any]] = None, log_entry: Optional[Dict[str, Any]] = None) -> bool:
+    """Update campaign status, completed leads counter, results, and append logs."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    fields = ["status = ?", "updated_at = CURRENT_TIMESTAMP"]
+    values = [status]
+
+    if completed is not None:
+        fields.append("completed_leads = ?")
+        values.append(completed)
+
+    if results is not None:
+        fields.append("results_json = ?")
+        values.append(json.dumps(results))
+
+    if log_entry is not None:
+        cursor.execute("SELECT logs_json FROM campaigns WHERE id = ?", (camp_id,))
+        cur_row = cursor.fetchone()
+        cur_logs = []
+        if cur_row and cur_row["logs_json"]:
+            try:
+                cur_logs = json.loads(cur_row["logs_json"])
+            except Exception:
+                pass
+        cur_logs.append(log_entry)
+        if len(cur_logs) > 100:
+            cur_logs = cur_logs[-100:]
+        fields.append("logs_json = ?")
+        values.append(json.dumps(cur_logs))
+
+    values.append(camp_id)
+    query = f"UPDATE campaigns SET {', '.join(fields)} WHERE id = ?"
+    cursor.execute(query, values)
     conn.commit()
     success = cursor.rowcount > 0
     conn.close()

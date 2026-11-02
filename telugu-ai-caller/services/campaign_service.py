@@ -15,8 +15,13 @@ from database import (
     get_lead_by_id,
     save_call_record,
     update_lead,
-    get_company_profile
+    get_company_profile,
+    create_campaign,
+    update_campaign_status,
+    get_campaign_by_id,
+    get_all_campaigns
 )
+from providers import registry, ProviderType
 from services.sarvam_service import sarvam_client
 from services.sales_agent import sales_agent
 from services.telephony_service import telephony_service
@@ -28,6 +33,8 @@ class CampaignService:
         self.is_paused = False
         self._stop_requested = False
         self.current_task: Optional[asyncio.Task] = None
+        self.active_campaign_id: Optional[int] = None
+        self.max_concurrency: int = 3
 
         self.total_leads = 0
         self.completed_leads = 0
@@ -51,6 +58,17 @@ class CampaignService:
         if len(self.logs) > 100:
             self.logs.pop(0)
         logger.info(f"[CAMPAIGN] {message}")
+        if self.active_campaign_id:
+            try:
+                update_campaign_status(
+                    camp_id=self.active_campaign_id,
+                    status="running" if self.is_running else "completed",
+                    completed=self.completed_leads,
+                    results=self.results,
+                    log_entry=entry
+                )
+            except Exception:
+                pass
 
     def get_status(self) -> Dict[str, Any]:
         return {
@@ -85,7 +103,10 @@ class CampaignService:
         self,
         lead_ids: Optional[List[int]] = None,
         mode: str = "simulation",  # "simulation" or "telephony"
-        delay_seconds: int = 5
+        delay_seconds: int = 5,
+        campaign_id: Optional[int] = None,
+        max_concurrency: int = 3,
+        name: str = "Outbound AI Sales Campaign"
     ) -> bool:
         if self.is_running:
             return False
@@ -113,9 +134,22 @@ class CampaignService:
             self.is_running = False
             return False
 
-        self._log(f"Starting auto-calling campaign for {self.total_leads} leads in '{mode}' mode.", "info")
+        self.max_concurrency = max_concurrency
+        if not campaign_id:
+            self.active_campaign_id = create_campaign({
+                "name": name,
+                "lead_ids": [l["id"] for l in leads_to_call],
+                "mode": mode,
+                "status": "running",
+                "max_concurrency": max_concurrency
+            })
+        else:
+            self.active_campaign_id = campaign_id
+            update_campaign_status(self.active_campaign_id, status="running")
 
-        # Launch background loop
+        self._log(f"Starting auto-calling campaign #{self.active_campaign_id} for {self.total_leads} leads in '{mode}' mode.", "info")
+
+        # Launch background loop with concurrency throttle
         self.current_task = asyncio.create_task(self._run_campaign_loop(leads_to_call, mode, delay_seconds))
         return True
 
@@ -140,11 +174,16 @@ class CampaignService:
                 self._log(f"[{idx}/{self.total_leads}] Dialing {lead_name} ({lead_phone}) for {service}...", "info")
 
                 if mode == "telephony":
-                    # Real phone call via Twilio
+                    # Real phone call via active provider (Exotel or Twilio)
                     try:
-                        resp = await telephony_service.initiate_outbound_call(to_phone=lead_phone, lead_id=lead_id)
+                        active_tel = registry.get_active(ProviderType.TELEPHONY)
+                        if active_tel and active_tel.is_configured():
+                            resp = await active_tel.initiate_outbound_call(to_phone=lead_phone, lead_id=lead_id)
+                        else:
+                            resp = await telephony_service.initiate_outbound_call(to_phone=lead_phone, lead_id=lead_id)
+
                         if resp.get("success"):
-                            self._log(f"📞 Call placed to {lead_name}. Twilio SID: {resp.get('call_sid')}", "success")
+                            self._log(f"📞 PSTN Call placed to {lead_name} via {resp.get('call_sid', 'telephony')}.", "success")
                             self.results["demo_scheduled"] += 1
                         else:
                             self._log(f"⚠️ Call failed to {lead_name}: {resp.get('error')}", "error")
