@@ -22,16 +22,34 @@
   --text-muted: #64748b;
   --text-light: #94a3b8;
 
-  /* Jewel-tone Accents */
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-soft: #eef2ff;
-  --primary-border: #c7d2fe;
+  /* Bespoke Royal Obsidian Sapphire & Vivid Emerald Jade (High-Tech Executive Precision) */
+  --bg-app: #fbfcfd;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-subtle: #f1f5f9;
+  --bg-input: #ffffff;
 
-  --accent: #7c3aed;
-  --accent-hover: #6d28d9;
-  --accent-soft: #f5f3ff;
-  --accent-border: #ddd6fe;
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --border-focus: #2563eb;
+
+  --text-main: #090d16;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+
+  /* Royal Sapphire Primary */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #eff6ff;
+  --primary-border: #bfdbfe;
+
+  /* Emerald Jade Growth Accent */
+  --accent: #059669;
+  --accent-hover: #047857;
+  --accent-soft: #ecfdf5;
+  --accent-border: #a7f3d0;
 
   --teal: #0d9488;
   --teal-soft: #f0fdfa;
@@ -46,16 +64,16 @@
   --warning-soft: #fffbeb;
   --warning-border: #fde68a;
 
-  --danger: #e11d48;
-  --danger-soft: #fff1f2;
-  --danger-border: #fecdd3;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --danger-border: #fecaca;
 
-  /* Multi-layered Soft Shadows */
+  /* Multi-layered Soft Shadows with subtle Sapphire glow */
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
-  --shadow-md: 0 8px 24px -4px rgba(79, 70, 229, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 16px 36px -6px rgba(79, 70, 229, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-  --shadow-glow: 0 0 25px rgba(79, 70, 229, 0.18);
+  --shadow-md: 0 8px 24px -4px rgba(37, 99, 235, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 16px 36px -6px rgba(37, 99, 235, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+  --shadow-glow: 0 0 25px rgba(37, 99, 235, 0.20);
 }
 
 * {
@@ -68,9 +86,9 @@
 body {
   background-color: var(--bg-app);
   background-image: 
-    radial-gradient(ellipse at 15% 0%, rgba(99, 102, 241, 0.09) 0%, rgba(248, 250, 252, 0) 55%),
-    radial-gradient(ellipse at 85% 15%, rgba(13, 148, 136, 0.08) 0%, rgba(248, 250, 252, 0) 50%),
-    radial-gradient(ellipse at 50% 90%, rgba(244, 63, 94, 0.04) 0%, rgba(248, 250, 252, 0) 60%);
+    radial-gradient(ellipse at 15% 0%, rgba(37, 99, 235, 0.07) 0%, rgba(251, 252, 253, 0) 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(16, 185, 129, 0.06) 0%, rgba(251, 252, 253, 0) 50%),
+    radial-gradient(ellipse at 50% 90%, rgba(37, 99, 235, 0.04) 0%, rgba(251, 252, 253, 0) 60%);
   color: var(--text-main);
   min-height: 100vh;
   display: flex;
@@ -123,16 +141,16 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
   color: #ffffff;
   border: none;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.25);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
 }
 
 .btn-outline {
@@ -149,15 +167,16 @@ body {
 }
 
 .btn-campaign {
-  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
   color: #ffffff;
   border: none;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 3px 12px rgba(5, 150, 105, 0.25);
 }
 
 .btn-campaign:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45);
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.35);
 }
 
 /* Badges & Tags */
@@ -244,9 +263,9 @@ body {
   font-weight: 800;
   padding: 2px 7px;
   border-radius: 4px;
-  background: #eef2ff;
-  border: 1px solid #c7d2fe;
-  color: #4338ca;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
 }
 
 .brand-subtitle {
@@ -281,9 +300,9 @@ body {
 }
 
 .nav-tab-btn.active {
-  background: #eef2ff;
-  color: #4338ca;
-  border-color: #c7d2fe;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
 }
 
 .credit-balance-chip {
@@ -1730,8 +1749,8 @@ body {
   background: var(--primary-soft);
 }
 .stage-pill-btn.active {
-  background: #4f46e5;
+  background: #2563eb;
   color: #ffffff;
-  border-color: #4f46e5;
-  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+  border-color: #2563eb;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.28);
 }

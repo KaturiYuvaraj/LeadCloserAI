@@ -942,9 +942,7 @@ Your registered phone / client phone will ring shortly.`);
         if (btn) btn.classList.add("active");
         window.scrollToSection("employeesSection");
       } else if (targetSectionId === "integrationsSection") {
-        const btn = document.getElementById("tabBtnIntegrations");
-        if (btn) btn.classList.add("active");
-        window.scrollToSection("integrationsSection");
+        window.openAdminSettingsModal();
       } else {
         const btn = document.getElementById("tabBtnLanding");
         if (btn) btn.classList.add("active");
@@ -1323,6 +1321,17 @@ Please check your API keys or network connection in Settings.`);
     }
   };
 
+    // Admin Console / System Settings Modal
+  window.openAdminSettingsModal = () => {
+    const modal = document.getElementById("adminSettingsModal");
+    if (modal) modal.classList.add("open");
+  };
+
+  window.closeAdminSettingsModal = () => {
+    const modal = document.getElementById("adminSettingsModal");
+    if (modal) modal.classList.remove("open");
+  };
+
   window.openConfigureProviderModal = (providerType, providerName) => {
     const modal = document.getElementById("providerConfigModal");
     const titleEl = document.getElementById("providerModalTitle");
@@ -1449,7 +1458,7 @@ Please check your API keys or network connection in Settings.`);
           const goSetup = confirm(`⚠️ ${data.error}\n\nWould you like to open Integrations Settings now to configure ${provider.toUpperCase()}?`);
           if (goSetup) {
             document.getElementById("discoverLeadsModal")?.classList.remove("open");
-            window.switchMainTab("landing", "integrationsSection");
+            window.openAdminSettingsModal();
           }
         } else {
           alert(`Discovery Search Failed: ${data.error || data.detail || 'Unknown error'}`);
@@ -1588,7 +1597,7 @@ Please check your API keys or network connection in Settings.`);
         if (data.error && data.error.includes("Neither Apollo nor Apify is configured")) {
           const goSetup = confirm(`⚠️ ${data.error}\n\nWould you like to configure Apollo or Apify now in Integrations Settings?`);
           if (goSetup) {
-            window.switchMainTab("landing", "integrationsSection");
+            window.openAdminSettingsModal();
           }
         } else {
           alert(`Enrichment failed: ${data.error || data.detail || 'Unknown error'}`);
@@ -1916,7 +1925,7 @@ Shall we lock the milestone plan?`;
 Would you like to open Integrations Settings now to configure Meta WhatsApp Cloud API credentials?`);
           if (goSetup) {
             window.closeWhatsAppModal();
-            window.switchMainTab("landing", "integrationsSection");
+            window.openAdminSettingsModal();
           }
         } else {
           alert(`WhatsApp Delivery Failed: ${data.error || 'Check WhatsApp API configuration.'}`);
@@ -2020,7 +2029,7 @@ Message ID: ${data.message_id || 'Delivered'}`);
 Would you like to open Integrations Settings now to configure Google Calendar OAuth?`);
           if (goSetup) {
             window.closeCalendarModal();
-            window.switchMainTab("landing", "integrationsSection");
+            window.openAdminSettingsModal();
           }
         } else {
           alert(`Meeting Booking Failed: ${data.error || 'Unknown error'}`);

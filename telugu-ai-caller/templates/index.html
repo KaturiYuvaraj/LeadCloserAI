@@ -31,16 +31,34 @@
   --text-muted: #64748b;
   --text-light: #94a3b8;
 
-  /* Jewel-tone Accents */
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-soft: #eef2ff;
-  --primary-border: #c7d2fe;
+  /* Bespoke Royal Obsidian Sapphire & Vivid Emerald Jade (High-Tech Executive Precision) */
+  --bg-app: #fbfcfd;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-subtle: #f1f5f9;
+  --bg-input: #ffffff;
 
-  --accent: #7c3aed;
-  --accent-hover: #6d28d9;
-  --accent-soft: #f5f3ff;
-  --accent-border: #ddd6fe;
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --border-focus: #2563eb;
+
+  --text-main: #090d16;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+
+  /* Royal Sapphire Primary */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #eff6ff;
+  --primary-border: #bfdbfe;
+
+  /* Emerald Jade Growth Accent */
+  --accent: #059669;
+  --accent-hover: #047857;
+  --accent-soft: #ecfdf5;
+  --accent-border: #a7f3d0;
 
   --teal: #0d9488;
   --teal-soft: #f0fdfa;
@@ -55,16 +73,16 @@
   --warning-soft: #fffbeb;
   --warning-border: #fde68a;
 
-  --danger: #e11d48;
-  --danger-soft: #fff1f2;
-  --danger-border: #fecdd3;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --danger-border: #fecaca;
 
-  /* Multi-layered Soft Shadows */
+  /* Multi-layered Soft Shadows with subtle Sapphire glow */
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
-  --shadow-md: 0 8px 24px -4px rgba(79, 70, 229, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 16px 36px -6px rgba(79, 70, 229, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-  --shadow-glow: 0 0 25px rgba(79, 70, 229, 0.18);
+  --shadow-md: 0 8px 24px -4px rgba(37, 99, 235, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 16px 36px -6px rgba(37, 99, 235, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+  --shadow-glow: 0 0 25px rgba(37, 99, 235, 0.20);
 }
 
 * {
@@ -77,9 +95,9 @@
 body {
   background-color: var(--bg-app);
   background-image: 
-    radial-gradient(ellipse at 15% 0%, rgba(99, 102, 241, 0.09) 0%, rgba(248, 250, 252, 0) 55%),
-    radial-gradient(ellipse at 85% 15%, rgba(13, 148, 136, 0.08) 0%, rgba(248, 250, 252, 0) 50%),
-    radial-gradient(ellipse at 50% 90%, rgba(244, 63, 94, 0.04) 0%, rgba(248, 250, 252, 0) 60%);
+    radial-gradient(ellipse at 15% 0%, rgba(37, 99, 235, 0.07) 0%, rgba(251, 252, 253, 0) 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(16, 185, 129, 0.06) 0%, rgba(251, 252, 253, 0) 50%),
+    radial-gradient(ellipse at 50% 90%, rgba(37, 99, 235, 0.04) 0%, rgba(251, 252, 253, 0) 60%);
   color: var(--text-main);
   min-height: 100vh;
   display: flex;
@@ -132,16 +150,16 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
   color: #ffffff;
   border: none;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.25);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
 }
 
 .btn-outline {
@@ -158,15 +176,16 @@ body {
 }
 
 .btn-campaign {
-  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
   color: #ffffff;
   border: none;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 3px 12px rgba(5, 150, 105, 0.25);
 }
 
 .btn-campaign:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45);
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.35);
 }
 
 /* Badges & Tags */
@@ -233,7 +252,7 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #059669 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,9 +272,9 @@ body {
   font-weight: 800;
   padding: 2px 7px;
   border-radius: 4px;
-  background: #eef2ff;
-  border: 1px solid #c7d2fe;
-  color: #4338ca;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
 }
 
 .brand-subtitle {
@@ -290,9 +309,9 @@ body {
 }
 
 .nav-tab-btn.active {
-  background: #eef2ff;
-  color: #4338ca;
-  border-color: #c7d2fe;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
 }
 
 .credit-balance-chip {
@@ -365,7 +384,7 @@ body {
 }
 
 .hero-title span.highlight {
-  background: linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #0284c7 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #059669 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -388,7 +407,7 @@ body {
 }
 
 .btn-hero-primary {
-  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
   color: #ffffff;
   border: none;
   font-weight: 700;
@@ -767,7 +786,7 @@ body {
   top: -13px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 800;
@@ -859,7 +878,7 @@ body {
 }
 
 .pricing-btn.primary {
-  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
   color: #ffffff;
   border: none;
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
@@ -1800,10 +1819,6 @@ body {
         <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         AI Employees
       </button>
-      <button class="nav-tab-btn" id="tabBtnIntegrations" onclick="window.switchMainTab('landing', 'integrationsSection')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-        Integrations
-      </button>
       <button class="nav-tab-btn" id="tabBtnPricing" onclick="window.switchMainTab('landing', 'pricingSection')">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
         Pricing & Credits
@@ -1811,8 +1826,8 @@ body {
     </nav>
 
     <!-- Top Right Actions & Live Credit Balance -->
-    <div class="navbar-right" style="gap: 10px;">
-      <!-- Live API Balance Pill (Outpero Pay-As-You-Go Style) -->
+    <div class="navbar-right" style="gap: 8px;">
+      <!-- Live API Balance Pill -->
       <div class="credit-balance-chip" onclick="window.openCheckoutModal('Credit Top-Up', 1000)" title="Click to purchase additional talk-time API credits">
         <span>🪙 ₹<span id="navCreditBalance">{{ "%.2f"|format(primary_key.credits_inr if primary_key else 2500.0) }}</span></span>
         <span style="color: #166534; font-weight: 500;">(~<span id="navMinutesBalance">{{ "%.0f"|format((primary_key.credits_inr if primary_key else 2500.0) / 5.0) }}</span> Mins)</span>
@@ -1820,13 +1835,19 @@ body {
       </div>
 
       <!-- Quick Action Buttons -->
-      <button class="btn btn-outline" id="navGetApiKeyBtn" onclick="window.switchMainTab('landing', 'apiSection')" style="font-size: 0.78rem; font-weight: 700;">
+      <button class="btn btn-outline" id="navGetApiKeyBtn" onclick="window.switchMainTab('landing', 'apiSection')" style="font-size: 0.78rem; font-weight: 700; height: 32px;">
         ⚡ API Keys
       </button>
 
-      <button class="btn btn-primary" id="navLaunchCrmBtn" onclick="window.switchMainTab('crm')" style="font-size: 0.78rem; font-weight: 700; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+      <button class="btn btn-primary" id="navLaunchCrmBtn" onclick="window.switchMainTab('crm')" style="font-size: 0.78rem; font-weight: 700; height: 32px;">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-        <span id="navLaunchCrmText">Launch CRM Station</span>
+        <span id="navLaunchCrmText">Launch CRM</span>
+      </button>
+
+      <!-- Admin Console (Discreetly Gated for System Architecture & Providers) -->
+      <button class="btn btn-outline" id="adminSystemBtn" onclick="window.openAdminSettingsModal()" title="System Architecture & Backend Telephony Config" style="padding: 0 10px; height: 32px; font-size: 0.75rem; color: var(--text-muted);">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span style="font-weight:600;">System</span>
       </button>
     </div>
   </header>
@@ -1960,7 +1981,7 @@ body {
         <div class="section-header-center">
           <span class="section-tag">Interactive Voice Demo</span>
           <h2 class="section-title">Listen to Our AI Voice Closer in Real Time</h2>
-          <p class="section-desc">Powered by Sarvam Saaras & Bulbul Flash engines. Experience natural human pauses, empathetic active listening, and persuasive sales closing.</p>
+          <p class="section-desc">Powered by proprietary S P Neural Voice Core. Experience natural human pauses, empathetic active listening, and persuasive sales closing in Telugu, Hindi, and Indian English with sub-second turnaround latency.</p>
         </div>
 
         <!-- Scenario Cards -->
@@ -2066,7 +2087,7 @@ body {
               <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
             </div>
             <div class="feature-title">DLT & TRAI Compliant Calling</div>
-            <div class="feature-desc">Built for Indian telecom regulations. Native integration with Twilio and Exotel DLT-registered CLI lines with automatic DND screening.</div>
+            <div class="feature-desc">Built for Indian telecom regulations. Full TRAI & DLT-compliant PSTN outbound infrastructure with automatic DND screening and caller ID masking.</div>
           </div>
         </div>
       </section>
@@ -2303,84 +2324,7 @@ body {
         </div>
       </section>
 
-      <!-- ============================================================= -->
-      <!-- THIRD-PARTY INTEGRATION ARCHITECTURE & PROVIDERS (OUTPERO STYLE) -->
-      <!-- ============================================================= -->
-      <section style="margin-bottom: 55px;" id="integrationsSection">
-        <div class="section-header-center">
-          <span class="section-tag">Modular Provider Engine</span>
-          <h2 class="section-title">Independently Configurable Third-Party Integrations</h2>
-          <p class="section-desc">Connect Exotel, Sarvam AI, Apollo.io, Apify, Meta WhatsApp, and Google Calendar. Enable, disable, configure, and run live connection tests without touching code.</p>
-        </div>
-
-        <!-- Providers Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; margin-top: 24px;">
-          {% for p in providers %}
-          <div class="card-panel" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                <div>
-                  <div style="font-weight: 800; font-size: 0.98rem; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                    {% if p.type == 'telephony' %}📞
-                    {% elif p.type == 'voice_stt' %}🎙️
-                    {% elif p.type == 'voice_tts' %}🔊
-                    {% elif p.type == 'llm' %}🧠
-                    {% elif p.type == 'lead_discovery' %}🔍
-                    {% elif p.type == 'messaging' %}💬
-                    {% elif p.type == 'calendar' %}📅
-                    {% else %}💾{% endif %}
-                    {{ p.name.upper() }}
-                  </div>
-                  <div style="font-size: 0.73rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-top: 2px;">
-                    Domain: {{ p.type }}
-                  </div>
-                </div>
-
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                  {% if p.is_active and p.is_configured and p.is_enabled %}
-                  <span class="badge-tag live"><span class="pulse-dot"></span> Active</span>
-                  {% elif p.is_configured and p.is_enabled %}
-                  <span class="badge-tag" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">Configured</span>
-                  {% elif not p.is_enabled %}
-                  <span class="lead-status status-contacted">Disabled</span>
-                  {% else %}
-                  <span class="lead-status status-qualified">Pending Setup</span>
-                  {% endif %}
-                </div>
-              </div>
-
-              <!-- Masked Configuration Snippet -->
-              <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 12px; font-family: monospace; font-size: 0.74rem; color: #334155; margin-bottom: 14px;">
-                {% for k, v in p.config.items() %}
-                <div><strong>{{ k }}:</strong> {{ v }}</div>
-                {% endfor %}
-              </div>
-            </div>
-
-            <div>
-              <!-- Live Test Status Feedback Pill -->
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.75rem;">
-                <span style="color: var(--text-muted);">Connection Status:</span>
-                <span id="test-badge-{{ p.type }}-{{ p.name }}" class="{% if p.test_status == 'success' %}badge-tag live{% elif p.test_status == 'failed' %}lead-status status-lost{% else %}badge-tag{% endif %}">
-                  {% if p.test_status == 'success' %}✓ Verified
-                  {% elif p.test_status == 'failed' %}✗ Failed
-                  {% else %}Untested{% endif %}
-                </span>
-              </div>
-
-              <div style="display: flex; gap: 8px;">
-                <button class="btn btn-primary" onclick="window.testProviderConnection('{{ p.type }}', '{{ p.name }}', this)" style="flex: 1; justify-content: center; font-size: 0.76rem; padding: 7px 10px;">
-                  ⚡ Test Connection
-                </button>
-                <button class="btn btn-outline" onclick="window.openConfigureProviderModal('{{ p.type }}', '{{ p.name }}')" style="padding: 7px 12px; font-size: 0.76rem;">
-                  ⚙️ Settings
-                </button>
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </section>
+      <!-- Internal Provider Engine moved to Admin System Settings Modal -->
 
       <!-- ============================================================= -->
       <!-- PRICING & CREDIT PURCHASE STORE (OUTPERO STYLE) -->
@@ -2500,7 +2444,7 @@ body {
             Autonomous Multilingual AI Telecalling and Deal Closing CRM. Built by <strong>S P Associates Software Company</strong> to help businesses scale outbound sales and close high-ticket software projects.
           </p>
           <div style="font-size: 0.74rem; color: #475569; margin-top: 12px;">
-            Certified Sarvam AI Developer Partner • 100% TRAI DLT Telecom Regulated
+            Enterprise Grade AI Architecture • 100% TRAI DLT Telecom Regulated
           </div>
         </div>
 
@@ -2537,7 +2481,7 @@ body {
 
       <div class="footer-bottom-row">
         <div>© 2026 S P Associates Software Company. All rights reserved.</div>
-        <div>Engineered with Sarvam 105B & Bulbul Flash Voice AI</div>
+        <div>S P Associates Neural Voice Engine • Trilingual te-hi-en</div>
       </div>
     </footer>
 
@@ -2583,45 +2527,43 @@ body {
     <!-- CRM Action Ribbon -->
     <div class="crm-action-ribbon">
       <div class="crm-ribbon-left">
-        <button class="btn btn-outline" onclick="window.switchMainTab('landing')" style="font-size: 0.76rem; font-weight: 700;">
+        <button class="btn btn-outline" onclick="window.switchMainTab('landing')" style="font-size: 0.76rem; font-weight: 700; height: 32px; padding: 0 12px;">
           <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-          ← Back to Website
+          ← Back to Overview
         </button>
         <span class="crm-ribbon-title">Live Sales Pipeline & Calling Station</span>
-        <span class="badge-tag live"><span class="pulse-dot"></span> Ready to Call</span>
-        <span class="badge-tag" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">
-          <span class="pulse-dot" style="background: #22c55e;"></span> Sarvam 105B & Bulbul Active
-        </span>
-        <span class="badge-tag" style="background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe;">
-          Telugu • Hindi • English
-        </span>
+        <span class="badge-tag live" style="height: 28px;"><span class="pulse-dot"></span> S P Neural Voice Engine Active (Telugu • Hindi • English)</span>
       </div>
 
       <div class="crm-ribbon-right">
-        <a href="/api/leads/template" class="btn btn-outline" download style="font-size: 0.75rem;">
+        <!-- Ingestion Group -->
+        <a href="/api/leads/template" class="btn btn-outline" download style="font-size: 0.75rem; height: 32px; padding: 0 10px;" title="Download sample Excel template">
           <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Template (.xlsx)
         </a>
-        <button class="btn btn-outline" id="openDiscoverLeadsBtn" onclick="window.openDiscoverLeadsModal()" style="font-size: 0.75rem; font-weight: 700; color: #4338ca; border-color: #c7d2fe; background: #eef2ff;">
+        <button class="btn btn-outline" id="openDiscoverLeadsBtn" onclick="window.openDiscoverLeadsModal()" style="font-size: 0.75rem; font-weight: 700; color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; height: 32px; padding: 0 11px;">
           <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           🔍 Discover Leads
         </button>
-        <button class="btn btn-outline" id="openUploadExcelBtn" onclick="window.openExcelModal()" style="font-size: 0.75rem;">
+        <button class="btn btn-outline" id="openUploadExcelBtn" onclick="window.openExcelModal()" style="font-size: 0.75rem; height: 32px; padding: 0 11px;">
           <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
           Import Excel
         </button>
-        <a href="/api/leads/export-excel" class="btn btn-outline" download style="font-size: 0.75rem;">
-          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-          Export Summaries
-        </a>
-        <button class="btn btn-campaign" id="openCampaignModalBtn" onclick="window.openCampaignModal()" style="font-size: 0.76rem; font-weight: 700;">
-          <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: #ffffff;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          Auto-Call Campaign
-        </button>
-        <button class="btn btn-primary" id="openAddLeadBtn" onclick="window.openLeadModal()" style="font-size: 0.76rem; font-weight: 700;">
-          <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: #ffffff;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          + Add Lead
-        </button>
+
+        <div style="display: inline-flex; align-items: center; gap: 7px; padding-left: 8px; border-left: 1px solid var(--border-light);">
+          <a href="/api/leads/export-excel" class="btn btn-outline" download style="font-size: 0.75rem; height: 32px; padding: 0 10px;" title="Export all lead summaries to Excel">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            Export
+          </a>
+          <button class="btn btn-campaign" id="openCampaignModalBtn" onclick="window.openCampaignModal()" style="font-size: 0.76rem; font-weight: 700; height: 32px; padding: 0 13px;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: #ffffff;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            Auto-Call Campaign
+          </button>
+          <button class="btn btn-primary" id="openAddLeadBtn" onclick="window.openLeadModal()" style="font-size: 0.76rem; font-weight: 700; height: 32px; padding: 0 13px;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: #ffffff;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            + Add Lead
+          </button>
+        </div>
       </div>
     </div>
 
@@ -2709,24 +2651,24 @@ body {
             </div>
           </div>
 
-          <div style="display: flex; gap: 7px;">
-            <button class="btn btn-outline" id="viewLeadHistoryBtn" title="View past call summaries for this lead">
+          <div style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap;">
+            <button class="btn btn-outline" id="viewLeadHistoryBtn" title="View past call summaries for this lead" style="height: 30px; padding: 0 9px; font-size: 0.74rem;">
               <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              Summary History
+              History
             </button>
-            <button class="btn btn-outline" id="enrichLeadBtn" onclick="window.enrichSelectedLead()" title="Enrich lead with Apollo & Apify">
+            <button class="btn btn-outline" id="enrichLeadBtn" onclick="window.enrichSelectedLead()" title="Enrich lead with verified company intelligence" style="height: 30px; padding: 0 9px; font-size: 0.74rem;">
               <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
               Enrich AI Intel
             </button>
-            <button class="btn btn-outline" id="openWhatsAppBtn" onclick="window.openWhatsAppModal()" title="Send WhatsApp Message" style="color: #059669; border-color: #a7f3d0; background: #ecfdf5;">
+            <button class="btn btn-outline" id="openWhatsAppBtn" onclick="window.openWhatsAppModal()" title="Send WhatsApp Message" style="color: #059669; border-color: #a7f3d0; background: #ecfdf5; height: 30px; padding: 0 9px; font-size: 0.74rem;">
               <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
               WhatsApp
             </button>
-            <button class="btn btn-outline" id="openCalendarModalBtn" onclick="window.openCalendarModal()" title="Schedule Google Meet Live Demo" style="color: #2563eb; border-color: #bfdbfe; background: #eff6ff;">
+            <button class="btn btn-outline" id="openCalendarModalBtn" onclick="window.openCalendarModal()" title="Schedule Google Meet Live Demo" style="color: #2563eb; border-color: #bfdbfe; background: #eff6ff; height: 30px; padding: 0 9px; font-size: 0.74rem;">
               <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               Book Demo
             </button>
-            <button class="btn btn-outline" id="phoneCallBtn" onclick="window.dialSelectedLeadPhone()" title="Dial via Outbound Carrier Telephony">
+            <button class="btn btn-outline" id="phoneCallBtn" onclick="window.dialSelectedLeadPhone()" title="Dial via Outbound Carrier Telephony" style="height: 30px; padding: 0 10px; font-size: 0.74rem; font-weight: 700; color: #1d4ed8; border-color: #bfdbfe;">
               <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
               Dial Phone
             </button>
@@ -2817,7 +2759,7 @@ body {
         <!-- Live Status Strip -->
         <div class="caller-status-strip">
           <span id="callerStatus" style="font-weight: 600; color: var(--primary);">సిద్ధంగా ఉంది (Ready to Call)</span>
-          <span style="font-size: 0.74rem; color: var(--text-muted);" id="engineIndicator">Sarvam Trilingual Voice Engine (te • hi • en)</span>
+          <span style="font-size: 0.74rem; color: var(--text-muted);" id="engineIndicator">S P Neural Voice Engine • Low Latency HD (te • hi • en)</span>
         </div>
 
         <!-- Quick Text Message Tester Fallback -->
@@ -3524,7 +3466,7 @@ body {
           </div>
           <div>
             <h3 style="font-size: 1.1rem; color: #0f172a; font-weight: 800; margin: 0;">Discover B2B Leads & Prospects</h3>
-            <span style="font-size: 0.74rem; color: var(--text-muted);">Extract target companies and decision-makers via Apollo.io or Apify</span>
+            <span style="font-size: 0.74rem; color: var(--text-muted);">Extract target companies and decision-makers via verified B2B directories</span>
           </div>
         </div>
         <button class="btn btn-outline" onclick="document.getElementById('discoverLeadsModal').classList.remove('open')" style="padding: 4px 8px;">✕</button>
@@ -3535,14 +3477,14 @@ body {
         <label style="flex: 1; border: 1.5px solid var(--border-light); border-radius: 8px; padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; background: #ffffff;" id="labelRadioApollo">
           <input type="radio" name="discoverProvider" value="apollo" checked onchange="window.toggleDiscoverProvider('apollo')" style="width: auto;" />
           <div>
-            <div style="font-weight: 800; font-size: 0.85rem; color: #0f172a;">Apollo.io Engine</div>
+            <div style="font-weight: 800; font-size: 0.85rem; color: #090d16;">Verified B2B Decision-Maker Directory</div>
             <div style="font-size: 0.72rem; color: var(--text-muted);">B2B decision-makers, direct emails & verified phones</div>
           </div>
         </label>
         <label style="flex: 1; border: 1.5px solid var(--border-light); border-radius: 8px; padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; background: #ffffff;" id="labelRadioApify">
           <input type="radio" name="discoverProvider" value="apify" onchange="window.toggleDiscoverProvider('apify')" style="width: auto;" />
           <div>
-            <div style="font-weight: 800; font-size: 0.85rem; color: #0f172a;">Apify Web Crawler</div>
+            <div style="font-weight: 800; font-size: 0.85rem; color: #090d16;">Deep Web Directory Crawler</div>
             <div style="font-size: 0.72rem; color: var(--text-muted);">Web scraper, Google Maps & local public directories</div>
           </div>
         </label>
@@ -3559,7 +3501,7 @@ body {
           <input type="text" id="discoverLocations" placeholder="e.g. Hyderabad, Bangalore, Telangana, India" value="Hyderabad, Telangana" />
         </div>
         <div class="form-group" style="margin-bottom: 0;" id="discoverTitlesGroup">
-          <label>Target Job Titles (Apollo):</label>
+          <label>Target Job Titles:</label>
           <input type="text" id="discoverTitles" placeholder="e.g. CEO, Founder, Managing Director, Owner" value="CEO, Founder, Managing Director" />
         </div>
         <div class="form-group" style="margin-bottom: 0;">
@@ -3752,5 +3694,98 @@ body {
       {% endif %}
     });
   </script>
+
+  <!-- ================================================================= -->
+  <!-- MODAL: ADMIN SYSTEM SETTINGS & PROVIDER CONSOLE (INTERNAL ENGINE) -->
+  <!-- ================================================================= -->
+  <div class="modal-overlay" id="adminSettingsModal">
+    <div class="modal-card" style="max-width: 960px; width: 95%; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #1d4ed8; font-size: 1.15rem;">
+            ⚙️
+          </div>
+          <div>
+            <h3 style="font-size: 1.15rem; color: #090d16; font-weight: 800; margin: 0;">System Architecture & Provider Console</h3>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Manage backend telephony carriers, speech models, lead discovery & webhook connectors</span>
+          </div>
+        </div>
+        <button class="btn btn-outline" onclick="window.closeAdminSettingsModal()" style="padding: 4px 8px;">✕</button>
+      </div>
+
+      <!-- Providers Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;">
+        {% for p in providers %}
+        <div class="card-panel" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+              <div>
+                <div style="font-weight: 800; font-size: 0.92rem; color: #090d16; display: flex; align-items: center; gap: 6px;">
+                  {% if p.type == 'telephony' %}📞
+                  {% elif p.type == 'voice_stt' %}🎙️
+                  {% elif p.type == 'voice_tts' %}🔊
+                  {% elif p.type == 'llm' %}🧠
+                  {% elif p.type == 'lead_discovery' %}🔍
+                  {% elif p.type == 'messaging' %}💬
+                  {% elif p.type == 'calendar' %}📅
+                  {% else %}💾{% endif %}
+                  {{ p.name.upper() }}
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-top: 1px;">
+                  Domain: {{ p.type }}
+                </div>
+              </div>
+
+              <div>
+                {% if p.is_active and p.is_configured and p.is_enabled %}
+                <span class="badge-tag live" style="font-size: 0.68rem; padding: 2px 7px;"><span class="pulse-dot"></span> Active</span>
+                {% elif p.is_configured and p.is_enabled %}
+                <span class="badge-tag" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 0.68rem; padding: 2px 7px;">Configured</span>
+                {% elif not p.is_enabled %}
+                <span class="lead-status status-contacted" style="font-size: 0.68rem; padding: 2px 7px;">Disabled</span>
+                {% else %}
+                <span class="lead-status status-qualified" style="font-size: 0.68rem; padding: 2px 7px;">Pending</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Masked Configuration Snippet -->
+            <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: 6px; padding: 8px 10px; font-family: monospace; font-size: 0.72rem; color: #334155; margin-bottom: 12px; max-height: 80px; overflow-y: auto;">
+              {% for k, v in p.config.items() %}
+              <div><strong>{{ k }}:</strong> {{ v }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div>
+            <!-- Live Test Status Feedback Pill -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.73rem;">
+              <span style="color: var(--text-muted);">Health:</span>
+              <span id="test-badge-{{ p.type }}-{{ p.name }}" class="{% if p.test_status == 'success' %}badge-tag live{% elif p.test_status == 'failed' %}lead-status status-lost{% else %}badge-tag{% endif %}">
+                {% if p.test_status == 'success' %}✓ Verified
+                {% elif p.test_status == 'failed' %}✗ Failed
+                {% else %}Untested{% endif %}
+              </span>
+            </div>
+
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-primary" onclick="window.testProviderConnection('{{ p.type }}', '{{ p.name }}', this)" style="flex: 1; justify-content: center; font-size: 0.74rem; padding: 6px 8px; height: 30px;">
+                ⚡ Test
+              </button>
+              <button class="btn btn-outline" onclick="window.openConfigureProviderModal('{{ p.type }}', '{{ p.name }}')" style="padding: 6px 10px; font-size: 0.74rem; height: 30px;">
+                ⚙️ Config
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div style="margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end;">
+        <button class="btn btn-outline" onclick="window.closeAdminSettingsModal()">Close Admin Console</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
