@@ -74,7 +74,9 @@ def test_client_vad_script_integrity():
     assert client_js_path.exists(), "call_client.js does not exist!"
 
     content = client_js_path.read_text(encoding="utf-8")
-    assert "silenceTimeoutMs = 1800" in content, "Missing 1.8s silence threshold!"
+    assert "silenceTimeoutMs = 900" in content, "Missing 0.9s default silence threshold!"
+    assert "setSilenceTimeout" in content, "Missing configurable reply wait time!"
+    assert "startCallRecording" in content, "Missing optional call recording!"
     assert "createAnalyser" in content, "Missing Web Audio API AnalyserNode VAD!"
     assert "audioQueue" in content, "Missing Audio Queue for overlap prevention!"
     assert "completeCustomerTurn" in content, "Missing turn completion logic!"

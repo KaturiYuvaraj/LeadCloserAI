@@ -1,3 +1,4 @@
+import re
 import json
 import base64
 import time
@@ -77,6 +78,83 @@ async def telephony_twiml(request: Request, lead_id: Optional[int] = Query(None)
 # INTERACTIVE BROWSER CALL WEBSOCKET (/ws/web-call)
 # =====================================================================
 
+def split_reply_into_chunks(text: str, min_chars: int = 25) -> List[str]:
+    """
+    Split an AI reply into sentence chunks so the first one can be synthesized
+    and played while the rest is still being generated.
+
+    The first chunk is kept as short as possible (speech time grows with length):
+    the opening sentence on its own, cut at a comma if it is long. Later sentences
+    are merged until they reach `min_chars` to avoid choppy audio.
+    """
+    parts = [p.strip() for p in re.split(r'(?<=[.!?।])\s+', text.strip()) if p.strip()]
+    if not parts:
+        return [text]
+
+    first, rest = parts[0], parts[1:]
+    if len(first) > 60:
+        comma = re.search(r'[,،]\s', first[10:])
+        if comma:
+            cut = 10 + comma.end()
+            rest.insert(0, first[cut:].strip())
+            first = first[:cut].strip()
+
+    chunks: List[str] = [first]
+    buffer = ""
+    for part in rest:
+        buffer = f"{buffer} {part}".strip() if buffer else part
+        if len(buffer) >= min_chars:
+            chunks.append(buffer)
+            buffer = ""
+    if buffer:
+        if len(chunks) > 1:
+            chunks[-1] = f"{chunks[-1]} {buffer}"
+        else:
+            chunks.append(buffer)
+    return [c for c in chunks if c]
+
+
+async def speak_reply(websocket: WebSocket, text: str, lang: str, timing: Dict[str, int]):
+    """
+    Synthesize the reply sentence by sentence and stream it in order: the first
+    chunk goes out with the transcript text and turn timing, the remaining chunks
+    follow as `ai_audio` events. The first chunk is requested on its own (parallel
+    requests slow it from ~0.9s to ~1.4s); the rest start together once it is back
+    and are ready while the first sentence is still playing.
+    """
+    chunks = split_reply_into_chunks(text)
+
+    async def synthesize(chunk: str, position: int) -> Optional[str]:
+        try:
+            audio = await sarvam_client.text_to_speech(chunk, language_code=lang)
+            return base64.b64encode(audio).decode("utf-8")
+        except Exception as tts_err:
+            logger.error(f"TTS error (chunk {position}/{len(chunks)}): {tts_err}")
+            return None
+
+    tts_start = time.time()
+    first_audio = await synthesize(chunks[0], 1)
+    rest_tasks = [
+        asyncio.create_task(synthesize(chunk, position))
+        for position, chunk in enumerate(chunks[1:], start=2)
+    ]
+
+    timing["tts_first_ms"] = int((time.time() - tts_start) * 1000)
+    await websocket.send_json({
+        "event": "ai_speech",
+        "text": text,
+        "audio": first_audio,
+        "role": "assistant",
+        "language": lang,
+        "timing": timing
+    })
+
+    for task in rest_tasks:
+        audio_b64 = await task
+        if audio_b64:
+            await websocket.send_json({"event": "ai_audio", "audio": audio_b64})
+
+
 @router.websocket("/ws/web-call")
 async def websocket_web_call(
     websocket: WebSocket,
@@ -137,11 +215,13 @@ async def websocket_web_call(
                 await websocket.send_json({"event": "status", "message": "Listening & transcribing... (వింటున్నాను)"})
 
                 # Transcribe user speech via Sarvam STT (auto-detects Telugu, Hindi, English)
+                stt_start = time.time()
                 try:
                     user_text = await sarvam_client.speech_to_text(audio_bytes, language_code="unknown")
                 except Exception as stt_err:
                     logger.error(f"STT error: {stt_err}")
                     user_text = ""
+                stt_ms = int((time.time() - stt_start) * 1000)
 
                 # Ignore empty audio or ambient micro-clicks (<2 characters)
                 if not user_text or len(user_text.strip()) < 2:
@@ -162,30 +242,16 @@ async def websocket_web_call(
 
                 await websocket.send_json({"event": "status", "message": "🧠 సమాధానాన్ని అర్థం చేసుకుంటున్నాను... (Analyzing your response...)"})
 
-                # Natural cognitive pause (500ms) - mimics human reflection and thought
-                await asyncio.sleep(0.5)
-
                 # Generate AI Sales Response matching customer's language
+                llm_start = time.time()
                 ai_reply = await sales_agent.generate_response(conversation_history, lead_id=lead_id)
+                llm_ms = int((time.time() - llm_start) * 1000)
                 conversation_history.append({"role": "assistant", "content": ai_reply})
                 ai_lang = detect_language(ai_reply)
 
-                # Synthesize Speech Audio in matched language
+                # Synthesize and stream speech sentence by sentence in the matched language
                 await websocket.send_json({"event": "status", "message": "సమాధానం చెబుతున్నాను... (Speaking...)"})
-                try:
-                    speech_audio = await sarvam_client.text_to_speech(ai_reply, language_code=ai_lang)
-                    speech_b64 = base64.b64encode(speech_audio).decode("utf-8")
-                except Exception as tts_err:
-                    logger.error(f"TTS error: {tts_err}")
-                    speech_b64 = None
-
-                await websocket.send_json({
-                    "event": "ai_speech",
-                    "text": ai_reply,
-                    "audio": speech_b64,
-                    "role": "assistant",
-                    "language": ai_lang
-                })
+                await speak_reply(websocket, ai_reply, ai_lang, {"stt_ms": stt_ms, "llm_ms": llm_ms})
 
             elif event_type == "text_input":
                 user_text = data.get("text", "").strip()
@@ -202,27 +268,23 @@ async def websocket_web_call(
                 })
 
                 await websocket.send_json({"event": "status", "message": "🧠 సమాధానాన్ని ఆలోచిస్తున్నాను... (Analyzing...)"})
-                await asyncio.sleep(0.4)
 
+                llm_start = time.time()
                 ai_reply = await sales_agent.generate_response(conversation_history, lead_id=lead_id)
+                llm_ms = int((time.time() - llm_start) * 1000)
                 conversation_history.append({"role": "assistant", "content": ai_reply})
                 ai_lang = detect_language(ai_reply)
 
-                speech_b64 = None
                 if data.get("generate_audio", True):
-                    try:
-                        speech_audio = await sarvam_client.text_to_speech(ai_reply, language_code=ai_lang)
-                        speech_b64 = base64.b64encode(speech_audio).decode("utf-8")
-                    except Exception as tts_err:
-                        logger.error(f"TTS error: {tts_err}")
-
-                await websocket.send_json({
-                    "event": "ai_speech",
-                    "text": ai_reply,
-                    "audio": speech_b64,
-                    "role": "assistant",
-                    "language": ai_lang
-                })
+                    await speak_reply(websocket, ai_reply, ai_lang, {"stt_ms": 0, "llm_ms": llm_ms})
+                else:
+                    await websocket.send_json({
+                        "event": "ai_speech",
+                        "text": ai_reply,
+                        "audio": None,
+                        "role": "assistant",
+                        "language": ai_lang
+                    })
 
             elif event_type == "hangup":
                 logger.info("Call hangup requested by client.")
@@ -283,10 +345,6 @@ async def websocket_web_call(
         except Exception:
             pass
 
-
-# =====================================================================
-# TWILIO TELEPHONY WEBSOCKET (/ws/telephony)
-# =====================================================================
 
 @router.websocket("/ws/telephony")
 async def websocket_telephony(websocket: WebSocket, lead_id: Optional[int] = Query(None)):

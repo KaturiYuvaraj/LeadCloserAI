@@ -1874,6 +1874,7 @@ body {
 }
 
 </style>
+  <link rel="stylesheet" href="/static/css/calling-station.css?v=1.5">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
@@ -2742,236 +2743,256 @@ body {
         </div>
       </section>
 
-      <!-- COLUMN 2: LIVE CALLING STATION & SUMMARY VIEW -->
-      <section class="caller-center card-panel">
-        <!-- Active Lead Bar -->
-        <div class="caller-header">
+      <!-- COLUMN 2: LIVE CALLING STATION (sectioned: lead → last call → call setup → live conversation) -->
+      <section class="caller-center cs-center">
+
+        <!-- SECTION 1: Selected lead -->
+        <div class="cs-card cs-lead">
           <div class="active-lead-banner">
             <div class="lead-avatar" id="activeLeadAvatar">
               {% if leads %}{{ leads[0].name[0] }}{% else %}C{% endif %}
             </div>
-            <div>
-              <h2 style="font-size: 1rem; font-weight: 800; color: #0f172a;" id="activeLeadName">
+            <div class="cs-lead-text">
+              <span class="cs-eyebrow">Selected lead</span>
+              <h2 id="activeLeadName">
                 {% if leads %}{{ leads[0].name }}{% else %}Quick Simulator (Anonymous Lead){% endif %}
               </h2>
-              <div style="font-size: 0.78rem; color: var(--text-muted);" id="activeLeadCompany">
+              <div class="cs-sub" id="activeLeadCompany">
                 {% if leads %}{{ leads[0].company }} • {{ leads[0].service_needed }}{% else %}Web Testing Call{% endif %}
               </div>
             </div>
           </div>
-
-          <div style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap;">
-            <button class="btn btn-outline" id="viewLeadHistoryBtn" title="View past call summaries for this lead" style="height: 30px; padding: 0 9px; font-size: 0.74rem;">
+          <div class="cs-lead-actions">
+            <button class="btn btn-outline" id="viewLeadHistoryBtn" title="View past call summaries and recordings for this lead">
               <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              History
+              Call History
             </button>
-            <button class="btn btn-outline" id="enrichLeadBtn" onclick="window.enrichSelectedLead()" title="Enrich lead with verified company intelligence" style="height: 30px; padding: 0 9px; font-size: 0.74rem;">
-              <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-              Enrich AI Intel
+            <button class="btn btn-outline" id="enrichLeadBtn" onclick="window.enrichSelectedLead()" title="Enrich lead with Apollo & Apify">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              Enrich Info
             </button>
-            <button class="btn btn-outline" id="openWhatsAppBtn" onclick="window.openWhatsAppModal()" title="Send WhatsApp Message" style="color: #059669; border-color: #a7f3d0; background: #ecfdf5; height: 30px; padding: 0 9px; font-size: 0.74rem;">
-              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-              WhatsApp
-            </button>
-            <button class="btn btn-outline" id="openCalendarModalBtn" onclick="window.openCalendarModal()" title="Schedule Google Meet Live Demo" style="color: #2563eb; border-color: #bfdbfe; background: #eff6ff; height: 30px; padding: 0 9px; font-size: 0.74rem;">
-              <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              Book Demo
-            </button>
-            <button class="btn btn-outline" id="phoneCallBtn" onclick="window.dialSelectedLeadPhone()" title="Dial via Outbound Carrier Telephony" style="height: 30px; padding: 0 10px; font-size: 0.74rem; font-weight: 700; color: #1d4ed8; border-color: #bfdbfe;">
+            <button class="btn btn-outline" id="phoneCallBtn" title="Dial via Outbound Carrier Telephony">
               <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
               Dial Phone
             </button>
           </div>
         </div>
 
-        <!-- Lead Call Intelligence & Summary Bar (Stored from Previous Calls) -->
-        <div id="leadSummaryDrawer" class="lead-summary-bar">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px;">
-              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-              Stored Call Summary (Executive Overview):
+        <!-- SECTION 2: Last call summary (collapsible) -->
+        <details class="cs-card cs-summary" id="leadSummaryDrawer" open>
+          <summary>
+            <span class="cs-section-title">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              Last call summary
             </span>
-            <span id="leadLastCalledAt" style="color: var(--text-muted); font-size: 0.72rem;">No previous call</span>
-          </div>
-          <div id="leadLastSummaryText" style="color: var(--text-secondary); line-height: 1.45; font-size: 0.82rem;">
-            Select a lead to see what was discussed in past calls.
-          </div>
-          <div id="leadActionItemText" style="color: var(--success); font-size: 0.76rem; font-weight: 600;"></div>
+            <span id="leadLastCalledAt" class="cs-meta">No previous call</span>
+          </summary>
+          <div class="cs-summary-body">
+            <div id="leadLastSummaryText" class="cs-summary-text">Select a lead to see what was discussed in past calls.</div>
+            <div id="leadActionItemText" class="cs-next-action"></div>
 
-          <!-- Enriched Intelligence Preview -->
-          <div id="leadEnrichmentBox" style="display: none; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-light); font-size: 0.76rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <span style="font-weight: 700; color: #1e293b;">🏢 Verified Intelligence (Apollo/Apify):</span>
-              <span class="badge-tag live" id="enrichmentConfidence" style="font-size: 0.65rem;">VERIFIED</span>
+            <!-- Enriched Intelligence Preview -->
+            <div id="leadEnrichmentBox" class="cs-enrichment" style="display: none;">
+              <div class="cs-enrichment-head">
+                <span>🏢 Verified company info (Apollo/Apify)</span>
+                <span class="badge-tag live" id="enrichmentConfidence">VERIFIED</span>
+              </div>
+              <div id="enrichmentDetailsText"></div>
+              <div id="enrichmentTechTags" class="cs-tags"></div>
             </div>
-            <div id="enrichmentDetailsText" style="color: #475569; line-height: 1.4;"></div>
-            <div id="enrichmentTechTags" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;"></div>
           </div>
-        </div>
+        </details>
 
-        <!-- Real-Time Language Switching Bar -->
-        <div class="lang-switch-row">
-          <span style="font-weight: 600; font-size: 0.73rem; color: var(--text-secondary);">Language Mode:</span>
-          <button class="lang-pill-btn active" data-lang="" id="langPillAuto" onclick="window.setCallLanguage('')" title="Automatically detects customer language during conversation">
-            🌐 Auto-Detect
-          </button>
-          <button class="lang-pill-btn" data-lang="te-IN" id="langPillTe" onclick="window.setCallLanguage('te-IN')" title="Greet and talk in Telugu">
-            తెలుగు (Telugu)
-          </button>
-          <button class="lang-pill-btn" data-lang="hi-IN" id="langPillHi" onclick="window.setCallLanguage('hi-IN')" title="Greet and talk in Hindi">
-            हिंदी (Hindi)
-          </button>
-          <button class="lang-pill-btn" data-lang="en-IN" id="langPillEn" onclick="window.setCallLanguage('en-IN')" title="Greet and talk in English">
-            English
-          </button>
-        </div>
-
-        <!-- Action & Voice Controls -->
-        <div class="call-controls-bar">
-          <button class="btn-call btn-start-call" id="startCallBtn">
+        <!-- SECTION 3: Call setup & controls -->
+        <div class="cs-card cs-controls">
+          <div class="cs-section-title">
             <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-            Start AI Call (Web Mic)
-          </button>
-          <button class="btn-call btn-end-call" id="endCallBtn" style="display: none;">
-            <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
-            End Call
-          </button>
-
-          <button class="btn btn-outline" id="doneSpeakingBtn" style="display: none; padding: 6px 14px; border-color: #059669; color: #047857; font-weight: 700; background: #ecfdf5; border-radius: 20px; font-size: 0.78rem;" title="Click if you finished speaking and want instant answer">
-            ✓ Done Speaking (Send Now)
-          </button>
-
-          <!-- Waveform Visualizer -->
-          <div class="wave-container" id="waveContainer">
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
+            Call setup
           </div>
-        </div>
 
-        <!-- Live Voice Conversation Box -->
-        <div class="transcript-box" id="transcriptBox">
-          <div class="message-bubble bubble-ai">
-            <div class="bubble-sender">
-              <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>
-              AI Sales Closer <span class="bubble-lang-badge te">Telugu • Hindi • English</span>
+          <div class="cs-setup-grid">
+            <div class="cs-field">
+              <span class="cs-label">Language</span>
+              <div class="cs-pills lang-switch-row">
+                <button class="lang-pill-btn active" data-lang="" id="langPillAuto" onclick="window.setCallLanguage('')" title="Automatically detects customer language during conversation">🌐 Auto</button>
+                <button class="lang-pill-btn" data-lang="te-IN" id="langPillTe" onclick="window.setCallLanguage('te-IN')" title="Greet and talk in Telugu">తెలుగు</button>
+                <button class="lang-pill-btn" data-lang="hi-IN" id="langPillHi" onclick="window.setCallLanguage('hi-IN')" title="Greet and talk in Hindi">हिंदी</button>
+                <button class="lang-pill-btn" data-lang="en-IN" id="langPillEn" onclick="window.setCallLanguage('en-IN')" title="Greet and talk in English">English</button>
+              </div>
             </div>
-            <div>నమస్కారం! / नमस्ते! / Hello! మేము <strong>S P Associates Software Company</strong> నుండి మాట్లాడుతున్నాము. మీ వ్యాపారం కోసం వెబ్‌సైట్, మొబైల్ యాప్ లేదా AI సొల్యూషన్స్ గురించి మాట్లాడటానికి సిద్ధంగా ఉన్నాము. 'Start AI Call' బటన్ నొక్కి మాట్లాడండి లేదా కింద టైప్ చేసి టెస్ట్ చేయండి!</div>
+
+            <div class="cs-field">
+              <label class="cs-label" for="waitSelect">Reply wait</label>
+              <select id="waitSelect" class="cs-select" title="How long the AI waits after the customer stops speaking">
+                <option value="700">Fast (0.7 s)</option>
+                <option value="900" selected>Normal (0.9 s)</option>
+                <option value="1300">Patient (1.3 s)</option>
+              </select>
+            </div>
+
+            <div class="cs-field">
+              <span class="cs-label">Recording</span>
+              <label class="cs-switch" for="recordToggle" title="Record both sides of the call and save it with the call summary">
+                <input type="checkbox" id="recordToggle" checked>
+                <span class="cs-switch-track"><span class="cs-switch-thumb"></span></span>
+                <span class="cs-switch-text" id="recordToggleText">Record this call</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="cs-action-row call-controls-bar">
+            <button class="btn-call btn-start-call" id="startCallBtn">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              Start AI Call
+            </button>
+            <button class="btn-call btn-end-call" id="endCallBtn" style="display: none;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+              End Call
+            </button>
+            <button class="btn btn-outline cs-done-btn" id="doneSpeakingBtn" style="display: none;" title="Click if you finished speaking and want an instant answer">
+              ✓ Done speaking
+            </button>
+
+            <div class="wave-container" id="waveContainer">
+              <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+            </div>
+
+            <div class="cs-badges">
+              <span class="cs-rec-badge" id="recBadge" hidden><span class="cs-rec-dot"></span>REC</span>
+              <span class="cs-time-badge" id="replyTimeBadge" hidden title="Time from customer finishing to AI starting to speak">Reply —</span>
+            </div>
+          </div>
+
+          <div class="cs-status caller-status-strip">
+            <span id="callerStatus">సిద్ధంగా ఉంది (Ready to Call)</span>
+            <span id="engineIndicator" class="cs-meta">Mode: 🌐 Auto-Detect (Customer Matching)</span>
           </div>
         </div>
 
-        <!-- Live Status Strip -->
-        <div class="caller-status-strip">
-          <span id="callerStatus" style="font-weight: 600; color: var(--primary);">సిద్ధంగా ఉంది (Ready to Call)</span>
-          <span style="font-size: 0.74rem; color: var(--text-muted);" id="engineIndicator">S P Neural Voice Engine • Low Latency HD (te • hi • en)</span>
-        </div>
+        <!-- SECTION 4: Live conversation -->
+        <div class="cs-card cs-conversation">
+          <div class="cs-conv-head">
+            <span class="cs-section-title">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              Live conversation
+            </span>
+            <span class="cs-meta">Sarvam voice engine · te · hi · en</span>
+          </div>
 
-        <!-- Quick Text Message Tester Fallback -->
-        <div class="test-input-bar">
-          <input type="text" id="testTextInput" placeholder="మాట్లాడలేకపోతే ఇక్కడ టైప్ చేయండి... / Type in Telugu, Hindi or English..." />
-          <button class="btn btn-primary" id="sendTestBtn">
-            <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            Send
-          </button>
+          <div class="transcript-box" id="transcriptBox">
+            <div class="cs-empty-conv">
+              <strong>No call in progress</strong>
+              <span>Pick a lead, choose the language, then press <em>Start AI Call</em>. Use headphones so the AI doesn't hear itself.</span>
+            </div>
+          </div>
+
+          <div class="test-input-bar">
+            <input type="text" id="testTextInput" placeholder="Type a reply instead of speaking (Telugu, Hindi or English)…" />
+            <button class="btn btn-primary" id="sendTestBtn">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              Send
+            </button>
+          </div>
         </div>
       </section>
 
-      <!-- COLUMN 3: INTELLIGENCE & CLOSING PLAYBOOK -->
-      <section class="intel-sidebar">
-        
+      <!-- COLUMN 3: CALLS, PLAYBOOK & VOICE (collapsible sections) -->
+      <section class="intel-sidebar cs-side">
+
+        <!-- Recent Calls & Recordings -->
+        <details class="intel-card cs-side-card" open>
+          <summary>
+            <span class="cs-section-title">
+              <svg class="icon icon-sm" style="color: #2563eb;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Recent calls
+            </span>
+            <span class="cs-meta">Click to review</span>
+          </summary>
+          <div class="tips-list" id="recentCallsList">
+            {% for c in calls[:5] %}
+            <div class="tip-item cs-call-item" onclick="window.openCallDetails({{ c.id }})" title="Click to view summary, transcript and recording">
+              <div class="cs-call-top">
+                <span class="tip-title">{{ c.lead_name or 'Web Lead' }}</span>
+                <span class="cs-call-meta">{% if c.recording_url %}🎙 {% endif %}{{ c.duration_seconds }}s ↗</span>
+              </div>
+              <div class="cs-call-stage">Stage: <strong>{{ (c.deal_stage or '').upper() }}</strong></div>
+              <div class="cs-call-summary">{{ c.summary or 'Call recorded successfully.' }}</div>
+            </div>
+            {% else %}
+            <div class="cs-empty-list">No calls yet. Start a call!</div>
+            {% endfor %}
+          </div>
+        </details>
+
         <!-- Multilingual Sales Objection Handling Playbook -->
-        <div class="intel-card">
-          <h3>
-            <svg class="icon icon-sm" style="color: var(--primary);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polygon points="12 8 8 12 12 16 12 8"></polygon></svg>
-            Multilingual Closing Playbook (తెలుగు • हिंदी • English)
-          </h3>
+        <details class="intel-card cs-side-card">
+          <summary>
+            <span class="cs-section-title">
+              <svg class="icon icon-sm" style="color: var(--primary);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polygon points="12 8 8 12 12 16 12 8"></polygon></svg>
+              Closing playbook
+            </span>
+            <span class="cs-meta">te · hi</span>
+          </summary>
           <div class="tips-list">
             <div class="tip-item">
               <div class="tip-title">"High Price / Budget Constraint"</div>
-              <div style="color: var(--text-secondary); font-size: 0.77rem;">
+              <div class="cs-tip-text">
                 <strong>TE:</strong> "మా వద్ద మైల్‌స్టోన్ పేమెంట్స్ ఉన్నాయి, మీ బడ్జెట్‌కు సరిపోయేలా చేస్తాము."<br/>
                 <strong>HI:</strong> "हमारे पास आसान माइलस्टोन पेमेंट्स हैं, आपके बजट के अनुसार कस्टमाइज़ कर देंगे।"
               </div>
             </div>
             <div class="tip-item">
               <div class="tip-title">"Already Have Website / App"</div>
-              <div style="color: var(--text-secondary); font-size: 0.77rem;">
+              <div class="cs-tip-text">
                 <strong>TE:</strong> "చాలా మంచిది! మీ సైట్ నుండి రోజూ కస్టమర్లు వస్తున్నారా? ఫ్రీగా 5-నిమిషాల ఆడిట్ చేస్తాము."<br/>
                 <strong>HI:</strong> "बहुत बढ़िया! क्या उससे रोज़ाना कस्टमर्स आ रहे हैं? हम मुफ़्त 5-मिनट ऑडिट करके देंगे।"
               </div>
             </div>
             <div class="tip-item">
               <div class="tip-title">"Send Details on WhatsApp / Later"</div>
-              <div style="color: var(--text-secondary); font-size: 0.77rem;">
+              <div class="cs-tip-text">
                 <strong>TE:</strong> "తప్పకుండా బ్రోచర్ పంపుతాను. రేపు ఉదయం 11:00కి 10 నిమిషాల డెమో ఫిక్స్ చేయమంటారా?"<br/>
                 <strong>HI:</strong> "ज़रूर व्हाट्सएप करेंगे! क्या कल सुबह 11:00 बजे 10 मिनट का ज़ूम डेमो फ़िक्स करें?"
               </div>
             </div>
-            <div class="tip-item" style="border-left-color: #059669; background: #ecfdf5;">
-              <div class="tip-title" style="color: #047857;">"Closing Target (డీల్ క్లోజింగ్)"</div>
-              <div style="color: #065f46; font-size: 0.78rem; font-weight: 600;">AI Goal: Lock 10-15 minute live demo/kickoff meeting for tomorrow with tech lead.</div>
+            <div class="tip-item cs-tip-goal">
+              <div class="tip-title">Closing target</div>
+              <div class="cs-tip-text">Book a 10–15 minute live demo or kickoff meeting for tomorrow with the tech lead.</div>
             </div>
           </div>
-        </div>
+        </details>
 
         <!-- Voice & Model Settings -->
-        <div class="intel-card">
-          <h3>
-            <svg class="icon icon-sm" style="color: var(--accent);" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-            Voice Engine Settings
-          </h3>
-          <div class="form-group" style="margin-bottom: 7px;">
-            <label>Voice Language:</label>
-            <select id="voiceLangSelect" onchange="window.updateVoiceOptions()" style="width: 100%;">
+        <details class="intel-card cs-side-card">
+          <summary>
+            <span class="cs-section-title">
+              <svg class="icon icon-sm" style="color: var(--accent);" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+              Voice preview
+            </span>
+          </summary>
+          <div class="form-group">
+            <label for="voiceLangSelect">Voice language</label>
+            <select id="voiceLangSelect" onchange="window.updateVoiceOptions()">
               <option value="te-IN" selected>Telugu (తెలుగు)</option>
               <option value="hi-IN">Hindi (हिंदी)</option>
               <option value="en-IN">English (Indian)</option>
             </select>
           </div>
-          <div class="form-group" style="margin-bottom: 7px;">
-            <label>Speaker Model:</label>
-            <select id="voiceSelect" style="width: 100%;">
+          <div class="form-group">
+            <label for="voiceSelect">Speaker</label>
+            <select id="voiceSelect">
               <option value="kavitha_te_conversation" selected>Kavitha (Telugu Conversational)</option>
               <option value="pooja_te_conversation">Pooja (Telugu Conversational)</option>
               <option value="tarun_te_narration">Tarun (Telugu Professional Male)</option>
               <option value="kavitha">Kavitha (Standard)</option>
             </select>
           </div>
-          <button class="btn btn-outline" id="testVoiceBtn" onclick="window.testTtsVoice()" style="width: 100%; justify-content: center;">
+          <button class="btn btn-outline cs-full-btn" id="testVoiceBtn" onclick="window.testTtsVoice()">
             <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
             <span id="testVoiceBtnText">Preview Telugu Voice</span>
           </button>
-        </div>
-
-        <!-- Recent Calls & Stored Summaries -->
-        <div class="intel-card">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin-bottom: 0;">
-              <svg class="icon icon-sm" style="color: #2563eb;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              Recent Call Summaries
-            </h3>
-            <span style="font-size: 0.7rem; color: var(--text-muted);">Executive Overview</span>
-          </div>
-          <div class="tips-list" id="recentCallsList" style="margin-top: 10px;">
-            {% for c in calls[:5] %}
-            <div class="tip-item" style="cursor: pointer;" onclick="window.openCallDetails({{ c.id }})" title="Click to view full transcript & call summary">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span class="tip-title">{{ c.lead_name or 'Web Lead' }}</span>
-                <span style="font-size:0.7rem; color: var(--primary); font-weight: 600;">{{ c.duration_seconds }}s ↗</span>
-              </div>
-              <div style="font-size:0.71rem; color: var(--text-muted); margin: 2px 0;">Stage: <strong style="color: #059669;">{{ (c.deal_stage or '').upper() }}</strong></div>
-              <div style="font-size:0.79rem; line-height: 1.35; color: var(--text-secondary);">{{ c.summary or 'Call recorded successfully.' }}</div>
-            </div>
-            {% else %}
-            <div style="font-size:0.78rem; color: var(--text-muted); text-align: center; padding: 12px;">No call records yet. Start a call!</div>
-            {% endfor %}
-          </div>
-        </div>
+        </details>
 
       </section>
 
@@ -3362,6 +3383,7 @@ body {
         </div>
       </div>
 
+      <div id="summaryRecording"></div>
       <div class="tip-item" style="margin-bottom: 8px; border-left-color: var(--primary); background: #f8fafc;">
         <div class="tip-title">Conversation Summary (Executive Overview)</div>
         <div id="summaryOverview" style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4;">Customer agreed to a project demo call.</div>
@@ -3405,6 +3427,7 @@ body {
         </div>
       </div>
 
+      <div id="modalCallRecording"></div>
       <div class="tip-item" style="margin-bottom: 10px; border-left-color: var(--primary); background: #eff6ff;">
         <div class="tip-title" style="color: #1e3a8a;">📝 Call Summary:</div>
         <div id="modalCallSummaryText" style="font-size: 0.84rem; color: #1e293b; line-height: 1.45;"></div>

@@ -25,6 +25,75 @@ document.addEventListener("DOMContentLoaded", () => {
   const activeLeadCompany = document.getElementById("activeLeadCompany");
   const activeLeadAvatar = document.getElementById("activeLeadAvatar");
 
+  // Call setup: recording switch, reply wait time, status badges
+  const recordToggle = document.getElementById("recordToggle");
+  const recordToggleText = document.getElementById("recordToggleText");
+  const waitSelect = document.getElementById("waitSelect");
+  const recBadge = document.getElementById("recBadge");
+  const replyTimeBadge = document.getElementById("replyTimeBadge");
+
+  const readPref = (key, fallback) => {
+    try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch (e) { return fallback; }
+  };
+  const writePref = (key, value) => {
+    try { localStorage.setItem(key, value); } catch (e) { /* storage unavailable */ }
+  };
+
+  const updateRecordToggleText = () => {
+    if (recordToggleText && recordToggle) {
+      recordToggleText.innerText = recordToggle.checked ? "Record this call" : "Recording off";
+    }
+  };
+
+  if (recordToggle) {
+    recordToggle.checked = readPref("lc.recordCalls", "1") === "1";
+    updateRecordToggleText();
+    recordToggle.addEventListener("change", () => {
+      writePref("lc.recordCalls", recordToggle.checked ? "1" : "0");
+      updateRecordToggleText();
+    });
+  }
+
+  if (waitSelect) {
+    waitSelect.value = readPref("lc.replyWaitMs", waitSelect.value);
+    caller.setSilenceTimeout(waitSelect.value);
+    waitSelect.addEventListener("change", () => {
+      caller.setSilenceTimeout(waitSelect.value);
+      writePref("lc.replyWaitMs", waitSelect.value);
+    });
+  }
+
+  const setCallSetupLocked = (locked) => {
+    if (recordToggle) recordToggle.disabled = locked;
+  };
+
+  const startWebCall = () => {
+    const leadId = selectedLead ? selectedLead.id : null;
+    if (replyTimeBadge) replyTimeBadge.hidden = true;
+    setCallSetupLocked(true);
+    return caller.startCall(leadId, selectedCallLanguage, {
+      record: recordToggle ? recordToggle.checked : false
+    });
+  };
+
+  // Recording player shown in the summary and call-details windows
+  const renderRecording = (containerId, recordingUrl) => {
+    const box = document.getElementById(containerId);
+    if (!box) return;
+    if (!recordingUrl) {
+      box.innerHTML = "";
+      return;
+    }
+    box.innerHTML = `
+      <div class="cs-recording-box">
+        <div class="cs-recording-title">
+          <span>🎙 Call recording</span>
+          <a href="${recordingUrl}" target="_blank" rel="noopener">Open file</a>
+        </div>
+        <audio controls preload="metadata" src="${recordingUrl}"></audio>
+      </div>`;
+  };
+
   // Language Pill Selector
   window.setCallLanguage = (lang) => {
     selectedCallLanguage = lang;
@@ -90,8 +159,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  caller.onRecordingStateChange = (isRecording) => {
+    if (recBadge) recBadge.hidden = !isRecording;
+  };
+
+  caller.onResponseTime = (totalMs, timing) => {
+    if (!replyTimeBadge) return;
+    const seconds = (totalMs / 1000).toFixed(1);
+    replyTimeBadge.innerText = `Reply ${seconds} s`;
+    replyTimeBadge.classList.toggle("slow", totalMs > 3000);
+    replyTimeBadge.title = timing
+      ? `Customer stopped → AI started: ${seconds}s (speech-to-text ${timing.stt_ms || 0} ms · AI ${timing.llm_ms || 0} ms · first voice ${timing.tts_first_ms || 0} ms)`
+      : `Customer stopped → AI started: ${seconds}s`;
+    replyTimeBadge.hidden = false;
+  };
+
   caller.onCallEnd = (summaryData) => {
     if (doneSpeakingBtn) doneSpeakingBtn.style.display = "none";
+    if (startCallBtn) startCallBtn.style.display = "inline-flex";
+    if (endCallBtn) endCallBtn.style.display = "none";
+    setCallSetupLocked(false);
     showDealSummaryModal(summaryData);
     refreshLeads();
     refreshCallHistory();
@@ -107,9 +194,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Button Listeners for Individual Live Call
   if (startCallBtn) {
     startCallBtn.addEventListener("click", () => {
-      const leadId = selectedLead ? selectedLead.id : null;
       transcriptBox.innerHTML = "";
-      caller.startCall(leadId, selectedCallLanguage);
+      startWebCall();
       startCallBtn.style.display = "none";
       endCallBtn.style.display = "inline-flex";
     });
@@ -121,6 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
       startCallBtn.style.display = "inline-flex";
       endCallBtn.style.display = "none";
       if (doneSpeakingBtn) doneSpeakingBtn.style.display = "none";
+      setCallSetupLocked(false);
     });
   }
 
@@ -130,8 +217,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!text) return;
 
       if (!caller.isCallActive) {
-        const leadId = selectedLead ? selectedLead.id : null;
-        caller.startCall(leadId).then(() => {
+        transcriptBox.innerHTML = "";
+        startWebCall().then(() => {
           setTimeout(() => {
             caller.sendTextMessage(text);
             testInput.value = "";
@@ -287,6 +374,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("modalCallSummaryText").innerText = c.summary || "Call summary recorded in English.";
       document.getElementById("modalCallBudget").innerText = c.extracted_budget || "Not specified";
       document.getElementById("modalCallTimeline").innerText = c.extracted_timeline || "Not specified";
+      renderRecording("modalCallRecording", c.recording_url);
 
       const container = document.getElementById("modalCallTranscriptContainer");
       container.innerHTML = "";
@@ -797,6 +885,7 @@ Your registered phone / client phone will ring shortly.`);
     document.getElementById("summaryObjections").innerText = intel.objections_raised || 'None noted';
     document.getElementById("summaryAction").innerText = intel.action_items || 'Follow up with quotation.';
     document.getElementById("summaryOverview").innerText = intel.summary || 'Call finished.';
+    renderRecording("summaryRecording", data.recording_url);
 
     modal.classList.add("open");
   }
@@ -873,17 +962,16 @@ Your registered phone / client phone will ring shortly.`);
       list.innerHTML = "";
       data.calls.slice(0, 6).forEach(call => {
         const item = document.createElement("div");
-        item.className = "tip-item";
-        item.style.cursor = "pointer";
+        item.className = "tip-item cs-call-item";
         item.onclick = () => window.openCallDetails(call.id);
-        item.title = "Click to view full transcript & call summary";
+        item.title = "Click to view summary, transcript and recording";
         item.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="cs-call-top">
             <span class="tip-title">${call.lead_name || 'Web Call'}</span>
-            <span style="font-size:0.7rem; color: var(--primary); font-weight: 600;">${call.duration_seconds}s ↗</span>
+            <span class="cs-call-meta">${call.recording_url ? '🎙 ' : ''}${call.duration_seconds}s ↗</span>
           </div>
-          <div style="font-size:0.71rem; color: var(--text-muted); margin: 2px 0;">Stage: <strong style="color: #059669;">${(call.deal_stage || '').toUpperCase()}</strong></div>
-          <div style="font-size:0.79rem; line-height: 1.35; color: var(--text-secondary);">${call.summary || 'Call recorded successfully.'}</div>
+          <div class="cs-call-stage">Stage: <strong>${(call.deal_stage || '').toUpperCase()}</strong></div>
+          <div class="cs-call-summary">${call.summary || 'Call recorded successfully.'}</div>
         `;
         list.appendChild(item);
       });
