@@ -227,125 +227,218 @@ body {
 /* ===================================================================
    TOP NAVBAR (FROSTED PORCELAIN GLASS)
    =================================================================== */
+/* ===================================================================
+   TOP NAVBAR (PIXEL-PERFECT EXECUTIVE HEADER)
+   =================================================================== */
 .navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 24px;
-  background: rgba(255, 255, 255, 0.92) !important;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  padding: 0 20px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-bottom: 1px solid var(--border-light) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  gap: 12px !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
 
 .navbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
 }
 
 .logo-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #059669 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  border-radius: 9px !important;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 55%, #059669 100%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.28) !important;
+  flex-shrink: 0 !important;
+}
+
+.brand-text {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  line-height: 1.15 !important;
+  cursor: pointer !important;
+}
+
+.brand-title-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
 }
 
 .brand-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 800;
-  font-size: 1.05rem;
-  color: #0f172a;
-  letter-spacing: -0.02em;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 1.05rem !important;
+  color: #090d16 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
 }
 
 .brand-tag {
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 2px 7px;
-  border-radius: 4px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
+  font-size: 0.62rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  color: #1d4ed8 !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1.2 !important;
+  flex-shrink: 0 !important;
 }
 
 .brand-subtitle {
-  font-size: 0.7rem;
-  color: var(--text-muted);
+  font-size: 0.68rem !important;
+  color: var(--text-muted) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
 }
 
 .nav-links-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
 }
 
 .nav-tab-btn {
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 0.81rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  padding: 6px 9px !important;
+  font-size: 0.79rem !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  height: 34px !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
 }
 
 .nav-tab-btn:hover {
-  background: #f1f5f9;
-  color: var(--primary);
+  background: #f1f5f9 !important;
+  color: var(--primary) !important;
 }
 
 .nav-tab-btn.active {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border-color: #bfdbfe;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+  font-weight: 700 !important;
+}
+
+.navbar-right {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  flex-shrink: 0 !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
 }
 
 .credit-balance-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #15803d;
-  font-size: 0.76rem;
-  font-weight: 700;
-  padding: 5px 12px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #047857 !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
+  padding: 0 10px !important;
+  height: 32px !important;
+  border-radius: 20px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .credit-balance-chip:hover {
-  background: #dcfce7;
-  border-color: #86efac;
-  transform: translateY(-1px);
+  background: #d1fae5 !important;
+  border-color: #6ee7b7 !important;
+  transform: translateY(-1px) !important;
 }
 
 .credit-balance-chip .add-icon {
-  background: #15803d;
-  color: #ffffff;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 800;
+  background: #059669 !important;
+  color: #ffffff !important;
+  width: 15px !important;
+  height: 15px !important;
+  border-radius: 50 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+
+@media (max-width: 1366px) {
+  .nav-tab-btn {
+    padding: 5px 7px !important;
+    font-size: 0.76rem !important;
+    gap: 4px !important;
+  }
+  .nav-links-row {
+    gap: 2px !important;
+  }
+  .navbar-right {
+    gap: 5px !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .brand-subtitle {
+    display: none !important;
+  }
+  .chip-mins {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .navbar {
+    overflow-x: auto !important;
+  }
 }
 
 /* ===================================================================
@@ -1112,14 +1205,23 @@ body {
    =================================================================== */
 
 .dashboard-grid {
-  display: grid;
-  grid-template-columns: 310px 1fr 340px;
-  gap: 16px;
-  padding: 16px 20px 24px;
-  flex: 1;
-  max-width: 1560px;
-  margin: 0 auto;
-  width: 100%;
+  display: grid !important;
+  grid-template-columns: 295px 1fr 325px !important;
+  gap: 14px !important;
+  padding: 14px 20px 20px !important;
+  flex: 1 !important;
+  max-width: 1600px !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 1240px) {
+  .dashboard-grid {
+    grid-template-columns: 270px 1fr 290px !important;
+    gap: 10px !important;
+    padding: 10px 14px 16px !important;
+  }
 }
 
 .campaign-banner {
@@ -1704,39 +1806,46 @@ body {
 
 /* CRM Action Ribbon */
 .crm-action-ribbon {
-  background: #ffffff;
-  border-bottom: 1px solid var(--border-light);
-  padding: 10px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-  gap: 16px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--border-light) !important;
+  padding: 0 20px !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  max-height: 52px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  gap: 12px !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
 
 .crm-ribbon-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  white-space: nowrap;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
 }
 
 .crm-ribbon-title {
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: #0f172a;
+  font-size: 0.86rem !important;
+  font-weight: 800 !important;
+  color: #090d16 !important;
+  letter-spacing: -0.01em !important;
+  white-space: nowrap !important;
 }
 
 .crm-ribbon-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  flex-shrink: 0;
-  white-space: nowrap;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
 }
 
   
@@ -1774,9 +1883,9 @@ body {
   <!-- ================================================================= -->
   <!-- TOP NAVIGATION BAR (OUTPERO STYLE) -->
   <!-- ================================================================= -->
-  <header class="navbar" style="position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); ">
+  <header class="navbar">
     <div class="navbar-left">
-      <div class="logo-icon" style="background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);">
+      <div class="logo-icon">
         <svg class="icon icon-md" viewBox="0 0 24 24" style="color: #ffffff;">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
@@ -1784,17 +1893,17 @@ body {
           <line x1="8" y1="23" x2="16" y2="23"></line>
         </svg>
       </div>
-      <div class="brand-text" onclick="window.switchMainTab('landing')" style="cursor: pointer;">
+      <div class="brand-text" onclick="window.switchMainTab('landing')">
         <div class="brand-title-wrap">
-          <span class="brand-title" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.05rem; letter-spacing: -0.02em;">LEADCLOSER<span style="color: var(--primary);">.AI</span></span>
-          <span class="brand-tag" >S P ASSOCIATES</span>
+          <span class="brand-title">LEADCLOSER<span style="color: var(--primary);">.AI</span></span>
+          <span class="brand-tag">S P ASSOCIATES</span>
         </div>
-        <div class="brand-subtitle">Autonomous Multilingual AI Telecaller & CRM Platform</div>
+        <div class="brand-subtitle">Autonomous Multilingual AI Telecaller</div>
       </div>
     </div>
 
     <!-- Navigation Tab Buttons -->
-    <nav class="nav-links-row" style="margin-left: 15px;">
+    <nav class="nav-links-row">
       <button class="nav-tab-btn active" id="tabBtnLanding" onclick="window.switchMainTab('landing')">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         Overview
@@ -1805,7 +1914,7 @@ body {
       </button>
       <button class="nav-tab-btn" id="tabBtnCrm" onclick="window.switchMainTab('crm')">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        Live CRM Platform
+        Live CRM
       </button>
       <button class="nav-tab-btn" id="tabBtnAnalytics" onclick="window.switchMainTab('analytics')">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -1821,31 +1930,31 @@ body {
       </button>
       <button class="nav-tab-btn" id="tabBtnPricing" onclick="window.switchMainTab('landing', 'pricingSection')">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-        Pricing & Credits
+        Pricing
       </button>
     </nav>
 
-    <!-- Top Right Actions & Live Credit Balance -->
-    <div class="navbar-right" style="gap: 8px;">
+    <!-- Top Right Actions & Live Credit Balance (Single Line) -->
+    <div class="navbar-right">
       <!-- Live API Balance Pill -->
       <div class="credit-balance-chip" onclick="window.openCheckoutModal('Credit Top-Up', 1000)" title="Click to purchase additional talk-time API credits">
         <span>🪙 ₹<span id="navCreditBalance">{{ "%.2f"|format(primary_key.credits_inr if primary_key else 2500.0) }}</span></span>
-        <span style="color: #166534; font-weight: 500;">(~<span id="navMinutesBalance">{{ "%.0f"|format((primary_key.credits_inr if primary_key else 2500.0) / 5.0) }}</span> Mins)</span>
+        <span class="chip-mins" style="color: #047857; font-weight: 500;">(~<span id="navMinutesBalance">{{ "%.0f"|format((primary_key.credits_inr if primary_key else 2500.0) / 5.0) }}</span>m)</span>
         <span class="add-icon" title="Add Credits">+</span>
       </div>
 
       <!-- Quick Action Buttons -->
-      <button class="btn btn-outline" id="navGetApiKeyBtn" onclick="window.switchMainTab('landing', 'apiSection')" style="font-size: 0.78rem; font-weight: 700; height: 32px;">
+      <button class="btn btn-outline" id="navGetApiKeyBtn" onclick="window.switchMainTab('landing', 'apiSection')" style="font-size: 0.76rem; font-weight: 700; height: 32px; padding: 0 10px; white-space: nowrap;">
         ⚡ API Keys
       </button>
 
-      <button class="btn btn-primary" id="navLaunchCrmBtn" onclick="window.switchMainTab('crm')" style="font-size: 0.78rem; font-weight: 700; height: 32px;">
+      <button class="btn btn-primary" id="navLaunchCrmBtn" onclick="window.switchMainTab('crm')" style="font-size: 0.76rem; font-weight: 700; height: 32px; padding: 0 12px; white-space: nowrap;">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
         <span id="navLaunchCrmText">Launch CRM</span>
       </button>
 
       <!-- Admin Console (Discreetly Gated for System Architecture & Providers) -->
-      <button class="btn btn-outline" id="adminSystemBtn" onclick="window.openAdminSettingsModal()" title="System Architecture & Backend Telephony Config" style="padding: 0 10px; height: 32px; font-size: 0.75rem; color: var(--text-muted);">
+      <button class="btn btn-outline" id="adminSystemBtn" onclick="window.openAdminSettingsModal()" title="System Architecture & Backend Telephony Config" style="padding: 0 9px; height: 32px; font-size: 0.74rem; color: var(--text-muted); white-space: nowrap;">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         <span style="font-weight:600;">System</span>
       </button>
