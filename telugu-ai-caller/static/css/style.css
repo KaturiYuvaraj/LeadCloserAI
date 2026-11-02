@@ -391,7 +391,7 @@ body {
   color: #ffffff !important;
   width: 15px !important;
   height: 15px !important;
-  border-radius: 50 !important;
+  border-radius: 50% !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -400,26 +400,58 @@ body {
   line-height: 1 !important;
 }
 
+@media (max-width: 1536px) {
+  .navbar {
+    padding: 0 16px !important;
+    gap: 8px !important;
+  }
+  .brand-subtitle {
+    display: none !important;
+  }
+  .nav-tab-btn {
+    padding: 5px 8px !important;
+    font-size: 0.77rem !important;
+    gap: 4px !important;
+  }
+  .nav-tab-btn svg {
+    display: none !important;
+  }
+}
+
 @media (max-width: 1366px) {
   .nav-tab-btn {
-    padding: 5px 7px !important;
-    font-size: 0.76rem !important;
-    gap: 4px !important;
+    padding: 5px 6px !important;
+    font-size: 0.75rem !important;
   }
   .nav-links-row {
     gap: 2px !important;
   }
+  .credit-balance-chip .chip-mins {
+    display: none !important;
+  }
+  #adminSystemBtn span {
+    display: none !important;
+  }
+  #adminSystemBtn {
+    padding: 0 8px !important;
+  }
   .navbar-right {
-    gap: 5px !important;
+    gap: 6px !important;
   }
 }
 
-@media (max-width: 1200px) {
-  .brand-subtitle {
-    display: none !important;
+@media (max-width: 1100px) {
+  .credit-balance-chip {
+    padding: 0 8px !important;
+    font-size: 0.72rem !important;
   }
-  .chip-mins {
-    display: none !important;
+  #navGetApiKeyBtn {
+    padding: 0 8px !important;
+    font-size: 0.72rem !important;
+  }
+  #navLaunchCrmBtn {
+    padding: 0 10px !important;
+    font-size: 0.72rem !important;
   }
 }
 

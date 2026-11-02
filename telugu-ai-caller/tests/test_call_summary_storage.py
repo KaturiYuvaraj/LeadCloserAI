@@ -19,7 +19,8 @@ from database import (
     save_call_record,
     get_call_by_id,
     get_calls_for_lead,
-    get_all_leads
+    get_all_leads,
+    delete_lead
 )
 from services.excel_service import generate_leads_export_excel
 
@@ -46,12 +47,12 @@ def test_call_summary_storage_and_export():
 
     # 2. Simulate AI Call with detailed summary of what was talked in the call
     simulated_summary = (
-        "కస్టమర్ నాగరాజు గారితో బిల్లింగ్ సాఫ్ట్‌వేర్ మరియు వాట్సాప్ ఇన్వాయిసింగ్ సేవల గురించి మాట్లాడాము. "
-        "కస్టమర్ ₹40,000 బడ్జెట్‌లో ఆఫ్‌లైన్ బిల్లింగ్ ఫీచర్ కావాలని కోరారు. "
-        "రేపు ఉదయం 11:30 గంటలకు 10 నిమిషాల జూమ్ డెమోకు అంగీకరించారు."
+        "Spoke with customer Nagaraju regarding billing software and WhatsApp invoicing services. "
+        "Customer requested offline billing feature within a budget of Rs 40,000. "
+        "Agreed to a 10-minute Zoom demo tomorrow at 11:30 AM."
     )
-    simulated_objections = "ధర తగ్గించాలి మరియు ఇంటర్నెట్ లేకపోయినా బిల్లింగ్ సాగాలి."
-    simulated_action = "రేపు ఉదయం 11:30 గంటలకు జూమ్ మీటింగ్ లింక్ మరియు ప్రైసింగ్ కొటేషన్ వాట్సాప్ ద్వారా పంపాలి."
+    simulated_objections = "Price negotiation requested and needs offline billing capabilities without internet."
+    simulated_action = "Send Zoom meeting link and pricing quotation via WhatsApp tomorrow at 11:30 AM."
 
     call_id = save_call_record({
         "lead_id": lead_id,
@@ -105,6 +106,8 @@ def test_call_summary_storage_and_export():
     assert len(export_bytes) > 2000, "Exported Excel binary should be non-empty"
     print(f"Generated leads export Excel with summaries: {len(export_bytes)} bytes.")
 
+    # Clean up test lead to avoid test contamination
+    delete_lead(lead_id)
     print("\nALL CALL SUMMARY STORAGE AND EXPORT TESTS PASSED! 🚀")
 
 
