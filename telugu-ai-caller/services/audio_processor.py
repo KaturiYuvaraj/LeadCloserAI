@@ -59,3 +59,41 @@ def wav_to_mulaw(wav_bytes: bytes, target_rate: int = 8000) -> bytes:
     mulaw_data = audioop.lin2ulaw(raw_frames, sample_width)
     return mulaw_data
 
+
+
+def exotel_audio_to_wav(audio_chunk: bytes, encoding: str = "audio/x-mulaw", sample_rate: int = 8000) -> bytes:
+    """
+    Transcode Exotel AgentStream audio (mu-law or Linear PCM L16) into standard 16kHz WAV.
+    """
+    if "mulaw" in encoding.lower() or "ulaw" in encoding.lower():
+        return mulaw_to_wav(audio_chunk, in_rate=sample_rate, out_rate=16000)
+    else:
+        # Linear PCM 16-bit
+        if sample_rate != 16000:
+            resampled, _ = audioop.ratecv(audio_chunk, 2, 1, sample_rate, 16000, None)
+            return pcm_to_wav(resampled, sample_rate=16000, channels=1, sample_width=2)
+        return pcm_to_wav(audio_chunk, sample_rate=16000, channels=1, sample_width=2)
+
+
+def wav_to_exotel_audio(wav_bytes: bytes, encoding: str = "audio/x-mulaw", target_rate: int = 8000) -> bytes:
+    """
+    Transcode synthesized WAV response from Sarvam TTS into Exotel's requested format (mu-law or PCM L16).
+    """
+    if "mulaw" in encoding.lower() or "ulaw" in encoding.lower():
+        return wav_to_mulaw(wav_bytes, target_rate=target_rate)
+    else:
+        # Linear PCM
+        buffer = io.BytesIO(wav_bytes)
+        with wave.open(buffer, 'rb') as wf:
+            num_channels = wf.getnchannels()
+            sample_width = wf.getsampwidth()
+            frame_rate = wf.getframerate()
+            raw_frames = wf.readframes(wf.getnframes())
+
+        if num_channels == 2:
+            raw_frames = audioop.tomono(raw_frames, sample_width, 1, 1)
+
+        if frame_rate != target_rate:
+            raw_frames, _ = audioop.ratecv(raw_frames, sample_width, 1, frame_rate, target_rate, None)
+
+        return raw_frames

@@ -107,6 +107,10 @@ class ProviderRegistry:
             return self._providers[provider_type].get(target_name)
         return None
 
+    def get_active(self, provider_type: ProviderType) -> Optional[BaseProvider]:
+        """Convenience method to get the active provider for a capability domain."""
+        return self.get(provider_type)
+
     def list_all(self) -> List[Dict[str, Any]]:
         """List metadata and status for all registered providers."""
         items = []

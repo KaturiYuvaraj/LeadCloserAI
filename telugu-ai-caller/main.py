@@ -47,13 +47,15 @@ from database import (
     upsert_provider_setting,
     record_provider_test_result,
     update_lead_enrichment,
-    get_daily_provider_usage
+    get_daily_provider_usage,
+    update_call_recording_by_sid,
+    update_call_status_by_sid
 )
 from schemas.lead import UnifiedLead
 from providers import registry, ProviderType, sync_providers_with_db
 from services.sarvam_service import sarvam_client
 from services.sales_agent import sales_agent
-from services.audio_processor import pcm_to_wav, mulaw_to_wav, wav_to_mulaw
+from services.audio_processor import pcm_to_wav, mulaw_to_wav, wav_to_mulaw, exotel_audio_to_wav, wav_to_exotel_audio
 from services.telephony_service import telephony_service
 from services.excel_service import parse_excel_or_csv, generate_sample_excel_template, generate_leads_export_excel
 from services.campaign_service import campaign_service
@@ -440,13 +442,32 @@ async def api_test_tts(payload: Dict[str, Any]):
 async def api_outbound_call(payload: Dict[str, Any], request: Request):
     to_phone = payload.get("phone")
     lead_id = payload.get("lead_id")
+    provider_override = payload.get("provider")
     if not to_phone:
         raise HTTPException(status_code=400, detail="Phone number is required")
+
+    host = request.headers.get("host")
+
+    # Check requested or active telephony provider
+    telephony_provider = None
+    if provider_override:
+        telephony_provider = registry.get(ProviderType.TELEPHONY, provider_override.lower())
+    if not telephony_provider:
+        telephony_provider = registry.get_active(ProviderType.TELEPHONY)
+
+    if telephony_provider and telephony_provider.is_configured():
+        logger.info(f"Initiating outbound call via active provider '{telephony_provider.name}'")
+        result = await telephony_provider.initiate_outbound_call(
+            to_phone=to_phone,
+            lead_id=lead_id,
+            callback_host=host
+        )
+        return result
 
     result = await telephony_service.initiate_outbound_call(
         to_phone=to_phone,
         lead_id=lead_id,
-        webhook_host=request.headers.get("host")
+        webhook_host=host
     )
     return result
 
@@ -1052,6 +1073,200 @@ async def websocket_telephony(websocket: WebSocket, lead_id: Optional[int] = Que
             "objections_raised": intel.get("objections_raised", ""),
             "action_items": intel.get("action_items", ""),
             "transcript": json.dumps(conversation_history, ensure_ascii=False)
+        })
+
+
+
+# =====================================================================
+# EXOTEL TELEPHONY CALLBACKS & AGENTSTREAM (/api/telephony/exotel/...)
+# =====================================================================
+
+@app.api_route("/api/telephony/exotel/status", methods=["GET", "POST"])
+async def exotel_call_status(request: Request):
+    """
+    Exotel status callback webhook: receives terminal call dispositions
+    (completed, busy, no-answer, failed, canceled).
+    """
+    params = dict(request.query_params)
+    if request.method == "POST":
+        try:
+            form = await request.form()
+            params.update(dict(form))
+        except Exception:
+            pass
+
+    call_sid = params.get("CallSid") or params.get("CallId") or params.get("Sid")
+    status = params.get("Status") or params.get("CallStatus") or "completed"
+    duration = int(params.get("Duration") or params.get("CallDuration") or 0)
+    recording_url = params.get("RecordingUrl") or params.get("RecordingUrlHttps")
+
+    logger.info(f"Exotel call callback: SID={call_sid}, status={status}, duration={duration}s")
+
+    if call_sid:
+        update_call_status_by_sid(call_sid=call_sid, status=status, duration=duration)
+        if recording_url:
+            update_call_recording_by_sid(call_sid=call_sid, recording_url=recording_url)
+
+    lead_id = params.get("lead_id") or params.get("CustomField")
+    if lead_id and status in ["busy", "no-answer", "failed"]:
+        try:
+            lead = get_lead_by_id(int(lead_id))
+            if lead:
+                existing_notes = lead.get("notes") or ""
+                update_lead(int(lead_id), {
+                    "notes": f"{existing_notes} [PSTN Call attempt: {status.upper()}]".strip()
+                })
+        except Exception as e:
+            logger.warning(f"Could not update lead {lead_id} from Exotel callback: {e}")
+
+    return JSONResponse(content={"status": "received", "call_sid": call_sid, "disposition": status})
+
+
+@app.api_route("/api/telephony/exotel/recording", methods=["GET", "POST"])
+async def exotel_recording_callback(request: Request):
+    """
+    Exotel recording callback webhook: captures authenticated recording URL.
+    """
+    params = dict(request.query_params)
+    if request.method == "POST":
+        try:
+            form = await request.form()
+            params.update(dict(form))
+        except Exception:
+            pass
+
+    call_sid = params.get("CallSid") or params.get("CallId") or params.get("Sid")
+    recording_url = params.get("RecordingUrl") or params.get("RecordingUrlHttps")
+
+    if call_sid and recording_url:
+        update_call_recording_by_sid(call_sid=call_sid, recording_url=recording_url)
+        logger.info(f"Saved recording URL for Exotel call {call_sid}: {recording_url}")
+
+    return JSONResponse(content={"status": "saved", "call_sid": call_sid})
+
+
+@app.websocket("/api/telephony/exotel/stream")
+async def websocket_exotel_agentstream(websocket: WebSocket, lead_id: Optional[int] = Query(None)):
+    """
+    Exotel AgentStream bidirectional WebSocket endpoint.
+    Handles real-time audio streaming (G.711 mu-law or 16-bit PCM),
+    interruptions, and conversational audio turn-taking.
+    """
+    await websocket.accept()
+    logger.info(f"Exotel AgentStream WebSocket connected. Lead ID: {lead_id}")
+
+    stream_id = None
+    call_id = None
+    encoding = "audio/x-mulaw"
+    sample_rate = 8000
+    audio_buffer = bytearray()
+    conversation_history: List[Dict[str, str]] = []
+    start_time = time.time()
+    call_lead = get_lead_by_id(lead_id) if lead_id else None
+
+    async def send_audio_chunk_to_exotel(audio_bytes: bytes):
+        payload = base64.b64encode(audio_bytes).decode("utf-8")
+        msg = {
+            "event": "media",
+            "stream_id": stream_id,
+            "media": {
+                "payload": payload
+            }
+        }
+        await websocket.send_text(json.dumps(msg))
+
+    try:
+        while True:
+            message = await websocket.receive_text()
+            data = json.loads(message)
+            event = data.get("event")
+
+            if event in ["connected", "start"]:
+                stream_id = data.get("stream_id") or data.get("streamSid") or (data.get("start", {}).get("streamSid"))
+                call_id = data.get("call_id") or data.get("callSid") or (data.get("start", {}).get("callSid"))
+                media_format = data.get("media_format") or (data.get("start", {}).get("mediaFormat")) or {}
+                encoding = media_format.get("encoding", "audio/x-mulaw")
+                sample_rate = int(media_format.get("sample_rate", 8000))
+
+                logger.info(f"Exotel AgentStream started: stream_id={stream_id}, call_id={call_id}, format={encoding}@{sample_rate}Hz")
+
+                greeting = await sales_agent.get_initial_greeting(lead_id)
+                conversation_history.append({"role": "assistant", "content": greeting})
+                wav_audio = await sarvam_client.text_to_speech(greeting)
+                exotel_audio = wav_to_exotel_audio(wav_audio, encoding=encoding, target_rate=sample_rate)
+                await send_audio_chunk_to_exotel(exotel_audio)
+
+            elif event == "media":
+                media_obj = data.get("media", {})
+                payload = media_obj.get("payload", "")
+                raw_audio = base64.b64decode(payload)
+                audio_buffer.extend(raw_audio)
+
+                buffer_limit = 24000 if sample_rate <= 8000 else 48000
+                if len(audio_buffer) >= buffer_limit:
+                    user_chunk = bytes(audio_buffer)
+                    audio_buffer.clear()
+
+                    wav_bytes = exotel_audio_to_wav(user_chunk, encoding=encoding, sample_rate=sample_rate)
+                    try:
+                        user_text = await sarvam_client.speech_to_text(wav_bytes, language_code="unknown")
+                    except Exception as e:
+                        logger.error(f"Exotel STT error: {e}")
+                        user_text = ""
+
+                    if user_text and len(user_text.strip()) > 2:
+                        conversation_history.append({"role": "user", "content": user_text})
+                        await asyncio.sleep(0.4)
+
+                        ai_reply = await sales_agent.generate_response(conversation_history, lead_id=lead_id)
+                        conversation_history.append({"role": "assistant", "content": ai_reply})
+
+                        ai_lang = detect_language(ai_reply)
+                        wav_reply = await sarvam_client.text_to_speech(ai_reply, language_code=ai_lang)
+                        exotel_reply = wav_to_exotel_audio(wav_reply, encoding=encoding, target_rate=sample_rate)
+                        await send_audio_chunk_to_exotel(exotel_reply)
+
+            elif event in ["clear", "interruption"]:
+                logger.info(f"Exotel stream interruption received for stream {stream_id}")
+                audio_buffer.clear()
+
+            elif event == "stop":
+                logger.info(f"Exotel AgentStream stopped for stream {stream_id}")
+                break
+
+    except WebSocketDisconnect:
+        logger.info("Exotel AgentStream client disconnected.")
+    except Exception as e:
+        logger.error(f"Exotel AgentStream error: {e}")
+    finally:
+        duration = int(time.time() - start_time)
+        try:
+            intel = await sales_agent.extract_call_intelligence(conversation_history)
+        except Exception:
+            intel = {
+                "summary": "Completed telephone conversation via Exotel carrier.",
+                "deal_stage": "qualifying",
+                "sentiment": "neutral",
+                "extracted_requirements": "Software Services",
+                "action_items": "Follow up with customer."
+            }
+
+        save_call_record({
+            "lead_id": lead_id,
+            "call_type": "phone",
+            "phone_number": call_lead.get("phone", "") if call_lead else "",
+            "duration_seconds": duration,
+            "status": "completed",
+            "summary": intel.get("summary", ""),
+            "sentiment": intel.get("sentiment", "neutral"),
+            "deal_stage": intel.get("deal_stage", "qualifying"),
+            "extracted_budget": intel.get("extracted_budget", ""),
+            "extracted_timeline": intel.get("extracted_timeline", ""),
+            "extracted_requirements": intel.get("extracted_requirements", ""),
+            "objections_raised": intel.get("objections_raised", ""),
+            "action_items": intel.get("action_items", ""),
+            "transcript": json.dumps(conversation_history, ensure_ascii=False),
+            "call_sid": call_id or ""
         })
 
 

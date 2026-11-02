@@ -92,10 +92,24 @@ def init_db():
         objections_raised TEXT,
         action_items TEXT,
         transcript TEXT,
+        recording_url TEXT,
+        call_sid TEXT,
+        disposition TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (lead_id) REFERENCES leads (id) ON DELETE SET NULL
     );
     """)
+
+    cursor.execute("PRAGMA table_info(calls)")
+    calls_cols = [col[1] for col in cursor.fetchall()]
+    new_call_cols = [
+        ("recording_url", "TEXT"),
+        ("call_sid", "TEXT"),
+        ("disposition", "TEXT")
+    ]
+    for c_name, c_type in new_call_cols:
+        if c_name not in calls_cols:
+            cursor.execute(f"ALTER TABLE calls ADD COLUMN {c_name} {c_type}")
 
     # Company Profile & Knowledge Base table
     cursor.execute("""
@@ -466,9 +480,10 @@ def save_call_record(call_data: Dict[str, Any]) -> int:
     INSERT INTO calls (
         lead_id, call_type, phone_number, duration_seconds, status,
         summary, sentiment, deal_stage, extracted_budget, extracted_timeline,
-        extracted_requirements, objections_raised, action_items, transcript
+        extracted_requirements, objections_raised, action_items, transcript,
+        recording_url, call_sid, disposition
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         call_data.get("lead_id"),
         call_data.get("call_type", "web"),
@@ -483,7 +498,10 @@ def save_call_record(call_data: Dict[str, Any]) -> int:
         call_data.get("extracted_requirements", ""),
         call_data.get("objections_raised", ""),
         call_data.get("action_items", ""),
-        call_data.get("transcript", "")
+        call_data.get("transcript", ""),
+        call_data.get("recording_url", ""),
+        call_data.get("call_sid", ""),
+        call_data.get("disposition", call_data.get("status", "completed"))
     ))
     call_id = cursor.lastrowid
 
@@ -913,3 +931,35 @@ def record_provider_usage(provider_name: str, operation: str, credits_used: floa
     """, (provider_name, operation, credits_used, details))
     conn.commit()
     conn.close()
+
+
+def update_call_recording_by_sid(call_sid: str, recording_url: str) -> bool:
+    """Update call record with telephony carrier recording URL."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE calls
+        SET recording_url = ?
+        WHERE call_sid = ?
+    """, (recording_url, call_sid))
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
+
+
+def update_call_status_by_sid(call_sid: str, status: str, duration: int = 0) -> bool:
+    """Update call status and disposition based on telephony callbacks."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    fields = ["status = ?", "disposition = ?"]
+    values = [status, status]
+    if duration > 0:
+        fields.append("duration_seconds = ?")
+        values.append(duration)
+    values.append(call_sid)
+    cursor.execute(f"UPDATE calls SET {', '.join(fields)} WHERE call_sid = ?", values)
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
