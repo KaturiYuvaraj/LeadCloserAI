@@ -179,3 +179,4 @@ class GoogleCalendarProvider(BaseCalendarProvider):
                 "message": "Failed to exchange Google OAuth refresh token for access token.",
                 "details": {"error": "TOKEN_EXCHANGE_FAILED"}
             }
+

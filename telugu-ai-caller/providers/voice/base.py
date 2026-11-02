@@ -35,3 +35,4 @@ class BaseVoiceTTSProvider(BaseProvider):
     ) -> bytes:
         """Synthesize text into speech audio bytes (WAV/PCM)."""
         pass
+

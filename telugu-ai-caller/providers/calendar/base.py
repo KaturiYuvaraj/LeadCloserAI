@@ -33,3 +33,4 @@ class BaseCalendarProvider(BaseProvider):
     ) -> Dict[str, Any]:
         """Book a live sales demo / kickoff meeting on the calendar."""
         pass
+

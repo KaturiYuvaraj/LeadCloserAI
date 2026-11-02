@@ -166,3 +166,4 @@ class MetaWhatsAppProvider(BaseMessagingProvider):
                     "message": f"WhatsApp connection error: {str(e)}",
                     "details": {"error": str(e)}
                 }
+

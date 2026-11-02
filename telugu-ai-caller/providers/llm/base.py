@@ -28,3 +28,4 @@ class BaseLLMProvider(BaseProvider):
     ) -> Dict[str, Any]:
         """Extract structured sales deal analytics in executive English."""
         pass
+

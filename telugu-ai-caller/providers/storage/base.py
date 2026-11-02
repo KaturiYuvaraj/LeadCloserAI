@@ -14,3 +14,4 @@ class BaseStorageProvider(BaseProvider):
     @abstractmethod
     def get_connection(self) -> Any:
         pass
+

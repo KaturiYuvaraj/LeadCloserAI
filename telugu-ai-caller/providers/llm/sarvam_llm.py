@@ -79,3 +79,4 @@ class SarvamLLMProvider(BaseLLMProvider):
                 "message": f"Sarvam LLM test failed: {str(e)}",
                 "details": {"error": str(e)}
             }
+

@@ -30,3 +30,4 @@ class BaseMessagingProvider(BaseProvider):
     ) -> Dict[str, Any]:
         """Send standard text message to authorized/consented prospect."""
         pass
+

@@ -2606,7 +2606,7 @@ body {
           <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           🔍 Discover Leads
         </button>
-        <button class="btn btn-outline" id="openUploadExcelBtn" style="font-size: 0.75rem;">
+        <button class="btn btn-outline" id="openUploadExcelBtn" onclick="window.openExcelModal()" style="font-size: 0.75rem;">
           <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
           Import Excel
         </button>
@@ -2614,11 +2614,11 @@ body {
           <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
           Export Summaries
         </a>
-        <button class="btn btn-campaign" id="openCampaignModalBtn" style="font-size: 0.76rem; font-weight: 700;">
+        <button class="btn btn-campaign" id="openCampaignModalBtn" onclick="window.openCampaignModal()" style="font-size: 0.76rem; font-weight: 700;">
           <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: #ffffff;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
           Auto-Call Campaign
         </button>
-        <button class="btn btn-primary" id="openAddLeadBtn" style="font-size: 0.76rem; font-weight: 700;">
+        <button class="btn btn-primary" id="openAddLeadBtn" onclick="window.openLeadModal()" style="font-size: 0.76rem; font-weight: 700;">
           <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: #ffffff;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           + Add Lead
         </button>
@@ -2637,7 +2637,7 @@ body {
               <span style="font-size: 0.72rem; color: var(--text-muted);">Click lead to inspect summary & dial</span>
             </div>
             <div style="display: flex; gap: 5px; align-items: center;">
-              <button class="btn btn-outline" id="sidebarUploadBtn" style="padding: 3px 7px; font-size: 0.72rem;" title="Upload Excel/CSV">
+              <button class="btn btn-outline" id="sidebarUploadBtn" onclick="window.openExcelModal()" style="padding: 3px 7px; font-size: 0.72rem;" title="Upload Excel/CSV">
                 Import
               </button>
               <span class="badge-tag" id="leadsCountBadge">{{ leads|length }} Total</span>
@@ -2726,7 +2726,7 @@ body {
               <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               Book Demo
             </button>
-            <button class="btn btn-outline" id="phoneCallBtn" title="Dial via Outbound Carrier Telephony">
+            <button class="btn btn-outline" id="phoneCallBtn" onclick="window.dialSelectedLeadPhone()" title="Dial via Outbound Carrier Telephony">
               <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
               Dial Phone
             </button>
@@ -3194,7 +3194,7 @@ body {
           <textarea id="leadNotes" rows="2" placeholder="Grocery store looking for customer ordering app."></textarea>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-          <button type="button" class="btn btn-outline" id="cancelLeadBtn">Cancel</button>
+          <button type="button" class="btn btn-outline" id="cancelLeadBtn" onclick="window.closeLeadModal()">Cancel</button>
           <button type="submit" class="btn btn-primary">Save Lead</button>
         </div>
       </form>
@@ -3227,7 +3227,7 @@ body {
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 8px;">
-        <button class="btn btn-outline" id="cancelExcelBtn">Cancel</button>
+        <button class="btn btn-outline" id="cancelExcelBtn" onclick="window.closeExcelModal()">Cancel</button>
         <button class="btn btn-primary" id="uploadFileBtn" disabled>Upload & Import Leads</button>
       </div>
     </div>
@@ -3270,7 +3270,7 @@ body {
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;">
-        <button class="btn btn-outline" id="cancelCampaignBtn">Cancel</button>
+        <button class="btn btn-outline" id="cancelCampaignBtn" onclick="window.closeCampaignModal()">Cancel</button>
         <button class="btn btn-campaign" id="startCampaignActionBtn">▶️ Launch Campaign Now</button>
       </div>
     </div>
@@ -3743,10 +3743,14 @@ body {
   <script src="/static/js/call_client.js"></script>
   <script src="/static/js/app.js"></script>
   <script>
-    // Initialize lead selection on load
-    {% if leads %}
-    window.selectLead({{ leads[0] | tojson }});
-    {% endif %}
+    // Initialize lead selection safely once DOMContentLoaded has finished
+    document.addEventListener("DOMContentLoaded", function() {
+      {% if leads %}
+      if (typeof window.selectLead === "function") {
+        window.selectLead({{ leads[0] | tojson }});
+      }
+      {% endif %}
+    });
   </script>
 </body>
 </html>

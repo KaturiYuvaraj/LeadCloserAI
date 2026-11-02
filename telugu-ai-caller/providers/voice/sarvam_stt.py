@@ -79,3 +79,4 @@ class SarvamSTTProvider(BaseVoiceSTTProvider):
                 "message": f"Sarvam STT test failed: {str(e)}",
                 "details": {"error": str(e)}
             }
+

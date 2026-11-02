@@ -49,3 +49,4 @@ class SQLiteStorageProvider(BaseStorageProvider):
                 "message": f"SQLite connection failed: {str(e)}",
                 "details": {"error": str(e)}
             }
+

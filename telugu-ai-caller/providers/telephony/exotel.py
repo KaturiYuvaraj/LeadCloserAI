@@ -140,3 +140,4 @@ class ExotelTelephonyProvider(BaseTelephonyProvider):
                     "message": f"Exotel connection error: {str(e)}",
                     "details": {"error": str(e)}
                 }
+

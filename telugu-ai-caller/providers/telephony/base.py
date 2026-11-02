@@ -29,3 +29,4 @@ class BaseTelephonyProvider(BaseProvider):
     ) -> str:
         """Generate response payload/XML instructing the telephony gateway to stream audio."""
         pass
+

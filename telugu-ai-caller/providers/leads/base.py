@@ -28,3 +28,4 @@ class BaseLeadDiscoveryProvider(BaseProvider):
     ) -> UnifiedLead:
         """Enrich existing lead with deep company, contact, and tech stack intelligence."""
         pass
+
