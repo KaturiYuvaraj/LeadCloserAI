@@ -62,7 +62,13 @@ def init_db():
         ("objections_noted", "TEXT"),
         ("action_items", "TEXT"),
         ("last_called_at", "TIMESTAMP"),
-        ("preferred_language", "TEXT DEFAULT 'te-IN'")
+        ("preferred_language", "TEXT DEFAULT 'te-IN'"),
+        ("source", "TEXT DEFAULT 'manual'"),
+        ("designation", "TEXT"),
+        ("industry", "TEXT"),
+        ("location", "TEXT"),
+        ("website", "TEXT"),
+        ("enrichment_data", "TEXT")
     ]
     for c_name, c_type in new_cols:
         if c_name not in existing_cols:
@@ -240,6 +246,18 @@ def init_db():
     );
     """)
 
+    # Provider Credit Usage Logs (Protects Apollo/Apify Daily Limits)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS provider_usage_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        provider_name TEXT NOT NULL,
+        operation TEXT NOT NULL,
+        credits_used REAL DEFAULT 1.0,
+        details TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
     # Seed default primary API key if api_keys table is empty
     cursor.execute("SELECT COUNT(*) as count FROM api_keys")
     if cursor.fetchone()["count"] == 0:
@@ -301,9 +319,16 @@ def get_lead_by_id(lead_id: int) -> Optional[Dict[str, Any]]:
 def create_lead(lead_data: Dict[str, Any]) -> int:
     conn = get_connection()
     cursor = conn.cursor()
+    enrichment = lead_data.get("enrichment_data")
+    if isinstance(enrichment, dict):
+        enrichment = json.dumps(enrichment, ensure_ascii=False)
+
     cursor.execute("""
-    INSERT INTO leads (name, phone, email, company, service_needed, budget, timeline, status, priority, notes, preferred_language)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO leads (
+        name, phone, email, company, service_needed, budget, timeline, status, priority, notes, preferred_language,
+        source, designation, industry, location, website, enrichment_data
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         lead_data.get("name", ""),
         lead_data.get("phone", ""),
@@ -315,7 +340,13 @@ def create_lead(lead_data: Dict[str, Any]) -> int:
         lead_data.get("status", "NEW"),
         lead_data.get("priority", "MEDIUM"),
         lead_data.get("notes", ""),
-        lead_data.get("preferred_language", "te-IN")
+        lead_data.get("preferred_language", "te-IN"),
+        lead_data.get("source", "manual"),
+        lead_data.get("designation", ""),
+        lead_data.get("industry", ""),
+        lead_data.get("location", ""),
+        lead_data.get("website", ""),
+        enrichment or ""
     ))
     lead_id = cursor.lastrowid
     conn.commit()
@@ -397,7 +428,7 @@ def update_lead(lead_id: int, updates: Dict[str, Any]) -> bool:
     fields = []
     values = []
     for k, v in updates.items():
-        if k in ["name", "phone", "email", "company", "service_needed", "budget", "timeline", "status", "priority", "notes", "preferred_language"]:
+        if k in ["name", "phone", "email", "company", "service_needed", "budget", "timeline", "status", "priority", "notes", "preferred_language", "source", "designation", "industry", "location", "website", "enrichment_data"]:
             fields.append(f"{k} = ?")
             values.append(v)
 
@@ -823,3 +854,62 @@ def record_provider_test_result(
     conn.close()
 
 
+
+
+# ---------------- LEAD ENRICHMENT & PROVIDER USAGE HELPERS ----------------
+
+def update_lead_enrichment(lead_id: int, enrichment: Dict[str, Any], extra: Optional[Dict[str, Any]] = None) -> bool:
+    """
+    Update a lead with enriched organization details, tech stack, and intelligence.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    enrichment_json = json.dumps(enrichment, ensure_ascii=False) if isinstance(enrichment, dict) else str(enrichment)
+
+    fields = ["enrichment_data = ?", "updated_at = CURRENT_TIMESTAMP"]
+    values = [enrichment_json]
+
+    if extra:
+        for col in ["industry", "website", "designation", "location", "company", "email"]:
+            if extra.get(col):
+                fields.append(f"{col} = COALESCE(NULLIF(?, ''), {col})")
+                values.append(extra[col])
+
+    values.append(lead_id)
+    query = f"UPDATE leads SET {', '.join(fields)} WHERE id = ?"
+    cursor.execute(query, values)
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
+
+
+def get_daily_provider_usage(provider_name: str) -> float:
+    """
+    Calculate total credits used by a provider today.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT COALESCE(SUM(credits_used), 0.0) as total_credits
+        FROM provider_usage_logs
+        WHERE provider_name = ?
+          AND date(timestamp) = date('now')
+    """, (provider_name,))
+    row = cursor.fetchone()
+    conn.close()
+    return float(row["total_credits"]) if row else 0.0
+
+
+def record_provider_usage(provider_name: str, operation: str, credits_used: float = 1.0, details: str = ""):
+    """
+    Record third-party API provider credit usage to enforce daily limits.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO provider_usage_logs (provider_name, operation, credits_used, details)
+        VALUES (?, ?, ?, ?)
+    """, (provider_name, operation, credits_used, details))
+    conn.commit()
+    conn.close()

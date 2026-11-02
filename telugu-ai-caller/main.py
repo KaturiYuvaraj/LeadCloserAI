@@ -45,8 +45,11 @@ from database import (
     deduct_api_credits,
     get_all_provider_settings,
     upsert_provider_setting,
-    record_provider_test_result
+    record_provider_test_result,
+    update_lead_enrichment,
+    get_daily_provider_usage
 )
+from schemas.lead import UnifiedLead
 from providers import registry, ProviderType, sync_providers_with_db
 from services.sarvam_service import sarvam_client
 from services.sales_agent import sales_agent
@@ -199,6 +202,134 @@ async def api_get_lead(lead_id: int):
 async def api_create_lead(lead_data: Dict[str, Any]):
     lead_id = create_lead(lead_data)
     return {"success": True, "lead_id": lead_id}
+
+@app.post("/api/leads/discover")
+async def api_discover_leads(payload: Dict[str, Any]):
+    """
+    Discover prospective leads via Apollo.io B2B search or Apify web scraping.
+    """
+    provider_name = payload.get("provider", "apollo").lower()
+    filters = payload.get("filters", {})
+    limit = int(payload.get("limit", 15))
+
+    provider = registry.get(ProviderType.LEAD_DISCOVERY, provider_name)
+    if not provider:
+        raise HTTPException(status_code=400, detail=f"Lead discovery provider '{provider_name}' not found.")
+
+    if not provider.is_configured():
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "error": f"Provider '{provider_name.upper()}' is not configured with an API credential. Please configure it in Integrations > Settings or set the environment variable.",
+                "provider": provider_name,
+                "leads": []
+            }
+        )
+
+    try:
+        leads = await provider.search_leads(filters, limit=limit)
+        leads_dict = [l.to_dict() for l in leads]
+        return {
+            "success": True,
+            "provider": provider_name,
+            "count": len(leads_dict),
+            "leads": leads_dict
+        }
+    except Exception as e:
+        logger.error(f"Lead discovery failed for {provider_name}: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": str(e),
+                "provider": provider_name,
+                "leads": []
+            }
+        )
+
+
+@app.post("/api/leads/discover/import")
+async def api_import_discovered_leads(payload: Dict[str, Any]):
+    """
+    Import selected discovered leads into the CRM database pipeline.
+    """
+    leads_data = payload.get("leads", [])
+    if not leads_data:
+        raise HTTPException(status_code=400, detail="No leads provided for import.")
+
+    inserted = 0
+    for l_data in leads_data:
+        try:
+            create_lead(l_data)
+            inserted += 1
+        except Exception as e:
+            logger.warning(f"Error importing discovered lead {l_data.get('name')}: {e}")
+
+    return {
+        "success": True,
+        "imported_count": inserted,
+        "message": f"Successfully imported {inserted} discovered leads into CRM station."
+    }
+
+
+@app.post("/api/leads/{lead_id}/enrich")
+async def api_enrich_lead(lead_id: int, payload: Optional[Dict[str, Any]] = None):
+    """
+    Enrich an existing CRM lead with organization intelligence, tech stack, and digital footprint
+    via active Apollo or Apify providers.
+    """
+    lead = get_lead_by_id(lead_id)
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    provider_name = (payload or {}).get("provider", "apollo").lower()
+    provider = registry.get(ProviderType.LEAD_DISCOVERY, provider_name)
+    if not provider or not provider.is_configured():
+        alt_name = "apify" if provider_name == "apollo" else "apollo"
+        alt_provider = registry.get(ProviderType.LEAD_DISCOVERY, alt_name)
+        if alt_provider and alt_provider.is_configured():
+            provider = alt_provider
+            provider_name = alt_name
+
+    if not provider or not provider.is_configured():
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "error": "Neither Apollo nor Apify is configured with valid credentials in Integrations Settings.",
+                "lead_id": lead_id
+            }
+        )
+
+    unified_lead = UnifiedLead.from_db_row(lead)
+    try:
+        enriched_lead = await provider.enrich_lead(unified_lead)
+        enrichment_dict = enriched_lead.enrichment.to_dict() if enriched_lead.enrichment else {}
+
+        extra = {
+            "industry": enriched_lead.industry,
+            "website": enriched_lead.website,
+            "designation": enriched_lead.designation,
+            "location": enriched_lead.location,
+            "company": enriched_lead.company
+        }
+        update_lead_enrichment(lead_id, enrichment_dict, extra=extra)
+
+        updated_lead = get_lead_by_id(lead_id)
+        return {
+            "success": True,
+            "provider": provider_name,
+            "lead": updated_lead,
+            "enrichment": enrichment_dict
+        }
+    except Exception as e:
+        logger.error(f"Enrichment error for lead {lead_id}: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e), "lead_id": lead_id}
+        )
+
 
 
 @app.get("/api/calls/{call_id}")

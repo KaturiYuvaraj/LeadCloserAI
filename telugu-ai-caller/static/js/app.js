@@ -186,6 +186,49 @@ document.addEventListener("DOMContentLoaded", () => {
     if (leadActionItemText) {
       leadActionItemText.innerText = lead.action_items ? `🎯 Next Action: ${lead.action_items}` : "";
     }
+
+    // Render Enriched Intelligence if present
+    const leadEnrichmentBox = document.getElementById("leadEnrichmentBox");
+    const enrichmentDetailsText = document.getElementById("enrichmentDetailsText");
+    const enrichmentTechTags = document.getElementById("enrichmentTechTags");
+
+    if (leadEnrichmentBox) {
+      if (lead.enrichment_data) {
+        try {
+          const enrichObj = typeof lead.enrichment_data === 'string' ? JSON.parse(lead.enrichment_data) : lead.enrichment_data;
+          leadEnrichmentBox.style.display = "block";
+
+          let details = `<strong>Org:</strong> ${enrichObj.company_name || lead.company || 'N/A'}`;
+          if (enrichObj.employee_count_range) details += ` • <strong>Employees:</strong> ${enrichObj.employee_count_range}`;
+          if (enrichObj.annual_revenue) details += ` • <strong>Rev:</strong> ${enrichObj.annual_revenue}`;
+          if (lead.website || enrichObj.website_url) {
+            const site = lead.website || enrichObj.website_url;
+            details += ` • <a href="${site.startsWith('http') ? site : 'https://' + site}" target="_blank" style="color: var(--primary); text-decoration: underline;">${site}</a>`;
+          }
+          if (enrichmentDetailsText) enrichmentDetailsText.innerHTML = details;
+
+          if (enrichmentTechTags) {
+            enrichmentTechTags.innerHTML = "";
+            const techs = enrichObj.technologies_detected || [];
+            if (techs.length > 0) {
+              techs.forEach(t => {
+                const tag = document.createElement("span");
+                tag.className = "badge-tag";
+                tag.style.background = "#eef2ff";
+                tag.style.color = "#4338ca";
+                tag.style.border = "1px solid #c7d2fe";
+                tag.innerText = t;
+                enrichmentTechTags.appendChild(tag);
+              });
+            }
+          }
+        } catch (e) {
+          leadEnrichmentBox.style.display = "none";
+        }
+      } else {
+        leadEnrichmentBox.style.display = "none";
+      }
+    }
   };
 
   // Lead Search Filter
@@ -1298,6 +1341,234 @@ Please check your API keys or network connection in Settings.`);
       location.reload();
     } catch (err) {
       alert(`Error saving provider settings: ${err.message}`);
+    }
+  };
+
+
+  // ===================================================================
+  // PHASE 3: LEAD DISCOVERY & CONTACT ENRICHMENT (APOLLO & APIFY)
+  // ===================================================================
+
+  let discoveredProspectsList = [];
+
+  window.openDiscoverLeadsModal = () => {
+    const modal = document.getElementById("discoverLeadsModal");
+    if (modal) modal.classList.add("open");
+  };
+
+  window.toggleDiscoverProvider = (provider) => {
+    const titlesGroup = document.getElementById("discoverTitlesGroup");
+    const labelApollo = document.getElementById("labelRadioApollo");
+    const labelApify = document.getElementById("labelRadioApify");
+
+    if (provider === "apollo") {
+      if (titlesGroup) titlesGroup.style.display = "block";
+      if (labelApollo) { labelApollo.style.borderColor = "var(--primary)"; labelApollo.style.background = "#eff6ff"; }
+      if (labelApify) { labelApify.style.borderColor = "var(--border-light)"; labelApify.style.background = "#ffffff"; }
+    } else {
+      if (titlesGroup) titlesGroup.style.display = "none";
+      if (labelApollo) { labelApollo.style.borderColor = "var(--border-light)"; labelApollo.style.background = "#ffffff"; }
+      if (labelApify) { labelApify.style.borderColor = "var(--primary)"; labelApify.style.background = "#eff6ff"; }
+    }
+  };
+
+  window.executeDiscoverLeads = async () => {
+    const btn = document.getElementById("runDiscoverBtn");
+    const provider = document.querySelector('input[name="discoverProvider"]:checked')?.value || "apollo";
+    const industries = document.getElementById("discoverIndustries")?.value.split(",").map(s => s.trim()).filter(Boolean) || ["Software"];
+    const locations = document.getElementById("discoverLocations")?.value.split(",").map(s => s.trim()).filter(Boolean) || ["Hyderabad"];
+    const titles = document.getElementById("discoverTitles")?.value.split(",").map(s => s.trim()).filter(Boolean) || ["CEO", "Founder"];
+    const servicePitch = document.getElementById("discoverServicePitch")?.value.trim() || "Custom Web App & AI Automation";
+    const limit = parseInt(document.getElementById("discoverLimit")?.value || "10", 10);
+
+    const origText = btn ? btn.innerHTML : "";
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = "⏳ Searching Prospects...";
+    }
+
+    try {
+      const resp = await fetch("/api/leads/discover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: provider,
+          filters: {
+            industries: industries,
+            locations: locations,
+            titles: titles,
+            service_needed: servicePitch
+          },
+          limit: limit
+        })
+      });
+
+      const data = await resp.json();
+      if (!resp.ok || !data.success) {
+        if (data.error && data.error.includes("not configured")) {
+          const goSetup = confirm(`⚠️ ${data.error}\n\nWould you like to open Integrations Settings now to configure ${provider.toUpperCase()}?`);
+          if (goSetup) {
+            document.getElementById("discoverLeadsModal")?.classList.remove("open");
+            window.switchMainTab("landing", "integrationsSection");
+          }
+        } else {
+          alert(`Discovery Search Failed: ${data.error || data.detail || 'Unknown error'}`);
+        }
+        return;
+      }
+
+      discoveredProspectsList = data.leads || [];
+      renderDiscoveredLeadsList();
+    } catch (err) {
+      alert(`Network Error: ${err.message}`);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origText || "⚡ Run Live Search";
+      }
+    }
+  };
+
+  function renderDiscoveredLeadsList() {
+    const container = document.getElementById("discoverResultsContainer");
+    const listEl = document.getElementById("discoverLeadsList");
+    const countLabel = document.getElementById("discoverCountLabel");
+    const importBtn = document.getElementById("importDiscoveredBtn");
+
+    if (!container || !listEl) return;
+
+    if (discoveredProspectsList.length === 0) {
+      container.style.display = "block";
+      listEl.innerHTML = '<div style="font-size: 0.78rem; color: var(--text-muted); text-align: center; padding: 10px;">No leads found matching your criteria.</div>';
+      if (importBtn) {
+        importBtn.disabled = true;
+        importBtn.innerText = "📥 Import Selected (0) into CRM";
+      }
+      return;
+    }
+
+    container.style.display = "block";
+    listEl.innerHTML = "";
+    if (countLabel) countLabel.innerText = `Discovered Leads (${discoveredProspectsList.length} Found)`;
+
+    discoveredProspectsList.forEach((lead, idx) => {
+      const item = document.createElement("div");
+      item.style.cssText = "display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: 1px solid var(--border-light); border-radius: 6px; padding: 8px 12px; font-size: 0.76rem;";
+      item.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <input type="checkbox" class="discovered-check" data-idx="${idx}" checked onchange="window.updateImportCount()" style="width: auto; cursor: pointer;" />
+          <div>
+            <div style="font-weight: 700; color: #0f172a;">${lead.name} <span style="font-weight: 400; color: var(--text-muted);">(${lead.designation || 'Contact'})</span></div>
+            <div style="font-size: 0.72rem; color: var(--text-secondary);">${lead.company || 'Company'} • 📍 ${lead.location || 'India'} • 📞 ${lead.phone}</div>
+          </div>
+        </div>
+        <span class="badge-tag live" style="font-size: 0.65rem;">${lead.source.toUpperCase()}</span>
+      `;
+      listEl.appendChild(item);
+    });
+
+    window.updateImportCount();
+  }
+
+  window.updateImportCount = () => {
+    const importBtn = document.getElementById("importDiscoveredBtn");
+    const checked = document.querySelectorAll(".discovered-check:checked");
+    if (importBtn) {
+      importBtn.disabled = checked.length === 0;
+      importBtn.innerText = `📥 Import Selected (${checked.length}) into CRM`;
+    }
+  };
+
+  window.toggleSelectAllDiscovered = () => {
+    const checkboxes = document.querySelectorAll(".discovered-check");
+    const allChecked = Array.from(checkboxes).every(c => c.checked);
+    checkboxes.forEach(c => c.checked = !allChecked);
+    window.updateImportCount();
+  };
+
+  window.importDiscoveredToCrm = async () => {
+    const checked = document.querySelectorAll(".discovered-check:checked");
+    if (checked.length === 0) return;
+
+    const leadsToImport = Array.from(checked).map(c => {
+      const idx = parseInt(c.getAttribute("data-idx"), 10);
+      return discoveredProspectsList[idx];
+    }).filter(Boolean);
+
+    const importBtn = document.getElementById("importDiscoveredBtn");
+    if (importBtn) {
+      importBtn.disabled = true;
+      importBtn.innerText = "⏳ Importing to Pipeline...";
+    }
+
+    try {
+      const resp = await fetch("/api/leads/discover/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leads: leadsToImport })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) throw new Error(data.detail || "Import failed");
+
+      alert(`🎉 ${data.message || `Imported ${leadsToImport.length} leads into CRM station.`}`);
+      document.getElementById("discoverLeadsModal")?.classList.remove("open");
+      await refreshLeads();
+    } catch (err) {
+      alert(`Import Error: ${err.message}`);
+    } finally {
+      if (importBtn) {
+        importBtn.disabled = false;
+        importBtn.innerText = `📥 Import Selected (${checked.length}) into CRM`;
+      }
+    }
+  };
+
+  window.enrichSelectedLead = async () => {
+    if (!selectedLead) {
+      alert("Please select a lead from the pipeline first.");
+      return;
+    }
+
+    const enrichBtn = document.getElementById("enrichLeadBtn");
+    const origText = enrichBtn ? enrichBtn.innerHTML : "";
+    if (enrichBtn) {
+      enrichBtn.disabled = true;
+      enrichBtn.innerHTML = "⏳ Enriching...";
+    }
+
+    try {
+      const resp = await fetch(`/api/leads/${selectedLead.id}/enrich`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: "apollo" })
+      });
+      const data = await resp.json();
+
+      if (!resp.ok || !data.success) {
+        if (data.error && data.error.includes("Neither Apollo nor Apify is configured")) {
+          const goSetup = confirm(`⚠️ ${data.error}\n\nWould you like to configure Apollo or Apify now in Integrations Settings?`);
+          if (goSetup) {
+            window.switchMainTab("landing", "integrationsSection");
+          }
+        } else {
+          alert(`Enrichment failed: ${data.error || data.detail || 'Unknown error'}`);
+        }
+        return;
+      }
+
+      alert(`✅ Lead Intelligence Enriched via ${data.provider.toUpperCase()}!\n\nTech stack, company intelligence, and digital profiles updated.`);
+      if (data.lead) {
+        selectedLead = data.lead;
+        window.selectLead(data.lead);
+      }
+      await refreshLeads();
+    } catch (err) {
+      alert(`Network Error: ${err.message}`);
+    } finally {
+      if (enrichBtn) {
+        enrichBtn.disabled = false;
+        enrichBtn.innerHTML = origText || "Enrich AI Intel";
+      }
     }
   };
 
