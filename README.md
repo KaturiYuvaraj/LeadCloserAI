@@ -70,6 +70,7 @@ LeadCloserAI/
     ├── templates/
     │   └── index.html              # Responsive CRM Dashboard & Calling Station
     └── tests/
+        ├── test_developer_api.py   # Tests API key generation, billing & call dispatch
         ├── test_english_summaries.py # Verifies 100% English CRM summary storage
         ├── test_pacing_and_turn_taking.py # Verifies conversational timing & human pacing
         ├── test_campaign_and_excel.py # Tests Excel import/export & auto campaigns
@@ -128,6 +129,9 @@ Open your browser at:
 Run tests to verify multilingual sales flow, turn-taking, and summary extraction:
 
 ```bash
+# Developer API & Credit Billing test
+python tests/test_developer_api.py
+
 # English summaries & CRM database test
 python tests/test_english_summaries.py
 
@@ -136,6 +140,40 @@ python tests/test_pacing_and_turn_taking.py
 
 # Excel template & Auto-call campaign test
 python tests/test_campaign_and_excel.py
+```
+
+---
+
+## ⚡ Developer REST API Endpoints
+
+Clients can purchase API credits and trigger calls programmatically:
+
+### 1. Trigger Outbound AI Call
+```bash
+POST /api/v1/calls/dispatch
+Header: Authorization: Bearer lc_live_...
+Content-Type: application/json
+
+{
+  "lead_name": "Ramesh Naidu",
+  "phone": "+919848011223",
+  "company": "Naidu Supermarkets",
+  "service": "Mobile App & Billing",
+  "budget": "₹75,000",
+  "language": "te-IN"
+}
+```
+
+### 2. Purchase API Credits (₹ INR)
+```bash
+POST /api/v1/billing/purchase-credits
+{
+  "api_key_id": 1,
+  "plan_name": "Business Growth",
+  "amount_inr": 4999.0,
+  "payment_method": "Instant UPI / Razorpay",
+  "customer_email": "developer@client.com"
+}
 ```
 
 ---

@@ -815,4 +815,362 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initial call on load
   refreshLeads();
+
+  // ===================================================================
+  // OUTPERO SAAS WEBSITE TABS, API SANDBOX & BILLING STORE
+  // ===================================================================
+
+  let currentMainTab = "landing";
+  let activePaymentMethod = "UPI";
+  let selectedCheckoutAmount = 4999;
+  let selectedCheckoutPlan = "Business Growth";
+
+  window.switchMainTab = (tabName, targetSectionId = null) => {
+    currentMainTab = tabName;
+    const viewLanding = document.getElementById("viewLanding");
+    const viewCrm = document.getElementById("viewCrm");
+    const navLaunchCrmText = document.getElementById("navLaunchCrmText");
+
+    // Remove active from all nav tab buttons
+    document.querySelectorAll(".nav-tab-btn").forEach(btn => btn.classList.remove("active"));
+
+    if (tabName === "crm") {
+      if (viewLanding) viewLanding.style.display = "none";
+      if (viewCrm) viewCrm.style.display = "block";
+      const btnCrm = document.getElementById("tabBtnCrm");
+      if (btnCrm) btnCrm.classList.add("active");
+      if (navLaunchCrmText) navLaunchCrmText.innerText = "← View Overview";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      if (viewLanding) viewLanding.style.display = "block";
+      if (viewCrm) viewCrm.style.display = "none";
+      if (navLaunchCrmText) navLaunchCrmText.innerText = "Launch CRM Station";
+
+      if (targetSectionId === "voiceSection") {
+        const btn = document.getElementById("tabBtnVoice");
+        if (btn) btn.classList.add("active");
+        window.scrollToSection("voiceSection");
+      } else if (targetSectionId === "apiSection") {
+        const btn = document.getElementById("tabBtnApi");
+        if (btn) btn.classList.add("active");
+        window.scrollToSection("apiSection");
+      } else if (targetSectionId === "pricingSection") {
+        const btn = document.getElementById("tabBtnPricing");
+        if (btn) btn.classList.add("active");
+        window.scrollToSection("pricingSection");
+      } else {
+        const btn = document.getElementById("tabBtnLanding");
+        if (btn) btn.classList.add("active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+  };
+
+  window.scrollToSection = (sectionId) => {
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  // Interactive Voice Showcase
+  window.playVoiceScenario = async (lang, scenarioId) => {
+    let sampleText = "";
+    let speaker = "kavitha_te_conversation";
+    let langCode = "te-IN";
+
+    if (lang === "te") {
+      sampleText = "సరేనండి, అర్థమైంది. మీ కిరాణా వ్యాపారానికి మొబైల్ ఆర్డరింగ్ యాప్ మరియు బిల్లింగ్ సాఫ్ట్‌వేర్ రెండూ చాలా అవసరం. మా వద్ద ₹30,000 నుండి ప్రారంభమవుతాయి. రేపు ఉదయం 11:00కి 10 నిమిషాల జూమ్ డెమో చూపిస్తాము, ఓకేనా అండి?";
+      speaker = "kavitha_te_conversation";
+      langCode = "te-IN";
+    } else if (lang === "hi") {
+      sampleText = "जी बिल्कुल सर, समझ गया। बजट को लेकर चिंता मत कीजिए, हमारे पास आसान माइलस्टोन पेमेंट्स हैं। आपकी कंपनी के लिए फ़्लीट ट्रैकिंग सिस्टम 3 हफ़्ते में तैयार हो जाएगा। क्या कल सुबह 11 बजे लाइव ज़ूम डेमो फ़िक्स करें?";
+      speaker = "pooja";
+      langCode = "hi-IN";
+    } else {
+      sampleText = "That makes total sense, doctor! We can launch your automated WhatsApp and AI phone appointment system within 10 days. Shall we schedule a quick 10-minute live Zoom demo for tomorrow morning at 11:00 AM?";
+      speaker = "tarun";
+      langCode = "en-IN";
+    }
+
+    try {
+      const resp = await fetch("/api/tts/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: sampleText,
+          language_code: langCode,
+          speaker: speaker
+        })
+      });
+
+      if (!resp.ok) {
+        throw new Error("TTS preview failed");
+      }
+
+      const blob = await resp.blob();
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
+      audio.play();
+    } catch (err) {
+      alert("Voice playback notice: " + err.message);
+    }
+  };
+
+  // Code Snippet Switcher
+  const CODE_SNIPPETS = {
+    curl: `curl -X POST http://localhost:8000/api/v1/calls/dispatch \\
+  -H "Authorization: Bearer lc_live_sp_assoc_7894a1b2" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "lead_name": "Ramesh Naidu",
+    "phone": "+919848011223",
+    "company": "Naidu Supermarkets",
+    "service": "Mobile App & Billing",
+    "budget": "₹75,000",
+    "language": "te-IN"
+  }'`,
+
+    python: `import httpx
+
+API_KEY = "lc_live_sp_assoc_7894a1b2"
+BASE_URL = "http://localhost:8000"
+
+payload = {
+    "lead_name": "Ramesh Naidu",
+    "phone": "+919848011223",
+    "company": "Naidu Supermarkets",
+    "service": "Mobile App & Billing",
+    "budget": "₹75,000",
+    "language": "te-IN"
+}
+
+headers = {
+    "Authorization": f"Bearer {API_KEY}",
+    "Content-Type": "application/json"
+}
+
+with httpx.Client() as client:
+    resp = client.post(f"{BASE_URL}/api/v1/calls/dispatch", json=payload, headers=headers)
+    result = resp.json()
+    print("Call ID:", result["call_id"])
+    print("Deal Stage:", result["deal_stage"])
+    print("Executive Summary:", result["summary"])
+    print("Minutes Billed:", result["billing"]["minutes_billed"])`,
+
+    js: `const axios = require('axios');
+
+const API_KEY = 'lc_live_sp_assoc_7894a1b2';
+
+async function dispatchLeadCall() {
+  const response = await axios.post('http://localhost:8000/api/v1/calls/dispatch', {
+    lead_name: 'Ramesh Naidu',
+    phone: '+919848011223',
+    company: 'Naidu Supermarkets',
+    service: 'Mobile App & Billing',
+    budget: '₹75,000',
+    language: 'te-IN'
+  }, {
+    headers: {
+      'Authorization': \`Bearer \${API_KEY}\`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  console.log('Call Closed:', response.data.deal_stage);
+  console.log('English Summary:', response.data.summary);
+}
+
+dispatchLeadCall();`
+  };
+
+  let activeCodeLang = "curl";
+  window.switchCodeTab = (lang) => {
+    activeCodeLang = lang;
+    document.querySelectorAll(".code-lang-btn").forEach(btn => btn.classList.remove("active"));
+    const activeBtn = document.getElementById(`btnCode${lang.charAt(0).toUpperCase() + lang.slice(1)}`);
+    if (activeBtn) activeBtn.classList.add("active");
+
+    const pre = document.getElementById("codeDisplayPre");
+    if (pre && CODE_SNIPPETS[lang]) {
+      pre.innerText = CODE_SNIPPETS[lang];
+    }
+  };
+
+  window.copyActiveCode = () => {
+    const text = CODE_SNIPPETS[activeCodeLang];
+    navigator.clipboard.writeText(text);
+    alert("Code snippet copied to clipboard!");
+  };
+
+  // API Sandbox Runner
+  window.runApiSandboxTest = async () => {
+    const name = document.getElementById("sandboxName").value.trim() || "Kalyan Kumar";
+    const phone = document.getElementById("sandboxPhone").value.trim() || "+91 9848011223";
+    const company = document.getElementById("sandboxCompany").value.trim() || "Kalyan Textiles";
+    const service = document.getElementById("sandboxService").value.trim() || "E-Commerce & Billing";
+    const runBtn = document.getElementById("sandboxRunBtn");
+    const resBox = document.getElementById("sandboxResponseBox");
+
+    runBtn.disabled = true;
+    runBtn.innerText = "⏳ Calling...";
+    resBox.style.display = "block";
+    resBox.innerText = `[Dispatching API Call...] Connecting AI agent for ${name} (${company})...\nExecuting sales dialogue & objection handling...`;
+
+    try {
+      const resp = await fetch("/api/v1/calls/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lead_name: name,
+          phone: phone,
+          company: company,
+          service: service,
+          budget: "₹50,000",
+          language: "te-IN"
+        })
+      });
+
+      const data = await resp.json();
+      resBox.innerText = JSON.stringify(data, null, 2);
+
+      // Update credit balance on navbar
+      if (data.billing && data.billing.remaining_credits_inr !== undefined) {
+        const balEl = document.getElementById("navCreditBalance");
+        const minEl = document.getElementById("navMinutesBalance");
+        if (balEl) balEl.innerText = Number(data.billing.remaining_credits_inr).toFixed(2);
+        if (minEl) minEl.innerText = Math.round(Number(data.billing.remaining_credits_inr) / 5.0);
+      }
+
+      refreshLeads();
+      refreshRecentCalls();
+    } catch (err) {
+      resBox.innerText = `API Call Error: ${err.message}`;
+    } finally {
+      runBtn.disabled = false;
+      runBtn.innerText = "🚀 Dispatch Call via API";
+    }
+  };
+
+  // Checkout & Billing Modal
+  window.openCheckoutModal = (planName, amount) => {
+    selectedCheckoutPlan = planName;
+    selectedCheckoutAmount = amount;
+
+    const modal = document.getElementById("checkoutModal");
+    const planTitle = document.getElementById("checkoutPlanTitle");
+    const planAmount = document.getElementById("checkoutPlanAmount");
+    const minutesCredited = document.getElementById("checkoutMinutesCredited");
+    const btnPayAmountText = document.getElementById("btnPayAmountText");
+
+    if (planTitle) planTitle.innerText = planName;
+    if (planAmount) planAmount.innerText = `₹${Number(amount).toLocaleString('en-IN')}.00`;
+    if (btnPayAmountText) btnPayAmountText.innerText = Number(amount).toLocaleString('en-IN');
+
+    const rate = amount >= 14999 ? 3.75 : (amount >= 4999 ? 4.16 : 5.0);
+    const estimatedMins = Math.round(amount / rate);
+    if (minutesCredited) {
+      minutesCredited.innerText = `⚡ ~${estimatedMins} Connected Minutes Talk-Time Credited (@ ₹${rate}/min)`;
+    }
+
+    if (modal) modal.classList.add("open");
+  };
+
+  window.setCalcAmount = (amount, btnElem) => {
+    selectedCheckoutAmount = amount;
+    selectedCheckoutPlan = `Pay-As-You-Go (${amount >= 5000 ? '1,000' : (amount >= 2500 ? '500' : (amount >= 1000 ? '200' : '100'))} Mins)`;
+
+    document.querySelectorAll(".quick-amount-pill").forEach(p => p.classList.remove("active"));
+    if (btnElem) btnElem.classList.add("active");
+
+    const btnBuy = document.getElementById("btnCalcBuy");
+    if (btnBuy) {
+      btnBuy.innerText = `💳 Top Up ₹${Number(amount).toLocaleString('en-IN')}`;
+      btnBuy.onclick = () => window.openCheckoutModal(selectedCheckoutPlan, amount);
+    }
+  };
+
+  window.selectPaymentMethod = (method, elem) => {
+    activePaymentMethod = method;
+    document.querySelectorAll(".payment-opt-btn").forEach(b => b.classList.remove("active"));
+    if (elem) elem.classList.add("active");
+  };
+
+  window.executeSimulatedCheckout = async () => {
+    const email = document.getElementById("checkoutEmail").value.trim() || "developer@client.com";
+    const company = document.getElementById("checkoutCompanyName").value.trim() || "S P Associates Client";
+    const payBtn = document.getElementById("btnPayAction");
+
+    payBtn.disabled = true;
+    payBtn.innerText = "⏳ Processing Payment...";
+
+    try {
+      const resp = await fetch("/api/v1/billing/purchase-credits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan_name: selectedCheckoutPlan,
+          amount_inr: selectedCheckoutAmount,
+          payment_method: activePaymentMethod,
+          customer_email: email
+        })
+      });
+
+      const res = await resp.json();
+      if (!res.success) throw new Error(res.detail || "Payment failed");
+
+      // Update navbar balance
+      const balEl = document.getElementById("navCreditBalance");
+      const minEl = document.getElementById("navMinutesBalance");
+      if (balEl && res.order) {
+        const current = Number(balEl.innerText.replace(/,/g, '')) || 0;
+        const updated = current + selectedCheckoutAmount;
+        balEl.innerText = updated.toFixed(2);
+        if (minEl) minEl.innerText = Math.round(updated / 5.0);
+      }
+
+      document.getElementById("checkoutModal").classList.remove("open");
+      alert(`🎉 Payment Successful!\n\nOrder ID: ${res.order.order_id}\nInvoice: ${res.order.invoice_number}\nAmount: ₹${selectedCheckoutAmount}\nMinutes Credited: ${res.order.minutes_credited} mins\n\nYour API Key now has active talk-time credits.`);
+      location.reload();
+    } catch (err) {
+      alert("Payment Error: " + err.message);
+    } finally {
+      payBtn.disabled = false;
+      payBtn.innerText = `🔒 Complete Payment (₹${selectedCheckoutAmount})`;
+    }
+  };
+
+  // Generate Key Modal
+  window.openGenerateKeyModal = () => {
+    const modal = document.getElementById("generateKeyModal");
+    if (modal) modal.classList.add("open");
+  };
+
+  window.executeGenerateKey = async () => {
+    const name = document.getElementById("genKeyName").value.trim() || "Web App Key";
+    const email = document.getElementById("genKeyEmail").value.trim() || "dev@spassociates.com";
+    const tier = document.getElementById("genKeyTier").value;
+
+    try {
+      const resp = await fetch("/api/v1/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key_name: name,
+          user_email: email,
+          plan_tier: tier,
+          initial_credits: 500.0
+        })
+      });
+
+      const data = await resp.json();
+      if (!data.success) throw new Error(data.detail || "Failed to create key");
+
+      document.getElementById("generateKeyModal").classList.remove("open");
+      alert(`🔑 New API Key Generated Successfully!\n\nKey: ${data.key.api_key}\nPlan: ${data.key.plan_tier}\nInitial Credits: ₹${data.key.credits_inr}\n\nMake sure to save it safely!`);
+      location.reload();
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
 });

@@ -1,575 +1,1102 @@
 <!DOCTYPE html>
-<html lang="te">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>S P Associates Software Company - AI Caller & Lead Closer CRM</title>
+  <title>LeadCloser AI - Autonomous Multilingual Voice Caller & Lead Closing CRM</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <!-- Top Navigation Bar -->
-  <header class="navbar">
+  <!-- ================================================================= -->
+  <!-- TOP NAVIGATION BAR (OUTPERO STYLE) -->
+  <!-- ================================================================= -->
+  <header class="navbar" style="position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.94); border-bottom: 1px solid var(--border-light);">
     <div class="navbar-left">
-      <div class="logo-icon">
-        <svg class="icon icon-md" viewBox="0 0 24 24">
+      <div class="logo-icon" style="background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);">
+        <svg class="icon icon-md" viewBox="0 0 24 24" style="color: #ffffff;">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
           <line x1="12" y1="19" x2="12" y2="23"></line>
           <line x1="8" y1="23" x2="16" y2="23"></line>
         </svg>
       </div>
-      <div class="brand-text">
+      <div class="brand-text" onclick="window.switchMainTab('landing')" style="cursor: pointer;">
         <div class="brand-title-wrap">
-          <span class="brand-title">S P ASSOCIATES</span>
-          <span class="brand-tag">SOFTWARE COMPANY</span>
+          <span class="brand-title" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.05rem; letter-spacing: -0.02em;">LEADCLOSER<span style="color: var(--primary);">.AI</span></span>
+          <span class="brand-tag" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">S P ASSOCIATES</span>
         </div>
-        <div class="brand-subtitle">AI Voice Caller & Project Lead Closing CRM</div>
+        <div class="brand-subtitle">Autonomous Multilingual AI Telecaller & CRM Platform</div>
       </div>
     </div>
 
-    <div class="navbar-center">
-      <div class="badge-tag live" title="Sarvam 105B LLM & Bulbul Flash Engine Connected">
-        <span class="pulse-dot"></span>
-        Sarvam AI Active
-      </div>
-      <div class="badge-tag" title="Natively switches based on customer language">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-        Telugu • Hindi • English
-      </div>
-    </div>
+    <!-- Navigation Tab Buttons -->
+    <nav class="nav-links-row" style="margin-left: 15px;">
+      <button class="nav-tab-btn active" id="tabBtnLanding" onclick="window.switchMainTab('landing')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        Overview
+      </button>
+      <button class="nav-tab-btn" id="tabBtnVoice" onclick="window.switchMainTab('landing', 'voiceSection')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        Voice Agents
+      </button>
+      <button class="nav-tab-btn" id="tabBtnCrm" onclick="window.switchMainTab('crm')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Live CRM Platform
+      </button>
+      <button class="nav-tab-btn" id="tabBtnApi" onclick="window.switchMainTab('landing', 'apiSection')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        Developer API
+      </button>
+      <button class="nav-tab-btn" id="tabBtnPricing" onclick="window.switchMainTab('landing', 'pricingSection')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+        Pricing & Credits
+      </button>
+    </nav>
 
-    <div class="navbar-right">
-      <!-- Data Tools Group -->
-      <div class="btn-group">
-        <a href="/api/leads/template" class="btn-nav" download title="Download formatted Excel template">
-          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-          Template
-        </a>
-        <button class="btn-nav" id="openUploadExcelBtn" title="Import Leads from Excel or CSV file">
-          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          Import
-        </button>
-        <a href="/api/leads/export-excel" class="btn-nav" download title="Export All Leads & Call Summaries to Excel">
-          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Export
-        </a>
+    <!-- Top Right Actions & Live Credit Balance -->
+    <div class="navbar-right" style="gap: 10px;">
+      <!-- Live API Balance Pill (Outpero Pay-As-You-Go Style) -->
+      <div class="credit-balance-chip" onclick="window.openCheckoutModal('Credit Top-Up', 1000)" title="Click to purchase additional talk-time API credits">
+        <span>🪙 ₹<span id="navCreditBalance">{{ "%.2f"|format(primary_key.credits_inr if primary_key else 2500.0) }}</span></span>
+        <span style="color: #166534; font-weight: 500;">(~<span id="navMinutesBalance">{{ "%.0f"|format((primary_key.credits_inr if primary_key else 2500.0) / 5.0) }}</span> Mins)</span>
+        <span class="add-icon" title="Add Credits">+</span>
       </div>
 
-      <!-- Action Buttons -->
-      <button class="btn btn-campaign" id="openCampaignModalBtn">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        Auto-Campaign
+      <!-- Quick Action Buttons -->
+      <button class="btn btn-outline" id="navGetApiKeyBtn" onclick="window.switchMainTab('landing', 'apiSection')" style="font-size: 0.78rem; font-weight: 700;">
+        ⚡ API Keys
       </button>
 
-      <button class="btn btn-primary" id="openAddLeadBtn">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Add Lead
+      <button class="btn btn-primary" id="navLaunchCrmBtn" onclick="window.switchMainTab('crm')" style="font-size: 0.78rem; font-weight: 700; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        <span id="navLaunchCrmText">Launch CRM Station</span>
       </button>
     </div>
   </header>
 
-  <!-- Live Autonomous Calling Campaign Banner -->
-  <div class="campaign-banner" id="campaignBanner">
-    <div class="campaign-header-row">
-      <div style="display: flex; align-items: center; gap: 8px;">
+
+  <!-- ================================================================= -->
+  <!-- VIEW 1: OUTPERO-STYLE SAAS LANDING & DEVELOPER PLATFORM -->
+  <!-- ================================================================= -->
+  <div id="viewLanding" class="view-landing-wrapper">
+    
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-pill-badge">
         <span class="pulse-dot"></span>
-        <strong style="color: #6d28d9; font-size: 0.92rem;">AUTONOMOUS AI CALLING CAMPAIGN IN PROGRESS</strong>
-        <span id="campaignModeBadge" class="lead-status status-qualified">SIMULATION</span>
+        🇮🇳 India's #1 Multilingual AI Telecalling & Lead Closing Platform
       </div>
-      <div style="display: flex; gap: 6px;">
-        <button class="btn btn-outline" id="pauseCampaignBtn" style="padding: 3px 9px; font-size: 0.74rem;">⏸️ Pause</button>
-        <button class="btn btn-outline" id="stopCampaignBtn" style="padding: 3px 9px; color: #dc2626; border-color: #fca5a5; font-size: 0.74rem;">⏹️ Stop</button>
+
+      <h1 class="hero-title">
+        Turn Leads into Closed Projects in <span class="highlight">30 Seconds</span> with Autonomous AI Voice Agents
+      </h1>
+
+      <p class="hero-subtitle">
+        Deploy human-like AI voice employees that call new leads instantly, speak fluent <strong>Telugu</strong>, <strong>Hindi</strong>, and <strong>Indian English</strong>, handle price objections, book live demos, and sync executive summaries directly to CRM or via REST API.
+      </p>
+
+      <div class="hero-cta-group">
+        <button class="btn-hero-primary" onclick="window.switchMainTab('crm')">
+          <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          Try Live AI Caller (Web Mic)
+        </button>
+        <button class="btn-hero-secondary" onclick="window.openCheckoutModal('Business Growth Tier', 4999)">
+          <svg class="icon icon-md" viewBox="0 0 24 24" style="color: #059669;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+          Buy API Credits (₹5/min)
+        </button>
+        <button class="btn-hero-secondary" onclick="window.scrollToSection('apiSection')">
+          <svg class="icon icon-md" viewBox="0 0 24 24" style="color: var(--primary);"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          View Developer API Docs
+        </button>
       </div>
-    </div>
 
-    <div class="campaign-progress-bar-bg">
-      <div class="campaign-progress-bar-fill" id="campaignProgressBar"></div>
-    </div>
-
-    <div class="campaign-stats-row">
-      <div id="campaignCurrentLead" style="color: #1e3a8a; font-weight: 600;">
-        📞 Preparing campaign...
+      <!-- Core Metrics Row (Outpero Proof Points) -->
+      <div class="metrics-grid">
+        <div class="metric-item">
+          <div class="metric-val">⚡ 30s</div>
+          <div class="metric-lbl">Lead Callback Speed</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-val">₹5.00</div>
+          <div class="metric-lbl">Per Connected Talk-Time Min</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-val">3.4x</div>
+          <div class="metric-lbl">Higher Demo Booking Rate</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-val">100%</div>
+          <div class="metric-lbl">English Executive CRM Summaries</div>
+        </div>
       </div>
-      <div class="campaign-counters">
-        <span style="color: var(--text-muted);">Progress: <strong id="campaignProgressText" style="color: var(--text-main);">0 / 0</strong></span>
-        <span style="color: #059669;">Demos Booked: <strong id="campaignDemosCount">0</strong></span>
-        <span style="color: #2563eb;">Closed Won: <strong id="campaignWonCount">0</strong></span>
-        <span style="color: #d97706;">Follow Up: <strong id="campaignFollowCount">0</strong></span>
-      </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- Main 3-Column Structured Dashboard -->
-  <main class="dashboard-grid">
+    <div class="saas-container">
 
-    <!-- COLUMN 1: LEADS CRM PIPELINE -->
-    <section class="leads-sidebar card-panel">
-      <div class="sidebar-header">
-        <div class="sidebar-title-row">
-          <div>
-            <h2 style="font-size: 0.98rem; font-weight: 800; color: #0f172a;">Leads Pipeline</h2>
-            <span style="font-size: 0.72rem; color: var(--text-muted);">Click lead to inspect summary & dial</span>
+      <!-- ============================================================= -->
+      <!-- 30-SECOND LEAD DIALING SHOWCASE (OUTPERO VALUE PROP) -->
+      <!-- ============================================================= -->
+      <section class="dialing-flow-card">
+        <div class="section-header-center">
+          <span class="section-tag">Instant Speed to Lead</span>
+          <h2 class="section-title">How Indian Businesses Close Deals 5x Faster</h2>
+          <p class="section-desc">When a customer requests a quote on Meta Ads, Google Ads, IndiaMART, or your website, our AI agent calls them in under 30 seconds while their intent is peak.</p>
+        </div>
+
+        <!-- 5-Step Process Flow -->
+        <div class="flow-steps-grid">
+          <div class="flow-step-item">
+            <div class="flow-step-number">1</div>
+            <div class="flow-step-title">Lead Ingestion</div>
+            <div class="flow-step-desc">Meta Ads, Google Ads, IndiaMART, or Excel Sheet upload into CRM.</div>
           </div>
-          <div style="display: flex; gap: 5px; align-items: center;">
-            <button class="btn btn-outline" id="sidebarUploadBtn" style="padding: 3px 7px; font-size: 0.72rem;" title="Upload Excel/CSV">
-              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-              Import
+          <div class="flow-step-item active">
+            <div class="flow-step-number" style="background: #2563eb;">2</div>
+            <div class="flow-step-title">30s Auto-Dial</div>
+            <div class="flow-step-desc">AI caller dials customer mobile number via Twilio/carrier stream.</div>
+          </div>
+          <div class="flow-step-item">
+            <div class="flow-step-number">3</div>
+            <div class="flow-step-title">Language Match</div>
+            <div class="flow-step-desc">Natively converses in Telugu, Hindi, or English matching the client.</div>
+          </div>
+          <div class="flow-step-item">
+            <div class="flow-step-number">4</div>
+            <div class="flow-step-title">Objection Handled</div>
+            <div class="flow-step-desc">Explains milestone pricing, timelines, and schedules Zoom demo.</div>
+          </div>
+          <div class="flow-step-item">
+            <div class="flow-step-number" style="background: #059669;">5</div>
+            <div class="flow-step-title">Deal Closed</div>
+            <div class="flow-step-desc">English executive summary & WhatsApp link dispatched immediately.</div>
+          </div>
+        </div>
+
+        <!-- Comparison: Traditional Call Center vs LeadCloser AI -->
+        <div class="comparison-grid">
+          <div class="compare-card compare-bad">
+            <span class="compare-badge">❌ Traditional Human Call Centers</span>
+            <ul class="compare-list">
+              <li>⚠️ <strong>Slow Dialing:</strong> Takes 4 to 24 hours to follow up on web enquiries; lead goes cold.</li>
+              <li>⚠️ <strong>High Overhead:</strong> ₹25,000 to ₹40,000 monthly salary per telecaller plus hardware and seat licenses.</li>
+              <li>⚠️ <strong>Language Barriers:</strong> Finding reps fluent in Telugu, Hindi, and English simultaneously is expensive and hard.</li>
+              <li>⚠️ <strong>Inconsistent Closing:</strong> Sales reps skip objection playbooks and forget CRM notes.</li>
+            </ul>
+          </div>
+          <div class="compare-card compare-good">
+            <span class="compare-badge">✅ LeadCloser AI Voice Employee</span>
+            <ul class="compare-list">
+              <li>⚡ <strong>Instant 30s Dial:</strong> Calls leads while they are still browsing your services.</li>
+              <li>💰 <strong>Pay Only for Talk-Time:</strong> Just ₹5 per connected minute. Unanswered calls are ₹0!</li>
+              <li>🗣️ <strong>Native Trilingual Fluency:</strong> Flawless code-switching in Telugu, Hindi, and Indian English with 0.8s response loops.</li>
+              <li>🎯 <strong>100% CRM Discipline:</strong> Every call logs executive English summaries, objections, and Zoom demos automatically.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ============================================================= -->
+      <!-- INTERACTIVE MULTILINGUAL VOICE AGENT SHOWCASE -->
+      <!-- ============================================================= -->
+      <section class="voice-showcase-box" id="voiceSection">
+        <div class="section-header-center">
+          <span class="section-tag">Interactive Voice Demo</span>
+          <h2 class="section-title">Listen to Our AI Voice Closer in Real Time</h2>
+          <p class="section-desc">Powered by Sarvam Saaras & Bulbul Flash engines. Experience natural human pauses, empathetic active listening, and persuasive sales closing.</p>
+        </div>
+
+        <!-- Scenario Cards -->
+        <div class="voice-sample-cards">
+          <div class="voice-sample-card" onclick="window.playVoiceScenario('te', 1)">
+            <span class="sample-scenario-tag">తెలుగు • Lead Qualification</span>
+            <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 4px; color: #0f172a;">Grocery Supermarket App</div>
+            <div class="sample-dialogue-text">
+              "సరేనండి, అర్థమైంది. కిరాణా వ్యాపారానికి మొబైల్ ఆర్డరింగ్ యాప్ మరియు బిల్లింగ్ సాఫ్ట్‌వేర్ రెండూ చాలా అవసరం. మా వద్ద ₹30,000 నుండి ప్రారంభమవుతాయి. రేపు ఉదయం 11:00కి 10 నిమిషాల జూమ్ డెమో చూపిస్తాము, ఓకేనా అండి?"
+            </div>
+            <div class="sample-play-row">
+              <span style="font-size: 0.73rem; color: var(--text-muted);">Voice: Kavitha (Telugu)</span>
+              <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.74rem;">▶️ Play Audio</button>
+            </div>
+          </div>
+
+          <div class="voice-sample-card" onclick="window.playVoiceScenario('hi', 2)">
+            <span class="sample-scenario-tag" style="color: #b45309; background: #fffbeb;">हिंदी • Objection Handling</span>
+            <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 4px; color: #0f172a;">Fleet Logistics & Tracking</div>
+            <div class="sample-dialogue-text">
+              "जी बिल्कुल सर, समझ गया। बजट को लेकर चिंता मत कीजिए, हमारे पास आसान माइलस्टोन पेमेंट्स हैं। आपकी लॉजिस्टिक्स कंपनी के लिए कस्टम फ़्लीट सिस्टम 3 हफ़्ते में तैयार हो जाएगा। क्या कल सुबह 11 बजे लाइव डेमो फ़िक्स करें?"
+            </div>
+            <div class="sample-play-row">
+              <span style="font-size: 0.73rem; color: var(--text-muted);">Voice: Swara / Pooja (Hindi)</span>
+              <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.74rem;">▶️ Play Audio</button>
+            </div>
+          </div>
+
+          <div class="voice-sample-card" onclick="window.playVoiceScenario('en', 3)">
+            <span class="sample-scenario-tag" style="color: #047857; background: #ecfdf5;">English • Deal Closing</span>
+            <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 4px; color: #0f172a;">Diagnostic Clinic Automation</div>
+            <div class="sample-dialogue-text">
+              "That makes total sense, doctor! We can launch your automated WhatsApp and AI phone appointment system within 10 days. I've sent the portfolio over WhatsApp. Shall we lock a 10-minute Zoom demo for tomorrow morning at 11:00 AM?"
+            </div>
+            <div class="sample-play-row">
+              <span style="font-size: 0.73rem; color: var(--text-muted);">Voice: Tarun (Indian English)</span>
+              <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.74rem;">▶️ Play Audio</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 24px;">
+          <button class="btn btn-primary" onclick="window.switchMainTab('crm')" style="padding: 10px 24px;">
+            🎙️ Test With Your Own Microphone in CRM Station
+          </button>
+        </div>
+      </section>
+
+
+      <!-- ============================================================= -->
+      <!-- 6-CORE FEATURES GRID -->
+      <!-- ============================================================= -->
+      <section style="margin-bottom: 50px;">
+        <div class="section-header-center">
+          <span class="section-tag">Enterprise Capabilities</span>
+          <h2 class="section-title">Built for High-Volume B2B Sales Teams</h2>
+          <p class="section-desc">Every tool you need to scale your outreach, manage pipelines, and integrate with your existing technology stack.</p>
+        </div>
+
+        <div class="features-grid-3x2">
+          <div class="feature-box">
+            <div class="feature-icon-circle">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            </div>
+            <div class="feature-title">Instant Webhook & API Triggers</div>
+            <div class="feature-desc">Connect Meta lead forms, Google Search ads, or website enquiry forms to automatically trigger calls within 30 seconds via REST API.</div>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon-circle" style="background: #f5f3ff; color: #7c3aed;">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            </div>
+            <div class="feature-title">Trilingual Code-Switching</div>
+            <div class="feature-desc">Seamlessly adapts to Telugu, Tenglish, Hindi, Hinglish, and Indian English mid-sentence without robotic tone drops or latency delays.</div>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon-circle" style="background: #ecfdf5; color: #059669;">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            </div>
+            <div class="feature-title">Human Turn-Taking & Interruption</div>
+            <div class="feature-desc">Low-latency Web Audio VAD with barge-in support. If the customer interrupts, the AI pauses politely and responds to their exact thought.</div>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon-circle" style="background: #eff6ff; color: #2563eb;">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            </div>
+            <div class="feature-title">Executive English Call Summaries</div>
+            <div class="feature-desc">Post-call intelligence extraction translates all notes, objections, and next action items into clean, professional English for executive CRM review.</div>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon-circle" style="background: #fffbeb; color: #d97706;">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            </div>
+            <div class="feature-title">Excel & CSV Batch Campaigns</div>
+            <div class="feature-desc">Upload spreadsheets with hundreds of leads. Run continuous autonomous auto-calling campaigns with live progress bars and closing analytics.</div>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon-circle" style="background: #fdf2f8; color: #db2777;">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <div class="feature-title">DLT & TRAI Compliant Calling</div>
+            <div class="feature-desc">Built for Indian telecom regulations. Native integration with Twilio and Exotel DLT-registered CLI lines with automatic DND screening.</div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ============================================================= -->
+      <!-- DEVELOPER API & SDK PLATFORM SECTION (PURCHASE OUR APIS) -->
+      <!-- ============================================================= -->
+      <section class="api-portal-card" id="apiSection">
+        <div class="section-header-center">
+          <span class="section-tag">Developer Platform & APIs</span>
+          <h2 class="section-title">Integrate LeadCloser AI into Your Systems</h2>
+          <p class="section-desc">Purchase API keys, trigger calls programmatically, receive webhook transcripts, and sync deal intelligence into any CRM or web app.</p>
+        </div>
+
+        <!-- API Key Management Bar -->
+        <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: 12px; padding: 18px 20px; margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a;">Active API Keys & Credit Balance</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">
+                Primary Key: <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: #1e3a8a;">{{ primary_key.api_key if primary_key else 'lc_live_sp_assoc_7894a1b2' }}</code>
+                <button class="btn btn-outline" style="padding: 2px 7px; font-size: 0.7rem; margin-left: 6px;" onclick="navigator.clipboard.writeText('{{ primary_key.api_key if primary_key else "lc_live_sp_assoc_7894a1b2" }}'); alert('API Key copied to clipboard!')">Copy</button>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-outline" onclick="window.openGenerateKeyModal()">
+                + Generate New API Key
+              </button>
+              <button class="btn btn-primary" onclick="window.openCheckoutModal('Developer Credits', 1000)">
+                💳 Buy Talk-Time Credits
+              </button>
+            </div>
+          </div>
+
+          <!-- Keys Table -->
+          <table class="api-keys-table">
+            <thead>
+              <tr>
+                <th>Key Name</th>
+                <th>Plan Tier</th>
+                <th>Balance (INR)</th>
+                <th>Rate / Min</th>
+                <th>Total Calls</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for k in api_keys %}
+              <tr>
+                <td><strong>{{ k.key_name }}</strong></td>
+                <td><span class="badge-tag" style="background:#eff6ff; color:#1d4ed8;">{{ k.plan_tier }}</span></td>
+                <td><strong style="color: #059669;">₹{{ "%.2f"|format(k.credits_inr) }}</strong></td>
+                <td>₹{{ "%.2f"|format(k.rate_per_min) }}/min</td>
+                <td>{{ k.total_calls }} calls</td>
+                <td><span class="lead-status status-qualified">{{ k.status.upper() }}</span></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted);">No custom API keys generated yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Interactive Code Snippet Tabs -->
+        <div class="code-snippet-box">
+          <div class="code-header-bar">
+            <div class="code-tabs-group">
+              <button class="code-lang-btn active" id="btnCodeCurl" onclick="window.switchCodeTab('curl')">cURL</button>
+              <button class="code-lang-btn" id="btnCodePython" onclick="window.switchCodeTab('python')">Python (httpx)</button>
+              <button class="code-lang-btn" id="btnCodeJs" onclick="window.switchCodeTab('js')">Node.js (JavaScript)</button>
+            </div>
+            <button class="btn btn-outline" style="padding: 2px 8px; font-size: 0.72rem; color: #94a3b8; border-color: #475569;" onclick="window.copyActiveCode()">
+              📋 Copy Code
             </button>
-            <span class="badge-tag" id="leadsCountBadge">{{ leads|length }} Total</span>
+          </div>
+
+          <pre class="code-pre-box" id="codeDisplayPre">curl -X POST http://localhost:8000/api/v1/calls/dispatch \
+  -H "Authorization: Bearer {{ primary_key.api_key if primary_key else 'lc_live_sp_assoc_7894a1b2' }}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lead_name": "Ramesh Naidu",
+    "phone": "+919848011223",
+    "company": "Naidu Supermarkets",
+    "service": "Mobile App & Billing",
+    "budget": "₹75,000",
+    "language": "te-IN"
+  }'</pre>
+        </div>
+
+        <!-- API Sandbox Dispatch Tester -->
+        <div style="background: #f1f5f9; border: 1px solid var(--border-medium); border-radius: 12px; padding: 20px; margin-top: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <strong style="color: #0f172a; font-size: 0.92rem;">⚡ Live API Dispatch Sandbox</strong>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Test triggering a real-time AI sales call directly through our REST API:</div>
+            </div>
+            <span class="badge-tag live"><span class="pulse-dot"></span> Live API Ready</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 10px; align-items: flex-end;">
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);">Customer Name:</label>
+              <input type="text" id="sandboxName" value="Kalyan Kumar" style="width: 100%; padding: 7px; border: 1px solid var(--border-medium); border-radius: 6px; font-size: 0.82rem;" />
+            </div>
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);">Phone Number:</label>
+              <input type="text" id="sandboxPhone" value="+91 9848011223" style="width: 100%; padding: 7px; border: 1px solid var(--border-medium); border-radius: 6px; font-size: 0.82rem;" />
+            </div>
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);">Company:</label>
+              <input type="text" id="sandboxCompany" value="Kalyan Textiles" style="width: 100%; padding: 7px; border: 1px solid var(--border-medium); border-radius: 6px; font-size: 0.82rem;" />
+            </div>
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);">Service Needed:</label>
+              <input type="text" id="sandboxService" value="E-Commerce & Billing" style="width: 100%; padding: 7px; border: 1px solid var(--border-medium); border-radius: 6px; font-size: 0.82rem;" />
+            </div>
+            <div>
+              <button class="btn btn-primary" onclick="window.runApiSandboxTest()" id="sandboxRunBtn" style="padding: 7px 16px; font-size: 0.82rem; height: 34px;">
+                🚀 Dispatch Call via API
+              </button>
+            </div>
+          </div>
+
+          <!-- Sandbox Live JSON Response Area -->
+          <div id="sandboxResponseBox" style="display: none; margin-top: 14px; background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.78rem; max-height: 180px; overflow-y: auto;">
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ============================================================= -->
+      <!-- PRICING & CREDIT PURCHASE STORE (OUTPERO STYLE) -->
+      <!-- ============================================================= -->
+      <section style="margin-bottom: 50px;" id="pricingSection">
+        <div class="section-header-center">
+          <span class="section-tag">Simple Indian Pricing</span>
+          <h2 class="section-title">Transparent Talk-Time Plans & API Licenses</h2>
+          <p class="section-desc">Billed in Indian Rupees (₹). Pay strictly for connected minutes. Unanswered calls and ringing time are completely free.</p>
+        </div>
+
+        <!-- 3-Tier Pricing Cards -->
+        <div class="pricing-grid-3">
+          <!-- Plan 1: Developer Starter -->
+          <div class="pricing-card">
+            <div class="pricing-plan-name">Developer Starter</div>
+            <div class="pricing-plan-desc">For indie developers and small businesses testing automated voice workflows.</div>
+            <div class="pricing-amount-row">
+              <span class="pricing-currency">₹</span>
+              <span class="pricing-number">999</span>
+              <span class="pricing-period">/ month</span>
+            </div>
+            <div class="pricing-rate-sub">Includes 200 Connected Minutes (₹4.99/min)</div>
+
+            <ul class="pricing-feature-list">
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> 1 Dedicated REST API Key</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Telugu, Hindi & English Native Voices</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Web Audio Browser Mic Testing</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Real-time Webhooks & JSON Transcripts</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Full Integrated CRM Dashboard Access</li>
+            </ul>
+
+            <button class="pricing-btn" onclick="window.openCheckoutModal('Developer Starter', 999)">
+              Purchase Starter API
+            </button>
+          </div>
+
+          <!-- Plan 2: Business Growth (Popular) -->
+          <div class="pricing-card popular">
+            <div class="pricing-badge-popular">Most Popular</div>
+            <div class="pricing-plan-name">Business Growth</div>
+            <div class="pricing-plan-desc">For growing agencies, IT software firms, and sales teams executing daily outbound calls.</div>
+            <div class="pricing-amount-row">
+              <span class="pricing-currency">₹</span>
+              <span class="pricing-number">4,999</span>
+              <span class="pricing-period">/ month</span>
+            </div>
+            <div class="pricing-rate-sub">Includes 1,200 Connected Minutes (₹4.16/min)</div>
+
+            <ul class="pricing-feature-list">
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> 5 Dedicated API Keys + Sub-Accounts</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Priority Low-Latency Voice Engine (0.8s)</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Autonomous Batch Auto-Calling Campaign</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Excel & CSV Lead Ingestion & Exporter</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> WhatsApp Meeting Link Automation</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Priority 24/7 Developer Support</li>
+            </ul>
+
+            <button class="pricing-btn primary" onclick="window.openCheckoutModal('Business Growth', 4999)">
+              Purchase Growth API (Instant)
+            </button>
+          </div>
+
+          <!-- Plan 3: Scale Enterprise -->
+          <div class="pricing-card">
+            <div class="pricing-plan-name">Scale Enterprise</div>
+            <div class="pricing-plan-desc">High-volume call operations requiring custom telephony SIP trunks and custom voice tuning.</div>
+            <div class="pricing-amount-row">
+              <span class="pricing-currency">₹</span>
+              <span class="pricing-number">14,999</span>
+              <span class="pricing-period">/ month</span>
+            </div>
+            <div class="pricing-rate-sub">Includes 4,000 Connected Minutes (₹3.75/min)</div>
+
+            <ul class="pricing-feature-list">
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Unlimited API Keys & High Concurrency</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> DLT Whitelisted Dedicated Indian Numbers</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Custom Brand Voice Cloning & Prompts</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Dedicated Account Manager & SLA Guarantee</li>
+              <li><svg class="icon icon-sm" style="color: #059669;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Custom ERP/CRM Webhook Handlers</li>
+            </ul>
+
+            <button class="pricing-btn" onclick="window.openCheckoutModal('Scale Enterprise', 14999)">
+              Purchase Enterprise API
+            </button>
           </div>
         </div>
 
-        <!-- Quick Search Box -->
-        <div class="search-box">
-          <svg class="icon icon-sm search-icon-svg" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" id="leadSearchInput" placeholder="Search leads by name, phone, company..." />
-        </div>
-      </div>
-
-      <div class="leads-list" id="leadsListContainer">
-        {% for lead in leads %}
-        <div class="lead-card {% if loop.first %}active{% endif %}" id="lead-card-{{ lead.id }}" onclick="selectLead({{ lead | tojson }})">
-          <div class="lead-header">
-            <span class="lead-name">{{ lead.name }}</span>
-            <span class="lead-status status-{{ lead.status.lower() }}">{{ lead.status }}</span>
-          </div>
-          <div class="lead-company">
-            <svg class="icon icon-sm" style="color: var(--text-muted);" viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M9 3h6v4H9z"></path></svg>
-            {{ lead.company or 'Business' }} • {{ lead.service_needed or 'Software' }}
-          </div>
-          <div class="lead-details-row">
-            <span>💰 {{ lead.budget or 'Flexible' }}</span>
-            <span>⏱️ {{ lead.timeline or 'Immediate' }}</span>
-          </div>
-          {% if lead.last_call_summary %}
-          <div style="margin-top: 6px; padding-top: 5px; border-top: 1px dashed var(--border-light); font-size: 0.73rem; color: var(--primary); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            📝 <strong>Summary:</strong> {{ lead.last_call_summary }}
-          </div>
-          {% endif %}
-        </div>
-        {% endfor %}
-      </div>
-    </section>
-
-    <!-- COLUMN 2: LIVE CALLING STATION & SUMMARY VIEW -->
-    <section class="caller-center card-panel">
-      <!-- Active Lead Bar -->
-      <div class="caller-header">
-        <div class="active-lead-banner">
-          <div class="lead-avatar" id="activeLeadAvatar">
-            {% if leads %}{{ leads[0].name[0] }}{% else %}C{% endif %}
-          </div>
+        <!-- Interactive Pay-As-You-Go Credit Calculator -->
+        <div class="calc-box">
           <div>
-            <h2 style="font-size: 1rem; font-weight: 800; color: #0f172a;" id="activeLeadName">
-              {% if leads %}{{ leads[0].name }}{% else %}Quick Simulator (Anonymous Lead){% endif %}
-            </h2>
-            <div style="font-size: 0.78rem; color: var(--text-muted);" id="activeLeadCompany">
-              {% if leads %}{{ leads[0].company }} • {{ leads[0].service_needed }}{% else %}Web Testing Call{% endif %}
-            </div>
+            <div style="font-weight: 800; font-size: 1rem; color: #0f172a; margin-bottom: 4px;">⚡ Pay-As-You-Go Credit Top-Up</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Don't need a monthly subscription? Add talk-time credits anytime. Credits never expire!</div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <button class="quick-amount-pill active" onclick="window.setCalcAmount(500, this)">+ ₹500 (100 Mins)</button>
+            <button class="quick-amount-pill" onclick="window.setCalcAmount(1000, this)">+ ₹1,000 (200 Mins)</button>
+            <button class="quick-amount-pill" onclick="window.setCalcAmount(2500, this)">+ ₹2,500 (500 Mins)</button>
+            <button class="quick-amount-pill" onclick="window.setCalcAmount(5000, this)">+ ₹5,000 (1,000 Mins)</button>
+            
+            <button class="btn btn-primary" id="btnCalcBuy" onclick="window.openCheckoutModal('Credit Top-Up', 500)" style="margin-left: 8px;">
+              💳 Top Up ₹500
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /.saas-container -->
+
+    <!-- Outpero-Style Modern SaaS Footer -->
+    <footer class="saas-footer">
+      <div class="footer-content">
+        <div>
+          <div class="footer-brand-title">LEADCLOSER<span style="color: #38bdf8;">.AI</span></div>
+          <p class="footer-brand-desc">
+            Autonomous Multilingual AI Telecalling and Deal Closing CRM. Built by <strong>S P Associates Software Company</strong> to help businesses scale outbound sales and close high-ticket software projects.
+          </p>
+          <div style="font-size: 0.74rem; color: #475569; margin-top: 12px;">
+            Certified Sarvam AI Developer Partner • 100% TRAI DLT Telecom Regulated
           </div>
         </div>
 
-        <div style="display: flex; gap: 7px;">
-          <button class="btn btn-outline" id="viewLeadHistoryBtn" title="View past call summaries for this lead">
-            <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            History
+        <div>
+          <div class="footer-col-title">Product</div>
+          <ul class="footer-links-list">
+            <li><a href="javascript:void(0)" onclick="window.switchMainTab('crm')">CRM Calling Station</a></li>
+            <li><a href="javascript:void(0)" onclick="window.switchMainTab('landing', 'voiceSection')">Voice Agent Showcase</a></li>
+            <li><a href="javascript:void(0)" onclick="window.switchMainTab('crm')">Excel Leads Batch Dialing</a></li>
+            <li><a href="/api/leads/template">Download Excel Template</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Developers & API</div>
+          <ul class="footer-links-list">
+            <li><a href="javascript:void(0)" onclick="window.switchMainTab('landing', 'apiSection')">REST API Documentation</a></li>
+            <li><a href="javascript:void(0)" onclick="window.openGenerateKeyModal()">Generate API Key</a></li>
+            <li><a href="javascript:void(0)" onclick="window.switchMainTab('landing', 'pricingSection')">Buy Talk-Time Credits</a></li>
+            <li><a href="javascript:void(0)" onclick="window.switchMainTab('landing', 'apiSection')">Webhooks Guide</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Company</div>
+          <ul class="footer-links-list">
+            <li><a href="javascript:void(0)">S P Associates Software Company</a></li>
+            <li><a href="javascript:void(0)">Support: support@spassociates.com</a></li>
+            <li><a href="javascript:void(0)">Hyderabad, Telangana, India</a></li>
+            <li><a href="javascript:void(0)">Privacy Policy & Terms</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom-row">
+        <div>© 2026 S P Associates Software Company. All rights reserved.</div>
+        <div>Engineered with Sarvam 105B & Bulbul Flash Voice AI</div>
+      </div>
+    </footer>
+
+  </div><!-- /#viewLanding -->
+
+
+  <!-- ================================================================= -->
+  <!-- VIEW 2: INTEGRATED LIVE CRM CALLING & DEAL CLOSING STATION -->
+  <!-- ================================================================= -->
+  <div id="viewCrm" class="view-crm-wrapper" style="display: none;">
+
+    <!-- Live Autonomous Calling Campaign Banner -->
+    <div class="campaign-banner" id="campaignBanner">
+      <div class="campaign-header-row">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="pulse-dot"></span>
+          <strong style="color: #6d28d9; font-size: 0.92rem;">AUTONOMOUS AI CALLING CAMPAIGN IN PROGRESS</strong>
+          <span id="campaignModeBadge" class="lead-status status-qualified">SIMULATION</span>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <button class="btn btn-outline" id="pauseCampaignBtn" style="padding: 3px 9px; font-size: 0.74rem;">⏸️ Pause</button>
+          <button class="btn btn-outline" id="stopCampaignBtn" style="padding: 3px 9px; color: #dc2626; border-color: #fca5a5; font-size: 0.74rem;">⏹️ Stop</button>
+        </div>
+      </div>
+
+      <div class="campaign-progress-bar-bg">
+        <div class="campaign-progress-bar-fill" id="campaignProgressBar"></div>
+      </div>
+
+      <div class="campaign-stats-row">
+        <div id="campaignCurrentLead" style="color: #1e3a8a; font-weight: 600;">
+          📞 Preparing campaign...
+        </div>
+        <div class="campaign-counters">
+          <span style="color: var(--text-muted);">Progress: <strong id="campaignProgressText" style="color: var(--text-main);">0 / 0</strong></span>
+          <span style="color: #059669;">Demos Booked: <strong id="campaignDemosCount">0</strong></span>
+          <span style="color: #2563eb;">Closed Won: <strong id="campaignWonCount">0</strong></span>
+          <span style="color: #d97706;">Follow Up: <strong id="campaignFollowCount">0</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRM Action Ribbon -->
+    <div style="background: #ffffff; border-bottom: 1px solid var(--border-light); padding: 8px 20px; display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button class="btn btn-outline" onclick="window.switchMainTab('landing')" style="font-size: 0.76rem; font-weight: 700;">
+          ← Back to Website
+        </button>
+        <span style="font-size: 0.8rem; font-weight: 800; color: #0f172a;">Live Sales Pipeline & Calling Station</span>
+        <span class="badge-tag live"><span class="pulse-dot"></span> Ready to Call</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 7px;">
+        <a href="/api/leads/template" class="btn btn-outline" download style="font-size: 0.75rem;">📥 Template</a>
+        <button class="btn btn-outline" id="openUploadExcelBtn" style="font-size: 0.75rem;">📊 Import Excel</button>
+        <a href="/api/leads/export-excel" class="btn btn-outline" download style="font-size: 0.75rem;">📈 Export Summaries</a>
+        <button class="btn btn-campaign" id="openCampaignModalBtn" style="font-size: 0.76rem;">▶️ Auto-Campaign</button>
+        <button class="btn btn-primary" id="openAddLeadBtn" style="font-size: 0.76rem;">+ Add Lead</button>
+      </div>
+    </div>
+
+    <!-- Main 3-Column Structured CRM Dashboard -->
+    <main class="dashboard-grid">
+
+      <!-- COLUMN 1: LEADS CRM PIPELINE -->
+      <section class="leads-sidebar card-panel">
+        <div class="sidebar-header">
+          <div class="sidebar-title-row">
+            <div>
+              <h2 style="font-size: 0.98rem; font-weight: 800; color: #0f172a;">Leads Pipeline</h2>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Click lead to inspect summary & dial</span>
+            </div>
+            <div style="display: flex; gap: 5px; align-items: center;">
+              <button class="btn btn-outline" id="sidebarUploadBtn" style="padding: 3px 7px; font-size: 0.72rem;" title="Upload Excel/CSV">
+                Import
+              </button>
+              <span class="badge-tag" id="leadsCountBadge">{{ leads|length }} Total</span>
+            </div>
+          </div>
+
+          <!-- Quick Search Box -->
+          <div class="search-box">
+            <svg class="icon icon-sm search-icon-svg" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="leadSearchInput" placeholder="Search leads by name, phone, company..." />
+          </div>
+        </div>
+
+        <div class="leads-list" id="leadsListContainer">
+          {% for lead in leads %}
+          <div class="lead-card {% if loop.first %}active{% endif %}" id="lead-card-{{ lead.id }}" onclick="selectLead({{ lead | tojson }})">
+            <div class="lead-header">
+              <span class="lead-name">{{ lead.name }}</span>
+              <span class="lead-status status-{{ lead.status.lower() }}">{{ lead.status }}</span>
+            </div>
+            <div class="lead-company">
+              <svg class="icon icon-sm" style="color: var(--text-muted);" viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M9 3h6v4H9z"></path></svg>
+              {{ lead.company or 'Business' }} • {{ lead.service_needed or 'Software' }}
+            </div>
+            <div class="lead-details-row">
+              <span>💰 {{ lead.budget or 'Flexible' }}</span>
+              <span>⏱️ {{ lead.timeline or 'Immediate' }}</span>
+            </div>
+            {% if lead.last_call_summary %}
+            <div style="margin-top: 6px; padding-top: 5px; border-top: 1px dashed var(--border-light); font-size: 0.73rem; color: var(--primary); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              📝 <strong>Summary:</strong> {{ lead.last_call_summary }}
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- COLUMN 2: LIVE CALLING STATION & SUMMARY VIEW -->
+      <section class="caller-center card-panel">
+        <!-- Active Lead Bar -->
+        <div class="caller-header">
+          <div class="active-lead-banner">
+            <div class="lead-avatar" id="activeLeadAvatar">
+              {% if leads %}{{ leads[0].name[0] }}{% else %}C{% endif %}
+            </div>
+            <div>
+              <h2 style="font-size: 1rem; font-weight: 800; color: #0f172a;" id="activeLeadName">
+                {% if leads %}{{ leads[0].name }}{% else %}Quick Simulator (Anonymous Lead){% endif %}
+              </h2>
+              <div style="font-size: 0.78rem; color: var(--text-muted);" id="activeLeadCompany">
+                {% if leads %}{{ leads[0].company }} • {{ leads[0].service_needed }}{% else %}Web Testing Call{% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 7px;">
+            <button class="btn btn-outline" id="viewLeadHistoryBtn" title="View past call summaries for this lead">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Summary History
+            </button>
+            <button class="btn btn-outline" id="phoneCallBtn" title="Dial via Outbound Carrier Telephony">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              Dial Phone
+            </button>
+          </div>
+        </div>
+
+        <!-- Lead Call Intelligence & Summary Bar (Stored from Previous Calls) -->
+        <div id="leadSummaryDrawer" class="lead-summary-bar">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Stored Call Summary (Executive Overview):
+            </span>
+            <span id="leadLastCalledAt" style="color: var(--text-muted); font-size: 0.72rem;">No previous call</span>
+          </div>
+          <div id="leadLastSummaryText" style="color: var(--text-secondary); line-height: 1.45; font-size: 0.82rem;">
+            Select a lead to see what was discussed in past calls.
+          </div>
+          <div id="leadActionItemText" style="color: var(--success); font-size: 0.76rem; font-weight: 600;"></div>
+        </div>
+
+        <!-- Real-Time Language Switching Bar -->
+        <div class="lang-switch-row">
+          <span style="font-weight: 600; font-size: 0.73rem; color: var(--text-secondary);">Language Mode:</span>
+          <button class="lang-pill-btn active" data-lang="" id="langPillAuto" onclick="window.setCallLanguage('')" title="Automatically detects customer language during conversation">
+            🌐 Auto-Detect
           </button>
-          <button class="btn btn-outline" id="phoneCallBtn" title="Make real phone call via Twilio">
+          <button class="lang-pill-btn" data-lang="te-IN" id="langPillTe" onclick="window.setCallLanguage('te-IN')" title="Greet and talk in Telugu">
+            తెలుగు (Telugu)
+          </button>
+          <button class="lang-pill-btn" data-lang="hi-IN" id="langPillHi" onclick="window.setCallLanguage('hi-IN')" title="Greet and talk in Hindi">
+            हिंदी (Hindi)
+          </button>
+          <button class="lang-pill-btn" data-lang="en-IN" id="langPillEn" onclick="window.setCallLanguage('en-IN')" title="Greet and talk in English">
+            English
+          </button>
+        </div>
+
+        <!-- Action & Voice Controls -->
+        <div class="call-controls-bar">
+          <button class="btn-call btn-start-call" id="startCallBtn">
             <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-            Dial Phone
+            Start AI Call (Web Mic)
+          </button>
+          <button class="btn-call btn-end-call" id="endCallBtn" style="display: none;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+            End Call
+          </button>
+
+          <button class="btn btn-outline" id="doneSpeakingBtn" style="display: none; padding: 6px 14px; border-color: #10b981; color: #047857; font-weight: 700; background: #ecfdf5; border-radius: 20px; font-size: 0.78rem;" title="Click if you finished speaking and want instant answer">
+            ✓ Done Speaking (Send Now)
+          </button>
+
+          <!-- Waveform Visualizer -->
+          <div class="wave-container" id="waveContainer">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+          </div>
+        </div>
+
+        <!-- Live Voice Conversation Box -->
+        <div class="transcript-box" id="transcriptBox">
+          <div class="message-bubble bubble-ai">
+            <div class="bubble-sender">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>
+              AI Sales Closer <span class="bubble-lang-badge te">Telugu • Hindi • English</span>
+            </div>
+            <div>నమస్కారం! / नमस्ते! / Hello! మేము <strong>S P Associates Software Company</strong> నుండి మాట్లాడుతున్నాము. మీ వ్యాపారం కోసం వెబ్‌సైట్, మొబైల్ యాప్ లేదా AI సొల్యూషన్స్ గురించి మాట్లాడటానికి సిద్ధంగా ఉన్నాము. 'Start AI Call' బటన్ నొక్కి మాట్లాడండి లేదా కింద టైప్ చేసి టెస్ట్ చేయండి!</div>
+          </div>
+        </div>
+
+        <!-- Live Status Strip -->
+        <div class="caller-status-strip">
+          <span id="callerStatus" style="font-weight: 600; color: var(--primary);">సిద్ధంగా ఉంది (Ready to Call)</span>
+          <span style="font-size: 0.74rem; color: var(--text-muted);" id="engineIndicator">Sarvam Trilingual Voice Engine (te • hi • en)</span>
+        </div>
+
+        <!-- Quick Text Message Tester Fallback -->
+        <div class="test-input-bar">
+          <input type="text" id="testTextInput" placeholder="మాట్లాడలేకపోతే ఇక్కడ టైప్ చేయండి... / Type in Telugu, Hindi or English..." />
+          <button class="btn btn-primary" id="sendTestBtn">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            Send
           </button>
         </div>
-      </div>
+      </section>
 
-      <!-- Lead Call Intelligence & Summary Bar (Stored from Previous Calls) -->
-      <div id="leadSummaryDrawer" class="lead-summary-bar">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px;">
-            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Stored Call Summary (Executive Overview):
-          </span>
-          <span id="leadLastCalledAt" style="color: var(--text-muted); font-size: 0.72rem;">No previous call</span>
-        </div>
-        <div id="leadLastSummaryText" style="color: var(--text-secondary); line-height: 1.45; font-size: 0.82rem;">
-          Select a lead to see what was discussed in past calls.
-        </div>
-        <div id="leadActionItemText" style="color: var(--success); font-size: 0.76rem; font-weight: 600;"></div>
-      </div>
-
-      <!-- Real-Time Language Switching Bar -->
-      <div class="lang-switch-row">
-        <span style="font-weight: 600; font-size: 0.73rem; color: var(--text-secondary);">Language Mode:</span>
-        <button class="lang-pill-btn active" data-lang="" id="langPillAuto" onclick="window.setCallLanguage('')" title="Automatically detects customer language during conversation">
-          🌐 Auto-Detect
-        </button>
-        <button class="lang-pill-btn" data-lang="te-IN" id="langPillTe" onclick="window.setCallLanguage('te-IN')" title="Greet and talk in Telugu">
-          తెలుగు (Telugu)
-        </button>
-        <button class="lang-pill-btn" data-lang="hi-IN" id="langPillHi" onclick="window.setCallLanguage('hi-IN')" title="Greet and talk in Hindi">
-          हिंदी (Hindi)
-        </button>
-        <button class="lang-pill-btn" data-lang="en-IN" id="langPillEn" onclick="window.setCallLanguage('en-IN')" title="Greet and talk in English">
-          English
-        </button>
-      </div>
-
-      <!-- Action & Voice Controls -->
-      <div class="call-controls-bar">
-        <button class="btn-call btn-start-call" id="startCallBtn">
-          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-          Start AI Call (Web Mic)
-        </button>
-        <button class="btn-call btn-end-call" id="endCallBtn" style="display: none;">
-          <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
-          End Call
-        </button>
-
-        <button class="btn btn-outline" id="doneSpeakingBtn" style="display: none; padding: 6px 14px; border-color: #10b981; color: #047857; font-weight: 700; background: #ecfdf5; border-radius: 20px; font-size: 0.78rem;" title="Click if you finished speaking and want instant answer">
-          ✓ Done Speaking (Send Now)
-        </button>
-
-        <!-- Waveform Visualizer -->
-        <div class="wave-container" id="waveContainer">
-          <div class="wave-bar"></div>
-          <div class="wave-bar"></div>
-          <div class="wave-bar"></div>
-          <div class="wave-bar"></div>
-          <div class="wave-bar"></div>
-          <div class="wave-bar"></div>
-          <div class="wave-bar"></div>
-          <div class="wave-bar"></div>
-        </div>
-      </div>
-
-      <!-- Live Voice Conversation Box -->
-      <div class="transcript-box" id="transcriptBox">
-        <div class="message-bubble bubble-ai">
-          <div class="bubble-sender">
-            <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>
-            AI Sales Closer <span class="bubble-lang-badge te">Telugu • Hindi • English</span>
-          </div>
-          <div>నమస్కారం! / नमस्ते! / Hello! మేము <strong>S P Associates Software Company</strong> నుండి మాట్లాడుతున్నాము. మీ వ్యాపారం కోసం వెబ్‌సైట్, మొబైల్ యాప్ లేదా AI సొల్యూషన్స్ గురించి మాట్లాడటానికి సిద్ధంగా ఉన్నాము. 'Start AI Call' బటన్ నొక్కి మాట్లాడండి లేదా కింద టైప్ చేసి టెస్ట్ చేయండి!</div>
-        </div>
-      </div>
-
-      <!-- Live Status Strip -->
-      <div class="caller-status-strip">
-        <span id="callerStatus" style="font-weight: 600; color: var(--primary);">సిద్ధంగా ఉంది (Ready to Call)</span>
-        <span style="font-size: 0.74rem; color: var(--text-muted);" id="engineIndicator">Sarvam Trilingual Voice Engine (te • hi • en)</span>
-      </div>
-
-      <!-- Quick Text Message Tester Fallback -->
-      <div class="test-input-bar">
-        <input type="text" id="testTextInput" placeholder="మాట్లాడలేకపోతే ఇక్కడ టైప్ చేయండి... / Type in Telugu, Hindi or English..." />
-        <button class="btn btn-primary" id="sendTestBtn">
-          <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-          Send
-        </button>
-      </div>
-    </section>
-
-    <!-- COLUMN 3: INTELLIGENCE & CLOSING PLAYBOOK -->
-    <section class="intel-sidebar">
-      
-      <!-- Multilingual Sales Objection Handling Playbook -->
-      <div class="intel-card">
-        <h3>
-          <svg class="icon icon-sm" style="color: var(--primary);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polygon points="12 8 8 12 12 16 12 8"></polygon></svg>
-          Multilingual Closing Playbook (తెలుగు • हिंदी • English)
-        </h3>
-        <div class="tips-list">
-          <div class="tip-item">
-            <div class="tip-title">"High Price / Budget Constraint"</div>
-            <div style="color: var(--text-secondary); font-size: 0.77rem;">
-              <strong>TE:</strong> "మా వద్ద మైల్‌స్టోన్ పేమెంట్స్ ఉన్నాయి, మీ బడ్జెట్‌కు సరిపోయేలా చేస్తాము."<br/>
-              <strong>HI:</strong> "हमारे पास आसान माइलस्टोन पेमेंट्स हैं, आपके बजट के अनुसार कस्टमाइज़ कर देंगे।"
+      <!-- COLUMN 3: INTELLIGENCE & CLOSING PLAYBOOK -->
+      <section class="intel-sidebar">
+        
+        <!-- Multilingual Sales Objection Handling Playbook -->
+        <div class="intel-card">
+          <h3>
+            <svg class="icon icon-sm" style="color: var(--primary);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polygon points="12 8 8 12 12 16 12 8"></polygon></svg>
+            Multilingual Closing Playbook (తెలుగు • हिंदी • English)
+          </h3>
+          <div class="tips-list">
+            <div class="tip-item">
+              <div class="tip-title">"High Price / Budget Constraint"</div>
+              <div style="color: var(--text-secondary); font-size: 0.77rem;">
+                <strong>TE:</strong> "మా వద్ద మైల్‌స్టోన్ పేమెంట్స్ ఉన్నాయి, మీ బడ్జెట్‌కు సరిపోయేలా చేస్తాము."<br/>
+                <strong>HI:</strong> "हमारे पास आसान माइलस्टोन पेमेंट्स हैं, आपके बजट के अनुसार कस्टमाइज़ कर देंगे।"
+              </div>
+            </div>
+            <div class="tip-item">
+              <div class="tip-title">"Already Have Website / App"</div>
+              <div style="color: var(--text-secondary); font-size: 0.77rem;">
+                <strong>TE:</strong> "చాలా మంచిది! మీ సైట్ నుండి రోజూ కస్టమర్లు వస్తున్నారా? ఫ్రీగా 5-నిమిషాల ఆడిట్ చేస్తాము."<br/>
+                <strong>HI:</strong> "बहुत बढ़िया! क्या उससे रोज़ाना कस्टमर्स आ रहे हैं? हम मुफ़्त 5-मिनट ऑडिट करके देंगे।"
+              </div>
+            </div>
+            <div class="tip-item">
+              <div class="tip-title">"Send Details on WhatsApp / Later"</div>
+              <div style="color: var(--text-secondary); font-size: 0.77rem;">
+                <strong>TE:</strong> "తప్పకుండా బ్రోచర్ పంపుతాను. రేపు ఉదయం 11:00కి 10 నిమిషాల డెమో ఫిక్స్ చేయమంటారా?"<br/>
+                <strong>HI:</strong> "ज़रूर व्हाट्सएप करेंगे! क्या कल सुबह 11:00 बजे 10 मिनट का ज़ूम डेमो फ़िक्स करें?"
+              </div>
+            </div>
+            <div class="tip-item" style="border-left-color: #059669; background: #ecfdf5;">
+              <div class="tip-title" style="color: #047857;">"Closing Target (డీల్ క్లోజింగ్)"</div>
+              <div style="color: #065f46; font-size: 0.78rem;">AI Goal: Lock 10-15 minute live demo/kickoff meeting for tomorrow with tech lead.</div>
             </div>
           </div>
-          <div class="tip-item">
-            <div class="tip-title">"Already Have Website / App"</div>
-            <div style="color: var(--text-secondary); font-size: 0.77rem;">
-              <strong>TE:</strong> "చాలా మంచిది! మీ సైట్ నుండి రోజూ కస్టమర్లు వస్తున్నారా? ఫ్రీగా 5-నిమిషాల ఆడిట్ చేస్తాము."<br/>
-              <strong>HI:</strong> "बहुत बढ़िया! क्या उससे रोज़ाना कस्टमर्स आ रहे हैं? हम मुफ़्त 5-मिनट ऑडिट करके देंगे।"
-            </div>
+        </div>
+
+        <!-- Voice & Model Settings -->
+        <div class="intel-card">
+          <h3>
+            <svg class="icon icon-sm" style="color: var(--accent);" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            Voice Engine Settings
+          </h3>
+          <div class="form-group" style="margin-bottom: 7px;">
+            <label>Voice Language:</label>
+            <select id="voiceLangSelect" onchange="window.updateVoiceOptions()" style="width: 100%;">
+              <option value="te-IN" selected>Telugu (తెలుగు)</option>
+              <option value="hi-IN">Hindi (हिंदी)</option>
+              <option value="en-IN">English (Indian)</option>
+            </select>
           </div>
-          <div class="tip-item">
-            <div class="tip-title">"Send Details on WhatsApp / Later"</div>
-            <div style="color: var(--text-secondary); font-size: 0.77rem;">
-              <strong>TE:</strong> "తప్పకుండా బ్రోచర్ పంపుతాను. రేపు ఉదయం 11:00కి 10 నిమిషాల డెమో ఫిక్స్ చేయమంటారా?"<br/>
-              <strong>HI:</strong> "ज़रूर व्हाट्सएप करेंगे! क्या कल सुबह 11:00 बजे 10 मिनट का ज़ूम डेमो फ़िक्स करें?"
-            </div>
+          <div class="form-group" style="margin-bottom: 7px;">
+            <label>Speaker Model:</label>
+            <select id="voiceSelect" style="width: 100%;">
+              <option value="kavitha_te_conversation" selected>Kavitha (Telugu Conversational)</option>
+              <option value="pooja_te_conversation">Pooja (Telugu Conversational)</option>
+              <option value="tarun_te_narration">Tarun (Telugu Professional Male)</option>
+              <option value="kavitha">Kavitha (Standard)</option>
+            </select>
           </div>
-          <div class="tip-item" style="border-left-color: #059669; background: #ecfdf5;">
-            <div class="tip-title" style="color: #047857;">"Closing Target (డీల్ క్లోజింగ్)"</div>
-            <div style="color: #065f46; font-size: 0.78rem;">AI Goal: Lock 10-15 minute live demo/kickoff meeting for tomorrow with tech lead.</div>
+          <button class="btn btn-outline" id="testVoiceBtn" onclick="window.testTtsVoice()" style="width: 100%; justify-content: center;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <span id="testVoiceBtnText">Preview Telugu Voice</span>
+          </button>
+        </div>
+
+        <!-- Recent Calls & Stored Summaries -->
+        <div class="intel-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin-bottom: 0;">
+              <svg class="icon icon-sm" style="color: #2563eb;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Recent Call Summaries
+            </h3>
+            <span style="font-size: 0.7rem; color: var(--text-muted);">Executive Overview</span>
+          </div>
+          <div class="tips-list" id="recentCallsList" style="margin-top: 10px;">
+            {% for c in calls[:5] %}
+            <div class="tip-item" style="cursor: pointer;" onclick="window.openCallDetails({{ c.id }})" title="Click to view full transcript & call summary">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="tip-title">{{ c.lead_name or 'Web Lead' }}</span>
+                <span style="font-size:0.7rem; color: var(--primary); font-weight: 600;">{{ c.duration_seconds }}s ↗</span>
+              </div>
+              <div style="font-size:0.71rem; color: var(--text-muted); margin: 2px 0;">Stage: <strong style="color: #059669;">{{ (c.deal_stage or '').upper() }}</strong></div>
+              <div style="font-size:0.79rem; line-height: 1.35; color: var(--text-secondary);">{{ c.summary or 'Call recorded successfully.' }}</div>
+            </div>
+            {% else %}
+            <div style="font-size:0.78rem; color: var(--text-muted); text-align: center; padding: 12px;">No call records yet. Start a call!</div>
+            {% endfor %}
           </div>
         </div>
-      </div>
 
-      <!-- Voice & Model Settings -->
-      <div class="intel-card">
-        <h3>
-          <svg class="icon icon-sm" style="color: var(--accent);" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-          Voice Engine Settings
-        </h3>
-        <div class="form-group" style="margin-bottom: 7px;">
-          <label>Voice Language:</label>
-          <select id="voiceLangSelect" onchange="window.updateVoiceOptions()" style="width: 100%;">
+      </section>
+
+    </main>
+  </div><!-- /#viewCrm -->
+
+
+  <!-- ================================================================= -->
+  <!-- MODALS (LEAD CREATION, EXCEL IMPORT, CAMPAIGNS, CHECKOUT, API KEYS) -->
+  <!-- ================================================================= -->
+
+  <!-- MODAL 1: ADD NEW LEAD -->
+  <div class="modal-overlay" id="leadModal">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 1.1rem; color: #0f172a; font-weight: 800;">Add New Business Lead</h3>
+        <button class="btn btn-outline" id="closeLeadModal" style="padding: 4px 8px;">✕</button>
+      </div>
+      <form id="leadForm">
+        <div class="form-group">
+          <label>Lead / Contact Name *</label>
+          <input type="text" id="leadName" required placeholder="రమేష్ నాయుడు (Ramesh Naidu)" />
+        </div>
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="text" id="leadPhone" required placeholder="+91 98480 12345" />
+        </div>
+        <div class="form-group">
+          <label>Company / Business Name</label>
+          <input type="text" id="leadCompany" placeholder="Naidu Supermarkets / Sri Krishna Jewellers" />
+        </div>
+        <div class="form-group">
+          <label>Service Needed *</label>
+          <select id="leadService">
+            <option value="Custom Website & E-Commerce">Custom Website & E-Commerce</option>
+            <option value="Mobile App (Android & iOS)">Mobile App (Android & iOS)</option>
+            <option value="AI Voice Caller & Chatbots">AI Voice Caller & Chatbots</option>
+            <option value="Billing Software & WhatsApp Invoicing">Billing Software & WhatsApp Invoicing</option>
+            <option value="Cloud & Business Automation">Cloud & Business Automation</option>
+          </select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label>Estimated Budget</label>
+            <input type="text" id="leadBudget" placeholder="₹50,000" />
+          </div>
+          <div class="form-group">
+            <label>Timeline</label>
+            <input type="text" id="leadTimeline" placeholder="2-4 Weeks" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Target Language</label>
+          <select id="leadLang">
             <option value="te-IN" selected>Telugu (తెలుగు)</option>
             <option value="hi-IN">Hindi (हिंदी)</option>
             <option value="en-IN">English (Indian)</option>
           </select>
         </div>
-        <div class="form-group" style="margin-bottom: 7px;">
-          <label>Speaker Model:</label>
-          <select id="voiceSelect" style="width: 100%;">
-            <option value="kavitha_te_conversation" selected>Kavitha (Telugu Conversational)</option>
-            <option value="pooja_te_conversation">Pooja (Telugu Conversational)</option>
-            <option value="tarun_te_narration">Tarun (Telugu Professional Male)</option>
-            <option value="kavitha">Kavitha (Standard)</option>
-          </select>
-        </div>
-        <button class="btn btn-outline" id="testVoiceBtn" onclick="window.testTtsVoice()" style="width: 100%; justify-content: center;">
-          <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-          <span id="testVoiceBtnText">Preview Telugu Voice</span>
-        </button>
-      </div>
-
-      <!-- Recent Calls & Stored Summaries -->
-      <div class="intel-card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h3 style="margin-bottom: 0;">
-            <svg class="icon icon-sm" style="color: #2563eb;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            Recent Call Summaries
-          </h3>
-          <a href="/api/leads/export-excel" class="btn btn-outline" download style="padding: 2px 7px; font-size: 0.72rem;">
-            Export
-          </a>
-        </div>
-        <div class="tips-list" id="recentCallsList">
-          {% for call in calls[:4] %}
-          <div class="tip-item" style="cursor: pointer;" onclick="openCallDetails({{ call.id }})" title="Click to view full transcript & summary">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span class="tip-title">{{ call.lead_name or 'Web Session' }}</span>
-              <span style="font-size:0.7rem; color: var(--primary); font-weight: 600;">{{ call.duration_seconds }}s 🔍</span>
-            </div>
-            <div style="font-size:0.71rem; color: var(--text-muted); margin: 2px 0;">Stage: <strong style="color: #059669;">{{ call.deal_stage.upper() if call.deal_stage else 'QUALIFYING' }}</strong></div>
-            <div style="font-size:0.79rem; line-height: 1.35; color: var(--text-secondary);">{{ call.summary or 'కాల్ పూర్తయింది.' }}</div>
-          </div>
-          {% else %}
-          <div style="font-size:0.8rem; color: var(--text-muted); padding: 8px 0;">No previous calls recorded. Place a call to see deal insights!</div>
-          {% endfor %}
-        </div>
-      </div>
-
-    </section>
-  </main>
-
-  <!-- MODAL 1: EXCEL / CSV SHEET UPLOAD -->
-  <div class="modal-overlay" id="uploadExcelModal">
-    <div class="modal-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h3 style="font-size: 1.1rem; color: #0f172a; font-weight: 700; display: flex; align-items: center; gap: 6px;">
-          <svg class="icon icon-md" style="color: var(--primary);" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          Upload Leads Excel / CSV Sheet
-        </h3>
-        <button class="btn btn-outline" id="closeUploadModal" style="padding: 4px 8px;">✕</button>
-      </div>
-
-      <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.45;">
-        Upload your spreadsheet with lead details (Customer Name, Phone Number, Company, Requirement, Budget, Notes). The AI will extract all details into the CRM pipeline.
-      </p>
-
-      <div class="upload-dropzone" id="excelDropzone" onclick="document.getElementById('excelFileInput').click()">
-        <svg class="icon icon-lg" style="color: var(--primary); margin-bottom: 6px;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-        <div style="font-weight: 700; font-size: 0.92rem; margin-bottom: 3px; color: #1e3a8a;" id="dropzoneText">Click or Drag & Drop Excel (.xlsx) or CSV file</div>
-        <div style="font-size: 0.74rem; color: var(--text-muted);">Supports .xlsx, .xls, .csv</div>
-        <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display: none;">
-      </div>
-
-      <div id="uploadStatusMsg" style="display: none; padding: 10px; border-radius: 8px; font-size: 0.84rem; margin-bottom: 12px;"></div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-        <a href="/api/leads/template" class="btn btn-outline" download style="font-size: 0.78rem;">
-          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Download Template
-        </a>
-        <div style="display: flex; gap: 7px;">
-          <button type="button" class="btn btn-outline" onclick="document.getElementById('uploadExcelModal').classList.remove('open')">Cancel</button>
-          <button type="button" class="btn btn-primary" id="submitExcelUploadBtn">Upload & Ingest</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL 2: AUTO-CALLING CAMPAIGN LAUNCHER -->
-  <div class="modal-overlay" id="campaignModal">
-    <div class="modal-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h3 style="font-size: 1.1rem; color: #6d28d9; font-weight: 700; display: flex; align-items: center; gap: 6px;">
-          <svg class="icon icon-md" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          Run Autonomous Auto-Calling Campaign
-        </h3>
-        <button class="btn btn-outline" id="closeCampaignModal" style="padding: 4px 8px;">✕</button>
-      </div>
-
-      <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.45;">
-        The AI agent will iterate through the leads, fetch every detail (company, budget, needs), dial them sequentially in natural Telugu, overcome objections, store call summaries, and close them for project demos.
-      </p>
-
-      <div class="form-group">
-        <label>Target Leads</label>
-        <select id="campaignTargetSelect">
-          <option value="new_leads" selected>All NEW & CONTACTED Leads (Recommended)</option>
-          <option value="all_leads">All Leads in Database</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Calling Mode</label>
-        <select id="campaignModeSelect">
-          <option value="simulation" selected>Autonomous AI Closer Simulation (Real-time AI Pitch & Closing)</option>
-          <option value="telephony">Real Carrier Phone Call (Twilio Telephony to Customer Mobile)</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Delay Between Calls</label>
-        <select id="campaignDelaySelect">
-          <option value="3">3 Seconds</option>
-          <option value="5" selected>5 Seconds</option>
-          <option value="10">10 Seconds</option>
-        </select>
-      </div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-        <button type="button" class="btn btn-outline" onclick="document.getElementById('campaignModal').classList.remove('open')">Cancel</button>
-        <button type="button" class="btn btn-campaign" id="startCampaignSubmitBtn">
-          <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          Start Auto-Dialing
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL 3: ADD NEW LEAD MANUALLY -->
-  <div class="modal-overlay" id="addLeadModal">
-    <div class="modal-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-        <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px;">
-          <svg class="icon icon-md" style="color: var(--primary);" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Add New Project Lead
-        </h3>
-        <button class="btn btn-outline" id="closeAddLeadModal" style="padding: 4px 8px;">✕</button>
-      </div>
-      <form id="leadForm">
         <div class="form-group">
-          <label>Customer Name *</label>
-          <input type="text" id="leadNameInput" placeholder="ఉదా: వెంకటేష్ రావు (Venkatesh Rao)" required>
+          <label>Notes / Context</label>
+          <textarea id="leadNotes" rows="2" placeholder="Grocery store looking for customer ordering app."></textarea>
         </div>
-        <div class="form-group">
-          <label>Phone Number *</label>
-          <input type="text" id="leadPhoneInput" placeholder="+91 98XXXXXXXX" required>
-        </div>
-        <div class="form-group">
-          <label>Company / Business Name</label>
-          <input type="text" id="leadCompanyInput" placeholder="Sri Venkateshwara Enterprises">
-        </div>
-        <div class="form-group">
-          <label>Service Needed</label>
-          <select id="leadServiceInput">
-            <option value="Mobile App (Android/iOS)">Mobile App (Android / iOS)</option>
-            <option value="Custom Web App & SaaS">Custom Web App & SaaS</option>
-            <option value="AI Voice Caller & Chatbots" selected>AI Voice Caller & Chatbots</option>
-            <option value="E-Commerce & Billing">E-Commerce & Billing</option>
-            <option value="Full IT Solution">Full IT Solution</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Estimated Budget</label>
-          <input type="text" id="leadBudgetInput" placeholder="₹50,000 - ₹1,00,000">
-        </div>
-        <div class="form-group">
-          <label>Timeline</label>
-          <input type="text" id="leadTimelineInput" placeholder="Next 2 weeks / Immediate">
-        </div>
-        <div class="form-group">
-          <label>Target Language</label>
-          <select id="leadLangInput">
-            <option value="te-IN" selected>Telugu (తెలుగు)</option>
-            <option value="hi-IN">Hindi (हिंदी)</option>
-            <option value="en-IN">English</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Client Background / Notes</label>
-          <textarea id="leadNotesInput" rows="2" placeholder="కస్టమర్ రిక్వైర్మెంట్ వివరాలు..."></textarea>
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
-          <button type="button" class="btn btn-outline" onclick="document.getElementById('addLeadModal').classList.remove('open')">Cancel</button>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+          <button type="button" class="btn btn-outline" id="cancelLeadBtn">Cancel</button>
           <button type="submit" class="btn btn-primary">Save Lead</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL 4: OUTBOUND PHONE CALL (TWILIO) -->
-  <div class="modal-overlay" id="phoneCallModal">
+  <!-- MODAL 2: EXCEL / CSV UPLOAD -->
+  <div class="modal-overlay" id="excelUploadModal">
     <div class="modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px;">
-          <svg class="icon icon-md" style="color: var(--primary);" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-          Make Real Phone Call
+        <h3 style="font-size: 1.1rem; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+          <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Import Leads from Excel / CSV
         </h3>
-        <button class="btn btn-outline" id="closePhoneModal" style="padding: 4px 8px;">✕</button>
+        <button class="btn btn-outline" id="closeExcelModal" style="padding: 4px 8px;">✕</button>
       </div>
-      <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.45;">
-        Enter customer's mobile number with country code (+91) to dial via Twilio telephony.
-      </p>
-      <div class="form-group">
-        <label>Customer Mobile Number</label>
-        <input type="text" id="phoneCallInput" placeholder="+91 9876543210">
+
+      <div class="upload-dropzone" id="dropzone">
+        <svg class="icon icon-lg" style="color: var(--primary); margin-bottom: 8px;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        <div style="font-weight: 700; color: #1e3a8a; font-size: 0.95rem;">Drag & drop your .xlsx, .xls, or .csv file here</div>
+        <div style="color: var(--text-muted); font-size: 0.76rem; margin-top: 4px;">or click to browse from computer</div>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display: none;" />
       </div>
-      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
-        <button type="button" class="btn btn-outline" onclick="document.getElementById('phoneCallModal').classList.remove('open')">Cancel</button>
-        <button type="button" class="btn btn-primary" id="submitPhoneCallBtn">Dial Customer</button>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px 12px; border-radius: 7px; border: 1px solid var(--border-light); margin-bottom: 14px;">
+        <span style="font-size: 0.78rem; color: var(--text-secondary);">Need the official header format?</span>
+        <a href="/api/leads/template" class="btn btn-outline" download style="padding: 4px 10px; font-size: 0.74rem;">
+          📥 Download Template (.xlsx)
+        </a>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn btn-outline" id="cancelExcelBtn">Cancel</button>
+        <button class="btn btn-primary" id="uploadFileBtn" disabled>Upload & Import Leads</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL 5: POST-CALL INTELLIGENCE & DEAL CLOSING SUMMARY -->
-  <div class="modal-overlay" id="dealSummaryModal">
-    <div class="modal-card" style="max-width: 560px;">
+  <!-- MODAL 3: AUTONOMOUS CALLING CAMPAIGN -->
+  <div class="modal-overlay" id="campaignModal">
+    <div class="modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h3 style="font-size: 1.1rem; color: var(--primary); font-weight: 800; display: flex; align-items: center; gap: 6px;">
-          <svg class="icon icon-md" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          Call Intelligence & Deal Update
+        <h3 style="font-size: 1.1rem; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+          <svg class="icon icon-md" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Launch Auto-Calling Campaign
         </h3>
-        <button class="btn btn-outline" id="closeDealModal" style="padding: 4px 8px;">✕</button>
+        <button class="btn btn-outline" id="closeCampaignModal" style="padding: 4px 8px;">✕</button>
       </div>
 
-      <div style="margin-bottom: 12px; padding: 10px 12px; background: #f8fafc; border: 1px solid var(--border-light); border-radius: 7px;">
-        <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Deal Stage Result:</div>
-        <div style="font-size: 1.1rem; font-weight: 800; margin-top: 3px;">
-          <span id="summaryStage" class="lead-status status-closed_won">DEMO_BOOKED</span>
+      <div class="form-group">
+        <label>Select Target Leads:</label>
+        <select id="campaignTargetSelect">
+          <option value="new">All NEW Leads (Not yet called)</option>
+          <option value="all">All Imported Leads in CRM</option>
+          <option value="selected">Currently Selected Lead</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Calling Mode:</label>
+        <div style="display: flex; gap: 10px; margin-top: 5px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; cursor: pointer;">
+            <input type="radio" name="campMode" value="simulation" checked />
+            ⚡ AI Simulation Mode (Instant qualification & zero phone cost)
+          </label>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 5px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; cursor: pointer;">
+            <input type="radio" name="campMode" value="phone" />
+            📞 Real Phone Telephony (Twilio Outbound Calling)
+          </label>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;">
+        <button class="btn btn-outline" id="cancelCampaignBtn">Cancel</button>
+        <button class="btn btn-campaign" id="startCampaignActionBtn">▶️ Launch Campaign Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: POST-CALL EXECUTIVE SUMMARY VIEWER -->
+  <div class="modal-overlay" id="dealSummaryModal">
+    <div class="modal-card" style="max-width: 520px;">
+      <div style="text-align: center; margin-bottom: 14px;">
+        <div style="font-size: 2.2rem; margin-bottom: 4px;">🎉</div>
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a;">Call Finished & Summary Recorded!</h3>
+        <p style="font-size: 0.78rem; color: var(--text-muted);">Stored strictly in English for executive CRM records.</p>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-light); border-radius: 8px; margin-bottom: 12px;">
+        <div>
+          <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">Deal Stage:</span>
+          <div id="summaryStage" class="lead-status status-demo_booked" style="margin-top: 2px;">DEMO SCHEDULED</div>
+        </div>
+        <div>
+          <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">Customer Sentiment:</span>
+          <div id="summarySentiment" style="font-weight: 700; font-size: 0.88rem; color: #059669;">Positive</div>
         </div>
       </div>
 
       <div class="stat-grid" style="margin-bottom: 12px;">
         <div class="stat-item">
-          <div class="stat-label">Customer Sentiment</div>
-          <div class="stat-value" id="summarySentiment" style="font-size: 0.92rem; color: #059669;">Positive</div>
-        </div>
-        <div class="stat-item">
           <div class="stat-label">Extracted Budget</div>
-          <div class="stat-value" id="summaryBudget" style="font-size: 0.92rem; color: #2563eb;">₹50,000</div>
+          <div class="stat-value" id="summaryBudget" style="font-size: 0.95rem; color: #059669;">₹50,000</div>
         </div>
         <div class="stat-item">
           <div class="stat-label">Target Timeline</div>
@@ -602,7 +1129,7 @@
     </div>
   </div>
 
-  <!-- MODAL 6: DETAILED CALL RECORD & TRANSCRIPT VIEWER -->
+  <!-- MODAL 5: DETAILED CALL RECORD & TRANSCRIPT VIEWER -->
   <div class="modal-overlay" id="callDetailsModal">
     <div class="modal-card" style="max-width: 600px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -652,10 +1179,104 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- MODAL 6: PURCHASE API CREDITS & INSTANT CHECKOUT (OUTPERO BILLING STORE) -->
+  <div class="modal-overlay" id="checkoutModal">
+    <div class="modal-card" style="max-width: 500px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div>
+          <h3 style="font-size: 1.15rem; color: #0f172a; font-weight: 800;">Purchase Talk-Time API Credits</h3>
+          <p style="font-size: 0.76rem; color: var(--text-muted);">Instant activation for LeadCloser AI developer endpoints.</p>
+        </div>
+        <button class="btn btn-outline" onclick="document.getElementById('checkoutModal').classList.remove('open')" style="padding: 4px 8px;">✕</button>
+      </div>
+
+      <div class="checkout-summary-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-size: 0.85rem; font-weight: 700; color: #0f172a;" id="checkoutPlanTitle">Business Growth Plan</span>
+          <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);" id="checkoutPlanAmount">₹4,999.00</span>
+        </div>
+        <div style="font-size: 0.74rem; color: #059669; font-weight: 600;" id="checkoutMinutesCredited">
+          ⚡ 1,200 Connected Minutes Talk-Time Credited
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Company / Organization Name:</label>
+        <input type="text" id="checkoutCompanyName" placeholder="e.g. S P Associates / Retail App Corp" value="S P Associates Client" />
+      </div>
+
+      <div class="form-group">
+        <label>Billing Email Address (for invoice & API key):</label>
+        <input type="email" id="checkoutEmail" placeholder="developer@yourcompany.com" value="admin@spassociates.com" />
+      </div>
+
+      <div class="form-group">
+        <label>Select Payment Method:</label>
+        <div class="payment-options-row">
+          <div class="payment-opt-btn active" onclick="window.selectPaymentMethod('UPI', this)">
+            <div style="font-size: 1.1rem;">📱</div>
+            <div>Instant UPI</div>
+          </div>
+          <div class="payment-opt-btn" onclick="window.selectPaymentMethod('Card', this)">
+            <div style="font-size: 1.1rem;">💳</div>
+            <div>Credit / Debit</div>
+          </div>
+          <div class="payment-opt-btn" onclick="window.selectPaymentMethod('NetBanking', this)">
+            <div style="font-size: 1.1rem;">🏛️</div>
+            <div>Net Banking</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+        <button class="btn btn-outline" onclick="document.getElementById('checkoutModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" id="btnPayAction" onclick="window.executeSimulatedCheckout()" style="padding: 10px 20px; font-weight: 700;">
+          🔒 Complete Payment (₹<span id="btnPayAmountText">4,999</span>)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 7: GENERATE NEW API KEY -->
+  <div class="modal-overlay" id="generateKeyModal">
+    <div class="modal-card" style="max-width: 480px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 1.1rem; color: #0f172a; font-weight: 800;">Generate Developer API Key</h3>
+        <button class="btn btn-outline" onclick="document.getElementById('generateKeyModal').classList.remove('open')" style="padding: 4px 8px;">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label>Key Name / Description:</label>
+        <input type="text" id="genKeyName" placeholder="e.g. Website Lead Webhook Key" value="Meta Ads Outbound Key" />
+      </div>
+      <div class="form-group">
+        <label>Developer Email:</label>
+        <input type="email" id="genKeyEmail" placeholder="developer@company.com" value="dev@spassociates.com" />
+      </div>
+      <div class="form-group">
+        <label>Associated Tier:</label>
+        <select id="genKeyTier">
+          <option value="Developer Starter (₹5/min)">Developer Starter (₹5/min)</option>
+          <option value="Business Growth (₹4.16/min)" selected>Business Growth (₹4.16/min)</option>
+          <option value="Scale Enterprise (₹3.75/min)">Scale Enterprise (₹3.75/min)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+        <button class="btn btn-outline" onclick="document.getElementById('generateKeyModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" onclick="window.executeGenerateKey()">Create API Key</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================================================================= -->
+  <!-- SCRIPTS -->
+  <!-- ================================================================= -->
   <script src="/static/js/call_client.js"></script>
   <script src="/static/js/app.js"></script>
   <script>
+    // Initialize lead selection on load
     {% if leads %}
     window.selectLead({{ leads[0] | tojson }});
     {% endif %}

@@ -187,6 +187,77 @@ def init_db():
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, seed_leads)
 
+    # API Keys & Developer Licensing Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS api_keys (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        key_name TEXT NOT NULL,
+        user_email TEXT NOT NULL,
+        company_name TEXT,
+        api_key TEXT UNIQUE NOT NULL,
+        plan_tier TEXT DEFAULT 'Business Growth',
+        credits_inr REAL DEFAULT 2500.0,
+        rate_per_min REAL DEFAULT 5.0,
+        total_calls INTEGER DEFAULT 0,
+        total_minutes REAL DEFAULT 0.0,
+        status TEXT DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    # API Billing & Credit Purchases Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS api_billing_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        api_key_id INTEGER,
+        order_id TEXT UNIQUE NOT NULL,
+        plan_name TEXT NOT NULL,
+        amount_inr REAL NOT NULL,
+        minutes_credited REAL NOT NULL,
+        payment_method TEXT DEFAULT 'UPI / Razorpay',
+        payment_status TEXT DEFAULT 'success',
+        customer_email TEXT,
+        invoice_number TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (api_key_id) REFERENCES api_keys (id) ON DELETE SET NULL
+    );
+    """)
+
+    # Seed default primary API key if api_keys table is empty
+    cursor.execute("SELECT COUNT(*) as count FROM api_keys")
+    if cursor.fetchone()["count"] == 0:
+        cursor.execute("""
+        INSERT INTO api_keys (id, key_name, user_email, company_name, api_key, plan_tier, credits_inr, rate_per_min, total_calls, total_minutes, status)
+        VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            'Production Master API Key',
+            'enterprise@spassociates.com',
+            'S P Associates Software Company',
+            'lc_live_sp_assoc_7894a1b2',
+            'Business Growth (₹5/min)',
+            2500.0,
+            5.0,
+            14,
+            28.5,
+            'active'
+        ))
+
+        cursor.execute("""
+        INSERT INTO api_billing_orders (api_key_id, order_id, plan_name, amount_inr, minutes_credited, payment_method, payment_status, customer_email, invoice_number)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            1,
+            'ORD_2026_9841',
+            'Business Growth Tier (500 Mins Talk-Time)',
+            2500.0,
+            500.0,
+            'Instant UPI / Razorpay Gateway',
+            'success',
+            'enterprise@spassociates.com',
+            'INV-SPA-2026-0049'
+        ))
+
     conn.commit()
     conn.close()
 
@@ -491,4 +562,168 @@ def update_company_profile(data: Dict[str, Any]) -> bool:
     conn.commit()
     conn.close()
     return True
+
+
+# ---------------- DEVELOPER API KEYS & BILLING ----------------
+
+import uuid
+import secrets
+
+def get_all_api_keys() -> List[Dict[str, Any]]:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM api_keys ORDER BY created_at DESC")
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
+
+
+def get_primary_api_key() -> Dict[str, Any]:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM api_keys WHERE status = 'active' ORDER BY id ASC LIMIT 1")
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return dict(row)
+    # If no key exists, auto-seed one
+    return create_api_key("Production Key", "developer@spassociates.com", "S P Associates Software Company", "Business Growth", 2500.0)
+
+
+def get_api_key_by_token(token: str) -> Optional[Dict[str, Any]]:
+    clean_token = token.strip()
+    if clean_token.startswith("Bearer "):
+        clean_token = clean_token[7:].strip()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM api_keys WHERE api_key = ? AND status = 'active'", (clean_token,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def create_api_key(
+    key_name: str,
+    user_email: str,
+    company_name: str = "Enterprise Client",
+    plan_tier: str = "Developer Starter",
+    initial_credits: float = 500.0
+) -> Dict[str, Any]:
+    conn = get_connection()
+    cursor = conn.cursor()
+    token = f"lc_live_{secrets.token_hex(16)}"
+    rate = 4.0 if "Enterprise" in plan_tier else (4.5 if "Growth" in plan_tier else 5.0)
+
+    cursor.execute("""
+    INSERT INTO api_keys (key_name, user_email, company_name, api_key, plan_tier, credits_inr, rate_per_min, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+    """, (key_name, user_email, company_name, token, plan_tier, initial_credits, rate))
+    key_id = cursor.lastrowid
+    conn.commit()
+
+    cursor.execute("SELECT * FROM api_keys WHERE id = ?", (key_id,))
+    new_key = dict(cursor.fetchone())
+    conn.close()
+    return new_key
+
+
+def revoke_api_key(key_id: int) -> bool:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE api_keys SET status = 'revoked', updated_at = CURRENT_TIMESTAMP WHERE id = ?", (key_id,))
+    conn.commit()
+    conn.close()
+    return True
+
+
+def deduct_api_credits(token: str, duration_seconds: int) -> Dict[str, Any]:
+    """
+    Deducts talk-time credits based on connected duration (rounded up to nearest half minute, min 30s).
+    """
+    key_data = get_api_key_by_token(token)
+    if not key_data:
+        return {"success": False, "error": "Invalid or revoked API Key"}
+
+    minutes = max(0.5, round(duration_seconds / 60.0, 2))
+    rate = key_data.get("rate_per_min", 5.0)
+    charge = round(minutes * rate, 2)
+
+    current_balance = key_data.get("credits_inr", 0.0)
+    new_balance = max(0.0, current_balance - charge)
+    total_calls = key_data.get("total_calls", 0) + 1
+    total_minutes = round(key_data.get("total_minutes", 0.0) + minutes, 2)
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    UPDATE api_keys
+    SET credits_inr = ?, total_calls = ?, total_minutes = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+    """, (new_balance, total_calls, total_minutes, key_data["id"]))
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "charged_inr": charge,
+        "minutes_billed": minutes,
+        "remaining_credits_inr": new_balance,
+        "total_calls": total_calls
+    }
+
+
+def create_billing_order(
+    api_key_id: int,
+    plan_name: str,
+    amount_inr: float,
+    payment_method: str = "Instant UPI / Razorpay",
+    customer_email: str = ""
+) -> Dict[str, Any]:
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    order_id = f"ORD_{datetime.now().strftime('%Y%m%d')}_{secrets.token_hex(4).upper()}"
+    invoice_number = f"INV-SPA-{secrets.token_hex(3).upper()}"
+    rate = 5.0
+    if amount_inr >= 14999:
+        rate = 3.75
+    elif amount_inr >= 4999:
+        rate = 4.16
+    minutes_credited = round(amount_inr / rate, 1)
+
+    cursor.execute("""
+    INSERT INTO api_billing_orders (
+        api_key_id, order_id, plan_name, amount_inr, minutes_credited,
+        payment_method, payment_status, customer_email, invoice_number
+    )
+    VALUES (?, ?, ?, ?, ?, ?, 'success', ?, ?)
+    """, (api_key_id, order_id, plan_name, amount_inr, minutes_credited, payment_method, customer_email, invoice_number))
+    order_db_id = cursor.lastrowid
+
+    # Credit the balance to the selected API key
+    cursor.execute("""
+    UPDATE api_keys
+    SET credits_inr = credits_inr + ?,
+        plan_tier = ?,
+        rate_per_min = ?,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+    """, (amount_inr, plan_name, rate, api_key_id))
+
+    conn.commit()
+    cursor.execute("SELECT * FROM api_billing_orders WHERE id = ?", (order_db_id,))
+    order_row = dict(cursor.fetchone())
+    conn.close()
+
+    return order_row
+
+
+def get_billing_orders() -> List[Dict[str, Any]]:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM api_billing_orders ORDER BY created_at DESC")
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
+
 
