@@ -271,6 +271,128 @@ def init_db():
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
+    # AI Employees Management Table (Module 6)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ai_employees (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        role TEXT NOT NULL,
+        description TEXT,
+        language TEXT DEFAULT 'te-IN',
+        voice_speaker TEXT DEFAULT 'kavitha_te_conversation',
+        greeting TEXT NOT NULL,
+        calling_objective TEXT,
+        system_prompt TEXT NOT NULL,
+        sales_script TEXT,
+        qualification_questions TEXT,
+        knowledge_base TEXT,
+        working_hours TEXT DEFAULT '09:00 - 19:00',
+        max_call_duration_seconds INTEGER DEFAULT 600,
+        status TEXT DEFAULT 'draft',
+        is_active BOOLEAN DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    # Seed 5 specialized AI Sales Employees if table is empty
+    cursor.execute("SELECT COUNT(*) as count FROM ai_employees")
+    if cursor.fetchone()["count"] == 0:
+        seed_employees = [
+            (
+                "S P Senior Closer (Default)",
+                "General Business Development Specialist",
+                "Flagship multilingual sales closer for S P Associates software solutions.",
+                "te-IN",
+                "kavitha_te_conversation",
+                "నమస్కారం అండి! నేను S P Associates Software Company నుండి మాట్లాడుతున్నాను. మీ వ్యాపారానికి కస్టమ్ వెబ్‌సైట్ లేదా మొబైల్ యాప్ అవసరం ఉందా అండి?",
+                "Qualify client software needs and book a 10-minute live demo.",
+                "You are a Senior Sales Closer at S P Associates Software Company. Qualify software requirements, answer questions, handle objections, and close with a live Zoom demo.",
+                "Introduce -> Discover Need -> Match Services -> Address Budget/Timeline -> Book Demo",
+                "1. Do you need a web app or mobile app?\n2. What is your estimated timeline?\n3. Who is your target customer?",
+                "S P Associates builds custom websites, Android/iOS apps, billing software, and AI voice automation systems with flexible milestone payments.",
+                "09:00 - 19:00",
+                600,
+                "active",
+                1
+            ),
+            (
+                "Priya - Web & SaaS Closer",
+                "Website & Web Application Sales Specialist",
+                "Focused on pitching modern responsive websites, SaaS web portals, and e-commerce stores.",
+                "te-IN",
+                "kavitha_te_conversation",
+                "నమస్కారం అండి! మీ బిజినెస్‌కి ఆన్‌లైన్ వెబ్‌సైట్ లేదా ఈ-కామర్స్ పోర్టల్ డెవలప్‌మెంట్ కోసం S P Associates నుండి కాల్ చేస్తున్నాను.",
+                "Close custom website and web app development deals.",
+                "You are Priya, Web & SaaS Sales Specialist at S P Associates Software Company. Emphasize fast load times, Google SEO ranking, and online sales conversions.",
+                "Highlight web design portfolio -> Offer free 5-minute technical audit -> Schedule demo.",
+                "1. Do you already have an existing website?\n2. Do you need online payment gateway integration?",
+                "We use React, Next.js, and Node.js for ultra-fast, modern web applications.",
+                "09:30 - 18:30",
+                600,
+                "approved",
+                0
+            ),
+            (
+                "Rahul - Mobile App Specialist",
+                "iOS & Android Mobile Applications Consultant",
+                "Specializes in custom mobile apps, customer ordering apps, and delivery tracking.",
+                "hi-IN",
+                "pooja",
+                "नमस्ते सर! मैं S P Associates Software Company से राहुल बात कर रहा हूँ। क्या आपकी कंपनी के लिए कोई मोबाइल ऐप बनाने का प्लान है?",
+                "Qualify mobile application requirements and estimate project milestones.",
+                "You are Rahul, Mobile App Solutions Specialist at S P Associates Software Company. Discuss iOS, Android, and cross-platform Flutter/React Native solutions.",
+                "Understand app features -> Explain playstore publication -> Propose starting package.",
+                "1. Do you need Android or iOS or both?\n2. What core features do you need?",
+                "Full-stack mobile app development with push notifications, maps, and Razorpay.",
+                "10:00 - 19:00",
+                600,
+                "approved",
+                0
+            ),
+            (
+                "Arjun - AI Voice & Chatbot Closer",
+                "AI Telephony & WhatsApp Automation Consultant",
+                "Pitches automated AI phone calling agents and Meta WhatsApp business messaging.",
+                "en-IN",
+                "tarun",
+                "Hello! This is Arjun from S P Associates Software Company. We help businesses automate customer sales calls and WhatsApp replies using native Indian AI.",
+                "Deploy AI autonomous caller systems for prospective businesses.",
+                "You are Arjun, AI Voice Automation Consultant at S P Associates Software Company. Explain how AI telephone agents reduce operational costs by 70%.",
+                "Demonstrate AI call handling -> Share ROI metrics -> Offer pilot trial.",
+                "1. How many incoming or outgoing customer calls do you handle daily?",
+                "Our AI caller speaks Telugu, Hindi, and English natively with Exotel telephony integration.",
+                "09:00 - 20:00",
+                900,
+                "approved",
+                0
+            ),
+            (
+                "Venkatesh - ERP & Billing Specialist",
+                "Retail & Wholesale ERP Software Consultant",
+                "Specialized in inventory, POS billing, GST invoicing, and accounting software.",
+                "te-IN",
+                "kavitha_te_conversation",
+                "నమస్కారం అండి! మీ రిటైల్ లేదా డిస్ట్రిబ్యూషన్ బిజినెస్‌కి జీఎస్టీ బిల్లింగ్ మరియు ఇన్వెంటరీ సాఫ్ట్‌వేర్ గురించి S P Associates నుండి మాట్లాడుతున్నాను.",
+                "Demonstrate retail ERP billing software and schedule onsite or Zoom demo.",
+                "You are Venkatesh, ERP Solutions Consultant. Emphasize GST compliance, barcode scanner support, and daily sales reports on mobile.",
+                "Assess inventory complexity -> Explain mobile reporting -> Offer 7-day free trial.",
+                "1. Do you need barcode scanning and thermal receipt printing?",
+                "Cloud-synced billing software works offline and online.",
+                "09:00 - 19:00",
+                600,
+                "approved",
+                0
+            )
+        ]
+        cursor.executemany("""
+        INSERT INTO ai_employees (
+            name, role, description, language, voice_speaker, greeting,
+            calling_objective, system_prompt, sales_script, qualification_questions,
+            knowledge_base, working_hours, max_call_duration_seconds, status, is_active
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, seed_employees)
+
 
     # Seed default primary API key if api_keys table is empty
     cursor.execute("SELECT COUNT(*) as count FROM api_keys")
@@ -959,6 +1081,127 @@ def update_call_status_by_sid(call_sid: str, status: str, duration: int = 0) -> 
         values.append(duration)
     values.append(call_sid)
     cursor.execute(f"UPDATE calls SET {', '.join(fields)} WHERE call_sid = ?", values)
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
+
+
+# ---------------- AI EMPLOYEES CRUD (MODULE 6) ----------------
+
+def get_all_ai_employees() -> List[Dict[str, Any]]:
+    """Fetch all configured AI employees."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM ai_employees ORDER BY is_active DESC, updated_at DESC")
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
+
+
+def get_ai_employee_by_id(emp_id: int) -> Optional[Dict[str, Any]]:
+    """Fetch a specific AI employee by ID."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM ai_employees WHERE id = ?", (emp_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_active_ai_employee() -> Optional[Dict[str, Any]]:
+    """Fetch the currently active AI sales employee."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM ai_employees WHERE is_active = 1 LIMIT 1")
+    row = cursor.fetchone()
+    if not row:
+        cursor.execute("SELECT * FROM ai_employees ORDER BY id ASC LIMIT 1")
+        row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def create_ai_employee(data: Dict[str, Any]) -> int:
+    """Create a new AI employee (draft or approved)."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    INSERT INTO ai_employees (
+        name, role, description, language, voice_speaker, greeting,
+        calling_objective, system_prompt, sales_script, qualification_questions,
+        knowledge_base, working_hours, max_call_duration_seconds, status, is_active
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data.get("name", "New AI Sales Agent"),
+        data.get("role", "Sales Specialist"),
+        data.get("description", ""),
+        data.get("language", "te-IN"),
+        data.get("voice_speaker", "kavitha_te_conversation"),
+        data.get("greeting", "Hello! I am calling from S P Associates Software Company."),
+        data.get("calling_objective", "Qualify requirements and schedule demo."),
+        data.get("system_prompt", "You are a professional sales closer."),
+        data.get("sales_script", ""),
+        data.get("qualification_questions", ""),
+        data.get("knowledge_base", ""),
+        data.get("working_hours", "09:00 - 19:00"),
+        int(data.get("max_call_duration_seconds", 600)),
+        data.get("status", "draft"),
+        1 if data.get("is_active") else 0
+    ))
+    emp_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return emp_id
+
+
+def update_ai_employee(emp_id: int, updates: Dict[str, Any]) -> bool:
+    """Update an AI employee's profile, script, or status."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    fields = []
+    values = []
+    allowed = [
+        "name", "role", "description", "language", "voice_speaker", "greeting",
+        "calling_objective", "system_prompt", "sales_script", "qualification_questions",
+        "knowledge_base", "working_hours", "max_call_duration_seconds", "status"
+    ]
+    for k, v in updates.items():
+        if k in allowed:
+            fields.append(f"{k} = ?")
+            values.append(v)
+
+    if not fields:
+        conn.close()
+        return False
+
+    fields.append("updated_at = CURRENT_TIMESTAMP")
+    values.append(emp_id)
+    query = f"UPDATE ai_employees SET {', '.join(fields)} WHERE id = ?"
+    cursor.execute(query, values)
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
+
+
+def set_active_ai_employee(emp_id: int) -> bool:
+    """Set a specific AI employee as active, setting all others to inactive."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE ai_employees SET is_active = 0")
+    cursor.execute("UPDATE ai_employees SET is_active = 1, status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = ?", (emp_id,))
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
+
+
+def delete_ai_employee(emp_id: int) -> bool:
+    """Delete an AI employee if not the only active one."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM ai_employees WHERE id = ? AND is_active = 0", (emp_id,))
     conn.commit()
     success = cursor.rowcount > 0
     conn.close()

@@ -12,7 +12,7 @@ from loguru import logger
 
 from services.sarvam_service import sarvam_client
 from services.language_utils import detect_language, get_localized_initial_greeting
-from database import get_company_profile, get_lead_by_id
+from database import get_company_profile, get_lead_by_id, get_active_ai_employee
 
 
 SALES_SYSTEM_PROMPT_TEMPLATE = """
@@ -90,6 +90,19 @@ class SalesAgent:
                 lead_context += f"- Background Notes: {lead_info.get('notes')}\n"
             lead_context += "Address the customer respectfully by name and tailor the conversation to close this specific project.\n"
             prompt += lead_context
+
+        active_emp = get_active_ai_employee()
+        if active_emp:
+            prompt += f"\nACTIVE AI SALES EMPLOYEE PERSONA:\n"
+            prompt += f"- Name: {active_emp.get('name')}\n"
+            prompt += f"- Role: {active_emp.get('role')}\n"
+            prompt += f"- Calling Objective: {active_emp.get('calling_objective')}\n"
+            if active_emp.get('system_prompt'):
+                prompt += f"- Custom Persona Instructions: {active_emp.get('system_prompt')}\n"
+            if active_emp.get('sales_script'):
+                prompt += f"- Sales Script Milestones: {active_emp.get('sales_script')}\n"
+            if active_emp.get('qualification_questions'):
+                prompt += f"- Qualification Rules: {active_emp.get('qualification_questions')}\n"
 
         return prompt
 

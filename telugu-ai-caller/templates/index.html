@@ -1767,6 +1767,10 @@ body {
         <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
         Developer API
       </button>
+      <button class="nav-tab-btn" id="tabBtnEmployees" onclick="window.switchMainTab('landing', 'employeesSection')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        AI Employees
+      </button>
       <button class="nav-tab-btn" id="tabBtnIntegrations" onclick="window.switchMainTab('landing', 'integrationsSection')">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
         Integrations
@@ -2167,6 +2171,108 @@ body {
         </div>
       </section>
 
+
+      <!-- ============================================================= -->
+      <!-- AI EMPLOYEES BUILDER & MANAGEMENT (MODULE 6 - OUTPERO STYLE) -->
+      <!-- ============================================================= -->
+      <section style="margin-bottom: 55px;" id="employeesSection">
+        <div class="section-header-center">
+          <span class="section-tag">AI Workforce Architecture</span>
+          <h2 class="section-title">Autonomous AI Sales Employees</h2>
+          <p class="section-desc">Deploy specialized sales agents with distinct personalities, native voices, custom pitches, and automated meeting booking capabilities.</p>
+        </div>
+
+        <!-- AI Assistant Generator Bar -->
+        <div class="card-panel" style="padding: 18px 24px; margin-top: 24px; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); border: 1.5px solid #c7d2fe;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 280px;">
+              <div style="font-weight: 800; font-size: 0.95rem; color: #1e1b4b; display: flex; align-items: center; gap: 8px;">
+                ✨ AI Employee Creation Assistant
+              </div>
+              <div style="font-size: 0.76rem; color: #4338ca; margin-top: 3px;">
+                Describe your desired persona in plain words — the assistant configures prompt, script & BANT criteria automatically.
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; flex: 2; min-width: 300px;">
+              <input type="text" id="aiEmpPromptInput" placeholder="e.g. 'Create a Telugu-speaking closer who calls business owners and books software demos'" style="flex: 1; font-size: 0.8rem; background: #ffffff;" />
+              <button class="btn btn-primary" onclick="window.generateEmployeeWithAi()" id="btnGenerateAiEmp" style="white-space: nowrap; font-size: 0.78rem; font-weight: 700;">
+                ⚡ Generate Draft
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Employees Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; margin-top: 24px;" id="employeesGridContainer">
+          {% for emp in employees %}
+          <div class="card-panel" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border: {% if emp.is_active %}2px solid #4f46e5{% else %}1px solid var(--border-light){% endif %};">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <div>
+                  <div style="font-weight: 800; font-size: 1rem; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                    🤖 {{ emp.name }}
+                  </div>
+                  <div style="font-size: 0.74rem; color: var(--primary); font-weight: 700; margin-top: 2px;">
+                    {{ emp.role }}
+                  </div>
+                </div>
+
+                <div>
+                  {% if emp.is_active %}
+                  <span class="badge-tag live"><span class="pulse-dot"></span> Active Closer</span>
+                  {% elif emp.status == 'approved' %}
+                  <span class="badge-tag" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">Approved</span>
+                  {% else %}
+                  <span class="lead-status status-qualified">Draft Review</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <p style="font-size: 0.77rem; color: var(--text-secondary); line-height: 1.45; margin-bottom: 12px;">
+                {{ emp.description or emp.calling_objective }}
+              </p>
+
+              <!-- Speech & Language Pill -->
+              <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
+                <span class="badge-tag" style="background: #f8fafc; font-size: 0.7rem;">
+                  🌐 {{ emp.language }}
+                </span>
+                <span class="badge-tag" style="background: #f8fafc; font-size: 0.7rem;">
+                  🎙️ {{ emp.voice_speaker }}
+                </span>
+                <span class="badge-tag" style="background: #f8fafc; font-size: 0.7rem;">
+                  ⏰ {{ emp.working_hours }}
+                </span>
+              </div>
+
+              <!-- Greeting Preview Box -->
+              <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 12px; font-size: 0.75rem; color: #334155; margin-bottom: 14px; font-style: italic;">
+                "{{ emp.greeting }}"
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              {% if emp.is_active %}
+              <button class="btn btn-outline" disabled style="flex: 1; justify-content: center; font-size: 0.76rem; background: #e0e7ff; color: #3730a3; border-color: #c7d2fe;">
+                ✓ Deployed in Production
+              </button>
+              {% elif emp.status == 'approved' %}
+              <button class="btn btn-primary" onclick="window.activateEmployee({{ emp.id }})" style="flex: 1; justify-content: center; font-size: 0.76rem;">
+                ⚡ Deploy Employee
+              </button>
+              {% else %}
+              <button class="btn btn-outline" onclick="window.approveEmployee({{ emp.id }})" style="flex: 1; justify-content: center; font-size: 0.76rem; background: #ecfdf5; color: #065f46; border-color: #a7f3d0;">
+                ✓ Approve Draft
+              </button>
+              {% endif %}
+              <button class="btn btn-outline" onclick="window.openEmployeeDetails({{ emp.id }})" style="padding: 7px 12px; font-size: 0.76rem;">
+                ⚙️ View Persona
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
 
       <!-- ============================================================= -->
       <!-- THIRD-PARTY INTEGRATION ARCHITECTURE & PROVIDERS (OUTPERO STYLE) -->
@@ -3109,7 +3215,48 @@ body {
   </div>
 
 
-    <!-- MODAL 8: DISCOVER B2B LEADS (APOLLO & APIFY) -->
+    <!-- MODAL 9: AI EMPLOYEE PERSONA & INSPECTOR MODAL -->
+  <div class="modal-overlay" id="aiEmployeeModal">
+    <div class="modal-card" style="max-width: 650px; width: 95%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 1.1rem; color: #0f172a; font-weight: 800;" id="modalEmpTitle">AI Employee Persona</h3>
+        <button class="btn btn-outline" onclick="document.getElementById('aiEmployeeModal').classList.remove('open')" style="padding: 4px 8px;">✕</button>
+      </div>
+
+      <input type="hidden" id="modalEmpId" />
+
+      <div class="form-group">
+        <label>Role & Responsibility:</label>
+        <input type="text" id="modalEmpRole" />
+      </div>
+
+      <div class="form-group">
+        <label>Opening Hook Greeting:</label>
+        <textarea id="modalEmpGreeting" rows="2"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Sales Script Milestones & Objection Handling:</label>
+        <textarea id="modalEmpScript" rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>BANT Qualification Criteria:</label>
+        <textarea id="modalEmpQuestions" rows="2"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+        <span id="modalEmpStatusBadge" class="badge-tag">Status</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline" onclick="document.getElementById('aiEmployeeModal').classList.remove('open')">Close</button>
+          <button class="btn btn-outline" id="btnModalApproveEmp" onclick="window.approveCurrentModalEmployee()" style="display: none; background: #ecfdf5; color: #065f46; border-color: #a7f3d0;">✓ Approve Persona</button>
+          <button class="btn btn-primary" id="btnModalActivateEmp" onclick="window.activateCurrentModalEmployee()">⚡ Deploy in Production</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 8: DISCOVER B2B LEADS (APOLLO & APIFY) -->
   <div class="modal-overlay" id="discoverLeadsModal">
     <div class="modal-card" style="max-width: 720px; width: 95%;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">

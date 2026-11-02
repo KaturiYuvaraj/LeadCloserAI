@@ -901,6 +901,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const btn = document.getElementById("tabBtnPricing");
         if (btn) btn.classList.add("active");
         window.scrollToSection("pricingSection");
+      } else if (targetSectionId === "employeesSection") {
+        const btn = document.getElementById("tabBtnEmployees");
+        if (btn) btn.classList.add("active");
+        window.scrollToSection("employeesSection");
       } else if (targetSectionId === "integrationsSection") {
         const btn = document.getElementById("tabBtnIntegrations");
         if (btn) btn.classList.add("active");
@@ -1570,6 +1574,142 @@ Please check your API keys or network connection in Settings.`);
         enrichBtn.innerHTML = origText || "Enrich AI Intel";
       }
     }
+  };
+
+
+  // ===================================================================
+  // PHASE 6: AI EMPLOYEES & PERSONA ORCHESTRATION ACTIONS
+  // ===================================================================
+
+  window.generateEmployeeWithAi = async () => {
+    const input = document.getElementById("aiEmpPromptInput");
+    const prompt = input?.value.trim();
+    if (!prompt) {
+      alert("Please enter a short description of the sales persona you want to build.");
+      return;
+    }
+
+    const btn = document.getElementById("btnGenerateAiEmp");
+    const origText = btn ? btn.innerHTML : "";
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = "⏳ Synthesizing Persona...";
+    }
+
+    try {
+      const resp = await fetch("/api/employees/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instruction: prompt })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) throw new Error(data.detail || "Draft generation failed");
+
+      const draft = data.draft;
+      const confirmCreate = confirm(
+        `🎉 AI Employee Draft Created!\n\n` +
+        `Name: ${draft.name}\n` +
+        `Role: ${draft.role}\n` +
+        `Language: ${draft.language}\n` +
+        `Greeting: "${draft.greeting}"\n\n` +
+        `Status: DRAFT (Requires Admin Review & Approval)\n\n` +
+        `Save this employee persona to your workforce?`
+      );
+
+      if (confirmCreate) {
+        const saveResp = await fetch("/api/employees", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(draft)
+        });
+        const saveData = await saveResp.json();
+        if (saveData.success) {
+          alert("✅ AI Employee successfully saved to your workforce! Review and approve it to activate.");
+          location.reload();
+        }
+      }
+    } catch (err) {
+      alert(`Assistant Error: ${err.message}`);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origText || "⚡ Generate Draft";
+      }
+    }
+  };
+
+  window.activateEmployee = async (empId) => {
+    try {
+      const resp = await fetch(`/api/employees/${empId}/activate`, { method: "POST" });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) throw new Error(data.detail || "Activation failed");
+
+      alert(`🚀 ${data.message}`);
+      location.reload();
+    } catch (err) {
+      alert(`Activation Error: ${err.message}`);
+    }
+  };
+
+  window.approveEmployee = async (empId) => {
+    try {
+      const resp = await fetch(`/api/employees/${empId}/approve`, { method: "POST" });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) throw new Error(data.detail || "Approval failed");
+
+      alert(`✅ Persona Approved! You can now deploy this employee to handle live sales calls.`);
+      location.reload();
+    } catch (err) {
+      alert(`Approval Error: ${err.message}`);
+    }
+  };
+
+  window.openEmployeeDetails = async (empId) => {
+    try {
+      const resp = await fetch(`/api/employees/${empId}`);
+      const data = await resp.json();
+      const emp = data.employee;
+      if (!emp) return;
+
+      document.getElementById("modalEmpId").value = emp.id;
+      document.getElementById("modalEmpTitle").innerText = `🤖 ${emp.name}`;
+      document.getElementById("modalEmpRole").value = emp.role || "";
+      document.getElementById("modalEmpGreeting").value = emp.greeting || "";
+      document.getElementById("modalEmpScript").value = emp.sales_script || "";
+      document.getElementById("modalEmpQuestions").value = emp.qualification_questions || "";
+
+      const statusBadge = document.getElementById("modalEmpStatusBadge");
+      const approveBtn = document.getElementById("btnModalApproveEmp");
+      const activateBtn = document.getElementById("btnModalActivateEmp");
+
+      if (statusBadge) {
+        statusBadge.className = emp.is_active ? "badge-tag live" : (emp.status === "approved" ? "badge-tag" : "lead-status status-qualified");
+        statusBadge.innerText = emp.is_active ? "Active Closer" : emp.status.toUpperCase();
+      }
+
+      if (approveBtn) {
+        approveBtn.style.display = emp.status === "draft" ? "inline-block" : "none";
+      }
+
+      if (activateBtn) {
+        activateBtn.disabled = emp.is_active || emp.status === "draft";
+        activateBtn.innerText = emp.is_active ? "✓ Deployed" : (emp.status === "draft" ? "Approval Required" : "⚡ Deploy in Production");
+      }
+
+      document.getElementById("aiEmployeeModal")?.classList.add("open");
+    } catch (err) {
+      alert(`Error loading employee details: ${err.message}`);
+    }
+  };
+
+  window.approveCurrentModalEmployee = async () => {
+    const empId = document.getElementById("modalEmpId")?.value;
+    if (empId) await window.approveEmployee(empId);
+  };
+
+  window.activateCurrentModalEmployee = async () => {
+    const empId = document.getElementById("modalEmpId")?.value;
+    if (empId) await window.activateEmployee(empId);
   };
 
 });
