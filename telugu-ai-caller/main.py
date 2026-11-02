@@ -94,8 +94,7 @@ async def serve_dashboard(request: Request):
     api_keys = get_all_api_keys()
     primary_key = get_primary_api_key()
     billing_orders = get_billing_orders()
-    return templates.TemplateResponse("index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "index.html", {
         "profile": profile,
         "leads": leads,
         "calls": calls,
