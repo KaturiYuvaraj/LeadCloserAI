@@ -152,3 +152,4 @@ async def api_test_provider_connection(provider_type: str, provider_name: str):
         "provider_name": provider_name,
         "result": test_result
     }
+

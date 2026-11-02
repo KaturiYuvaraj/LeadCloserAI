@@ -174,3 +174,4 @@ async def api_get_call_intelligence(call_id: int):
     if not call:
         raise HTTPException(status_code=404, detail="Call record not found")
     return {"call": call}
+

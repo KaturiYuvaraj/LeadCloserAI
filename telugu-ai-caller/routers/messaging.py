@@ -149,3 +149,4 @@ async def api_check_calendar_availability(start_time: str, end_time: str):
 
     slots = await calendar_provider.check_availability(start_time=start_time, end_time=end_time)
     return {"busy_slots": slots}
+

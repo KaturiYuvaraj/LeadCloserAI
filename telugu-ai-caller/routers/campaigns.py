@@ -42,3 +42,4 @@ async def api_resume_campaign():
 async def api_stop_campaign():
     campaign_service.stop_campaign()
     return {"success": True}
+

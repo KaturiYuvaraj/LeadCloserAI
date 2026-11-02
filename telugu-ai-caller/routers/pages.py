@@ -51,3 +51,4 @@ async def serve_dashboard(request: Request):
         "employees": employees,
         "active_employee": active_emp
     })
+

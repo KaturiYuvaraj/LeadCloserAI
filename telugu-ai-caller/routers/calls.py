@@ -34,3 +34,4 @@ async def api_get_analytics_overview():
     except Exception as e:
         logger.error(f"Failed to generate analytics overview: {e}")
         return {"success": False, "error": str(e)}
+

@@ -112,3 +112,4 @@ async def api_delete_employee(emp_id: int):
 
     delete_ai_employee(emp_id)
     return {"success": True, "message": "Employee deleted successfully."}
+
