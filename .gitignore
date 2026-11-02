@@ -1,0 +1,47 @@
+# ===================================================================
+# Git Ignore Configuration for LeadCloserAI
+# ===================================================================
+
+# Python Byte-code & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pytest_cache/
+.pytest_cache/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+*/venv/
+*/.venv/
+
+# Environment Variables & Secrets (CRITICAL: Do NOT commit API keys)
+.env
+*.env
+.env.*
+!.env.example
+telugu-ai-caller/.env
+
+# SQLite Databases & Local Runtime State
+*.db
+*.db-journal
+*.sqlite3
+leads_crm.db
+telugu-ai-caller/leads_crm.db
+
+# OS & Editor generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary Audio Exports
+*.wav
+*.mp3

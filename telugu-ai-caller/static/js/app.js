@@ -1,0 +1,818 @@
+/**
+ * Main Frontend Application Logic for Telugu AI Caller & CRM.
+ * Manages Live Voice Calling, Excel Leads Ingestion, Autonomous Campaigns,
+ * and Persistent Call Summaries & Transcripts.
+ */
+
+document.addEventListener("DOMContentLoaded", () => {
+  const caller = new VoiceCallClient();
+  let selectedLead = null;
+  let campaignPollInterval = null;
+  let selectedCallLanguage = ""; // auto-detect
+
+  // UI Elements - Calling Station
+  const startCallBtn = document.getElementById("startCallBtn");
+  const endCallBtn = document.getElementById("endCallBtn");
+  const doneSpeakingBtn = document.getElementById("doneSpeakingBtn");
+  const phoneCallBtn = document.getElementById("phoneCallBtn");
+  const testInput = document.getElementById("testTextInput");
+  const sendTestBtn = document.getElementById("sendTestBtn");
+  const transcriptBox = document.getElementById("transcriptBox");
+  const callerStatus = document.getElementById("callerStatus");
+  const waveContainer = document.getElementById("waveContainer");
+
+  const activeLeadName = document.getElementById("activeLeadName");
+  const activeLeadCompany = document.getElementById("activeLeadCompany");
+  const activeLeadAvatar = document.getElementById("activeLeadAvatar");
+
+  // Language Pill Selector
+  window.setCallLanguage = (lang) => {
+    selectedCallLanguage = lang;
+    document.querySelectorAll(".lang-pill-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
+    });
+
+    const engineIndicator = document.getElementById("engineIndicator");
+    if (engineIndicator) {
+      if (lang === "te-IN") engineIndicator.innerText = "Mode: Telugu (తెలుగు) Active";
+      else if (lang === "hi-IN") engineIndicator.innerText = "Mode: Hindi (हिंदी) Active";
+      else if (lang === "en-IN") engineIndicator.innerText = "Mode: English Active";
+      else engineIndicator.innerText = "Mode: 🌐 Auto-Detect (Customer Matching)";
+    }
+  };
+
+  // Callbacks
+  caller.onStatusChange = (status) => {
+    if (callerStatus) callerStatus.innerText = status;
+  };
+
+  caller.onWaveformUpdate = (isSpeaking) => {
+    if (!waveContainer) return;
+    if (isSpeaking) {
+      waveContainer.classList.add("wave-active");
+    } else {
+      waveContainer.classList.remove("wave-active");
+    }
+  };
+
+  caller.onTranscript = (sender, text, type, language) => {
+    if (!transcriptBox) return;
+    const bubble = document.createElement("div");
+    bubble.className = `message-bubble bubble-${type}`;
+
+    const isAi = type === 'ai';
+    const iconSvg = isAi 
+      ? `<svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path></svg>`
+      : `<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+
+    let langTag = "";
+    if (language === "te-IN") langTag = '<span class="bubble-lang-badge te">Telugu</span>';
+    else if (language === "hi-IN") langTag = '<span class="bubble-lang-badge hi">Hindi</span>';
+    else if (language === "en-IN") langTag = '<span class="bubble-lang-badge en">English</span>';
+
+    const senderSpan = document.createElement("div");
+    senderSpan.className = "bubble-sender";
+    senderSpan.innerHTML = `<div style="display:flex; align-items:center; gap:5px;">${iconSvg} <span>${sender}</span></div>${langTag}`;
+
+    const textP = document.createElement("div");
+    textP.innerText = text;
+
+    bubble.appendChild(senderSpan);
+    bubble.appendChild(textP);
+    transcriptBox.appendChild(bubble);
+
+    transcriptBox.scrollTop = transcriptBox.scrollHeight;
+  };
+
+  caller.onSpeakingStateChange = (isSpeaking) => {
+    if (doneSpeakingBtn) {
+      doneSpeakingBtn.style.display = isSpeaking ? "inline-flex" : "none";
+    }
+  };
+
+  caller.onCallEnd = (summaryData) => {
+    if (doneSpeakingBtn) doneSpeakingBtn.style.display = "none";
+    showDealSummaryModal(summaryData);
+    refreshLeads();
+    refreshCallHistory();
+  };
+
+  if (doneSpeakingBtn) {
+    doneSpeakingBtn.addEventListener("click", () => {
+      caller.forceFinishTurn();
+      doneSpeakingBtn.style.display = "none";
+    });
+  }
+
+  // Button Listeners for Individual Live Call
+  if (startCallBtn) {
+    startCallBtn.addEventListener("click", () => {
+      const leadId = selectedLead ? selectedLead.id : null;
+      transcriptBox.innerHTML = "";
+      caller.startCall(leadId, selectedCallLanguage);
+      startCallBtn.style.display = "none";
+      endCallBtn.style.display = "inline-flex";
+    });
+  }
+
+  if (endCallBtn) {
+    endCallBtn.addEventListener("click", () => {
+      caller.endCall(true);
+      startCallBtn.style.display = "inline-flex";
+      endCallBtn.style.display = "none";
+      if (doneSpeakingBtn) doneSpeakingBtn.style.display = "none";
+    });
+  }
+
+  if (sendTestBtn && testInput) {
+    sendTestBtn.addEventListener("click", () => {
+      const text = testInput.value.trim();
+      if (!text) return;
+
+      if (!caller.isCallActive) {
+        const leadId = selectedLead ? selectedLead.id : null;
+        caller.startCall(leadId).then(() => {
+          setTimeout(() => {
+            caller.sendTextMessage(text);
+            testInput.value = "";
+          }, 1200);
+        });
+        startCallBtn.style.display = "none";
+        endCallBtn.style.display = "inline-flex";
+      } else {
+        caller.sendTextMessage(text);
+        testInput.value = "";
+      }
+    });
+
+    testInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        sendTestBtn.click();
+      }
+    });
+  }
+
+  // ===================================================================
+  // SELECT LEAD & DISPLAY STORED CALL SUMMARY
+  // ===================================================================
+  window.selectLead = (lead) => {
+    selectedLead = lead;
+    document.querySelectorAll(".lead-card").forEach(el => el.classList.remove("active"));
+    const card = document.getElementById(`lead-card-${lead.id}`);
+    if (card) card.classList.add("active");
+
+    if (activeLeadName) activeLeadName.innerText = lead.name;
+    if (activeLeadCompany) activeLeadCompany.innerText = `${lead.company || 'Business'} • ${lead.service_needed || 'Software'}`;
+    if (activeLeadAvatar) activeLeadAvatar.innerText = lead.name.charAt(0);
+
+    // Populate the Stored Call Summary Bar
+    const leadLastSummaryText = document.getElementById("leadLastSummaryText");
+    const leadLastCalledAt = document.getElementById("leadLastCalledAt");
+    const leadActionItemText = document.getElementById("leadActionItemText");
+
+    if (leadLastSummaryText) {
+      if (lead.last_call_summary) {
+        const stagePrefix = lead.last_call_stage ? `<span class="lead-status status-${lead.last_call_stage.toLowerCase()}" style="margin-right:6px;">${lead.last_call_stage.toUpperCase()}</span>` : '';
+        leadLastSummaryText.innerHTML = `${stagePrefix}${lead.last_call_summary}`;
+      } else {
+        leadLastSummaryText.innerText = "No calls made yet for this lead. Click 'Start AI Call' to initiate outreach.";
+      }
+    }
+
+    if (leadLastCalledAt) {
+      leadLastCalledAt.innerText = lead.last_called_at ? `🕒 Last Call: ${lead.last_called_at}` : "Not called yet";
+    }
+
+    if (leadActionItemText) {
+      leadActionItemText.innerText = lead.action_items ? `🎯 Next Action: ${lead.action_items}` : "";
+    }
+  };
+
+  // Lead Search Filter
+  const leadSearchInput = document.getElementById("leadSearchInput");
+  if (leadSearchInput) {
+    leadSearchInput.addEventListener("input", () => {
+      const q = leadSearchInput.value.toLowerCase().trim();
+      document.querySelectorAll(".lead-card").forEach(card => {
+        const text = card.innerText.toLowerCase();
+        if (!q || text.includes(q)) {
+          card.style.display = "block";
+        } else {
+          card.style.display = "none";
+        }
+      });
+    });
+  }
+
+  // View Lead History button handler
+  const viewLeadHistoryBtn = document.getElementById("viewLeadHistoryBtn");
+  if (viewLeadHistoryBtn) {
+    viewLeadHistoryBtn.addEventListener("click", async () => {
+      if (!selectedLead) {
+        alert("Please select a lead first.");
+        return;
+      }
+      try {
+        const resp = await fetch(`/api/leads/${selectedLead.id}/calls`);
+        const data = await resp.json();
+        if (data.calls && data.calls.length > 0) {
+          window.openCallDetails(data.calls[0].id);
+        } else {
+          alert(`No past call records found for ${selectedLead.name}. Start a call to generate a summary!`);
+        }
+      } catch (e) {
+        alert("Error loading call history: " + e.message);
+      }
+    });
+  }
+
+  // ===================================================================
+  // DETAILED CALL SUMMARY & TRANSCRIPT VIEWER
+  // ===================================================================
+  window.openCallDetails = async (callId) => {
+    try {
+      const resp = await fetch(`/api/calls/${callId}`);
+      const data = await resp.json();
+      if (!data.call) return;
+      const c = data.call;
+
+      document.getElementById("modalCallLeadName").innerText = c.lead_name || c.phone_number || "Customer";
+      document.getElementById("modalCallPhone").innerText = c.lead_phone || c.phone_number || "";
+      document.getElementById("modalCallStage").innerText = (c.deal_stage || "QUALIFIED").toUpperCase();
+      document.getElementById("modalCallStage").className = `lead-status status-${(c.deal_stage || 'qualified').toLowerCase()}`;
+      document.getElementById("modalCallDate").innerText = c.created_at || "";
+      document.getElementById("modalCallSummaryText").innerText = c.summary || "Call summary recorded in English.";
+      document.getElementById("modalCallBudget").innerText = c.extracted_budget || "Not specified";
+      document.getElementById("modalCallTimeline").innerText = c.extracted_timeline || "Not specified";
+
+      const container = document.getElementById("modalCallTranscriptContainer");
+      container.innerHTML = "";
+
+      let transcript = [];
+      try {
+        transcript = typeof c.transcript === 'string' ? JSON.parse(c.transcript) : c.transcript;
+      } catch (e) {
+        transcript = [];
+      }
+
+      if (Array.isArray(transcript) && transcript.length > 0) {
+        transcript.forEach(msg => {
+          const bubble = document.createElement("div");
+          const isAi = msg.role === "assistant";
+          bubble.className = `message-bubble ${isAi ? 'bubble-ai' : 'bubble-user'}`;
+          bubble.style.maxWidth = "90%";
+          bubble.style.padding = "8px 12px";
+          bubble.style.fontSize = "0.85rem";
+          const iconSvg = isAi
+            ? `<svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path></svg>`
+            : `<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+          bubble.innerHTML = `
+            <div style="font-weight:700; font-size:0.7rem; opacity:0.85; margin-bottom:2px; display:flex; align-items:center; gap:4px;">
+              ${iconSvg} <span>${isAi ? 'AI Sales Caller' : 'Customer'}</span>
+            </div>
+            <div>${msg.content}</div>
+          `;
+          container.appendChild(bubble);
+        });
+      } else {
+        container.innerHTML = `<div style="font-size:0.8rem; color:#94a3b8; padding:8px;">Transcript: ${c.transcript || c.summary || 'Recorded.'}</div>`;
+      }
+
+      document.getElementById("callDetailsModal").classList.add("open");
+    } catch (e) {
+      alert("Failed to load call details: " + e.message);
+    }
+  };
+
+  const closeCallDetailsModal = document.getElementById("closeCallDetailsModal");
+  if (closeCallDetailsModal) {
+    closeCallDetailsModal.addEventListener("click", () => {
+      document.getElementById("callDetailsModal").classList.remove("open");
+    });
+  }
+
+  // ===================================================================
+  // EXCEL / CSV UPLOAD CONTROLLER
+  // ===================================================================
+  const uploadExcelModal = document.getElementById("uploadExcelModal");
+  const openUploadExcelBtn = document.getElementById("openUploadExcelBtn");
+  const sidebarUploadBtn = document.getElementById("sidebarUploadBtn");
+  const closeUploadModal = document.getElementById("closeUploadModal");
+  const excelFileInput = document.getElementById("excelFileInput");
+  const excelDropzone = document.getElementById("excelDropzone");
+  const dropzoneText = document.getElementById("dropzoneText");
+  const submitExcelUploadBtn = document.getElementById("submitExcelUploadBtn");
+  const uploadStatusMsg = document.getElementById("uploadStatusMsg");
+
+  function openUpload() {
+    uploadStatusMsg.style.display = "none";
+    excelFileInput.value = "";
+    dropzoneText.innerText = "Click or Drag & Drop Excel (.xlsx) or CSV file";
+    uploadExcelModal.classList.add("open");
+  }
+
+  if (openUploadExcelBtn) openUploadExcelBtn.addEventListener("click", openUpload);
+  if (sidebarUploadBtn) sidebarUploadBtn.addEventListener("click", openUpload);
+  if (closeUploadModal) {
+    closeUploadModal.addEventListener("click", () => uploadExcelModal.classList.remove("open"));
+  }
+
+  if (excelFileInput) {
+    excelFileInput.addEventListener("change", () => {
+      if (excelFileInput.files.length > 0) {
+        dropzoneText.innerText = `Selected: ${excelFileInput.files[0].name} (${Math.round(excelFileInput.files[0].size / 1024)} KB)`;
+      }
+    });
+  }
+
+  if (excelDropzone) {
+    excelDropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      excelDropzone.classList.add("dragover");
+    });
+    excelDropzone.addEventListener("dragleave", () => {
+      excelDropzone.classList.remove("dragover");
+    });
+    excelDropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      excelDropzone.classList.remove("dragover");
+      if (e.dataTransfer.files.length > 0) {
+        excelFileInput.files = e.dataTransfer.files;
+        dropzoneText.innerText = `Selected: ${e.dataTransfer.files[0].name} (${Math.round(e.dataTransfer.files[0].size / 1024)} KB)`;
+      }
+    });
+  }
+
+  if (submitExcelUploadBtn) {
+    submitExcelUploadBtn.addEventListener("click", async () => {
+      if (!excelFileInput.files || excelFileInput.files.length === 0) {
+        alert("Please select an Excel (.xlsx) or CSV file first.");
+        return;
+      }
+
+      submitExcelUploadBtn.disabled = true;
+      submitExcelUploadBtn.innerText = "Parsing & Ingesting...";
+      uploadStatusMsg.style.display = "none";
+
+      const formData = new FormData();
+      formData.append("file", excelFileInput.files[0]);
+
+      try {
+        const resp = await fetch("/api/leads/upload-excel", {
+          method: "POST",
+          body: formData
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.success) {
+          uploadStatusMsg.style.display = "block";
+          uploadStatusMsg.style.background = "rgba(16, 185, 129, 0.2)";
+          uploadStatusMsg.style.color = "#34d399";
+          uploadStatusMsg.style.border = "1px solid rgba(16, 185, 129, 0.4)";
+          uploadStatusMsg.innerHTML = `
+            <strong>✅ Import Successful!</strong><br/>
+            Found: ${data.total_parsed} leads | Added: ${data.inserted} | Updated: ${data.updated}
+          `;
+
+          setTimeout(() => {
+            uploadExcelModal.classList.remove("open");
+            refreshLeads();
+          }, 1800);
+        } else {
+          uploadStatusMsg.style.display = "block";
+          uploadStatusMsg.style.background = "rgba(239, 68, 68, 0.2)";
+          uploadStatusMsg.style.color = "#f87171";
+          uploadStatusMsg.style.border = "1px solid rgba(239, 68, 68, 0.4)";
+          uploadStatusMsg.innerText = data.detail || (data.errors ? data.errors.join(", ") : "Failed to import leads.");
+        }
+      } catch (err) {
+        uploadStatusMsg.style.display = "block";
+        uploadStatusMsg.style.background = "rgba(239, 68, 68, 0.2)";
+        uploadStatusMsg.style.color = "#f87171";
+        uploadStatusMsg.innerText = "Upload failed: " + err.message;
+      } finally {
+        submitExcelUploadBtn.disabled = false;
+        submitExcelUploadBtn.innerText = "Upload & Ingest";
+      }
+    });
+  }
+
+  // ===================================================================
+  // AUTONOMOUS AUTO-CALLING CAMPAIGN CONTROLLER
+  // ===================================================================
+  const campaignModal = document.getElementById("campaignModal");
+  const openCampaignModalBtn = document.getElementById("openCampaignModalBtn");
+  const closeCampaignModal = document.getElementById("closeCampaignModal");
+  const startCampaignSubmitBtn = document.getElementById("startCampaignSubmitBtn");
+
+  const campaignBanner = document.getElementById("campaignBanner");
+  const campaignModeBadge = document.getElementById("campaignModeBadge");
+  const campaignProgressBar = document.getElementById("campaignProgressBar");
+  const campaignCurrentLead = document.getElementById("campaignCurrentLead");
+  const campaignProgressText = document.getElementById("campaignProgressText");
+  const campaignDemosCount = document.getElementById("campaignDemosCount");
+  const campaignWonCount = document.getElementById("campaignWonCount");
+  const campaignFollowCount = document.getElementById("campaignFollowCount");
+  const pauseCampaignBtn = document.getElementById("pauseCampaignBtn");
+  const stopCampaignBtn = document.getElementById("stopCampaignBtn");
+
+  if (openCampaignModalBtn) {
+    openCampaignModalBtn.addEventListener("click", () => {
+      campaignModal.classList.add("open");
+    });
+  }
+
+  if (closeCampaignModal) {
+    closeCampaignModal.addEventListener("click", () => {
+      campaignModal.classList.remove("open");
+    });
+  }
+
+  if (startCampaignSubmitBtn) {
+    startCampaignSubmitBtn.addEventListener("click", async () => {
+      const mode = document.getElementById("campaignModeSelect").value;
+      const target = document.getElementById("campaignTargetSelect").value;
+      const delay = parseInt(document.getElementById("campaignDelaySelect").value, 10);
+
+      startCampaignSubmitBtn.disabled = true;
+      startCampaignSubmitBtn.innerText = "Starting...";
+
+      try {
+        const resp = await fetch("/api/campaign/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: mode,
+            delay_seconds: delay
+          })
+        });
+
+        const data = await resp.json();
+        if (resp.ok && data.success) {
+          campaignModal.classList.remove("open");
+          campaignBanner.classList.add("active");
+          campaignModeBadge.innerText = mode.toUpperCase();
+          startCampaignPolling();
+        } else {
+          alert(data.detail || "Could not start campaign.");
+        }
+      } catch (err) {
+        alert("Campaign start error: " + err.message);
+      } finally {
+        startCampaignSubmitBtn.disabled = false;
+        startCampaignSubmitBtn.innerText = "🚀 Start Auto-Dialing";
+      }
+    });
+  }
+
+  function startCampaignPolling() {
+    if (campaignPollInterval) clearInterval(campaignPollInterval);
+
+    campaignPollInterval = setInterval(async () => {
+      try {
+        const resp = await fetch("/api/campaign/status");
+        const status = await resp.json();
+
+        campaignProgressBar.style.width = `${status.progress_percent || 0}%`;
+        campaignProgressText.innerText = `${status.completed_leads || 0} / ${status.total_leads || 0}`;
+
+        if (status.current_lead) {
+          campaignCurrentLead.innerHTML = `📞 Calling: <strong>${status.current_lead.name}</strong> (${status.current_lead.phone}) • ${status.current_lead.service_needed || 'Software'}`;
+        } else if (status.is_running) {
+          campaignCurrentLead.innerText = "Dialing next lead...";
+        }
+
+        const res = status.results || {};
+        campaignDemosCount.innerText = res.demo_scheduled || 0;
+        campaignWonCount.innerText = res.closed_won || 0;
+        campaignFollowCount.innerText = res.follow_up || 0;
+
+        if (pauseCampaignBtn) {
+          pauseCampaignBtn.innerText = status.is_paused ? "▶️ Resume" : "⏸️ Pause";
+        }
+
+        if (!status.is_running && status.total_leads > 0 && status.completed_leads >= status.total_leads) {
+          clearInterval(campaignPollInterval);
+          campaignPollInterval = null;
+          campaignCurrentLead.innerHTML = `🎉 <strong>Campaign Complete!</strong> ${status.completed_leads} leads called. Call summaries saved.`;
+          refreshLeads();
+          refreshCallHistory();
+          setTimeout(() => {
+            campaignBanner.classList.remove("active");
+          }, 8000);
+        }
+      } catch (e) {
+        console.error("Campaign poll error:", e);
+      }
+    }, 1500);
+  }
+
+  if (pauseCampaignBtn) {
+    pauseCampaignBtn.addEventListener("click", async () => {
+      const isPaused = pauseCampaignBtn.innerText.includes("Resume");
+      const endpoint = isPaused ? "/api/campaign/resume" : "/api/campaign/pause";
+      await fetch(endpoint, { method: "POST" });
+    });
+  }
+
+  if (stopCampaignBtn) {
+    stopCampaignBtn.addEventListener("click", async () => {
+      if (confirm("Stop the running auto-calling campaign?")) {
+        await fetch("/api/campaign/stop", { method: "POST" });
+        if (campaignPollInterval) clearInterval(campaignPollInterval);
+        campaignBanner.classList.remove("active");
+        refreshLeads();
+      }
+    });
+  }
+
+  // ===================================================================
+  // MANUAL LEAD & PHONE DIAL MODALS
+  // ===================================================================
+  if (phoneCallBtn) {
+    phoneCallBtn.addEventListener("click", () => {
+      const phone = selectedLead ? selectedLead.phone : "";
+      document.getElementById("phoneCallInput").value = phone;
+      document.getElementById("phoneCallModal").classList.add("open");
+    });
+  }
+
+  const closePhoneModal = document.getElementById("closePhoneModal");
+  if (closePhoneModal) {
+    closePhoneModal.addEventListener("click", () => {
+      document.getElementById("phoneCallModal").classList.remove("open");
+    });
+  }
+
+  const submitPhoneCallBtn = document.getElementById("submitPhoneCallBtn");
+  if (submitPhoneCallBtn) {
+    submitPhoneCallBtn.addEventListener("click", async () => {
+      const phone = document.getElementById("phoneCallInput").value.trim();
+      if (!phone) {
+        alert("Please enter a phone number");
+        return;
+      }
+
+      try {
+        const resp = await fetch("/api/call/outbound", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: phone,
+            lead_id: selectedLead ? selectedLead.id : null
+          })
+        });
+        const data = await resp.json();
+        if (data.success) {
+          alert("Outbound phone call initiated! Check your phone.");
+          document.getElementById("phoneCallModal").classList.remove("open");
+        } else {
+          alert(data.error || "Failed to trigger phone call.");
+        }
+      } catch (e) {
+        alert("Error initiating phone call: " + e.message);
+      }
+    });
+  }
+
+  // Add Lead Modal
+  const addLeadModal = document.getElementById("addLeadModal");
+  const openAddLeadBtn = document.getElementById("openAddLeadBtn");
+  const closeAddLeadModal = document.getElementById("closeAddLeadModal");
+
+  if (openAddLeadBtn && addLeadModal) {
+    openAddLeadBtn.addEventListener("click", () => addLeadModal.classList.add("open"));
+  }
+  if (closeAddLeadModal && addLeadModal) {
+    closeAddLeadModal.addEventListener("click", () => addLeadModal.classList.remove("open"));
+  }
+
+  const leadForm = document.getElementById("leadForm");
+  if (leadForm) {
+    leadForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const langEl = document.getElementById("leadLangInput");
+      const payload = {
+        name: document.getElementById("leadNameInput").value,
+        phone: document.getElementById("leadPhoneInput").value,
+        company: document.getElementById("leadCompanyInput").value,
+        service_needed: document.getElementById("leadServiceInput").value,
+        budget: document.getElementById("leadBudgetInput").value,
+        timeline: document.getElementById("leadTimelineInput").value,
+        notes: document.getElementById("leadNotesInput").value,
+        preferred_language: langEl ? langEl.value : "te-IN",
+        status: "NEW"
+      };
+
+      const resp = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (resp.ok) {
+        addLeadModal.classList.remove("open");
+        leadForm.reset();
+        refreshLeads();
+      }
+    });
+  }
+
+  // Voice Engine Language & Speaker Options
+  window.updateVoiceOptions = () => {
+    const langSelect = document.getElementById("voiceLangSelect");
+    const voiceSelect = document.getElementById("voiceSelect");
+    const testBtnText = document.getElementById("testVoiceBtnText");
+    if (!langSelect || !voiceSelect) return;
+
+    const lang = langSelect.value;
+    voiceSelect.innerHTML = "";
+
+    if (lang === "hi-IN") {
+      voiceSelect.innerHTML = `
+        <option value="aditya_hi_sales" selected>Aditya (Hindi Sales Closer)</option>
+        <option value="simran_hi_sales">Simran (Hindi Sales Specialist)</option>
+        <option value="ritu_hi_sales">Ritu (Hindi Conversational)</option>
+      `;
+      if (testBtnText) testBtnText.innerText = "Preview Hindi Voice";
+    } else if (lang === "en-IN") {
+      voiceSelect.innerHTML = `
+        <option value="simran_en_sales" selected>Simran (English Sales Specialist)</option>
+        <option value="ishita_en_customer">Ishita (English Customer Success)</option>
+        <option value="aditya">Aditya (Indian English Professional)</option>
+      `;
+      if (testBtnText) testBtnText.innerText = "Preview English Voice";
+    } else {
+      voiceSelect.innerHTML = `
+        <option value="kavitha_te_conversation" selected>Kavitha (Telugu Conversational)</option>
+        <option value="pooja_te_conversation">Pooja (Telugu Conversational)</option>
+        <option value="tarun_te_narration">Tarun (Telugu Professional Male)</option>
+        <option value="kavitha">Kavitha (Standard)</option>
+      `;
+      if (testBtnText) testBtnText.innerText = "Preview Telugu Voice";
+    }
+  };
+
+  // Voice Test Function
+  window.testTtsVoice = async () => {
+    const langSelect = document.getElementById("voiceLangSelect");
+    const voiceSelect = document.getElementById("voiceSelect");
+    const testBtn = document.getElementById("testVoiceBtn");
+
+    const lang = langSelect ? langSelect.value : "te-IN";
+    const speaker = voiceSelect ? voiceSelect.value : "kavitha_te_conversation";
+
+    let sampleText = "నమస్కారం! మేము S P Associates Software Company నుండి మాట్లాడుతున్నాము. మీ వ్యాపారం కోసం అధునాతన సాఫ్ట్‌వేర్ మరియు AI సేవల గురించి మాట్లాడొచ్చా అండి?";
+    if (lang === "hi-IN") {
+      sampleText = "नमस्ते सर! मैं S P Associates Software Company से बात कर रहा हूँ। क्या हम आपके बिज़नेस के लिए सॉफ़्टवेयर और AI सेवाओं के बारे में 2 मिनट बात कर सकते हैं?";
+    } else if (lang === "en-IN") {
+      sampleText = "Hello! I am calling from S P Associates Software Company to discuss custom websites, mobile apps, and AI solutions for your business.";
+    }
+
+    if (testBtn) {
+      testBtn.disabled = true;
+      testBtn.innerHTML = `<span class="pulse-dot"></span> Generating voice audio...`;
+    }
+
+    try {
+      const resp = await fetch("/api/tts/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: sampleText,
+          speaker: speaker,
+          language_code: lang
+        })
+      });
+
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.play();
+      } else {
+        alert("Voice test failed: " + resp.statusText);
+      }
+    } catch (e) {
+      alert("Error: " + e.message);
+    } finally {
+      if (testBtn) {
+        testBtn.disabled = false;
+        const btnText = lang === 'hi-IN' ? 'Preview Hindi Voice' : (lang === 'en-IN' ? 'Preview English Voice' : 'Preview Telugu Voice');
+        testBtn.innerHTML = `<svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg> <span id="testVoiceBtnText">${btnText}</span>`;
+      }
+    }
+  };
+
+  // Deal Summary Modal
+  function showDealSummaryModal(data) {
+    const intel = data.intelligence || {};
+    const modal = document.getElementById("dealSummaryModal");
+    if (!modal) return;
+
+    document.getElementById("summaryStage").innerText = (intel.deal_stage || 'QUALIFYING').toUpperCase();
+    document.getElementById("summaryStage").className = `lead-status status-${(intel.deal_stage || 'qualified').toLowerCase()}`;
+    document.getElementById("summarySentiment").innerText = intel.sentiment || 'neutral';
+    document.getElementById("summaryBudget").innerText = intel.extracted_budget || 'Not specified';
+    document.getElementById("summaryTimeline").innerText = intel.extracted_timeline || 'Not specified';
+    document.getElementById("summaryRequirements").innerText = intel.extracted_requirements || 'Software Services';
+    document.getElementById("summaryObjections").innerText = intel.objections_raised || 'None noted';
+    document.getElementById("summaryAction").innerText = intel.action_items || 'Follow up with quotation.';
+    document.getElementById("summaryOverview").innerText = intel.summary || 'Call finished.';
+
+    modal.classList.add("open");
+  }
+
+  const closeDealModal = document.getElementById("closeDealModal");
+  if (closeDealModal) {
+    closeDealModal.addEventListener("click", () => {
+      document.getElementById("dealSummaryModal").classList.remove("open");
+    });
+  }
+
+  // Refresh functions
+  async function refreshLeads() {
+    try {
+      const resp = await fetch("/api/leads");
+      const data = await resp.json();
+      const container = document.getElementById("leadsListContainer");
+      const leadsCountBadge = document.getElementById("leadsCountBadge");
+
+      if (leadsCountBadge && data.leads) {
+        leadsCountBadge.innerText = `${data.leads.length} Total`;
+      }
+
+      if (!container || !data.leads || data.leads.length === 0) return;
+
+      container.innerHTML = "";
+      data.leads.forEach(lead => {
+        const card = document.createElement("div");
+        card.id = `lead-card-${lead.id}`;
+        card.className = `lead-card ${selectedLead && selectedLead.id === lead.id ? 'active' : ''}`;
+        card.onclick = () => window.selectLead(lead);
+
+        let summaryHtml = "";
+        if (lead.last_call_summary) {
+          summaryHtml = `
+            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border-color); font-size: 0.74rem; color: #93c5fd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              📝 <strong>Summary:</strong> ${lead.last_call_summary}
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="lead-header">
+            <span class="lead-name">${lead.name}</span>
+            <span class="lead-status status-${(lead.status || 'new').toLowerCase()}">${lead.status || 'NEW'}</span>
+          </div>
+          <div class="lead-company">${lead.company || 'Business'} • ${lead.service_needed || 'Software'}</div>
+          <div class="lead-details-row">
+            <span>💰 ${lead.budget || 'Flexible'}</span>
+            <span>⏱️ ${lead.timeline || 'Immediate'}</span>
+          </div>
+          ${summaryHtml}
+        `;
+        container.appendChild(card);
+      });
+
+      // Re-sync currently selected lead's summary if open
+      if (selectedLead) {
+        const updated = data.leads.find(l => l.id === selectedLead.id);
+        if (updated) window.selectLead(updated);
+      }
+    } catch (e) {
+      console.error("Failed to refresh leads:", e);
+    }
+  }
+
+  async function refreshCallHistory() {
+    try {
+      const resp = await fetch("/api/calls");
+      const data = await resp.json();
+      const list = document.getElementById("recentCallsList");
+      if (!list || !data.calls) return;
+
+      list.innerHTML = "";
+      data.calls.slice(0, 6).forEach(call => {
+        const item = document.createElement("div");
+        item.className = "tip-item";
+        item.style.cursor = "pointer";
+        item.onclick = () => window.openCallDetails(call.id);
+        item.title = "Click to view full transcript & call summary";
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="tip-title">${call.lead_name || 'Web Call'}</span>
+            <span style="font-size:0.7rem; color: var(--primary); font-weight: 600;">${call.duration_seconds}s ↗</span>
+          </div>
+          <div style="font-size:0.71rem; color: var(--text-muted); margin: 2px 0;">Stage: <strong style="color: #059669;">${(call.deal_stage || '').toUpperCase()}</strong></div>
+          <div style="font-size:0.79rem; line-height: 1.35; color: var(--text-secondary);">${call.summary || 'Call recorded successfully.'}</div>
+        `;
+        list.appendChild(item);
+      });
+    } catch (e) {
+      console.error("Failed to refresh calls:", e);
+    }
+  }
+
+  // Initial call on load
+  refreshLeads();
+});
