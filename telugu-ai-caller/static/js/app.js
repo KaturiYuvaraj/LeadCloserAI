@@ -301,9 +301,9 @@ document.addEventListener("DOMContentLoaded", () => {
               techs.forEach(t => {
                 const tag = document.createElement("span");
                 tag.className = "badge-tag";
-                tag.style.background = "#eef2ff";
-                tag.style.color = "#4338ca";
-                tag.style.border = "1px solid #c7d2fe";
+                tag.style.background = "#fff7ed";
+                tag.style.color = "#c2410c";
+                tag.style.border = "1px solid #fed7aa";
                 tag.innerText = t;
                 enrichmentTechTags.appendChild(tag);
               });
@@ -1500,12 +1500,12 @@ Please check your API keys or network connection in Settings.`);
 
     if (provider === "apollo") {
       if (titlesGroup) titlesGroup.style.display = "block";
-      if (labelApollo) { labelApollo.style.borderColor = "var(--primary)"; labelApollo.style.background = "#eff6ff"; }
+      if (labelApollo) { labelApollo.style.borderColor = "var(--primary)"; labelApollo.style.background = "#fff7ed"; }
       if (labelApify) { labelApify.style.borderColor = "var(--border-light)"; labelApify.style.background = "#ffffff"; }
     } else {
       if (titlesGroup) titlesGroup.style.display = "none";
       if (labelApollo) { labelApollo.style.borderColor = "var(--border-light)"; labelApollo.style.background = "#ffffff"; }
-      if (labelApify) { labelApify.style.borderColor = "var(--primary)"; labelApify.style.background = "#eff6ff"; }
+      if (labelApify) { labelApify.style.borderColor = "var(--primary)"; labelApify.style.background = "#fff7ed"; }
     }
   };
 
@@ -2129,7 +2129,7 @@ Would you like to open Integrations Settings now to configure Google Calendar OA
       const successBox = document.getElementById("calendarSuccessBox");
       const meetLinkText = document.getElementById("calendarMeetLinkText");
       if (successBox && meetLinkText) {
-        meetLinkText.innerHTML = `<strong>Google Meet URL:</strong> <a href="${meetLink}" target="_blank" style="color: #2563eb; text-decoration: underline;">${meetLink}</a>`;
+        meetLinkText.innerHTML = `<strong>Google Meet URL:</strong> <a href="${meetLink}" target="_blank" style="color: #ea580c; text-decoration: underline;">${meetLink}</a>`;
         successBox.style.display = "block";
       }
 
@@ -2191,11 +2191,11 @@ Lead updated to DEMO_BOOKED.`);
         const won = d.closed_won || 0;
 
         const stages = [
-          { name: "1. Discovered / Ingested Prospects", count: total, pct: 100, color: "#4f46e5" },
+          { name: "1. Discovered / Ingested Prospects", count: total, pct: 100, color: "#ea580c" },
           { name: "2. Outbound Telephony Attempted", count: calls, pct: Math.min(Math.round((calls / total) * 100), 100), color: "#6366f1" },
           { name: "3. Conversed & Engaged (Voice)", count: connected, pct: Math.min(Math.round((connected / total) * 100), 100), color: "#0d9488" },
           { name: "4. Qualified Requirements & Budget", count: qualified, pct: Math.min(Math.round((qualified / total) * 100), 100), color: "#059669" },
-          { name: "5. Live Demos Scheduled (Google Meet)", count: demos, pct: Math.min(Math.round((demos / total) * 100), 100), color: "#2563eb" },
+          { name: "5. Live Demos Scheduled (Google Meet)", count: demos, pct: Math.min(Math.round((demos / total) * 100), 100), color: "#f97316" },
           { name: "6. Closed Won (High-Ticket Software)", count: won, pct: Math.min(Math.round((won / total) * 100), 100), color: "#7c3aed" }
         ];
 
@@ -2240,7 +2240,7 @@ Lead updated to DEMO_BOOKED.`);
         const totalObj = Object.values(d.objections).reduce((a, b) => a + b, 0) || 1;
         const objItems = [
           { name: "Pricing / High Budget Constraint", count: d.objections.pricing || 0, strategy: "AI pitches milestone flex-payments", color: "#d97706" },
-          { name: "Already Have Website / App In-House", count: d.objections.existing_solution || 0, strategy: "AI offers 5-min free performance audit", color: "#2563eb" },
+          { name: "Already Have Website / App In-House", count: d.objections.existing_solution || 0, strategy: "AI offers 5-min free performance audit", color: "#ea580c" },
           { name: "Send Details on WhatsApp / Busy Now", count: d.objections.send_whatsapp_timing || 0, strategy: "AI triggers instant Meta Cloud WhatsApp PDF", color: "#059669" },
           { name: "Custom ERP & Specialized Features", count: d.objections.custom_requirements || 0, strategy: "AI locks tech lead architectural scoping", color: "#7c3aed" }
         ];
@@ -2311,7 +2311,7 @@ Lead updated to DEMO_BOOKED.`);
             <td style="padding: 10px 12px; color: var(--text-secondary);">${emp.role}</td>
             <td style="padding: 10px 12px;"><span class="badge-tag">${emp.language === 'te-IN' ? 'Telugu' : (emp.language === 'hi-IN' ? 'Hindi' : 'English')}</span></td>
             <td style="padding: 10px 12px; font-weight: 600;">${emp.calls_handled}</td>
-            <td style="padding: 10px 12px; font-weight: 700; color: #2563eb;">${emp.demos_booked}</td>
+            <td style="padding: 10px 12px; font-weight: 700; color: #ea580c;">${emp.demos_booked}</td>
             <td style="padding: 10px 12px; font-weight: 700; color: #059669;">${emp.success_rate}%</td>
             <td style="padding: 10px 12px;">
               <span class="badge-tag ${emp.is_active ? 'live' : ''}">${emp.is_active ? 'Active' : emp.status.toUpperCase()}</span>

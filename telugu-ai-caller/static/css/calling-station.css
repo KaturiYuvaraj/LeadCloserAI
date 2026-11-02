@@ -206,7 +206,7 @@
 }
 .cs-switch input:checked + .cs-switch-track { background: var(--cs-rec); }
 .cs-switch input:checked + .cs-switch-track .cs-switch-thumb { transform: translateX(16px); }
-.cs-switch input:focus-visible + .cs-switch-track { outline: 2px solid var(--primary, #2563eb); outline-offset: 2px; }
+.cs-switch input:focus-visible + .cs-switch-track { outline: 2px solid var(--primary, #ea580c); outline-offset: 2px; }
 .cs-switch input:disabled + .cs-switch-track { opacity: 0.5; }
 
 /* Action row */
@@ -260,7 +260,7 @@
   gap: 10px;
   font-size: 0.76rem;
 }
-#callerStatus { font-weight: 600; color: var(--primary, #2563eb); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#callerStatus { font-weight: 600; color: var(--primary, #ea580c); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Section 4: live conversation */
 .cs-conversation {
@@ -301,7 +301,7 @@
 .cs-full-btn { width: 100%; justify-content: center; }
 .cs-call-item { cursor: pointer; }
 .cs-call-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-.cs-call-meta { font-size: 0.7rem; color: var(--primary, #2563eb); font-weight: 600; white-space: nowrap; }
+.cs-call-meta { font-size: 0.7rem; color: var(--primary, #ea580c); font-weight: 600; white-space: nowrap; }
 .cs-call-stage { font-size: 0.71rem; color: var(--text-muted, #64748b); margin: 2px 0; }
 .cs-call-stage strong { color: var(--cs-good); }
 .cs-call-summary { font-size: 0.79rem; line-height: 1.35; color: var(--text-secondary, #334155); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
@@ -321,7 +321,7 @@
 }
 .cs-recording-box audio { width: 100%; height: 36px; }
 .cs-recording-title { font-size: 0.8rem; font-weight: 700; color: #991b1b; display: flex; justify-content: space-between; gap: 8px; }
-.cs-recording-title a { font-weight: 600; color: var(--primary, #2563eb); }
+.cs-recording-title a { font-weight: 600; color: var(--primary, #ea580c); }
 
 /* ---------- Responsive: laptops and desktops ---------- */
 
