@@ -1077,6 +1077,21 @@ def record_provider_usage(provider_name: str, operation: str, credits_used: floa
     conn.close()
 
 
+def update_call_recording(call_id: int, recording_url: str) -> bool:
+    """Attach a stored recording URL to a call record by its ID."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE calls
+        SET recording_url = ?
+        WHERE id = ?
+    """, (recording_url, call_id))
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
+
+
 def update_call_recording_by_sid(call_sid: str, recording_url: str) -> bool:
     """Update call record with telephony carrier recording URL."""
     conn = get_connection()

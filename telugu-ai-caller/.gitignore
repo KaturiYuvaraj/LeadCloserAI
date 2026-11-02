@@ -16,3 +16,6 @@ __pycache__/
 *.db
 *.sqlite3
 leads_crm.db
+
+# Call recordings (stored locally, never committed)
+recordings/

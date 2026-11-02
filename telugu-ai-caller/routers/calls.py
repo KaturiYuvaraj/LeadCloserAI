@@ -1,10 +1,13 @@
 """
 Calls Router - Call History, Call Records & Analytics
 """
-from fastapi import APIRouter, HTTPException
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from loguru import logger
 
-from database import get_call_history, get_call_by_id, get_analytics_summary
+from database import get_call_history, get_call_by_id, get_analytics_summary, update_call_recording
 
 router = APIRouter(tags=["calls"])
 
@@ -20,6 +23,44 @@ async def api_get_call_details(call_id: int):
     if not call_record:
         raise HTTPException(status_code=404, detail="Call record not found")
     return {"call": call_record}
+
+
+RECORDINGS_DIR = Path(__file__).resolve().parent.parent / "recordings"
+MAX_RECORDING_BYTES = 50 * 1024 * 1024  # 50 MB, roughly 2 hours of Opus audio
+
+
+@router.post("/api/calls/{call_id}/recording")
+async def api_upload_call_recording(call_id: int, file: UploadFile = File(...)):
+    """
+    Store the browser-side call recording (customer + AI mixed, WebM/Opus)
+    so the sales team can replay the conversation before closing the deal.
+    """
+    if not get_call_by_id(call_id):
+        raise HTTPException(status_code=404, detail="Call record not found")
+    if file.content_type and not file.content_type.startswith(("audio/", "video/webm")):
+        raise HTTPException(status_code=400, detail="Only audio recordings are accepted.")
+
+    audio_bytes = await file.read()
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="Recording is empty.")
+    if len(audio_bytes) > MAX_RECORDING_BYTES:
+        raise HTTPException(status_code=413, detail="Recording is larger than 50 MB.")
+
+    RECORDINGS_DIR.mkdir(parents=True, exist_ok=True)
+    (RECORDINGS_DIR / f"call_{call_id}.webm").write_bytes(audio_bytes)
+
+    recording_url = f"/api/calls/{call_id}/recording"
+    update_call_recording(call_id, recording_url)
+    logger.info(f"Stored recording for call #{call_id} ({len(audio_bytes) // 1024} KB)")
+    return {"success": True, "recording_url": recording_url}
+
+
+@router.get("/api/calls/{call_id}/recording")
+async def api_get_call_recording(call_id: int):
+    recording_path = RECORDINGS_DIR / f"call_{call_id}.webm"
+    if not recording_path.exists():
+        raise HTTPException(status_code=404, detail="No recording stored for this call.")
+    return FileResponse(recording_path, media_type="audio/webm", filename=f"call_{call_id}.webm")
 
 
 @router.get("/api/analytics/overview")

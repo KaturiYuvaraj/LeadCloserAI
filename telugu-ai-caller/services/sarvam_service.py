@@ -5,6 +5,7 @@ tailored for fast Telugu and Indian Multilingual Voice Calling.
 """
 
 import os
+import asyncio
 import base64
 import httpx
 from typing import Optional, Dict, Any, List, Tuple
@@ -27,8 +28,25 @@ from config import (
 class SarvamService:
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or SARVAM_API_KEY
+        self._http: Optional[httpx.AsyncClient] = None
+        self._http_loop = None
         if not self.api_key:
             logger.warning("Sarvam API key is not configured! Please check .env")
+
+    def _client(self) -> httpx.AsyncClient:
+        """
+        Shared HTTP client so STT, LLM and TTS calls reuse one kept-alive TLS
+        connection (saves ~0.3s per request vs opening a new connection).
+        Recreated if the event loop changed (e.g. separate asyncio.run calls in tests).
+        """
+        loop = asyncio.get_running_loop()
+        if self._http is None or self._http.is_closed or self._http_loop is not loop:
+            self._http = httpx.AsyncClient(
+                timeout=httpx.Timeout(35.0, connect=10.0),
+                limits=httpx.Limits(max_keepalive_connections=10, keepalive_expiry=60.0),
+            )
+            self._http_loop = loop
+        return self._http
 
     def _get_headers(self) -> Dict[str, str]:
         return {
@@ -58,22 +76,24 @@ class SarvamService:
             "language_code": language_code
         }
 
-        async with httpx.AsyncClient(timeout=25.0) as client:
-            response = await client.post(
-                SARVAM_STT_ENDPOINT,
-                headers=headers,
-                files=files,
-                data=data
-            )
+        client = self._client()
+        request_timeout = 25.0
+        response = await client.post(
+            SARVAM_STT_ENDPOINT,
+            timeout=request_timeout,
+            headers=headers,
+            files=files,
+            data=data
+        )
 
-            if response.status_code != 200:
-                logger.error(f"Sarvam STT failed ({response.status_code}): {response.text}")
-                raise RuntimeError(f"STT Error: {response.text}")
+        if response.status_code != 200:
+            logger.error(f"Sarvam STT failed ({response.status_code}): {response.text}")
+            raise RuntimeError(f"STT Error: {response.text}")
 
-            result = response.json()
-            transcript = result.get("transcript", "").strip()
-            logger.info(f"STT Transcription success: {transcript[:80]}...")
-            return transcript
+        result = response.json()
+        transcript = result.get("transcript", "").strip()
+        logger.info(f"STT Transcription success: {transcript[:80]}...")
+        return transcript
 
     async def text_to_speech(
         self,
@@ -133,30 +153,32 @@ class SarvamService:
         elif model in {"bulbul:v3", "bulbul:v4-flash"}:
             payload["temperature"] = 0.6
 
-        async with httpx.AsyncClient(timeout=25.0) as client:
-            response = await client.post(
-                SARVAM_TTS_ENDPOINT,
-                headers=headers,
-                json=payload
-            )
+        client = self._client()
+        request_timeout = 25.0
+        response = await client.post(
+            SARVAM_TTS_ENDPOINT,
+            timeout=request_timeout,
+            headers=headers,
+            json=payload
+        )
 
+        if response.status_code != 200:
+            logger.error(f"Sarvam TTS failed ({response.status_code}): {response.text}")
+            # Fallback to standard speaker if needed
+            if "Speaker" in response.text and model == "bulbul:v3":
+                payload["speaker"] = "kavitha"
+                response = await client.post(SARVAM_TTS_ENDPOINT, headers=headers, json=payload, timeout=request_timeout)
             if response.status_code != 200:
-                logger.error(f"Sarvam TTS failed ({response.status_code}): {response.text}")
-                # Fallback to standard speaker if needed
-                if "Speaker" in response.text and model == "bulbul:v3":
-                    payload["speaker"] = "kavitha"
-                    response = await client.post(SARVAM_TTS_ENDPOINT, headers=headers, json=payload)
-                if response.status_code != 200:
-                    raise RuntimeError(f"TTS Error: {response.text}")
+                raise RuntimeError(f"TTS Error: {response.text}")
 
-            result = response.json()
-            audios = result.get("audios", [])
-            if not audios:
-                raise RuntimeError("No audio returned from Sarvam TTS")
+        result = response.json()
+        audios = result.get("audios", [])
+        if not audios:
+            raise RuntimeError("No audio returned from Sarvam TTS")
 
-            audio_b64 = audios[0]
-            audio_bytes = base64.b64decode(audio_b64)
-            return audio_bytes
+        audio_b64 = audios[0]
+        audio_bytes = base64.b64decode(audio_b64)
+        return audio_bytes
 
     async def chat_completion(
         self,
@@ -183,20 +205,22 @@ class SarvamService:
             "max_tokens": max_tokens
         }
 
-        async with httpx.AsyncClient(timeout=35.0) as client:
-            response = await client.post(
-                SARVAM_CHAT_ENDPOINT,
-                headers=headers,
-                json=payload
-            )
+        client = self._client()
+        request_timeout = 35.0
+        response = await client.post(
+            SARVAM_CHAT_ENDPOINT,
+            timeout=request_timeout,
+            headers=headers,
+            json=payload
+        )
 
-            if response.status_code != 200:
-                logger.error(f"Sarvam LLM failed ({response.status_code}): {response.text}")
-                raise RuntimeError(f"LLM Error: {response.text}")
+        if response.status_code != 200:
+            logger.error(f"Sarvam LLM failed ({response.status_code}): {response.text}")
+            raise RuntimeError(f"LLM Error: {response.text}")
 
-            result = response.json()
-            reply = result["choices"][0]["message"]["content"].strip()
-            return reply
+        result = response.json()
+        reply = result["choices"][0]["message"]["content"].strip()
+        return reply
 
 
 # Singleton instance

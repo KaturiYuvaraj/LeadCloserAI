@@ -3,10 +3,12 @@
  * Connects browser microphone & speakers with Telugu AI Caller WebSocket.
  * Features:
  *  - Real-time Voice Activity Detection (VAD) with Web Audio Analyser
- *  - 1.8-second Silence Endpoint Detection (ensures customer completes sentence without interruption)
+ *  - Configurable silence endpoint (default 0.9s) so replies start within ~2-3 seconds
  *  - Half-Duplex Echo Prevention (mutes mic during AI playback to prevent echo-loops)
- *  - Human Breathing Space (600ms natural conversational pause between turns)
- *  - Audio Queueing (guarantees zero speech overlap)
+ *  - Short breathing gap (250ms) before the mic reopens after the AI speaks
+ *  - Sentence-chunked audio queue (first sentence plays while the rest is synthesized)
+ *  - Optional call recording: customer mic + AI voice mixed into one WebM file,
+ *    uploaded to the call record when the call ends
  */
 
 class VoiceCallClient {
@@ -25,13 +27,26 @@ class VoiceCallClient {
     this.isCustomerSpeaking = false;
 
     this.speechThreshold = 0.022; // calibrated for typical laptop / headset mic
-    this.silenceTimeoutMs = 1800; // 1.8s sustained silence threshold
+    this.silenceTimeoutMs = 900;  // sustained silence that ends the customer's turn
+    this.minSpeechMs = 400;       // ignore coughs / clicks shorter than this
+    this.listenGapMs = 250;       // pause after AI audio before the mic reopens
     this.silenceTimer = null;
     this.turnStartTime = 0;
+    this.turnEndedAt = null;      // when the customer's turn ended (for reply timing)
+    this.lastTiming = null;
     this.audioChunks = [];
 
     this.audioQueue = [];
     this.currentAudioElement = null;
+    this.currentSourceNode = null;
+
+    // Call recording (customer + AI mixed)
+    this.recordEnabled = false;
+    this.recordDestination = null;
+    this.callRecorder = null;
+    this.recordingChunks = [];
+    this.recordingDone = null;
+    this.summaryWaitTimer = null;
 
     // Callbacks
     this.onStatusChange = null;
@@ -39,12 +54,23 @@ class VoiceCallClient {
     this.onCallEnd = null;
     this.onWaveformUpdate = null;
     this.onSpeakingStateChange = null; // notifies UI when customer is actively speaking
+    this.onResponseTime = null;        // (totalMs, serverTiming) after each AI reply starts
+    this.onRecordingStateChange = null; // (isRecording)
+    this.onRecordingSaved = null;      // (callId, recordingUrl)
   }
 
-  async startCall(leadId = null, lang = null) {
+  setSilenceTimeout(ms) {
+    const value = parseInt(ms, 10);
+    if (!isNaN(value) && value >= 400 && value <= 3000) {
+      this.silenceTimeoutMs = value;
+    }
+  }
+
+  async startCall(leadId = null, lang = null, options = {}) {
     if (this.isCallActive) return;
 
     this.currentLeadId = leadId;
+    this.recordEnabled = Boolean(options.record);
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const params = new URLSearchParams();
     if (leadId) params.append("lead_id", leadId);
@@ -53,6 +79,15 @@ class VoiceCallClient {
     const wsUrl = `${protocol}//${window.location.host}/ws/web-call${qs}`;
 
     if (this.onStatusChange) this.onStatusChange("కాల్ కనెక్ట్ అవుతోంది... (Connecting call...)");
+
+    // Create the audio context inside the click handler so the browser allows playback
+    try {
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      if (this.audioContext.state === "suspended") this.audioContext.resume();
+    } catch (e) {
+      console.warn("AudioContext unavailable, falling back to <audio> playback:", e);
+      this.audioContext = null;
+    }
 
     try {
       // 1. Request microphone with hardware echo cancellation & noise suppression
@@ -72,6 +107,7 @@ class VoiceCallClient {
       this.ws.onopen = () => {
         this.isCallActive = true;
         this.initVoiceActivityDetection();
+        if (this.recordEnabled) this.startCallRecording();
         if (this.onStatusChange) this.onStatusChange("కాల్ ప్రారంభమైంది (Call Connected)");
       };
 
@@ -85,6 +121,10 @@ class VoiceCallClient {
       };
 
       this.ws.onclose = () => {
+        if (this.summaryWaitTimer) {
+          clearTimeout(this.summaryWaitTimer);
+          this.summaryWaitTimer = null;
+        }
         this.endCall(false);
       };
 
@@ -97,14 +137,25 @@ class VoiceCallClient {
       console.error("Microphone access error:", err);
       alert("Microphone access is required for AI Calling. Please allow microphone permissions or use the text tester below.");
       if (this.onStatusChange) this.onStatusChange("మైక్రోఫోన్ అనుమతి అవసరం. (Mic Access Denied)");
+      this.closeAudioContext();
     }
+  }
+
+  getSupportedMimeType() {
+    const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+    for (const type of candidates) {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) return type;
+    }
+    return '';
   }
 
   initVoiceActivityDetection() {
     if (!this.audioStream) return;
 
     try {
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      if (!this.audioContext) {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
       this.source = this.audioContext.createMediaStreamSource(this.audioStream);
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 512;
@@ -114,16 +165,11 @@ class VoiceCallClient {
       const dataArray = new Uint8Array(bufferLength);
 
       // Determine best audio MIME type
-      let mimeType = 'audio/webm;codecs=opus';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
-        else if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
-        else mimeType = '';
-      }
+      const mimeType = this.getSupportedMimeType();
       this.mimeType = mimeType;
 
-      this.mediaRecorder = mimeType 
-        ? new MediaRecorder(this.audioStream, { mimeType }) 
+      this.mediaRecorder = mimeType
+        ? new MediaRecorder(this.audioStream, { mimeType })
         : new MediaRecorder(this.audioStream);
 
       this.mediaRecorder.ondataavailable = (e) => {
@@ -179,7 +225,6 @@ class VoiceCallClient {
         } else {
           // --- USER HAS PAUSED OR STOPPED SPEAKING ---
           if (this.isCustomerSpeaking) {
-            // Start the 1.8s silence timer if not already ticking
             if (!this.silenceTimer) {
               this.silenceTimer = setTimeout(() => {
                 this.completeCustomerTurn();
@@ -193,6 +238,80 @@ class VoiceCallClient {
       console.error("VAD setup error:", e);
     }
   }
+
+  // ------------------------------------------------------------------
+  // CALL RECORDING (customer mic + AI playback mixed into one track)
+  // ------------------------------------------------------------------
+  startCallRecording() {
+    if (!this.audioContext || !this.source || !window.MediaRecorder) {
+      console.warn("Call recording not supported in this browser.");
+      this.recordEnabled = false;
+      if (this.onRecordingStateChange) this.onRecordingStateChange(false);
+      return;
+    }
+
+    try {
+      this.recordDestination = this.audioContext.createMediaStreamDestination();
+      this.source.connect(this.recordDestination);
+
+      const mimeType = this.getSupportedMimeType();
+      this.recordingMimeType = mimeType || 'audio/webm';
+      this.callRecorder = mimeType
+        ? new MediaRecorder(this.recordDestination.stream, { mimeType })
+        : new MediaRecorder(this.recordDestination.stream);
+      this.recordingChunks = [];
+
+      this.recordingDone = new Promise((resolve) => {
+        this.callRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) this.recordingChunks.push(e.data);
+        };
+        this.callRecorder.onstop = () => {
+          const blob = this.recordingChunks.length
+            ? new Blob(this.recordingChunks, { type: this.recordingMimeType })
+            : null;
+          this.recordingChunks = [];
+          resolve(blob);
+        };
+      });
+
+      this.callRecorder.start(1000);
+      if (this.onRecordingStateChange) this.onRecordingStateChange(true);
+    } catch (e) {
+      console.error("Failed to start call recording:", e);
+      this.callRecorder = null;
+      this.recordingDone = null;
+      if (this.onRecordingStateChange) this.onRecordingStateChange(false);
+    }
+  }
+
+  stopCallRecording() {
+    if (this.callRecorder && this.callRecorder.state !== "inactive") {
+      try { this.callRecorder.stop(); } catch (e) {}
+    }
+    if (this.onRecordingStateChange) this.onRecordingStateChange(false);
+  }
+
+  async uploadRecording(callId) {
+    if (!this.recordingDone || !callId) return null;
+    const blob = await this.recordingDone;
+    this.recordingDone = null;
+    if (!blob || blob.size === 0) return null;
+
+    const form = new FormData();
+    form.append("file", blob, `call_${callId}.webm`);
+    try {
+      const resp = await fetch(`/api/calls/${callId}/recording`, { method: "POST", body: form });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const result = await resp.json();
+      if (this.onRecordingSaved) this.onRecordingSaved(callId, result.recording_url);
+      return result.recording_url;
+    } catch (e) {
+      console.error("Recording upload failed:", e);
+      return null;
+    }
+  }
+
+  // ------------------------------------------------------------------
 
   completeCustomerTurn() {
     if (!this.isCustomerSpeaking) return;
@@ -208,8 +327,8 @@ class VoiceCallClient {
 
     const speechDuration = Date.now() - this.turnStartTime;
 
-    // Filter out micro-noises/coughs shorter than 600ms
-    if (speechDuration < 600) {
+    // Filter out micro-noises/coughs
+    if (speechDuration < this.minSpeechMs) {
       this.audioChunks = [];
       if (this.mediaRecorder && this.mediaRecorder.state === "recording") {
         try { this.mediaRecorder.stop(); } catch (e) {}
@@ -220,7 +339,8 @@ class VoiceCallClient {
       return;
     }
 
-    // Customer turn is complete!
+    // Customer turn is complete! Measure from the moment they actually stopped talking.
+    this.turnEndedAt = Date.now() - this.silenceTimeoutMs;
     if (this.onStatusChange) {
       this.onStatusChange("🧠 మీ సమాధానాన్ని విశ్లేషిస్తున్నాను... (Analyzing what you said...)");
     }
@@ -247,7 +367,10 @@ class VoiceCallClient {
   forceFinishTurn() {
     // Allows user to click "Done Speaking" to skip silence wait time
     if (this.isCustomerSpeaking) {
+      if (this.silenceTimer) clearTimeout(this.silenceTimer);
+      this.silenceTimer = null;
       this.completeCustomerTurn();
+      this.turnEndedAt = Date.now();
     }
   }
 
@@ -272,13 +395,11 @@ class VoiceCallClient {
     }
 
     // Stop ongoing speech & playback
-    if (this.currentAudioElement) {
-      try { this.currentAudioElement.pause(); } catch (e) {}
-    }
-    this.isPlayingAudio = false;
+    this.stopPlayback();
     this.isCustomerSpeaking = false;
     this.isListeningActive = false;
     if (this.silenceTimer) clearTimeout(this.silenceTimer);
+    this.turnEndedAt = Date.now();
 
     if (this.onStatusChange) {
       this.onStatusChange("🧠 మీ మెసేజ్‌ను విశ్లేషిస్తున్నాను... (Analyzing...)");
@@ -299,33 +420,34 @@ class VoiceCallClient {
 
     } else if (event === "ai_speech") {
       if (this.onTranscript) this.onTranscript("AI (Sales Closer)", data.text, "ai", data.language);
+      this.lastTiming = data.timing || null;
 
       if (data.audio) {
-        // Enqueue audio to ensure perfectly sequential, non-overlapping playback
-        this.audioQueue.push({
-          audio: data.audio,
-          text: data.text,
-          lang: data.language
-        });
-
-        if (!this.isPlayingAudio) {
-          this.processAudioQueue();
-        }
+        // First chunk of a reply: reply timing is measured when it starts playing
+        this.audioQueue.push({ audio: data.audio, first: true });
+        if (!this.isPlayingAudio) this.processAudioQueue();
       } else {
-        // No audio attached; wait 600ms and reopen mic
+        this.reportResponseTime();
         setTimeout(() => {
           this.isListeningActive = true;
           if (this.onStatusChange) {
             this.onStatusChange("🟢 వింటున్నాను... మీరు మాట్లాడండి (Listening... speak now)");
           }
-        }, 600);
+        }, this.listenGapMs);
+      }
+
+    } else if (event === "ai_audio") {
+      // Follow-up sentence chunks of the same reply
+      if (data.audio) {
+        this.audioQueue.push({ audio: data.audio, first: false });
+        if (!this.isPlayingAudio) this.processAudioQueue();
       }
 
     } else if (event === "user_speech") {
       if (this.onTranscript) this.onTranscript("You (Customer)", data.text, "user", data.language);
 
     } else if (event === "call_summary") {
-      if (this.onCallEnd) this.onCallEnd(data);
+      this.finishWithSummary(data);
 
     } else if (event === "error") {
       if (this.onStatusChange) this.onStatusChange(data.message);
@@ -336,14 +458,47 @@ class VoiceCallClient {
     }
   }
 
-  processAudioQueue() {
+  async finishWithSummary(data) {
+    if (this.summaryWaitTimer) {
+      clearTimeout(this.summaryWaitTimer);
+      this.summaryWaitTimer = null;
+    }
+    if (this.recordingDone && data.call_id) {
+      if (this.onStatusChange) this.onStatusChange("💾 రికార్డింగ్ సేవ్ అవుతోంది... (Saving call recording...)");
+      const url = await this.uploadRecording(data.call_id);
+      if (url) data.recording_url = url;
+    }
+    if (this.onCallEnd) this.onCallEnd(data);
+    if (this.onStatusChange) this.onStatusChange("కాల్ ముగిసింది (Call Finished)");
+  }
+
+  reportResponseTime() {
+    if (!this.turnEndedAt) return;
+    const totalMs = Date.now() - this.turnEndedAt;
+    this.turnEndedAt = null;
+    if (this.onResponseTime) this.onResponseTime(totalMs, this.lastTiming);
+  }
+
+  base64ToArrayBuffer(b64) {
+    const binary = atob(b64);
+    const buffer = new ArrayBuffer(binary.length);
+    const view = new Uint8Array(buffer);
+    for (let i = 0; i < binary.length; i++) view[i] = binary.charCodeAt(i);
+    return buffer;
+  }
+
+  onPlaybackFinished() {
+    this.currentSourceNode = null;
+    this.currentAudioElement = null;
+    this.processAudioQueue();
+  }
+
+  async processAudioQueue() {
     if (this.audioQueue.length === 0) {
       this.isPlayingAudio = false;
       if (this.onWaveformUpdate) this.onWaveformUpdate(false);
 
-      // NATURAL HUMAN BREATHING GAP:
-      // Wait 600ms after AI finishes speaking before opening the microphone gate.
-      // This prevents the AI from cutting in immediately and allows the customer time to process.
+      // Short breathing gap before the mic reopens so the AI doesn't hear its own tail
       setTimeout(() => {
         if (this.isCallActive && !this.isPlayingAudio) {
           this.isListeningActive = true;
@@ -351,7 +506,7 @@ class VoiceCallClient {
             this.onStatusChange("🟢 వింటున్నాను... మీరు మాట్లాడండి (Listening... speak now)");
           }
         }
-      }, 600);
+      }, this.listenGapMs);
       return;
     }
 
@@ -364,52 +519,77 @@ class VoiceCallClient {
     }
     if (this.onWaveformUpdate) this.onWaveformUpdate(true);
 
+    let arrayBuffer;
     try {
-      const audioBytes = atob(nextItem.audio);
-      const arrayBuffer = new ArrayBuffer(audioBytes.length);
-      const view = new Uint8Array(arrayBuffer);
-      for (let i = 0; i < audioBytes.length; i++) {
-        view[i] = audioBytes.charCodeAt(i);
-      }
+      arrayBuffer = this.base64ToArrayBuffer(nextItem.audio);
+    } catch (err) {
+      console.error("Audio decode error:", err);
+      this.processAudioQueue();
+      return;
+    }
 
+    // Preferred path: Web Audio (also feeds the call recording)
+    if (this.audioContext && this.audioContext.state !== "closed") {
+      try {
+        const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer.slice(0));
+        const node = this.audioContext.createBufferSource();
+        node.buffer = audioBuffer;
+        node.connect(this.audioContext.destination);
+        if (this.recordDestination) node.connect(this.recordDestination);
+        node.onended = () => this.onPlaybackFinished();
+        this.currentSourceNode = node;
+        node.start();
+        if (nextItem.first) this.reportResponseTime();
+        return;
+      } catch (e) {
+        console.warn("Web Audio playback failed, using <audio> fallback:", e);
+      }
+    }
+
+    // Fallback path: HTML audio element (not included in the recording)
+    try {
       const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
       this.currentAudioElement = audio;
-
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        this.currentAudioElement = null;
-        // Proceed to next queued audio, or finish playback
-        this.processAudioQueue();
-      };
-
-      audio.onerror = (e) => {
-        console.warn("Audio playback error:", e);
-        URL.revokeObjectURL(audioUrl);
-        this.currentAudioElement = null;
-        this.processAudioQueue();
-      };
-
-      audio.play().catch(e => {
-        console.warn("Autoplay audio blocked or error:", e);
-        this.processAudioQueue();
-      });
-
-    } catch (err) {
-      console.error("Audio decode error:", err);
-      this.processAudioQueue();
+      audio.onended = () => { URL.revokeObjectURL(audioUrl); this.onPlaybackFinished(); };
+      audio.onerror = () => { URL.revokeObjectURL(audioUrl); this.onPlaybackFinished(); };
+      await audio.play();
+      if (nextItem.first) this.reportResponseTime();
+    } catch (e) {
+      console.warn("Autoplay audio blocked or error:", e);
+      this.onPlaybackFinished();
     }
+  }
+
+  stopPlayback() {
+    this.audioQueue = [];
+    if (this.currentSourceNode) {
+      try { this.currentSourceNode.onended = null; this.currentSourceNode.stop(); } catch (e) {}
+      this.currentSourceNode = null;
+    }
+    if (this.currentAudioElement) {
+      try { this.currentAudioElement.pause(); } catch (e) {}
+      this.currentAudioElement = null;
+    }
+    this.isPlayingAudio = false;
+  }
+
+  closeAudioContext() {
+    if (this.audioContext && this.audioContext.state !== "closed") {
+      try { this.audioContext.close(); } catch (e) {}
+    }
+    this.audioContext = null;
+    this.recordDestination = null;
   }
 
   endCall(notifyServer = true) {
     if (!this.isCallActive) return;
 
     this.isCallActive = false;
-    this.isPlayingAudio = false;
     this.isListeningActive = false;
     this.isCustomerSpeaking = false;
-    this.audioQueue = [];
+    this.stopPlayback();
 
     if (this.silenceTimer) {
       clearTimeout(this.silenceTimer);
@@ -421,24 +601,20 @@ class VoiceCallClient {
       this.vadInterval = null;
     }
 
-    if (this.currentAudioElement) {
-      try { this.currentAudioElement.pause(); } catch (e) {}
-      this.currentAudioElement = null;
-    }
-
     if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
       try { this.mediaRecorder.stop(); } catch (e) {}
     }
+
+    // Stop the call recording first, then release audio once it has flushed
+    const recordingFlushed = this.recordingDone || Promise.resolve();
+    this.stopCallRecording();
 
     if (this.source) {
       try { this.source.disconnect(); } catch (e) {}
       this.source = null;
     }
 
-    if (this.audioContext && this.audioContext.state !== "closed") {
-      try { this.audioContext.close(); } catch (e) {}
-      this.audioContext = null;
-    }
+    recordingFlushed.then(() => this.closeAudioContext());
 
     if (this.audioStream) {
       this.audioStream.getTracks().forEach(track => track.stop());
@@ -446,18 +622,23 @@ class VoiceCallClient {
     }
 
     if (this.ws) {
-      if (notifyServer && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ event: "hangup" }));
+      const ws = this.ws;
+      if (notifyServer && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ event: "hangup" }));
+        if (this.onStatusChange) this.onStatusChange("📝 కాల్ సారాంశం సిద్ధమవుతోంది... (Preparing call summary...)");
+        // Keep the socket open until the server sends the call summary (max 20s)
+        this.summaryWaitTimer = setTimeout(() => {
+          try { ws.close(); } catch (e) {}
+        }, 20000);
+      } else {
+        try { ws.close(); } catch (e) {}
       }
-      setTimeout(() => {
-        try { this.ws.close(); } catch (e) {}
-        this.ws = null;
-      }, 400);
+      this.ws = null;
     }
 
     if (this.onSpeakingStateChange) this.onSpeakingStateChange(false);
     if (this.onWaveformUpdate) this.onWaveformUpdate(false);
-    if (this.onStatusChange) this.onStatusChange("కాల్ ముగిసింది (Call Finished)");
+    if (!notifyServer && this.onStatusChange) this.onStatusChange("కాల్ ముగిసింది (Call Finished)");
   }
 }
 
