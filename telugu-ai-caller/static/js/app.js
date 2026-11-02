@@ -858,6 +858,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const btn = document.getElementById("tabBtnPricing");
         if (btn) btn.classList.add("active");
         window.scrollToSection("pricingSection");
+      } else if (targetSectionId === "integrationsSection") {
+        const btn = document.getElementById("tabBtnIntegrations");
+        if (btn) btn.classList.add("active");
+        window.scrollToSection("integrationsSection");
       } else {
         const btn = document.getElementById("tabBtnLanding");
         if (btn) btn.classList.add("active");
@@ -1173,4 +1177,128 @@ dispatchLeadCall();`
       alert("Error: " + err.message);
     }
   };
+
+  // ===================================================================
+  // THIRD-PARTY PROVIDER INTEGRATION ACTIONS & MODALS
+  // ===================================================================
+
+  window.testProviderConnection = async (providerType, providerName, btnElem) => {
+    const originalText = btnElem ? btnElem.innerHTML : "";
+    if (btnElem) {
+      btnElem.disabled = true;
+      btnElem.innerHTML = "⏳ Testing...";
+    }
+
+    const badgeElem = document.getElementById(`test-badge-${providerType}-${providerName}`);
+    if (badgeElem) {
+      badgeElem.className = "badge-tag";
+      badgeElem.innerText = "Testing...";
+    }
+
+    try {
+      const resp = await fetch(`/api/integrations/providers/${providerType}/${providerName}/test`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      const data = await resp.json();
+      const res = data.result || {};
+
+      if (res.success) {
+        if (badgeElem) {
+          badgeElem.className = "badge-tag live";
+          badgeElem.innerText = `✓ Verified (${res.latency_ms || 0}ms)`;
+        }
+        alert(`✅ Provider Connection Verified!
+
+Provider: ${providerName.toUpperCase()} (${providerType})
+Status: Active & Reachable
+Latency: ${res.latency_ms}ms
+Message: ${res.message}`);
+      } else {
+        if (badgeElem) {
+          badgeElem.className = "lead-status status-lost";
+          badgeElem.innerText = "✗ Failed";
+        }
+        alert(`❌ Connection Test Failed!
+
+Provider: ${providerName.toUpperCase()} (${providerType})
+Error: ${res.message}
+
+Please check your API keys or network connection in Settings.`);
+      }
+    } catch (err) {
+      if (badgeElem) {
+        badgeElem.className = "lead-status status-lost";
+        badgeElem.innerText = "✗ Error";
+      }
+      alert(`⚠️ Test Network Error: ${err.message}`);
+    } finally {
+      if (btnElem) {
+        btnElem.disabled = false;
+        btnElem.innerHTML = originalText || "⚡ Test Connection";
+      }
+    }
+  };
+
+  window.openConfigureProviderModal = (providerType, providerName) => {
+    const modal = document.getElementById("providerConfigModal");
+    const titleEl = document.getElementById("providerModalTitle");
+    const typeInput = document.getElementById("providerConfigType");
+    const nameInput = document.getElementById("providerConfigName");
+    const keyInput = document.getElementById("providerConfigKey");
+
+    if (typeInput) typeInput.value = providerType;
+    if (nameInput) nameInput.value = providerName;
+    if (keyInput) keyInput.value = "";
+    if (titleEl) titleEl.innerText = `Configure ${providerName.toUpperCase()} (${providerType})`;
+
+    if (modal) modal.classList.add("open");
+  };
+
+  window.saveProviderConfig = async () => {
+    const pType = document.getElementById("providerConfigType")?.value;
+    const pName = document.getElementById("providerConfigName")?.value;
+    const isEnabled = document.getElementById("providerConfigEnabled")?.checked ?? true;
+    const keyVal = document.getElementById("providerConfigKey")?.value.trim();
+
+    if (!pType || !pName) return;
+
+    const payload = {
+      is_enabled: isEnabled,
+      config: {}
+    };
+
+    if (keyVal) {
+      if (pName === "exotel") {
+        payload.config["api_key"] = keyVal;
+      } else if (pName === "apollo") {
+        payload.config["api_key"] = keyVal;
+      } else if (pName === "apify") {
+        payload.config["api_token"] = keyVal;
+      } else if (pName === "meta_whatsapp") {
+        payload.config["access_token"] = keyVal;
+      } else if (pName === "google_calendar") {
+        payload.config["client_secret"] = keyVal;
+      } else {
+        payload.config["api_key"] = keyVal;
+      }
+    }
+
+    try {
+      const resp = await fetch(`/api/integrations/providers/${pType}/${pName}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      if (!data.success) throw new Error(data.detail || "Failed to update provider");
+
+      document.getElementById("providerConfigModal")?.classList.remove("open");
+      alert(`🎉 Settings for ${pName.toUpperCase()} saved successfully!`);
+      location.reload();
+    } catch (err) {
+      alert(`Error saving provider settings: ${err.message}`);
+    }
+  };
+
 });

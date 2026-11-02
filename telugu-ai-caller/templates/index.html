@@ -1767,6 +1767,10 @@ body {
         <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
         Developer API
       </button>
+      <button class="nav-tab-btn" id="tabBtnIntegrations" onclick="window.switchMainTab('landing', 'integrationsSection')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+        Integrations
+      </button>
       <button class="nav-tab-btn" id="tabBtnPricing" onclick="window.switchMainTab('landing', 'pricingSection')">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
         Pricing & Credits
@@ -2163,6 +2167,85 @@ body {
         </div>
       </section>
 
+
+      <!-- ============================================================= -->
+      <!-- THIRD-PARTY INTEGRATION ARCHITECTURE & PROVIDERS (OUTPERO STYLE) -->
+      <!-- ============================================================= -->
+      <section style="margin-bottom: 55px;" id="integrationsSection">
+        <div class="section-header-center">
+          <span class="section-tag">Modular Provider Engine</span>
+          <h2 class="section-title">Independently Configurable Third-Party Integrations</h2>
+          <p class="section-desc">Connect Exotel, Sarvam AI, Apollo.io, Apify, Meta WhatsApp, and Google Calendar. Enable, disable, configure, and run live connection tests without touching code.</p>
+        </div>
+
+        <!-- Providers Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; margin-top: 24px;">
+          {% for p in providers %}
+          <div class="card-panel" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div>
+                  <div style="font-weight: 800; font-size: 0.98rem; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                    {% if p.type == 'telephony' %}📞
+                    {% elif p.type == 'voice_stt' %}🎙️
+                    {% elif p.type == 'voice_tts' %}🔊
+                    {% elif p.type == 'llm' %}🧠
+                    {% elif p.type == 'lead_discovery' %}🔍
+                    {% elif p.type == 'messaging' %}💬
+                    {% elif p.type == 'calendar' %}📅
+                    {% else %}💾{% endif %}
+                    {{ p.name.upper() }}
+                  </div>
+                  <div style="font-size: 0.73rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-top: 2px;">
+                    Domain: {{ p.type }}
+                  </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                  {% if p.is_active and p.is_configured and p.is_enabled %}
+                  <span class="badge-tag live"><span class="pulse-dot"></span> Active</span>
+                  {% elif p.is_configured and p.is_enabled %}
+                  <span class="badge-tag" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">Configured</span>
+                  {% elif not p.is_enabled %}
+                  <span class="lead-status status-contacted">Disabled</span>
+                  {% else %}
+                  <span class="lead-status status-qualified">Pending Setup</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Masked Configuration Snippet -->
+              <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 12px; font-family: monospace; font-size: 0.74rem; color: #334155; margin-bottom: 14px;">
+                {% for k, v in p.config.items() %}
+                <div><strong>{{ k }}:</strong> {{ v }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div>
+              <!-- Live Test Status Feedback Pill -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.75rem;">
+                <span style="color: var(--text-muted);">Connection Status:</span>
+                <span id="test-badge-{{ p.type }}-{{ p.name }}" class="{% if p.test_status == 'success' %}badge-tag live{% elif p.test_status == 'failed' %}lead-status status-lost{% else %}badge-tag{% endif %}">
+                  {% if p.test_status == 'success' %}✓ Verified
+                  {% elif p.test_status == 'failed' %}✗ Failed
+                  {% else %}Untested{% endif %}
+                </span>
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary" onclick="window.testProviderConnection('{{ p.type }}', '{{ p.name }}', this)" style="flex: 1; justify-content: center; font-size: 0.76rem; padding: 7px 10px;">
+                  ⚡ Test Connection
+                </button>
+                <button class="btn btn-outline" onclick="window.openConfigureProviderModal('{{ p.type }}', '{{ p.name }}')" style="padding: 7px 12px; font-size: 0.76rem;">
+                  ⚙️ Settings
+                </button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
 
       <!-- ============================================================= -->
       <!-- PRICING & CREDIT PURCHASE STORE (OUTPERO STYLE) -->
@@ -3008,7 +3091,39 @@ body {
   </div>
 
 
-  <!-- ================================================================= -->
+    <!-- MODAL 7: CONFIGURE PROVIDER SETTINGS -->
+  <div class="modal-overlay" id="providerConfigModal">
+    <div class="modal-card" style="max-width: 480px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 1.1rem; color: #0f172a; font-weight: 800;" id="providerModalTitle">Configure Provider</h3>
+        <button class="btn btn-outline" onclick="document.getElementById('providerConfigModal').classList.remove('open')" style="padding: 4px 8px;">✕</button>
+      </div>
+
+      <input type="hidden" id="providerConfigType" />
+      <input type="hidden" id="providerConfigName" />
+
+      <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+        <input type="checkbox" id="providerConfigEnabled" checked style="width: auto;" />
+        <label for="providerConfigEnabled" style="margin-bottom: 0; cursor: pointer;">Enable this Provider</label>
+      </div>
+
+      <div class="form-group">
+        <label>API Key / Token / Secret:</label>
+        <input type="password" id="providerConfigKey" placeholder="Paste updated credential here (leave blank to keep current)" />
+      </div>
+
+      <div class="tip-item" style="margin-bottom: 16px; background: #f8fafc; font-size: 0.76rem; color: var(--text-secondary);">
+        💡 Note: Changes are securely persisted in SQLite. You can also configure credentials via your <code>.env</code> file.
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn btn-outline" onclick="document.getElementById('providerConfigModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" onclick="window.saveProviderConfig()">Save Provider Settings</button>
+      </div>
+    </div>
+  </div>
+
+<!-- ================================================================= -->
   <!-- SCRIPTS -->
   <!-- ================================================================= -->
   <script src="/static/js/call_client.js"></script>

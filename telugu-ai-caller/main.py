@@ -42,8 +42,12 @@ from database import (
     revoke_api_key,
     create_billing_order,
     get_billing_orders,
-    deduct_api_credits
+    deduct_api_credits,
+    get_all_provider_settings,
+    upsert_provider_setting,
+    record_provider_test_result
 )
+from providers import registry, ProviderType, sync_providers_with_db
 from services.sarvam_service import sarvam_client
 from services.sales_agent import sales_agent
 from services.audio_processor import pcm_to_wav, mulaw_to_wav, wav_to_mulaw
@@ -79,7 +83,8 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 @app.on_event("startup")
 async def on_startup():
     init_db()
-    logger.info("Database initialized. Telugu AI Caller ready.")
+    sync_providers_with_db()
+    logger.info("Database & Multi-Provider Architecture initialized. Telugu AI Caller ready.")
 
 
 # =====================================================================
@@ -94,13 +99,23 @@ async def serve_dashboard(request: Request):
     api_keys = get_all_api_keys()
     primary_key = get_primary_api_key()
     billing_orders = get_billing_orders()
+    providers_list = registry.list_all()
+    db_settings = {f"{s['provider_type']}:{s['provider_name']}": s for s in get_all_provider_settings()}
+    for p in providers_list:
+        key = f"{p['type']}:{p['name']}"
+        rec = db_settings.get(key, {})
+        p["last_tested_at"] = rec.get("last_tested_at")
+        p["test_status"] = rec.get("test_status", "untested")
+        p["test_message"] = rec.get("test_message", "")
+
     return templates.TemplateResponse(request, "index.html", {
         "profile": profile,
         "leads": leads,
         "calls": calls,
         "api_keys": api_keys,
         "primary_key": primary_key,
-        "billing_orders": billing_orders
+        "billing_orders": billing_orders,
+        "providers": providers_list
     })
 
 
@@ -469,6 +484,117 @@ async def api_get_call_intelligence(call_id: int):
     return {"call": call}
 
 
+
+
+# =====================================================================
+# INTEGRATION PROVIDERS MANAGEMENT APIS (/api/integrations/...)
+# =====================================================================
+
+@app.get("/api/integrations/providers")
+async def api_list_providers():
+    """
+    List all third-party providers with configuration status, activation, and recent test results.
+    """
+    providers_list = registry.list_all()
+    db_settings = {f"{s['provider_type']}:{s['provider_name']}": s for s in get_all_provider_settings()}
+    for p in providers_list:
+        key = f"{p['type']}:{p['name']}"
+        rec = db_settings.get(key, {})
+        p["last_tested_at"] = rec.get("last_tested_at")
+        p["test_status"] = rec.get("test_status", "untested")
+        p["test_message"] = rec.get("test_message", "")
+    return {"providers": providers_list}
+
+
+def _resolve_provider_type(pt_str: str) -> ProviderType:
+    s = pt_str.strip().lower()
+    if s in ["leads", "lead", "discovery", "lead_discovery"]:
+        return ProviderType.LEAD_DISCOVERY
+    if s in ["voice", "tts", "voice_tts"]:
+        return ProviderType.VOICE_TTS
+    if s in ["stt", "voice_stt"]:
+        return ProviderType.VOICE_STT
+    return ProviderType(s)
+
+@app.post("/api/integrations/providers/{provider_type}/{provider_name}")
+async def api_update_provider(
+    provider_type: str,
+    provider_name: str,
+    payload: Dict[str, Any]
+):
+    """
+    Update configuration settings or enable/disable a specific provider.
+    """
+    try:
+        p_type = _resolve_provider_type(provider_type)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid provider type: {provider_type}")
+
+    provider = registry.get(p_type, provider_name)
+    if not provider:
+        raise HTTPException(status_code=404, detail=f"Provider '{provider_name}' not found under '{provider_type}'")
+
+    is_enabled = payload.get("is_enabled", provider.enabled)
+    is_active = payload.get("is_active", False)
+    config = payload.get("config", {})
+
+    provider.enabled = bool(is_enabled)
+    if config:
+        provider.update_config(config)
+
+    if is_active:
+        registry.set_active(p_type, provider_name)
+
+    updated = upsert_provider_setting(
+        provider_type=provider_type,
+        provider_name=provider_name,
+        is_enabled=provider.enabled,
+        is_configured=provider.is_configured(),
+        config=provider.get_masked_config()
+    )
+
+    return {
+        "success": True,
+        "provider": {
+            "type": provider_type,
+            "name": provider_name,
+            "is_enabled": provider.enabled,
+            "is_configured": provider.is_configured(),
+            "config": provider.get_masked_config()
+        }
+    }
+
+
+@app.post("/api/integrations/providers/{provider_type}/{provider_name}/test")
+async def api_test_provider_connection(provider_type: str, provider_name: str):
+    """
+    Execute a live diagnostic connection test against the third-party provider API.
+    """
+    try:
+        p_type = _resolve_provider_type(provider_type)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid provider type: {provider_type}")
+
+    provider = registry.get(p_type, provider_name)
+    if not provider:
+        raise HTTPException(status_code=404, detail=f"Provider '{provider_name}' not found under '{provider_type}'")
+
+    test_result = await provider.test_connection()
+    status_str = "success" if test_result.get("success") else "failed"
+    message_str = test_result.get("message", "")
+
+    record_provider_test_result(
+        provider_type=provider_type,
+        provider_name=provider_name,
+        status=status_str,
+        message=message_str
+    )
+
+    return {
+        "provider_type": provider_type,
+        "provider_name": provider_name,
+        "result": test_result
+    }
 
 # =====================================================================
 # INTERACTIVE BROWSER CALL WEBSOCKET (/ws/web-call)

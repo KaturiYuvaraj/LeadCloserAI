@@ -332,3 +332,4 @@ $$\text{Campaign Cost} = \sum \text{Call Cost} + (\text{Apollo Credits} \times \
 $$\text{Cost Per Qualified Lead (CPQL)} = \frac{\text{Total Campaign Cost}}{\text{Number of Qualified Leads}}$$
 
 All unit rates are configurable by the administrator in the UI and never hardcoded into business logic.
+

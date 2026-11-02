@@ -224,6 +224,22 @@ def init_db():
     );
     """)
 
+    # Provider Integration Settings Table (Outpero Multi-Provider Architecture)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS provider_settings (
+        provider_type TEXT NOT NULL,
+        provider_name TEXT NOT NULL,
+        is_enabled BOOLEAN DEFAULT 1,
+        is_configured BOOLEAN DEFAULT 0,
+        config_json TEXT DEFAULT '{}',
+        last_tested_at TIMESTAMP,
+        test_status TEXT DEFAULT 'untested',
+        test_message TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (provider_type, provider_name)
+    );
+    """)
+
     # Seed default primary API key if api_keys table is empty
     cursor.execute("SELECT COUNT(*) as count FROM api_keys")
     if cursor.fetchone()["count"] == 0:
@@ -725,5 +741,85 @@ def get_billing_orders() -> List[Dict[str, Any]]:
     rows = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return rows
+
+
+# ---------------- PROVIDER INTEGRATION SETTINGS ----------------
+
+def get_all_provider_settings() -> List[Dict[str, Any]]:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM provider_settings ORDER BY provider_type, provider_name")
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
+
+
+def get_provider_setting(provider_type: str, provider_name: str) -> Optional[Dict[str, Any]]:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT * FROM provider_settings WHERE provider_type = ? AND provider_name = ?",
+        (provider_type, provider_name)
+    )
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def upsert_provider_setting(
+    provider_type: str,
+    provider_name: str,
+    is_enabled: bool,
+    is_configured: bool,
+    config: Dict[str, Any],
+    test_status: Optional[str] = None,
+    test_message: Optional[str] = None
+) -> Dict[str, Any]:
+    conn = get_connection()
+    cursor = conn.cursor()
+    config_str = json.dumps(config) if isinstance(config, dict) else str(config)
+
+    cursor.execute("""
+    INSERT INTO provider_settings (provider_type, provider_name, is_enabled, is_configured, config_json, test_status, test_message, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(provider_type, provider_name) DO UPDATE SET
+        is_enabled = excluded.is_enabled,
+        is_configured = excluded.is_configured,
+        config_json = excluded.config_json,
+        test_status = COALESCE(excluded.test_status, provider_settings.test_status),
+        test_message = COALESCE(excluded.test_message, provider_settings.test_message),
+        updated_at = CURRENT_TIMESTAMP
+    """, (
+        provider_type,
+        provider_name,
+        1 if is_enabled else 0,
+        1 if is_configured else 0,
+        config_str,
+        test_status or "untested",
+        test_message or ""
+    ))
+    conn.commit()
+    conn.close()
+    return get_provider_setting(provider_type, provider_name) or {}
+
+
+def record_provider_test_result(
+    provider_type: str,
+    provider_name: str,
+    status: str,
+    message: str
+):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    UPDATE provider_settings
+    SET test_status = ?,
+        test_message = ?,
+        last_tested_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE provider_type = ? AND provider_name = ?
+    """, (status, message, provider_type, provider_name))
+    conn.commit()
+    conn.close()
 
 

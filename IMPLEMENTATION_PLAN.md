@@ -299,3 +299,4 @@ The objective is to elevate the existing `telugu-ai-caller` into an enterprise-g
    - If an API key is absent, the UI cleanly notifies the administrator and falls back to existing manual/browser simulation modes without raising 500 errors.
 3. **Automated Regression Testing**:
    - The test suite (`pytest` / `unittest`) will run automatically after each phase. If any pre-existing test fails, work will halt until the regression is resolved.
+
