@@ -97,3 +97,86 @@ def wav_to_exotel_audio(wav_bytes: bytes, encoding: str = "audio/x-mulaw", targe
             raw_frames, _ = audioop.ratecv(raw_frames, sample_width, 1, frame_rate, target_rate, None)
 
         return raw_frames
+
+
+class VoiceActivityDetector:
+    """
+    Energy-based Voice Activity Detector (VAD) with Barge-In & End-of-Turn Detection.
+    Optimizes turn-taking latency and prevents speaking over the caller.
+    """
+    def __init__(
+        self,
+        energy_threshold: int = 500,
+        silence_duration_ms: int = 800,
+        min_speech_duration_ms: int = 400,
+        sample_rate: int = 8000,
+        sample_width: int = 2
+    ):
+        self.energy_threshold = energy_threshold
+        self.silence_duration_ms = silence_duration_ms
+        self.min_speech_duration_ms = min_speech_duration_ms
+        self.sample_rate = sample_rate
+        self.sample_width = sample_width
+
+        self.bytes_per_ms = (sample_rate * sample_width) // 1000
+        self.silence_bytes_threshold = self.silence_duration_ms * self.bytes_per_ms
+        self.min_speech_bytes = self.min_speech_duration_ms * self.bytes_per_ms
+
+        self.is_user_speaking = False
+        self.speech_buffer = bytearray()
+        self.consecutive_silence_bytes = 0
+
+    def process_frame(self, pcm_frame: bytes) -> dict:
+        """
+        Process a PCM frame and return real-time speech/silence state.
+        """
+        if len(pcm_frame) < 2:
+            return {
+                "is_speech": False,
+                "end_of_turn": False,
+                "barge_in": False,
+                "accumulated_bytes": len(self.speech_buffer),
+                "rms": 0
+            }
+
+        rms = audioop.rms(pcm_frame, self.sample_width)
+        is_speech = rms >= self.energy_threshold
+
+        barge_in = False
+        end_of_turn = False
+
+        if is_speech:
+            if not self.is_user_speaking:
+                self.is_user_speaking = True
+                barge_in = True
+            self.speech_buffer.extend(pcm_frame)
+            self.consecutive_silence_bytes = 0
+        else:
+            if self.is_user_speaking:
+                self.speech_buffer.extend(pcm_frame)
+                self.consecutive_silence_bytes += len(pcm_frame)
+                if self.consecutive_silence_bytes >= self.silence_bytes_threshold:
+                    if len(self.speech_buffer) >= self.min_speech_bytes:
+                        end_of_turn = True
+                    self.is_user_speaking = False
+                    self.consecutive_silence_bytes = 0
+
+        return {
+            "is_speech": is_speech,
+            "end_of_turn": end_of_turn,
+            "barge_in": barge_in,
+            "accumulated_bytes": len(self.speech_buffer),
+            "rms": rms
+        }
+
+    def get_speech_bytes(self) -> bytes:
+        data = bytes(self.speech_buffer)
+        self.speech_buffer.clear()
+        self.is_user_speaking = False
+        self.consecutive_silence_bytes = 0
+        return data
+
+    def reset(self):
+        self.speech_buffer.clear()
+        self.is_user_speaking = False
+        self.consecutive_silence_bytes = 0

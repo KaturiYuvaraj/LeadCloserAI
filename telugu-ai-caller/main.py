@@ -55,7 +55,7 @@ from schemas.lead import UnifiedLead
 from providers import registry, ProviderType, sync_providers_with_db
 from services.sarvam_service import sarvam_client
 from services.sales_agent import sales_agent
-from services.audio_processor import pcm_to_wav, mulaw_to_wav, wav_to_mulaw, exotel_audio_to_wav, wav_to_exotel_audio
+from services.audio_processor import pcm_to_wav, mulaw_to_wav, wav_to_mulaw, exotel_audio_to_wav, wav_to_exotel_audio, VoiceActivityDetector
 from services.telephony_service import telephony_service
 from services.excel_service import parse_excel_or_csv, generate_sample_excel_template, generate_leads_export_excel
 from services.campaign_service import campaign_service
@@ -1150,7 +1150,7 @@ async def websocket_exotel_agentstream(websocket: WebSocket, lead_id: Optional[i
     """
     Exotel AgentStream bidirectional WebSocket endpoint.
     Handles real-time audio streaming (G.711 mu-law or 16-bit PCM),
-    interruptions, and conversational audio turn-taking.
+    interruptions, and conversational audio turn-taking with VAD.
     """
     await websocket.accept()
     logger.info(f"Exotel AgentStream WebSocket connected. Lead ID: {lead_id}")
@@ -1159,7 +1159,8 @@ async def websocket_exotel_agentstream(websocket: WebSocket, lead_id: Optional[i
     call_id = None
     encoding = "audio/x-mulaw"
     sample_rate = 8000
-    audio_buffer = bytearray()
+    vad = None
+    ai_is_speaking = False
     conversation_history: List[Dict[str, str]] = []
     start_time = time.time()
     call_lead = get_lead_by_id(lead_id) if lead_id else None
@@ -1188,47 +1189,74 @@ async def websocket_exotel_agentstream(websocket: WebSocket, lead_id: Optional[i
                 encoding = media_format.get("encoding", "audio/x-mulaw")
                 sample_rate = int(media_format.get("sample_rate", 8000))
 
+                vad = VoiceActivityDetector(energy_threshold=450, silence_duration_ms=750, sample_rate=sample_rate)
                 logger.info(f"Exotel AgentStream started: stream_id={stream_id}, call_id={call_id}, format={encoding}@{sample_rate}Hz")
 
                 greeting = await sales_agent.get_initial_greeting(lead_id)
                 conversation_history.append({"role": "assistant", "content": greeting})
                 wav_audio = await sarvam_client.text_to_speech(greeting)
                 exotel_audio = wav_to_exotel_audio(wav_audio, encoding=encoding, target_rate=sample_rate)
+                ai_is_speaking = True
                 await send_audio_chunk_to_exotel(exotel_audio)
 
             elif event == "media":
                 media_obj = data.get("media", {})
                 payload = media_obj.get("payload", "")
                 raw_audio = base64.b64decode(payload)
-                audio_buffer.extend(raw_audio)
 
-                buffer_limit = 24000 if sample_rate <= 8000 else 48000
-                if len(audio_buffer) >= buffer_limit:
-                    user_chunk = bytes(audio_buffer)
-                    audio_buffer.clear()
+                import audioop
+                if "mulaw" in encoding.lower() or "ulaw" in encoding.lower():
+                    pcm_frame = audioop.ulaw2lin(raw_audio, 2)
+                else:
+                    pcm_frame = raw_audio
 
-                    wav_bytes = exotel_audio_to_wav(user_chunk, encoding=encoding, sample_rate=sample_rate)
-                    try:
-                        user_text = await sarvam_client.speech_to_text(wav_bytes, language_code="unknown")
-                    except Exception as e:
-                        logger.error(f"Exotel STT error: {e}")
-                        user_text = ""
+                vad_state = vad.process_frame(pcm_frame) if vad else {"is_speech": False, "end_of_turn": False, "barge_in": False}
 
-                    if user_text and len(user_text.strip()) > 2:
-                        conversation_history.append({"role": "user", "content": user_text})
-                        await asyncio.sleep(0.4)
+                # Interruption / Barge-in detection
+                if vad_state["barge_in"] and ai_is_speaking:
+                    logger.info(f"Barge-in detected: interrupting AI speech on stream {stream_id}")
+                    ai_is_speaking = False
+                    await websocket.send_text(json.dumps({"event": "clear", "stream_id": stream_id}))
 
-                        ai_reply = await sales_agent.generate_response(conversation_history, lead_id=lead_id)
-                        conversation_history.append({"role": "assistant", "content": ai_reply})
+                # End of turn detection (VAD silence threshold or buffer limit)
+                if vad_state["end_of_turn"] or (vad and len(vad.speech_buffer) >= (sample_rate * 2 * 4)):
+                    speech_pcm = vad.get_speech_bytes() if vad else b""
+                    if len(speech_pcm) >= 1600:
+                        wav_bytes = pcm_to_wav(speech_pcm, sample_rate=sample_rate)
+                        t_start = time.time()
+                        try:
+                            user_text = await sarvam_client.speech_to_text(wav_bytes, language_code="unknown")
+                        except Exception as e:
+                            logger.error(f"Exotel STT error: {e}")
+                            user_text = ""
+                        stt_ms = round((time.time() - t_start) * 1000, 1)
 
-                        ai_lang = detect_language(ai_reply)
-                        wav_reply = await sarvam_client.text_to_speech(ai_reply, language_code=ai_lang)
-                        exotel_reply = wav_to_exotel_audio(wav_reply, encoding=encoding, target_rate=sample_rate)
-                        await send_audio_chunk_to_exotel(exotel_reply)
+                        if user_text and len(user_text.strip()) > 2:
+                            conversation_history.append({"role": "user", "content": user_text})
+                            await asyncio.sleep(0.3)
+
+                            t_llm = time.time()
+                            ai_reply = await sales_agent.generate_response(conversation_history, lead_id=lead_id)
+                            conversation_history.append({"role": "assistant", "content": ai_reply})
+                            llm_ms = round((time.time() - t_llm) * 1000, 1)
+
+                            t_tts = time.time()
+                            ai_lang = detect_language(ai_reply)
+                            wav_reply = await sarvam_client.text_to_speech(ai_reply, language_code=ai_lang)
+                            exotel_reply = wav_to_exotel_audio(wav_reply, encoding=encoding, target_rate=sample_rate)
+                            tts_ms = round((time.time() - t_tts) * 1000, 1)
+
+                            total_ms = round((time.time() - t_start) * 1000, 1)
+                            logger.info(f"[EXOTEL LATENCY] Turnaround: {total_ms}ms (STT: {stt_ms}ms, LLM: {llm_ms}ms, TTS: {tts_ms}ms)")
+
+                            ai_is_speaking = True
+                            await send_audio_chunk_to_exotel(exotel_reply)
 
             elif event in ["clear", "interruption"]:
                 logger.info(f"Exotel stream interruption received for stream {stream_id}")
-                audio_buffer.clear()
+                if vad:
+                    vad.reset()
+                ai_is_speaking = False
 
             elif event == "stop":
                 logger.info(f"Exotel AgentStream stopped for stream {stream_id}")
