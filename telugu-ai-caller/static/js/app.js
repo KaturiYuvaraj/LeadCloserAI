@@ -174,10 +174,22 @@ document.addEventListener("DOMContentLoaded", () => {
     replyTimeBadge.hidden = false;
   };
 
+  caller.onCallEnding = () => {
+    if (doneSpeakingBtn) doneSpeakingBtn.style.display = "none";
+    if (endCallBtn) {
+      endCallBtn.disabled = true;
+      endCallBtn.innerHTML = `<span>⏳ Finishing Call...</span>`;
+    }
+  };
+
   caller.onCallEnd = (summaryData) => {
     if (doneSpeakingBtn) doneSpeakingBtn.style.display = "none";
     if (startCallBtn) startCallBtn.style.display = "inline-flex";
-    if (endCallBtn) endCallBtn.style.display = "none";
+    if (endCallBtn) {
+      endCallBtn.disabled = false;
+      endCallBtn.innerHTML = `<span>End Call</span>`;
+      endCallBtn.style.display = "none";
+    }
     setCallSetupLocked(false);
     showDealSummaryModal(summaryData);
     refreshLeads();

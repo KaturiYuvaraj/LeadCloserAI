@@ -114,7 +114,7 @@ def split_reply_into_chunks(text: str, min_chars: int = 25) -> List[str]:
     return [c for c in chunks if c]
 
 
-async def speak_reply(websocket: WebSocket, text: str, lang: str, timing: Dict[str, int]):
+async def speak_reply(websocket: WebSocket, text: str, lang: str, timing: Dict[str, int], should_hangup: bool = False):
     """
     Synthesize the reply sentence by sentence and stream it in order: the first
     chunk goes out with the transcript text and turn timing, the remaining chunks
@@ -146,7 +146,8 @@ async def speak_reply(websocket: WebSocket, text: str, lang: str, timing: Dict[s
         "audio": first_audio,
         "role": "assistant",
         "language": lang,
-        "timing": timing
+        "timing": timing,
+        "should_hangup": should_hangup
     })
 
     for task in rest_tasks:
@@ -245,13 +246,14 @@ async def websocket_web_call(
                 # Generate AI Sales Response matching customer's language
                 llm_start = time.time()
                 ai_reply = await sales_agent.generate_response(conversation_history, lead_id=lead_id)
+                should_hangup = sales_agent.is_call_completed(conversation_history, ai_reply)
                 llm_ms = int((time.time() - llm_start) * 1000)
                 conversation_history.append({"role": "assistant", "content": ai_reply})
                 ai_lang = detect_language(ai_reply)
 
                 # Synthesize and stream speech sentence by sentence in the matched language
                 await websocket.send_json({"event": "status", "message": "సమాధానం చెబుతున్నాను... (Speaking...)"})
-                await speak_reply(websocket, ai_reply, ai_lang, {"stt_ms": stt_ms, "llm_ms": llm_ms})
+                await speak_reply(websocket, ai_reply, ai_lang, {"stt_ms": stt_ms, "llm_ms": llm_ms}, should_hangup=should_hangup)
 
             elif event_type == "text_input":
                 user_text = data.get("text", "").strip()
@@ -271,19 +273,21 @@ async def websocket_web_call(
 
                 llm_start = time.time()
                 ai_reply = await sales_agent.generate_response(conversation_history, lead_id=lead_id)
+                should_hangup = sales_agent.is_call_completed(conversation_history, ai_reply)
                 llm_ms = int((time.time() - llm_start) * 1000)
                 conversation_history.append({"role": "assistant", "content": ai_reply})
                 ai_lang = detect_language(ai_reply)
 
                 if data.get("generate_audio", True):
-                    await speak_reply(websocket, ai_reply, ai_lang, {"stt_ms": 0, "llm_ms": llm_ms})
+                    await speak_reply(websocket, ai_reply, ai_lang, {"stt_ms": 0, "llm_ms": llm_ms}, should_hangup=should_hangup)
                 else:
                     await websocket.send_json({
                         "event": "ai_speech",
                         "text": ai_reply,
                         "audio": None,
                         "role": "assistant",
-                        "language": ai_lang
+                        "language": ai_lang,
+                        "should_hangup": should_hangup
                     })
 
             elif event_type == "hangup":

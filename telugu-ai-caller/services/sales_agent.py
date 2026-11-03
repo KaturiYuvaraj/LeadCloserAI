@@ -46,6 +46,29 @@ NATURAL HUMAN CONVERSATIONAL FLOW & PACING (CRITICAL):
    - Never overwhelm the customer with a barrage of features or rush the conversation.
 3. CLOSING ORIENTATION:
    - End with ONE clear, warm question asking to schedule a quick 10-minute live demo or kick-off call for tomorrow morning at 11:00 AM or 4:00 PM.
+4. CALL CONCLUSION & AUTO-HANGUP PROTOCOL (CRITICAL):
+   - You MUST smoothly conclude the call as soon as the closing outcome is reached:
+     a) IF CUSTOMER ACCEPTS / CONFIRMS A DEMO TIME (e.g. "Tomorrow 11 AM works", "Okay schedule it", "రేపు 11 కి పెట్టండి", "कल 11 बजे चलेगा"):
+        - Warmly confirm the demo in 1 sentence.
+        - Give a final warm farewell and goodbye.
+        - DO NOT ask any further questions.
+        - Append [CALL_COMPLETED] at the very end.
+        * Telugu: "ధన్యవాదాలు అండి! రేపు ఉదయం 11 గంటలకు మా సీనియర్ లీడ్ మీకు కాల్ చేస్తారు. వివరాలు వాట్సాప్‌లో పంపిస్తున్నాము. ఉంటానండి, సెలవు! [CALL_COMPLETED]"
+        * Hindi: "धन्यवाद सर! कल सुबह 11 बजे हमारे सीनियर टेक लीड आपसे कनेक्ट करेंगे। आपका दिन शुभ हो, अलविदा! [CALL_COMPLETED]"
+        * English: "Wonderful, thank you! Our senior tech lead will connect with you tomorrow at 11:00 AM. Have a great day ahead, goodbye! [CALL_COMPLETED]"
+     b) IF CUSTOMER SAYS NOT INTERESTED / DECLINES / REQUESTS OPT-OUT:
+        - Politely respect their decision in 1 sentence.
+        - Thank them for their time and say goodbye.
+        - DO NOT ask any further questions.
+        - Append [CALL_COMPLETED] at the very end.
+        * Telugu: "సరేనండి, మీ సమయానికి చాలా ధన్యవాదాలు. మీకు ఎప్పుడు అవసరమైనా మమ్మల్ని సంప్రదించవచ్చు. ఉంటానండి, సెలవు! [CALL_COMPLETED]"
+        * Hindi: "जी बिल्कुल सर, आपके समय के लिए बहुत-बहुत धन्यवाद। आपका दिन शुभ हो, अलविदा! [CALL_COMPLETED]"
+        * English: "Understood, thank you very much for your time. Have a great day ahead, goodbye! [CALL_COMPLETED]"
+     c) IF CUSTOMER ASKS TO SEND ON WHATSAPP & SAYS BYE / THANKS:
+        - Confirm sending the brochure on WhatsApp right away.
+        - Say goodbye and append [CALL_COMPLETED].
+     d) IF CUSTOMER SAYS GOODBYE / BYE / THANKS:
+        - Give a warm goodbye and append [CALL_COMPLETED].
 
 OBJECTION HANDLING PLAYBOOK:
 - "Budget is tight / too expensive": "We offer flexible milestone-based payments and customize solutions to your exact budget."
@@ -132,12 +155,24 @@ class SalesAgent:
                 temperature=0.5,
                 max_tokens=140
             )
-            return reply
+            # Remove any raw termination token so it is never spoken aloud by TTS
+            clean_reply = reply.replace("[CALL_COMPLETED]", "").strip()
+            return clean_reply
         except Exception as e:
             logger.error(f"Error generating sales response: {e}")
             # Detect language of last user utterance for localized fallback
             last_user_msg = next((m["content"] for m in reversed(conversation_history) if m["role"] == "user"), "")
             detected_lang = detect_language(last_user_msg)
+            lower_user = last_user_msg.lower()
+
+            # If user was expressing rejection or concluding, provide a graceful farewell fallback
+            if any(p in lower_user for p in ["not interested", "dont call", "no need", "వద్దు", "లేదు", "नहीं", "bye", "బై", "11"]):
+                if detected_lang == "hi-IN":
+                    return "धन्यवाद सर! आपके समय के लिए बहुत-बहुत धन्यवाद। आपका दिन शुभ हो, अलविदा!"
+                elif detected_lang == "en-IN":
+                    return "Understood, thank you very much for your time. Have a wonderful day ahead, goodbye!"
+                else:
+                    return "సరేనండి, మీ సమయానికి చాలా ధన్యవాదాలు. ఉంటానండి, సెలవు!"
 
             if detected_lang == "hi-IN":
                 return "नमस्ते सर! हम आपकी आवश्यकता समझ गए हैं। क्या हम कल सुबह 11 बजे आपके साथ 10 मिनट का मुफ़्त डेमो कॉल शेड्यूल करें?"
@@ -145,6 +180,84 @@ class SalesAgent:
                 return "Thank you! We completely understand your requirements. Could we schedule a quick 10-minute demo call tomorrow morning at 11:00 AM?"
             else:
                 return "నమస్కారం అండి! మీ ప్రాజెక్ట్ అవసరాలు మేము విన్నాము. మా సీనియర్ టెక్నాలజీ ఎక్స్‌పర్ట్‌తో రేపు 10 నిమిషాల ఉచిత డెమో కాల్ షెడ్యూల్ చేయమంటారా?"
+
+    def is_call_completed(
+        self,
+        conversation_history: List[Dict[str, str]],
+        ai_reply: str
+    ) -> bool:
+        """
+        Determines if the sales call has reached its natural conversational conclusion.
+        Uses multi-layered detection across Telugu, Hindi, and English:
+        1. Explicit termination token [CALL_COMPLETED]
+        2. Spoken farewell phrases in the AI's final statement
+        3. Customer explicit agreement/rejection/goodbye paired with AI acknowledgment
+        """
+        if not ai_reply:
+            return False
+
+        if "[CALL_COMPLETED]" in ai_reply:
+            return True
+
+        lower_ai = ai_reply.lower().strip()
+
+        # Spoken farewell markers in Telugu, Hindi, and English
+        farewell_markers = [
+            # Telugu
+            "సెలవు", "ఉంటానండి", "ఉంటాను", "వీడ్కోలు", "మంచి రోజు",
+            "బై", "బై బై", "కాల్ ముగిస్తున్నాను", "కలుద్దాం. ఉంటాను",
+            # Hindi
+            "अलविदा", "बाय", "बाय बाय", "शुभ दिन", "दिन शुभ हो", "फिर मिलेंगे",
+            # English
+            "goodbye", "good-bye", "have a great day", "have a wonderful day",
+            "have a nice day", "have a good day", "take care, bye", "take care!",
+            "talk to you tomorrow", "talk soon", "bye for now", "bye!", "bye."
+        ]
+        for marker in farewell_markers:
+            if marker in lower_ai:
+                return True
+
+        # Check customer's latest utterance for closing intent + AI confirmation
+        last_user_turn = ""
+        for m in reversed(conversation_history):
+            if m.get("role") == "user":
+                last_user_turn = m.get("content", "").lower().strip()
+                break
+
+        if last_user_turn:
+            # Customer declined / opted-out
+            rejection_patterns = [
+                "not interested", "don't call", "dont call", "no need", "no thanks", "stop calling",
+                "వద్దు", "ఆసక్తి లేదు", "వద్దు లేండి", "నాకు వద్దు", "కాల్ చేయకండి", "ఫోన్ చేయకండి",
+                "नहीं चाहिए", "कॉल मत करना", "फोन मत करो", "रुचि नहीं"
+            ]
+            if any(p in last_user_turn for p in rejection_patterns):
+                ai_ack = ["ధన్యవాదాలు", "సరేనండి", "అర్థమైంది", "thank you", "understood", "okay", "धन्यवाद", "समझ गया", "जी बिल्कुल"]
+                if any(w in lower_ai for w in ai_ack):
+                    return True
+
+            # Customer confirmed demo schedule
+            demo_patterns = [
+                "11 am", "11:00", "11am", "4 pm", "4:00", "4pm", "tomorrow works", "schedule it", "confirm it",
+                "yes tomorrow", "okay schedule", "done send link", "that works", "sounds good",
+                "రేపు 11", "11 గంటలకు", "సాయంత్రం 4", "ఓకే పెట్టండి", "షెడ్యూల్ చేయండి", "రేపు కలుద్దాం", "సరే రేపు", "రేపు ఉదయం",
+                "कल 11", "11 बजे", "शाम 4", "शेड्यूल कर दीजिए", "कल मिलते हैं", "हाँ ठीक है", "कल चलेगा"
+            ]
+            if any(p in last_user_turn for p in demo_patterns):
+                ai_confirm = ["ధన్యవాదాలు", "కలుద్దాం", "షెడ్యూల్", "వాట్సాప్", "thank you", "tomorrow", "scheduled", "connect", "धन्यवाद", "मिलते हैं", "शेड्यूल"]
+                if any(w in lower_ai for w in ai_confirm):
+                    return True
+
+            # Customer said goodbye / thank you
+            goodbye_patterns = [
+                "thank you bye", "thanks bye", "bye", "bye bye", "goodbye",
+                "ధన్యవాదాలు బై", "థాంక్యూ బై", "సరే బై",
+                "धन्यवाद बाय", "बाय", "बाय बाय"
+            ]
+            if any(p in last_user_turn for p in goodbye_patterns):
+                return True
+
+        return False
 
     async def get_initial_greeting(
         self,
