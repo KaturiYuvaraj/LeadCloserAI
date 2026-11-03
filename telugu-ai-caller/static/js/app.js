@@ -1266,6 +1266,10 @@ Your registered phone / client phone will ring shortly.`);
     }
 
     if (tabName === "crm") {
+      if (!viewCrm) {
+        window.location.href = "/crm";
+        return;
+      }
       document.body.classList.add("crm-mode");
       if (viewLanding) viewLanding.style.display = "none";
       if (viewCrm) viewCrm.style.display = "block";
@@ -1276,6 +1280,10 @@ Your registered phone / client phone will ring shortly.`);
       if (navCreditChip) navCreditChip.style.display = "inline-flex";
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
+      if (!viewLanding) {
+        window.location.href = "/";
+        return;
+      }
       document.body.classList.remove("crm-mode");
       if (viewLanding) viewLanding.style.display = "block";
       if (viewCrm) viewCrm.style.display = "none";
@@ -2570,29 +2578,31 @@ Lead updated to DEMO_BOOKED.`);
   };
 
 
-  // Auto-switch based on URL hash or tab query parameter
+  // Auto-switch based on URL hash, query parameter or path
   const initialHash = (window.location.hash || "").replace("#", "").toLowerCase();
   const initialTab = (new URLSearchParams(window.location.search).get("tab") || "").toLowerCase();
-  const activeRoute = initialHash || initialTab;
+  const initialPath = window.location.pathname.replace(/^\/+|\/+$/g, "").toLowerCase();
+  
+  let activeRoute = initialHash || initialTab;
+  if (!activeRoute && initialPath && initialPath !== "crm") {
+    activeRoute = initialPath;
+  }
+  if (!activeRoute && document.getElementById("viewCrm")) {
+    activeRoute = "calling";
+  }
+
   if (activeRoute === "crm" || activeRoute === "calling") {
-    window.switchMainTab("crm");
     window.switchCrmView("calling");
   } else if (activeRoute === "dashboard") {
-    window.switchMainTab("crm");
     window.switchCrmView("dashboard");
   } else if (activeRoute === "leads") {
-    window.switchMainTab("crm");
     window.switchCrmView("leads");
   } else if (activeRoute === "campaigns") {
-    window.switchMainTab("crm");
     window.switchCrmView("campaigns");
   } else if (activeRoute === "automations") {
-    window.switchMainTab("crm");
     window.switchCrmView("automations");
   } else if (activeRoute === "analytics") {
-    window.switchMainTab("crm");
     window.switchCrmView("analytics");
-
   }
 
 });
