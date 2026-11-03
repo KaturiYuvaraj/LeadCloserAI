@@ -160,6 +160,12 @@ def _clean_language(lang_val: str) -> str:
         return "hi-IN"
     if any(e in cleaned for e in ["en", "english", "eng"]):
         return "en-IN"
+    if any(t in cleaned for t in ["ta", "tamil", "தமிழ்"]):
+        return "ta-IN"
+    if any(k in cleaned for k in ["kn", "kannada", "ಕನ್ನಡ"]):
+        return "kn-IN"
+    if any(m in cleaned for m in ["ml", "malayalam", "മലയാളം"]):
+        return "ml-IN"
     return "te-IN"
 
 

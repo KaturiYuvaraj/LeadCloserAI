@@ -742,6 +742,7 @@ body.crm-mode {
 .crm-lang-pills {
   display: flex;
   gap: 5px;
+  flex-wrap: wrap;
 }
 
 .crm-lang-pill, .lang-pill-btn {

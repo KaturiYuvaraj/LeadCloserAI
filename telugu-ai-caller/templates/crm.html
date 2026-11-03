@@ -3302,7 +3302,7 @@ input[type="checkbox"] {
   <link rel="stylesheet" href="/static/css/calling-station.css?v=1.5">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&family=Noto+Sans+Malayalam:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </hea
 <body class="crm-mode">
 
@@ -3549,6 +3549,9 @@ input[type="checkbox"] {
                     <button class="crm-lang-pill lang-pill-btn" data-lang="te-IN" id="langPillTe" onclick="window.setCallLanguage('te-IN')">తెలుగు</button>
                     <button class="crm-lang-pill lang-pill-btn" data-lang="hi-IN" id="langPillHi" onclick="window.setCallLanguage('hi-IN')">हिंदी</button>
                     <button class="crm-lang-pill lang-pill-btn" data-lang="en-IN" id="langPillEn" onclick="window.setCallLanguage('en-IN')">English</button>
+                    <button class="crm-lang-pill lang-pill-btn" data-lang="ta-IN" id="langPillTa" onclick="window.setCallLanguage('ta-IN')">தமிழ்</button>
+                    <button class="crm-lang-pill lang-pill-btn" data-lang="kn-IN" id="langPillKn" onclick="window.setCallLanguage('kn-IN')">ಕನ್ನಡ</button>
+                    <button class="crm-lang-pill lang-pill-btn" data-lang="ml-IN" id="langPillMl" onclick="window.setCallLanguage('ml-IN')">മലയാളം</button>
                   </div>
                 </div>
 
@@ -3635,7 +3638,7 @@ input[type="checkbox"] {
 
               <!-- Bottom Reply Input Bar -->
               <div class="crm-input-bar">
-                <input type="text" id="testTextInput" class="crm-chat-input" placeholder="Type a reply (Telugu, Hindi or English)..." />
+                <input type="text" id="testTextInput" class="crm-chat-input" placeholder="Type a reply (Telugu, Hindi, English, Tamil, Kannada, Malayalam)..." />
                 <button class="crm-send-btn" id="sendTestBtn" title="Send Reply">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
@@ -4094,6 +4097,36 @@ input[type="checkbox"] {
                     <div id="langEnglishBar" style="height: 100%; width: 20%; background: linear-gradient(90deg, #ea580c, #f97316); border-radius: 4px;"></div>
                   </div>
                 </div>
+
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; margin-bottom: 6px;">
+                    <span>Tamil (தமிழ் • ta-IN)</span>
+                    <span id="langTamilStat">--</span>
+                  </div>
+                  <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+                    <div id="langTamilBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 4px;"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; margin-bottom: 6px;">
+                    <span>Kannada (ಕನ್ನಡ • kn-IN)</span>
+                    <span id="langKannadaStat">--</span>
+                  </div>
+                  <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+                    <div id="langKannadaBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #ec4899, #f43f5e); border-radius: 4px;"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; margin-bottom: 6px;">
+                    <span>Malayalam (മലയാളം • ml-IN)</span>
+                    <span id="langMalayalamStat">--</span>
+                  </div>
+                  <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+                    <div id="langMalayalamBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #0284c7, #06b6d4); border-radius: 4px;"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -4164,6 +4197,9 @@ input[type="checkbox"] {
             <option value="te-IN" selected>Telugu (తెలుగు)</option>
             <option value="hi-IN">Hindi (हिंदी)</option>
             <option value="en-IN">English (Indian)</option>
+            <option value="ta-IN">Tamil (தமிழ்)</option>
+            <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+            <option value="ml-IN">Malayalam (മലയാളം)</option>
           </select>
         </div>
         <div class="form-group">

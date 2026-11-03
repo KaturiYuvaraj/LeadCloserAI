@@ -1543,7 +1543,7 @@ def get_analytics_summary() -> Dict[str, Any]:
         conversion_rate = round(((demos_booked + closed_won) / max(total_calls, 1)) * 100, 1)
 
         # Languages breakdown
-        languages = {"te-IN": 0, "hi-IN": 0, "en-IN": 0}
+        languages = {"te-IN": 0, "hi-IN": 0, "en-IN": 0, "ta-IN": 0, "kn-IN": 0, "ml-IN": 0}
         for l in leads:
             lang = (l.variables or {}).get("preferred_language", "te-IN") if isinstance(l.variables, dict) else "te-IN"
             if lang in languages:
@@ -1551,7 +1551,7 @@ def get_analytics_summary() -> Dict[str, Any]:
             else:
                 languages["te-IN"] += 1
         if sum(languages.values()) == 0:
-            languages = {"te-IN": 18, "hi-IN": 7, "en-IN": 5}
+            languages = {"te-IN": 18, "hi-IN": 7, "en-IN": 5, "ta-IN": 4, "kn-IN": 3, "ml-IN": 2}
 
         # CPQL estimate
         est_total_spend = total_calls * 5.0 + 150.0

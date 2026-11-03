@@ -37,6 +37,15 @@ class EmployeeBuilder:
         elif "hindi" in lower_inst or (preferred_language and "hi" in preferred_language):
             lang = "hi-IN"
             speaker = "pooja"
+        elif "tamil" in lower_inst or (preferred_language and "ta" in preferred_language):
+            lang = "ta-IN"
+            speaker = "meera_ta_conversation"
+        elif "kannada" in lower_inst or (preferred_language and "kn" in preferred_language):
+            lang = "kn-IN"
+            speaker = "shreya_kn_conversation"
+        elif "malayalam" in lower_inst or (preferred_language and "ml" in preferred_language):
+            lang = "ml-IN"
+            speaker = "arya_ml_conversation"
         else:
             lang = "en-IN"
             speaker = "tarun"

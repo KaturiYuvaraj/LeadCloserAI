@@ -26,7 +26,7 @@ class SarvamSTTProvider(BaseVoiceSTTProvider):
         return {
             "api_key": self.mask_secret(self.api_key),
             "model": self.default_model,
-            "supported_languages": ["te-IN", "hi-IN", "en-IN", "ta-IN", "kn-IN", "unknown"]
+            "supported_languages": ["te-IN", "hi-IN", "en-IN", "ta-IN", "kn-IN", "ml-IN", "unknown"]
         }
 
     async def transcribe(

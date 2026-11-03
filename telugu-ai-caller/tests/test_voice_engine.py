@@ -55,7 +55,8 @@ def test_router_keeps_language_for_undecidable_text():
 
 
 def test_router_defaults_unknown_initial_language_to_telugu():
-    assert LanguageRouter("ta-IN").current_language == "te-IN"
+    assert LanguageRouter("ta-IN").current_language == "ta-IN"
+    assert LanguageRouter("fr-FR").current_language == "te-IN"
 
 
 @pytest.mark.parametrize("wait_ms,expected", [

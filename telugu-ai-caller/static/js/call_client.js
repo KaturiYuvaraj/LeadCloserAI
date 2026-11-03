@@ -95,6 +95,30 @@ class VoiceCallClient {
       if (lower.includes(marker)) return true;
     }
 
+    // Spoken farewell markers in Tamil
+    const tamilMarkers = [
+      'வணக்கம்', 'நன்றி', 'போய் வருகிறேன்', 'மீண்டும் சந்திப்போம்', 'பை', 'பை பை'
+    ];
+    for (const marker of tamilMarkers) {
+      if (text.includes(marker)) return true;
+    }
+
+    // Spoken farewell markers in Kannada
+    const kannadaMarkers = [
+      'ಶುಭ ದಿನ', 'ಮತ್ತೆ ಭೇಟಿಯಾಗೋಣ', 'ಹೋಗಿ ಬರುತ್ತೇನೆ', 'ಧನ್ಯವಾದ', 'ಬೈ', 'ಬೈ ಬೈ'
+    ];
+    for (const marker of kannadaMarkers) {
+      if (text.includes(marker)) return true;
+    }
+
+    // Spoken farewell markers in Malayalam
+    const malayalamMarkers = [
+      'വിട', 'ശുഭദിനം', 'പിന്നെ കാണാം', 'നന്ദി', 'ബൈ', 'ബൈ ബൈ'
+    ];
+    for (const marker of malayalamMarkers) {
+      if (text.includes(marker)) return true;
+    }
+
     return false;
   }
 

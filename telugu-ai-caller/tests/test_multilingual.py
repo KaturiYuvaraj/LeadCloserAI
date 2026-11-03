@@ -31,6 +31,9 @@ def test_language_detection():
     assert detect_language("Hello! We need an e-commerce website with payment gateway.") == "en-IN"
     assert detect_language("enti andi entha budget avtundi app ki?") == "te-IN"
     assert detect_language("namaste bhai hume billing app chahiye kitna lagega?") == "hi-IN"
+    assert detect_language("வணக்கம் சார், உங்கள் மென்பொருள் சேவைக்கு நன்றி.") == "ta-IN"
+    assert detect_language("ನಮಸ್ಕಾರ, ನಮಗೆ ವೆಬ್‌ಸೈಟ್ ಮತ್ತು ಆ್ಯಪ್ ಬೇಕು.") == "kn-IN"
+    assert detect_language("നമസ്കാരം, ഞങ്ങൾക്ക് പുതിയ സോഫ്റ്റ്‌വെയർ വേണം.") == "ml-IN"
     print(" Language Detection: PASSED")
 
 
@@ -51,6 +54,21 @@ def test_localized_greetings():
     assert "S P Associates Software Company" in g_en
     assert "Hello" in g_en
     assert lang_en == "en-IN"
+
+    g_ta, lang_ta = get_localized_initial_greeting(agency, lead={"name": "முருகன்"}, language_code="ta-IN")
+    assert "S P Associates Software Company" in g_ta
+    assert "வணக்கம்" in g_ta
+    assert lang_ta == "ta-IN"
+
+    g_kn, lang_kn = get_localized_initial_greeting(agency, lead={"name": "ಸುರೇಶ್"}, language_code="kn-IN")
+    assert "S P Associates Software Company" in g_kn
+    assert "ನಮಸ್ಕಾರ" in g_kn
+    assert lang_kn == "kn-IN"
+
+    g_ml, lang_ml = get_localized_initial_greeting(agency, lead={"name": "മനോജ്"}, language_code="ml-IN")
+    assert "S P Associates Software Company" in g_ml
+    assert "നമസ്കാരം" in g_ml
+    assert lang_ml == "ml-IN"
     print(" Localized Initial Greetings: PASSED")
 
 
@@ -67,6 +85,15 @@ def test_tts_speaker_routing():
     lang_en, spk_en = get_tts_speaker_and_lang("Hello sir, we are ready to build your app")
     assert lang_en == "en-IN"
     assert "simran" in spk_en or "aditya" in spk_en
+
+    lang_ta, spk_ta = get_tts_speaker_and_lang("வணக்கம் சார்")
+    assert lang_ta == "ta-IN"
+
+    lang_kn, spk_kn = get_tts_speaker_and_lang("ನಮಸ್ಕಾರ ಸರ್")
+    assert lang_kn == "kn-IN"
+
+    lang_ml, spk_ml = get_tts_speaker_and_lang("നമസ്കാരം സാർ")
+    assert lang_ml == "ml-IN"
     print(" TTS Speaker Routing: PASSED")
 
 

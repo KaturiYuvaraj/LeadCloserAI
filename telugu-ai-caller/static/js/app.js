@@ -111,6 +111,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (lang === "te-IN") engineIndicator.innerText = "Mode: Telugu (తెలుగు) Active";
       else if (lang === "hi-IN") engineIndicator.innerText = "Mode: Hindi (हिंदी) Active";
       else if (lang === "en-IN") engineIndicator.innerText = "Mode: English Active";
+      else if (lang === "ta-IN") engineIndicator.innerText = "Mode: Tamil (தமிழ்) Active";
+      else if (lang === "kn-IN") engineIndicator.innerText = "Mode: Kannada (ಕನ್ನಡ) Active";
+      else if (lang === "ml-IN") engineIndicator.innerText = "Mode: Malayalam (മലയാളം) Active";
       else engineIndicator.innerText = "Mode: 🌐 Auto-Detect (Customer Matching)";
     }
   };
@@ -2560,10 +2563,13 @@ Lead updated to DEMO_BOOKED.`);
 
       // 3. Languages
       const langs = d.languages || {};
-      const totalLang = (langs["te-IN"] || 0) + (langs["hi-IN"] || 0) + (langs["en-IN"] || 0) || 1;
+      const totalLang = (langs["te-IN"] || 0) + (langs["hi-IN"] || 0) + (langs["en-IN"] || 0) + (langs["ta-IN"] || 0) + (langs["kn-IN"] || 0) + (langs["ml-IN"] || 0) || 1;
       const tePct = Math.round(((langs["te-IN"] || 0) / totalLang) * 100);
       const hiPct = Math.round(((langs["hi-IN"] || 0) / totalLang) * 100);
       const enPct = Math.round(((langs["en-IN"] || 0) / totalLang) * 100);
+      const taPct = Math.round(((langs["ta-IN"] || 0) / totalLang) * 100);
+      const knPct = Math.round(((langs["kn-IN"] || 0) / totalLang) * 100);
+      const mlPct = Math.round(((langs["ml-IN"] || 0) / totalLang) * 100);
 
       const elTeStat = document.getElementById("langTeluguStat");
       const elTeBar = document.getElementById("langTeluguBar");
@@ -2579,6 +2585,21 @@ Lead updated to DEMO_BOOKED.`);
       const elEnBar = document.getElementById("langEnglishBar");
       if (elEnStat) elEnStat.innerText = `${enPct}% (${langs["en-IN"] || 0} leads)`;
       if (elEnBar) elEnBar.style.width = `${enPct}%`;
+
+      const elTaStat = document.getElementById("langTamilStat");
+      const elTaBar = document.getElementById("langTamilBar");
+      if (elTaStat) elTaStat.innerText = `${taPct}% (${langs["ta-IN"] || 0} leads)`;
+      if (elTaBar) elTaBar.style.width = `${taPct}%`;
+
+      const elKnStat = document.getElementById("langKannadaStat");
+      const elKnBar = document.getElementById("langKannadaBar");
+      if (elKnStat) elKnStat.innerText = `${knPct}% (${langs["kn-IN"] || 0} leads)`;
+      if (elKnBar) elKnBar.style.width = `${knPct}%`;
+
+      const elMlStat = document.getElementById("langMalayalamStat");
+      const elMlBar = document.getElementById("langMalayalamBar");
+      if (elMlStat) elMlStat.innerText = `${mlPct}% (${langs["ml-IN"] || 0} leads)`;
+      if (elMlBar) elMlBar.style.width = `${mlPct}%`;
 
       // 4. Objections Breakdown
       const objContainer = document.getElementById("objectionsContainer");
@@ -2655,7 +2676,7 @@ Lead updated to DEMO_BOOKED.`);
           <tr style="border-bottom: 1px solid var(--border-light);">
             <td style="padding: 10px 12px; font-weight: 700; color: #0f172a;">${emp.name}</td>
             <td style="padding: 10px 12px; color: var(--text-secondary);">${emp.role}</td>
-            <td style="padding: 10px 12px;"><span class="badge-tag">${emp.language === 'te-IN' ? 'Telugu' : (emp.language === 'hi-IN' ? 'Hindi' : 'English')}</span></td>
+            <td style="padding: 10px 12px;"><span class="badge-tag">${({'te-IN':'Telugu','hi-IN':'Hindi','en-IN':'English','ta-IN':'Tamil','kn-IN':'Kannada','ml-IN':'Malayalam'}[emp.language] || emp.language)}</span></td>
             <td style="padding: 10px 12px; font-weight: 600;">${emp.calls_handled}</td>
             <td style="padding: 10px 12px; font-weight: 700; color: #ea580c;">${emp.demos_booked}</td>
             <td style="padding: 10px 12px; font-weight: 700; color: #059669;">${emp.success_rate}%</td>
