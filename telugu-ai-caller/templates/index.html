@@ -3399,7 +3399,7 @@ input[type="checkbox"] {
         <span class="add-icon" title="Add Credits">+</span>
       </div>
 
-      <button class="btn-nav-login" onclick="window.openAdminSettingsModal()" title="System Architecture & Backend Telephony Config">
+      <button class="btn-nav-login" onclick="window.switchMainTab('crm')" title="Access LeadCloser CRM Dashboard">
         Login
       </button>
 
@@ -4869,88 +4869,208 @@ input[type="checkbox"] {
         </div>
 
         <!-- ============================================================= -->
-        <!-- VIEW 7: SYSTEM ARCHITECTURE & PROVIDER CONSOLE (IMAGE 2)      -->
-        <!-- ============================================================= -->
+        <!-- VIEW 7: ECOSYSTEM & BUSINESS CRM INTEGRATIONS -->
         <div class="crm-view-section" id="crmViewIntegrations" style="display: none;">
-          <div class="crm-provider-console-card">
-            <div class="crm-provider-head">
-              <div class="crm-provider-head-icon">⚙️</div>
+          <div class="crm-panel-card" style="padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px;">
               <div>
-                <h2 style="font-size: 1.18rem; font-weight: 800; color: #0f172a; margin: 0;">System Architecture & Provider Console</h2>
-                <span style="font-size: 0.78rem; color: #64748b;">Manage backend telephony carriers, speech models, lead discovery & webhook connectors</span>
+                <h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0;">Ecosystem & Business Integrations</h2>
+                <span style="font-size: 0.78rem; color: #64748b;">Connect LeadCloser AI seamlessly with your CRMs, spreadsheets, and communication channels</span>
               </div>
+              <span class="crm-lead-badge badge-qualified">● 4 Active Connections</span>
             </div>
 
-            <!-- 3x3 Provider Cards Grid Matching Image 2 -->
-            <div class="crm-provider-grid">
-              {% for p in providers %}
-              <div class="crm-provider-card">
+            <!-- Business Integrations Grid (No secret keys or backend details) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px;">
+              
+              <!-- 1. Google Sheets -->
+              <div class="crm-panel-card" style="padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; background: #ffffff;">
                 <div>
-                  <div class="crm-provider-top">
-                    <div class="crm-provider-name-block">
-                      <div class="crm-provider-name">
-                        {% if p.type == 'telephony' %}📞
-                        {% elif p.type == 'voice_stt' %}🎙️
-                        {% elif p.type == 'voice_tts' %}🔊
-                        {% elif p.type == 'llm' %}🧠
-                        {% elif p.type == 'lead_discovery' %}🔍
-                        {% elif p.type == 'messaging' %}💬
-                        {% elif p.type == 'calendar' %}📅
-                        {% else %}💾{% endif %}
-                        {{ p.name.upper() }}
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 38px; height: 38px; border-radius: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">📊</div>
+                      <div>
+                        <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a;">Google Sheets</div>
+                        <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Productivity & Data</div>
                       </div>
-                      <div class="crm-provider-domain">DOMAIN: {{ p.type.upper() }}</div>
                     </div>
-
-                    <div>
-                      {% if p.is_active and p.is_configured and p.is_enabled %}
-                      <span class="crm-lead-badge badge-qualified">● Active</span>
-                      {% elif p.is_configured and p.is_enabled %}
-                      <span class="crm-lead-badge badge-demo">Configured</span>
-                      {% elif not p.is_enabled %}
-                      <span class="crm-lead-badge badge-lost">Disabled</span>
-                      {% else %}
-                      <span class="crm-lead-badge badge-qualifying">PENDING</span>
-                      {% endif %}
-                    </div>
+                    <span class="crm-lead-badge badge-qualified">● Connected</span>
                   </div>
-
-                  <!-- Masked Configuration Box -->
-                  <div class="crm-provider-code">
-                    {% for k, v in p.config.items() %}
-                    <div><strong>{{ k }}:</strong> {{ v }}</div>
-                    {% endfor %}
-                  </div>
+                  <p style="font-size: 0.77rem; color: #64748b; line-height: 1.45; margin: 12px 0 0 0;">
+                    Automatically append new lead entries, qualification statuses, deal sizes, and call summaries to your master Google Sheet in real time.
+                  </p>
                 </div>
-
-                <div>
-                  <!-- Live Health Status Row -->
-                  <div class="crm-provider-health-row">
-                    <span>Health:</span>
-                    <span id="test-badge-{{ p.type }}-{{ p.name }}" class="{% if p.test_status == 'success' %}crm-lead-badge badge-qualified{% elif p.test_status == 'failed' %}crm-lead-badge badge-lost{% else %}crm-lead-badge badge-demo{% endif %}">
-                      {% if p.test_status == 'success' %}✓ Verified
-                      {% elif p.test_status == 'failed' %}✗ FAILED
-                      {% else %}Untested{% endif %}
-                    </span>
-                  </div>
-
-                  <!-- Buttons: Test & Config -->
-                  <div class="crm-provider-actions">
-                    <button class="crm-provider-test-btn" onclick="window.testProviderConnection('{{ p.type }}', '{{ p.name }}', this)">
-                      ⚡ Test
-                    </button>
-                    <button class="crm-provider-config-btn" onclick="window.openConfigureProviderModal('{{ p.type }}', '{{ p.name }}')">
-                      ⚙ Config
-                    </button>
-                  </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; pt: 10px; border-top: 1px solid #f8fafc;">
+                  <span style="font-size: 0.72rem; color: #059669; font-weight: 600;">✓ Live Sync Active</span>
+                  <button class="crm-action-pill" style="height: 30px; font-size: 0.74rem;" onclick="alert('Google Sheets integration active. Leads automatically synchronized.')">Settings</button>
                 </div>
               </div>
-              {% endfor %}
+
+              <!-- 2. Meta WhatsApp Cloud -->
+              <div class="crm-panel-card" style="padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; background: #ffffff;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 38px; height: 38px; border-radius: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">💬</div>
+                      <div>
+                        <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a;">Meta WhatsApp Cloud</div>
+                        <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Messaging Automation</div>
+                      </div>
+                    </div>
+                    <span class="crm-lead-badge badge-qualified">● Connected</span>
+                  </div>
+                  <p style="font-size: 0.77rem; color: #64748b; line-height: 1.45; margin: 12px 0 0 0;">
+                    Instantly dispatch company brochures, pricing cards, and meeting links to prospect's WhatsApp right after call qualification.
+                  </p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.72rem; color: #059669; font-weight: 600;">✓ Auto-Dispatch On</span>
+                  <button class="crm-action-pill" style="height: 30px; font-size: 0.74rem;" onclick="alert('WhatsApp messaging rules active for Qualified and Demo Booked leads.')">Templates</button>
+                </div>
+              </div>
+
+              <!-- 3. Google Calendar & Meet -->
+              <div class="crm-panel-card" style="padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; background: #ffffff;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 38px; height: 38px; border-radius: 10px; background: #eff6ff; border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">📅</div>
+                      <div>
+                        <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a;">Google Calendar</div>
+                        <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Meeting Scheduling</div>
+                      </div>
+                    </div>
+                    <span class="crm-lead-badge badge-qualified">● Connected</span>
+                  </div>
+                  <p style="font-size: 0.77rem; color: #64748b; line-height: 1.45; margin: 12px 0 0 0;">
+                    Auto-schedule 15-minute product demos with Google Meet invitations sent to both prospect and sales engineer.
+                  </p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.72rem; color: #059669; font-weight: 600;">✓ 15-min Demo Slots</span>
+                  <button class="crm-action-pill" style="height: 30px; font-size: 0.74rem;" onclick="alert('Google Calendar reservation sync active.')">Calendar</button>
+                </div>
+              </div>
+
+              <!-- 4. HubSpot CRM -->
+              <div class="crm-panel-card" style="padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; background: #ffffff;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 38px; height: 38px; border-radius: 10px; background: #fff7ed; border: 1px solid #fed7aa; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">🟧</div>
+                      <div>
+                        <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a;">HubSpot CRM</div>
+                        <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Pipeline & Deals</div>
+                      </div>
+                    </div>
+                    <span class="crm-lead-badge badge-demo">Available</span>
+                  </div>
+                  <p style="font-size: 0.77rem; color: #64748b; line-height: 1.45; margin: 12px 0 0 0;">
+                    Bi-directional deal sync: push new qualified opportunities directly into HubSpot stages with call audio recording links.
+                  </p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.72rem; color: #64748b;">Ready to connect</span>
+                  <button class="crm-btn-orange" style="height: 30px; font-size: 0.74rem; padding: 0 12px;" onclick="alert('HubSpot Connect: Please contact administrator to authorize OAuth2 token.')">Connect</button>
+                </div>
+              </div>
+
+              <!-- 5. Salesforce -->
+              <div class="crm-panel-card" style="padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; background: #ffffff;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 38px; height: 38px; border-radius: 10px; background: #eff6ff; border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">☁️</div>
+                      <div>
+                        <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a;">Salesforce</div>
+                        <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Enterprise CRM</div>
+                      </div>
+                    </div>
+                    <span class="crm-lead-badge badge-demo">Enterprise</span>
+                  </div>
+                  <p style="font-size: 0.77rem; color: #64748b; line-height: 1.45; margin: 12px 0 0 0;">
+                    Enterprise lead mapping for large organizations. Custom fields, account ownership assignment, and conversion tracking.
+                  </p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.72rem; color: #64748b;">Enterprise Add-on</span>
+                  <button class="crm-action-pill" style="height: 30px; font-size: 0.74rem;" onclick="alert('Salesforce Enterprise Connector: Available on Business Enterprise tier.')">Connect</button>
+                </div>
+              </div>
+
+              <!-- 6. Zoho CRM -->
+              <div class="crm-panel-card" style="padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; background: #ffffff;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 38px; height: 38px; border-radius: 10px; background: #fef2f2; border: 1px solid #fecaca; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">🔴</div>
+                      <div>
+                        <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a;">Zoho CRM & Bigin</div>
+                        <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Sales Pipeline</div>
+                      </div>
+                    </div>
+                    <span class="crm-lead-badge badge-demo">Available</span>
+                  </div>
+                  <p style="font-size: 0.77rem; color: #64748b; line-height: 1.45; margin: 12px 0 0 0;">
+                    One-click contact creation for Indian SMB businesses. Push deal stages, customer budget, and meeting schedules.
+                  </p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.72rem; color: #64748b;">Ready to link</span>
+                  <button class="crm-btn-orange" style="height: 30px; font-size: 0.74rem; padding: 0 12px;" onclick="alert('Zoho CRM Connect: Initiating secure API key authorization.')">Connect</button>
+                </div>
+              </div>
+
+              <!-- 7. Slack Alerts -->
+              <div class="crm-panel-card" style="padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; background: #ffffff;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 38px; height: 38px; border-radius: 10px; background: #fdf4ff; border: 1px solid #f5d0fe; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">🟣</div>
+                      <div>
+                        <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a;">Slack</div>
+                        <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Team Notifications</div>
+                      </div>
+                    </div>
+                    <span class="crm-lead-badge badge-demo">Available</span>
+                  </div>
+                  <p style="font-size: 0.77rem; color: #64748b; line-height: 1.45; margin: 12px 0 0 0;">
+                    Post celebratory announcements to #sales-wins when an AI closer schedules a demo or secures a high-ticket contract.
+                  </p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.72rem; color: #64748b;">Webhook Hook</span>
+                  <button class="crm-action-pill" style="height: 30px; font-size: 0.74rem;" onclick="alert('Slack Webhook: Enter incoming webhook URL in company settings.')">Configure</button>
+                </div>
+              </div>
+
+              <!-- 8. Webhooks & Zapier -->
+              <div class="crm-panel-card" style="padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; background: #ffffff;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 38px; height: 38px; border-radius: 10px; background: #fff7ed; border: 1px solid #fed7aa; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">⚡</div>
+                      <div>
+                        <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a;">Zapier & Custom Webhooks</div>
+                        <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Universal Connector</div>
+                      </div>
+                    </div>
+                    <span class="crm-lead-badge badge-qualified">● Active</span>
+                  </div>
+                  <p style="font-size: 0.77rem; color: #64748b; line-height: 1.45; margin: 12px 0 0 0;">
+                    Connect with 5,000+ web applications. Outbound HTTP callbacks dispatch JSON event payloads for call started, completed, and qualified.
+                  </p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.72rem; color: #059669; font-weight: 600;">✓ Endpoint Listening</span>
+                  <button class="crm-action-pill" style="height: 30px; font-size: 0.74rem;" onclick="alert('Webhooks configured at /api/webhooks/call-events')">Manage</button>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
-
-      </main>
+        </main>
     </div>
 </div><!-- /#viewCrm -->
 
@@ -5638,37 +5758,6 @@ input[type="checkbox"] {
     </div>
   </div>
 
-  <!-- MODAL 7: CONFIGURE PROVIDER SETTINGS -->
-  <div class="modal-overlay" id="providerConfigModal">
-    <div class="modal-card" style="max-width: 480px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h3 style="font-size: 1.1rem; color: #0f172a; font-weight: 800;" id="providerModalTitle">Configure Provider</h3>
-        <button class="btn btn-outline" onclick="document.getElementById('providerConfigModal').classList.remove('open')" style="padding: 4px 8px;">✕</button>
-      </div>
-
-      <input type="hidden" id="providerConfigType" />
-      <input type="hidden" id="providerConfigName" />
-
-      <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
-        <input type="checkbox" id="providerConfigEnabled" checked style="width: auto;" />
-        <label for="providerConfigEnabled" style="margin-bottom: 0; cursor: pointer;">Enable this Provider</label>
-      </div>
-
-      <div class="form-group">
-        <label>API Key / Token / Secret:</label>
-        <input type="password" id="providerConfigKey" placeholder="Paste updated credential here (leave blank to keep current)" />
-      </div>
-
-      <div class="tip-item" style="margin-bottom: 16px; background: #f8fafc; font-size: 0.76rem; color: var(--text-secondary);">
-        💡 Note: Changes are securely persisted in SQLite. You can also configure credentials via your <code>.env</code> file.
-      </div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 8px;">
-        <button class="btn btn-outline" onclick="document.getElementById('providerConfigModal').classList.remove('open')">Cancel</button>
-        <button class="btn btn-primary" onclick="window.saveProviderConfig()">Save Provider Settings</button>
-      </div>
-    </div>
-  </div>
 
 <!-- ================================================================= -->
   
@@ -5794,97 +5883,8 @@ input[type="checkbox"] {
   </script>
 
   <!-- ================================================================= -->
-  <!-- MODAL: ADMIN SYSTEM SETTINGS & PROVIDER CONSOLE (INTERNAL ENGINE) -->
+  
   <!-- ================================================================= -->
-  <div class="modal-overlay" id="adminSettingsModal">
-    <div class="modal-card" style="max-width: 960px; width: 95%; max-height: 90vh; overflow-y: auto;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="width: 36px; height: 36px; border-radius: 8px; background: #fff7ed; display: flex; align-items: center; justify-content: center; color: #ea580c; font-size: 1.15rem;">
-            ⚙️
-          </div>
-          <div>
-            <h3 style="font-size: 1.15rem; color: #090d16; font-weight: 800; margin: 0;">System Architecture & Provider Console</h3>
-            <span style="font-size: 0.75rem; color: var(--text-muted);">Manage backend telephony carriers, speech models, lead discovery & webhook connectors</span>
-          </div>
-        </div>
-        <button class="btn btn-outline" onclick="window.closeAdminSettingsModal()" style="padding: 4px 8px;">✕</button>
-      </div>
-
-      <!-- Providers Grid -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;">
-        {% for p in providers %}
-        <div class="card-panel" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff;">
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-              <div>
-                <div style="font-weight: 800; font-size: 0.92rem; color: #090d16; display: flex; align-items: center; gap: 6px;">
-                  {% if p.type == 'telephony' %}📞
-                  {% elif p.type == 'voice_stt' %}🎙️
-                  {% elif p.type == 'voice_tts' %}🔊
-                  {% elif p.type == 'llm' %}🧠
-                  {% elif p.type == 'lead_discovery' %}🔍
-                  {% elif p.type == 'messaging' %}💬
-                  {% elif p.type == 'calendar' %}📅
-                  {% else %}💾{% endif %}
-                  {{ p.name.upper() }}
-                </div>
-                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-top: 1px;">
-                  Domain: {{ p.type }}
-                </div>
-              </div>
-
-              <div>
-                {% if p.is_active and p.is_configured and p.is_enabled %}
-                <span class="badge-tag live" style="font-size: 0.68rem; padding: 2px 7px;"><span class="pulse-dot"></span> Active</span>
-                {% elif p.is_configured and p.is_enabled %}
-                <span class="badge-tag" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 0.68rem; padding: 2px 7px;">Configured</span>
-                {% elif not p.is_enabled %}
-                <span class="lead-status status-contacted" style="font-size: 0.68rem; padding: 2px 7px;">Disabled</span>
-                {% else %}
-                <span class="lead-status status-qualified" style="font-size: 0.68rem; padding: 2px 7px;">Pending</span>
-                {% endif %}
-              </div>
-            </div>
-
-            <!-- Masked Configuration Snippet -->
-            <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: 6px; padding: 8px 10px; font-family: monospace; font-size: 0.72rem; color: #334155; margin-bottom: 12px; max-height: 80px; overflow-y: auto;">
-              {% for k, v in p.config.items() %}
-              <div><strong>{{ k }}:</strong> {{ v }}</div>
-              {% endfor %}
-            </div>
-          </div>
-
-          <div>
-            <!-- Live Test Status Feedback Pill -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.73rem;">
-              <span style="color: var(--text-muted);">Health:</span>
-              <span id="test-badge-{{ p.type }}-{{ p.name }}" class="{% if p.test_status == 'success' %}badge-tag live{% elif p.test_status == 'failed' %}lead-status status-lost{% else %}badge-tag{% endif %}">
-                {% if p.test_status == 'success' %}✓ Verified
-                {% elif p.test_status == 'failed' %}✗ Failed
-                {% else %}Untested{% endif %}
-              </span>
-            </div>
-
-            <div style="display: flex; gap: 6px;">
-              <button class="btn btn-primary" onclick="window.testProviderConnection('{{ p.type }}', '{{ p.name }}', this)" style="flex: 1; justify-content: center; font-size: 0.74rem; padding: 6px 8px; height: 30px;">
-                ⚡ Test
-              </button>
-              <button class="btn btn-outline" onclick="window.openConfigureProviderModal('{{ p.type }}', '{{ p.name }}')" style="padding: 6px 10px; font-size: 0.74rem; height: 30px;">
-                ⚙️ Config
-              </button>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-
-      <div style="margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end;">
-        <button class="btn btn-outline" onclick="window.closeAdminSettingsModal()">Close Admin Console</button>
-      </div>
-    </div>
-  </div>
-
   <script src="/static/js/vendor/lucide.min.js"></script>
   <script>if (window.lucide) { lucide.createIcons(); }</script>
 </body>

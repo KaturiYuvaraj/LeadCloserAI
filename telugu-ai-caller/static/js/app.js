@@ -1083,8 +1083,8 @@ Your registered phone / client phone will ring shortly.`);
         if (pageActions) pageActions.style.display = "none";
         if (window.loadAnalyticsDashboard) window.loadAnalyticsDashboard();
       } else if (viewName === "integrations") {
-        pageTitle.innerText = "System Architecture & Provider Console";
-        pageSub.innerText = "Manage backend telephony carriers, speech models, lead discovery & webhook connectors";
+        pageTitle.innerText = "Ecosystem & Business Integrations";
+        pageSub.innerText = "Connect LeadCloser AI seamlessly with your CRMs, spreadsheets, and messaging platforms";
         if (pageActions) pageActions.style.display = "none";
       }
     }
@@ -1144,7 +1144,8 @@ Your registered phone / client phone will ring shortly.`);
         if (btn) btn.classList.add("active");
         window.scrollToSection("employeesSection");
       } else if (targetSectionId === "integrationsSection") {
-        window.openAdminSettingsModal();
+        window.switchMainTab("crm");
+        window.switchCrmView("integrations");
       } else {
         const btn = document.getElementById("tabBtnLanding");
         if (btn) btn.classList.add("active");
@@ -1523,16 +1524,13 @@ Please check your API keys or network connection in Settings.`);
     }
   };
 
-    // Admin Console / System Settings Modal
+    // Admin Console / System Settings Modal -> Securely route to Business Integrations
   window.openAdminSettingsModal = () => {
-    const modal = document.getElementById("adminSettingsModal");
-    if (modal) modal.classList.add("open");
+    window.switchMainTab("crm");
+    window.switchCrmView("integrations");
   };
 
-  window.closeAdminSettingsModal = () => {
-    const modal = document.getElementById("adminSettingsModal");
-    if (modal) modal.classList.remove("open");
-  };
+  window.closeAdminSettingsModal = () => {};
 
   window.openConfigureProviderModal = (providerType, providerName) => {
     const modal = document.getElementById("providerConfigModal");
