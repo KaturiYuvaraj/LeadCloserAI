@@ -71,6 +71,7 @@ class VoiceOffer(BaseModel):
     lead_id: Optional[int] = None
     lang: Optional[str] = None
     wait_ms: Optional[int] = None
+    employee_id: Optional[int] = None  # AI employee to use; default: the live one
 
 
 class IceCandidateIn(BaseModel):
@@ -113,7 +114,8 @@ async def voice_offer(offer: VoiceOffer):
     created: Dict[str, Any] = {}
 
     async def on_connection(connection: SmallWebRTCConnection):
-        session = WebCallSession(connection, lead_id=offer.lead_id, language=offer.lang, wait_ms=offer.wait_ms)
+        session = WebCallSession(connection, lead_id=offer.lead_id, language=offer.lang, wait_ms=offer.wait_ms,
+                                 employee_id=offer.employee_id)
         _sessions[session.session_id] = session
         _session_created[session.session_id] = time.time()
         created["session"] = session

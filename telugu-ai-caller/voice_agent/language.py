@@ -103,10 +103,12 @@ UserTextCallback = Callable[[str, str], Awaitable[None]]
 class LanguageRouter(FrameProcessor):
     """Keeps the LLM reply language and the TTS voice matched to the caller's language."""
 
-    def __init__(self, initial_language: str, on_user_text: Optional[UserTextCallback] = None, **kwargs):
+    def __init__(self, initial_language: str, on_user_text: Optional[UserTextCallback] = None,
+                 hint_provider: Optional[Callable[[str], Optional[str]]] = None, **kwargs):
         super().__init__(**kwargs)
         self._current = initial_language if initial_language in VOICES else "te-IN"
         self._on_user_text = on_user_text
+        self._hint_provider = hint_provider  # extra per-message guidance (caller behaviour, knowledge)
 
     @property
     def current_language(self) -> str:
@@ -127,7 +129,9 @@ class LanguageRouter(FrameProcessor):
                 delta=SarvamTTSService.Settings(voice=VOICES[language], language=language)
             )
         name = LANGUAGE_NAMES.get(self._current, "the customer's language")
-        return f"{text.strip()}\n(Reply only in {name}.)", switch_frame
+        hint = self._hint_provider(text) if self._hint_provider else None
+        hint = f" {hint}" if hint else ""
+        return f"{text.strip()}\n(Reply only in {name}.{hint})", switch_frame
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)

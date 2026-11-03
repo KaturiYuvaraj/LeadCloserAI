@@ -627,7 +627,8 @@ def save_call_record(call_data: Dict[str, Any]) -> int:
         call = Call(
             account_id=1,
             lead_id=lead_id,
-            direction="out",
+            employee_id=call_data.get("employee_id"),
+            direction=call_data.get("direction") or "out",
             channel="manual" if call_data.get("call_type") == "web" else "instant",
             state=call_data.get("status", "completed"),
             provider_call_sid=call_data.get("call_sid") or None,
@@ -645,8 +646,12 @@ def save_call_record(call_data: Dict[str, Any]) -> int:
                 "extracted_timeline": call_data.get("extracted_timeline", ""),
                 "extracted_requirements": call_data.get("extracted_requirements", ""),
                 "objections_raised": call_data.get("objections_raised", ""),
-                "action_items": call_data.get("action_items", "")
+                "action_items": call_data.get("action_items", ""),
+                # voice engine call analytics: end reason, interruptions, languages, actions, …
+                **({"analytics": call_data["analytics"]} if call_data.get("analytics") else {}),
             },
+            ended_by=call_data.get("ended_by"),
+            latency_avg_ms=call_data.get("latency_avg_ms"),
             transcript=transcript_parsed,
             recording_url=call_data.get("recording_url", "")
         )
