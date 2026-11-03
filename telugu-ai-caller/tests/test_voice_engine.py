@@ -166,3 +166,105 @@ def test_exotel_stream_rejects_non_exotel_handshake():
             with pytest.raises(WebSocketDisconnect) as closed:
                 ws.receive_text()
             assert closed.value.code == 1008
+
+
+# ---------------------------------------------------------------------------- Vobiz
+
+import base64  # noqa: E402
+import json  # noqa: E402
+
+from pipecat.frames.frames import InputAudioRawFrame, InterruptionFrame, OutputAudioRawFrame  # noqa: E402
+from pipecat.processors.frame_processor import FrameProcessorSetup  # noqa: E402
+
+from voice_agent.vobiz import (  # noqa: E402
+    VOBIZ_SAMPLE_RATE,
+    VobizFrameSerializer,
+    build_answer_xml,
+    parse_start_message,
+)
+
+
+def test_answer_xml_streams_to_engine_then_hangs_up():
+    xml = build_answer_xml("wss://example.com/api/voice/vobiz/stream?lead_id=1&lang=te-IN")
+    assert '<Stream bidirectional="true"' in xml
+    assert 'contentType="audio/x-l16;rate=16000"' in xml
+    assert "wss://example.com/api/voice/vobiz/stream?lead_id=1&amp;lang=te-IN</Stream>" in xml
+    assert xml.index("</Stream>") < xml.index("<Hangup/>")
+
+
+def test_parse_start_message_reads_nested_and_top_level_fields():
+    data = parse_start_message({
+        "event": "start", "streamId": "s-top",
+        "start": {"callId": "c1", "mediaFormat": {"encoding": "audio/x-mulaw", "sampleRate": 8000}},
+    })
+    assert data["stream_id"] == "s-top"
+    assert data["call_id"] == "c1"
+    assert data["encoding"] == "mulaw"
+    assert data["sample_rate"] == 8000
+
+    data = parse_start_message({"event": "start", "start": {"streamId": "s-nested"}})
+    assert data["stream_id"] == "s-nested"
+    assert data["encoding"] == "l16"
+    assert data["sample_rate"] == VOBIZ_SAMPLE_RATE
+
+
+async def _setup_serializer(serializer, rate=16000):
+    class _Setup:
+        audio_in_sample_rate = rate
+    await serializer.setup(_Setup())
+
+
+@pytest.mark.asyncio
+async def test_vobiz_serializer_audio_round_trip():
+    serializer = VobizFrameSerializer(stream_id="s1")
+    await _setup_serializer(serializer)
+
+    pcm = (b"\x10\x00\xf0\xff" * 800)  # 100 ms of 16 kHz 16-bit audio
+    inbound = await serializer.deserialize(json.dumps({
+        "event": "media", "streamId": "s1", "media": {"payload": base64.b64encode(pcm).decode()},
+    }))
+    assert isinstance(inbound, InputAudioRawFrame)
+    assert inbound.sample_rate == 16000 and inbound.audio == pcm
+
+    outbound = json.loads(await serializer.serialize(OutputAudioRawFrame(audio=pcm, sample_rate=16000, num_channels=1)))
+    assert outbound["event"] == "playAudio"
+    assert outbound["streamId"] == "s1"
+    assert outbound["media"]["contentType"] == "audio/x-l16"
+    assert outbound["media"]["sampleRate"] == 16000
+    assert base64.b64decode(outbound["media"]["payload"]) == pcm
+
+
+@pytest.mark.asyncio
+async def test_vobiz_serializer_barge_in_and_ignored_events():
+    serializer = VobizFrameSerializer(stream_id="s2")
+    await _setup_serializer(serializer)
+    assert json.loads(await serializer.serialize(InterruptionFrame())) == {"event": "clearAudio", "streamId": "s2"}
+    assert await serializer.deserialize(json.dumps({"event": "playedStream", "name": "tts"})) is None
+    assert await serializer.deserialize("not json") is None
+
+
+def test_vobiz_answer_endpoint_returns_stream_xml():
+    from starlette.testclient import TestClient
+    import main
+
+    with TestClient(main.app) as client:
+        resp = client.post("/api/voice/vobiz/answer?lead_id=7",
+                           data={"From": "+919876543210", "To": "+918040000000", "CallUUID": "call-1"})
+        assert resp.status_code == 200
+        assert resp.headers["content-type"].startswith("application/xml")
+        assert "/api/voice/vobiz/stream?lead_id=7" in resp.text
+        assert "call_id=call-1" in resp.text
+        assert "<Hangup/>" in resp.text
+
+
+def test_vobiz_stream_rejects_missing_stream_id():
+    from starlette.testclient import TestClient
+    from starlette.websockets import WebSocketDisconnect
+    import main
+
+    with TestClient(main.app) as client:
+        with client.websocket_connect("/api/voice/vobiz/stream") as ws:
+            ws.send_json({"event": "start", "start": {}})
+            with pytest.raises(WebSocketDisconnect) as closed:
+                ws.receive_text()
+            assert closed.value.code == 1008

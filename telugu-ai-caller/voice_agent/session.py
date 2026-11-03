@@ -10,6 +10,8 @@ Pipeline (same for both):
 - PhoneCallSession: phone calls over the Exotel Voicebot WebSocket (8 kHz PCM).
                     The lead comes from the `lead_id` custom parameter (outbound)
                     or is matched by the caller's number (inbound).
+- VobizCallSession: phone calls over a Vobiz bidirectional stream (16 kHz Linear16),
+                    including numbers rented from Sarvam (powered by Vobiz).
 
 When a call ends the transcript is summarized with the existing sales agent and
 saved through `save_call_record`, exactly like the classic engine.
@@ -65,6 +67,7 @@ from database import clean_phone, get_all_leads, get_lead_by_id, save_call_recor
 from services.language_utils import detect_language as detect_text_language
 from services.sales_agent import sales_agent
 from voice_agent.language import VOICES, LanguageRouter
+from voice_agent.vobiz import VOBIZ_SAMPLE_RATE, VobizFrameSerializer
 
 STT_MODEL = os.getenv("VOICE_STT_MODEL", "saaras:v3")
 LLM_MODEL = os.getenv("VOICE_LLM_MODEL", "sarvam-105b-conversations")
@@ -465,6 +468,7 @@ class PhoneCallSession(BaseCallSession):
     """Phone call over the Exotel Voicebot WebSocket (bidirectional 8 kHz PCM)."""
 
     call_type = "phone"
+    provider = "exotel"
 
     def __init__(self, websocket, call_data: Dict[str, Any], query_params: Optional[Dict[str, str]] = None):
         custom = parse_custom_parameters(call_data.get("custom_parameters"))
@@ -514,3 +518,38 @@ class PhoneCallSession(BaseCallSession):
 
     def extra_result_fields(self) -> Dict[str, Any]:
         return {"call_sid": self.call_sid}
+
+
+class VobizCallSession(PhoneCallSession):
+    """Phone call over a Vobiz bidirectional stream (also Sarvam-rented numbers)."""
+
+    provider = "vobiz"
+
+    def __init__(self, websocket, call_data: Dict[str, Any], query_params: Optional[Dict[str, str]] = None):
+        super().__init__(websocket, call_data, query_params)
+        self.inbound_encoding = call_data.get("encoding", "l16")
+        self.inbound_sample_rate = int(call_data.get("sample_rate") or VOBIZ_SAMPLE_RATE)
+
+    def create_transport(self) -> BaseTransport:
+        serializer = VobizFrameSerializer(
+            stream_id=self.stream_sid,
+            inbound_encoding=self.inbound_encoding,
+            inbound_sample_rate=self.inbound_sample_rate,
+        )
+        return FastAPIWebsocketTransport(
+            websocket=self.websocket,
+            params=FastAPIWebsocketParams(
+                audio_in_enabled=True,
+                audio_out_enabled=True,
+                add_wav_header=False,
+                serializer=serializer,
+            ),
+        )
+
+    def pipeline_params(self) -> PipelineParams:
+        return PipelineParams(
+            enable_metrics=True,
+            enable_usage_metrics=True,
+            audio_in_sample_rate=VOBIZ_SAMPLE_RATE,
+            audio_out_sample_rate=VOBIZ_SAMPLE_RATE,
+        )

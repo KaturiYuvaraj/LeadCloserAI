@@ -70,6 +70,29 @@ python tests/fake_exotel/client.py --wav tests/fake_exotel/samples/three_questio
 Add `--url ws://127.0.0.1:<port>/api/voice/exotel/stream` if the app isn't on port 8000.
 These runs use real Sarvam calls, so they cost a few rupees each.
 
+### Phone calls (Vobiz, including numbers rented from Sarvam)
+
+Sarvam's "Rent from Sarvam" numbers are Vobiz numbers. With a Vobiz number connected to
+your own application, calls run on this engine with 16 kHz Linear16 audio:
+
+1. Expose the app over HTTPS (as above).
+2. In Vobiz, create an **application**:
+   - **Answer URL:** `https://<tunnel-host>/api/voice/vobiz/answer` (POST)
+   - **Hangup URL:** `https://<tunnel-host>/api/voice/vobiz/hangup` (POST)
+3. Attach your number to that application.
+
+The Answer URL returns `<Stream>` XML pointing at `wss://<host>/api/voice/vobiz/stream`
+(the same host the request came in on; set `VOICE_PUBLIC_WS_BASE=wss://your-host` to
+override). Add `?lead_id=<id>&lang=te-IN` to the Answer URL for outbound calls to a lead.
+
+Test it without an account. The fake caller fetches the Answer URL like Vobiz does:
+
+```powershell
+python tests/fake_exotel/client.py --provider vobiz --wav tests/fake_exotel/samples/three_questions.wav --lead-id 1
+```
+
+Use `--answer-url http://127.0.0.1:<port>/api/voice/vobiz/answer` if the app isn't on port 8000.
+
 ## Main routes
 
 - `GET /api/leads`, `POST /api/leads`, `PUT /api/leads/{id}`: manage CRM leads.
