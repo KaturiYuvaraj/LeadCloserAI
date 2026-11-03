@@ -268,3 +268,63 @@ def test_vobiz_stream_rejects_missing_stream_id():
             with pytest.raises(WebSocketDisconnect) as closed:
                 ws.receive_text()
             assert closed.value.code == 1008
+
+
+# ---------------------------------------------------------------------------- AI ends the call
+
+from pipecat.frames.frames import LLMFullResponseEndFrame, LLMFullResponseStartFrame, LLMTextFrame  # noqa: E402
+
+from voice_agent.conclusion import CALL_COMPLETED_MARKER, CallConclusionFilter, split_marker  # noqa: E402
+
+
+@pytest.mark.parametrize("text,emit,hold,found", [
+    ("Goodbye! [CALL_COMPLETED]", "Goodbye! ", "", True),
+    ("Goodbye! [CALL", "Goodbye! ", "[CALL", False),
+    ("Price is [about] 25k", "Price is [about] 25k", "", False),
+    ("Thanks [", "Thanks ", "[", False),
+    ("no marker here", "no marker here", "", False),
+])
+def test_split_marker(text, emit, hold, found):
+    assert split_marker(text) == (emit, hold, found)
+
+
+async def _run_filter(chunks, monkeypatch):
+    """Feed streamed tokens through the filter; return (text sent on to TTS, concluded?)."""
+    from pipecat.processors.frame_processor import FrameProcessor
+
+    async def skip_base_processing(self, frame, direction):
+        return None
+
+    monkeypatch.setattr(FrameProcessor, "process_frame", skip_base_processing)
+
+    spoken, concluded = [], []
+
+    async def on_concluded():
+        concluded.append(True)
+
+    flt = CallConclusionFilter(on_concluded)
+
+    async def capture(frame, direction=None):
+        if isinstance(frame, LLMTextFrame):
+            spoken.append(frame.text)
+
+    monkeypatch.setattr(flt, "push_frame", capture)
+    for frame in [LLMFullResponseStartFrame(), *[LLMTextFrame(c) for c in chunks], LLMFullResponseEndFrame()]:
+        await flt.process_frame(frame, None)
+    return "".join(spoken), bool(concluded)
+
+
+@pytest.mark.asyncio
+async def test_filter_removes_marker_split_across_tokens(monkeypatch):
+    text, concluded = await _run_filter(["ఉంటానండి, సెలవు! ", "[CALL", "_COMPL", "ETED]"], monkeypatch)
+    assert CALL_COMPLETED_MARKER not in text
+    assert "[" not in text
+    assert text.strip() == "ఉంటానండి, సెలవు!"
+    assert concluded
+
+
+@pytest.mark.asyncio
+async def test_filter_passes_normal_reply_and_brackets(monkeypatch):
+    text, concluded = await _run_filter(["Our price is ", "[starting] ₹25,000", ". Shall we book a demo?"], monkeypatch)
+    assert text == "Our price is [starting] ₹25,000. Shall we book a demo?"
+    assert not concluded
