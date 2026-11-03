@@ -32,6 +32,7 @@ from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.frames.frames import (
     BotStartedSpeakingFrame,
     BotStoppedSpeakingFrame,
+    EndFrame,
     Frame,
     InterruptionFrame,
     LLMFullResponseEndFrame,
@@ -66,6 +67,7 @@ from config import SARVAM_API_KEY
 from database import clean_phone, get_all_leads, get_lead_by_id, save_call_record
 from services.language_utils import detect_language as detect_text_language
 from services.sales_agent import sales_agent
+from voice_agent.conclusion import CallConclusionFilter
 from voice_agent.language import VOICES, LanguageRouter
 from voice_agent.vobiz import VOBIZ_SAMPLE_RATE, VobizFrameSerializer
 
@@ -188,6 +190,7 @@ class SpeakingObserver(BaseObserver):
         elif isinstance(frame, BotStoppedSpeakingFrame) and self._bot:
             self._bot = False
             self._session.send_event("speaking", who="bot", active=False)
+            await self._session.on_bot_stopped_speaking()
         elif isinstance(frame, UserStartedSpeakingFrame) and not self._user:
             self._user = True
             self._session.send_event("speaking", who="user", active=True)
@@ -218,6 +221,8 @@ class BaseCallSession:
         self.router: Optional[LanguageRouter] = None
         self.result: Optional[Dict[str, Any]] = None
         self.done = asyncio.Event()
+        self.hangup_pending = False
+        self._hangup_fallback: Optional[asyncio.Task] = None
 
     # ------------------------------------------------------------------ hooks for subclasses
     def send_event(self, kind: str, **payload):
@@ -275,6 +280,29 @@ class BaseCallSession:
         if self.task:
             await self.task.cancel()
 
+    # ------------------------------------------------------------------ AI ends the call
+    async def _on_conversation_concluded(self):
+        """The AI said goodbye ([CALL_COMPLETED]): end the call once the goodbye has been spoken."""
+        if self.hangup_pending:
+            return
+        logger.info(f"{self.call_type.title()} call {self.session_id}: AI concluded the conversation")
+        self.hangup_pending = True
+        self.send_event("status", text="👋 Wrapping up the call…")
+        # Safety net in case the "bot stopped speaking" signal never arrives
+        self._hangup_fallback = asyncio.create_task(self._end_after(15.0))
+
+    async def on_bot_stopped_speaking(self):
+        if self.hangup_pending:
+            await self._end_after(0.8)  # short pause after the goodbye
+
+    async def _end_after(self, delay: float):
+        await asyncio.sleep(delay)
+        if not self.task or self.done.is_set() or self.ended_by == "agent":
+            return
+        self.ended_by = "agent"
+        self.send_event("call_ending", reason="conversation_completed")
+        await self.task.queue_frame(EndFrame())
+
     # ------------------------------------------------------------------ run
     async def run(self):
         try:
@@ -323,6 +351,7 @@ class BaseCallSession:
             self.router,
             context_pair.user(),
             llm,
+            CallConclusionFilter(self._on_conversation_concluded),
             ReplyTap(self._on_reply),
             tts,
             transport.output(),
@@ -366,6 +395,8 @@ class BaseCallSession:
         async def on_disconnected(transport, client):
             if self.ended_by == "system":
                 self.ended_by = "caller"
+            if self._hangup_fallback:
+                self._hangup_fallback.cancel()
             await self.task.cancel()
 
         self.register_transport_handlers(transport)

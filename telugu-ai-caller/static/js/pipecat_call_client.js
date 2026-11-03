@@ -218,6 +218,11 @@ class PipecatCallClient {
           this.onResponseTime(msg.total_ms, { stt_ms: b.stt || 0, llm_ms: b.llm || 0, tts_first_ms: b.tts || 0 });
         }
         break;
+      case "call_ending":
+        // The AI said goodbye and is ending the call: run the normal end-of-call flow
+        this.status("👋 కాల్ ముగుస్తోంది... (AI ended the call)");
+        setTimeout(() => this.endCall(false), 300);
+        break;
       case "call_summary":
         this.finishWithSummary(msg);
         break;
