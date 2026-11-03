@@ -5,7 +5,10 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-  const caller = new VoiceCallClient();
+  // Real-time Pipecat engine when the server enables it (/api/voice/config.js), else the classic engine
+  const usePipecat = window.LC_VOICE_ENGINE === "pipecat" && typeof window.PipecatCallClient === "function";
+  const caller = usePipecat ? new PipecatCallClient() : new VoiceCallClient();
+  console.info(`Voice engine: ${usePipecat ? "pipecat (real-time)" : "classic"}`);
   let selectedLead = null;
   let campaignPollInterval = null;
   let selectedCallLanguage = ""; // auto-detect

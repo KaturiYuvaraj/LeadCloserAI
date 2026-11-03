@@ -14,3 +14,7 @@ sqlalchemy>=2.0.0
 alembic>=1.13.0
 psycopg[binary]>=3.1.0
 phonenumbers>=8.13.0
+
+# Real-time voice engine (Pipecat). Needs Python 3.10–3.13; on 3.14 the app
+# still runs and the dashboard falls back to the classic /ws/web-call engine.
+pipecat-ai[sarvam,silero,webrtc,openai]==1.14.0; python_version < "3.14"

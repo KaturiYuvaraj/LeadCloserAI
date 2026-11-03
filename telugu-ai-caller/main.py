@@ -75,6 +75,13 @@ app.include_router(messaging.router)
 app.include_router(developer.router)
 app.include_router(telephony.router)
 
+# Real-time voice engine (Pipecat). Optional: without it the dashboard uses the classic engine.
+try:
+    from routers import voice
+    app.include_router(voice.router)
+except ImportError as e:
+    logger.warning(f"Real-time voice engine unavailable ({e}); using the classic /ws/web-call engine.")
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host=HOST, port=PORT, reload=True)
