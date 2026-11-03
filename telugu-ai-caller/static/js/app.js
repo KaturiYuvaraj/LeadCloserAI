@@ -650,6 +650,11 @@ Updated: ${data.updated}`);
     const targetSel = document.getElementById("campaignTargetSelect")?.value || "new";
     const modeRadio = document.querySelector('input[name="campMode"]:checked');
     const mode = modeRadio ? modeRadio.value : "simulation";
+    const consentConfirmed = Boolean(document.getElementById("campaignConsent")?.checked);
+    if ((mode === "phone" || mode === "telephony") && !consentConfirmed) {
+      alert("Please confirm these contacts consented to be called before starting real phone calls.");
+      return;
+    }
 
     const btn = document.getElementById("startCampaignActionBtn");
     const origText = btn ? btn.innerText : "";
@@ -666,7 +671,8 @@ Updated: ${data.updated}`);
           mode: mode,
           delay_seconds: 2,
           target: targetSel,
-          lead_id: targetSel === "selected" && selectedLead ? selectedLead.id : null
+          lead_id: targetSel === "selected" && selectedLead ? selectedLead.id : null,
+          consent_confirmed: consentConfirmed
         })
       });
 

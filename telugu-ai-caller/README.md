@@ -93,6 +93,38 @@ python tests/fake_exotel/client.py --provider vobiz --wav tests/fake_exotel/samp
 
 Use `--answer-url http://127.0.0.1:<port>/api/voice/vobiz/answer` if the app isn't on port 8000.
 
+## Outbound calling (dialer)
+
+Upload leads, then **Campaign → Real Phone** (tick the consent box) or `POST /api/dialer/campaigns`.
+The dialer (`voice_agent/dialer.py`) queues each lead as a `call_jobs` row and, every second:
+
+1. checks the **calling rules** (`voice_agent/rules.py`):
+   - account approved
+   - Do-Not-Call / opt-out
+   - valid number
+   - consent (imported leads need the consent tick)
+   - calling hours and days in IST, clamped to 9 AM–9 PM
+   - recently called
+   - weekly limit
+   - optional minimum credit
+2. dials through the provider (`voice_agent/outbound.py`), using at most `DIALER_MAX_LINES` lines;
+3. moves calls on from provider callbacks:
+   - answered → the call runs on the real-time engine → completed (outcome saved);
+   - no answer / busy → retry after 2 h, about a day later, then 2 days later → not reachable.
+
+Providers are set with `DIALER_PROVIDER`:
+- `vobiz` (also numbers rented from Sarvam)
+- `exotel` (needs `EXOTEL_FLOW_URL`, a call flow with the Voicebot applet)
+- `fake`: a simulated phone network for testing without a number. Numbers ending in **0** don't
+  answer, numbers ending in **9** are busy, and others answer and talk using the fake caller.
+
+Set `VOICE_PUBLIC_BASE_URL` to the public https address the provider calls back on.
+
+Routes:
+- `/api/dialer/campaigns`, `/api/dialer/call-now/{lead_id}`, `/api/dialer/status`, `/api/dialer/jobs`
+- `/api/dialer/pause|resume|stop`
+- The CRM's `/api/campaign/*` buttons use the dialer in Real Phone mode.
+
 ## Main routes
 
 - `GET /api/leads`, `POST /api/leads`, `PUT /api/leads/{id}`: manage CRM leads.

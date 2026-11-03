@@ -223,6 +223,7 @@ class BaseCallSession:
         self.done = asyncio.Event()
         self.hangup_pending = False
         self._hangup_fallback: Optional[asyncio.Task] = None
+        self.job_id: Optional[int] = None  # outbound dialer job (voice_agent/dialer.py), if any
 
     # ------------------------------------------------------------------ hooks for subclasses
     def send_event(self, kind: str, **payload):
@@ -453,6 +454,10 @@ class BaseCallSession:
             "avg_reply_gap_s": avg_latency,
             "ended_by": self.ended_by,
         }
+        if self.job_id:
+            from voice_agent.dialer import call_queue
+            await asyncio.to_thread(call_queue.on_call_saved, self.job_id, call_id,
+                                    intel.get("deal_stage") or "completed")
         self.send_event("call_summary", **self.result)
         self.done.set()
 
@@ -521,6 +526,8 @@ class PhoneCallSession(BaseCallSession):
         self.call_sid = str(call_data.get("call_id") or "")
         self.caller = caller
         self.callee = callee
+        job_id = str(params.get("job_id") or "")
+        self.job_id = int(job_id) if job_id.isdigit() else None
 
     def create_transport(self) -> BaseTransport:
         serializer = ExotelFrameSerializer(stream_sid=self.stream_sid, call_sid=self.call_sid)

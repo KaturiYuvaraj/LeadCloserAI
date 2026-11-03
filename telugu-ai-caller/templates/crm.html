@@ -4188,12 +4188,16 @@ input[type="checkbox"] {
             <input type="radio" name="campMode" value="phone" />
             <div style="display: flex; flex-direction: column; gap: 2px;">
               <span style="font-weight: 700; font-size: 0.88rem; color: #18181b;">📞 Real Phone Telephony</span>
-              <span style="font-size: 0.76rem; color: #71717a;">Twilio / Exotel Outbound Telephony to Real Mobile Devices</span>
+              <span style="font-size: 0.76rem; color: #71717a;">Real calls to clients' phones via Sarvam / Vobiz or Exotel · calling hours, Do-Not-Call and retries applied</span>
             </div>
           </label>
         </div>
       </div>
 
+      <label for="campaignConsent" style="display: flex; gap: 10px; align-items: flex-start; font-size: 0.8rem; color: #3f3f46; line-height: 1.4; cursor: pointer;">
+        <input type="checkbox" id="campaignConsent" style="margin-top: 3px;" />
+        <span>I confirm these contacts <strong>consented to be called</strong> by us (they enquired, filled a form, or are existing customers). Calling people who haven't consented can breach telemarketing rules. <em>Required for Real Phone mode.</em></span>
+      </label>
       <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 22px; border-top: 1px solid var(--border-light); padding-top: 16px;">
         <button class="btn btn-outline" id="cancelCampaignBtn" onclick="window.closeCampaignModal()" style="padding: 10px 22px; border-radius: 9999px; font-weight: 600; font-size: 0.88rem;">Cancel</button>
         <button class="btn btn-campaign" id="startCampaignActionBtn" style="padding: 10px 24px; border-radius: 9999px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px;">

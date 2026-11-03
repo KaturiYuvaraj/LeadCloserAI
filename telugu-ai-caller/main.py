@@ -40,7 +40,14 @@ async def lifespan(app: FastAPI):
     init_db()
     sync_providers_with_db()
     logger.info("Database & Multi-Provider Architecture initialized. Telugu AI Caller ready.")
+    try:  # outbound call queue (needs the real-time voice engine)
+        from voice_agent.dialer import call_queue
+        call_queue.start()
+    except ImportError:
+        call_queue = None
     yield
+    if call_queue:
+        await call_queue.stop()
 
 
 app = FastAPI(
@@ -77,8 +84,9 @@ app.include_router(telephony.router)
 
 # Real-time voice engine (Pipecat). Optional: without it the dashboard uses the classic engine.
 try:
-    from routers import voice
+    from routers import voice, dialer
     app.include_router(voice.router)
+    app.include_router(dialer.router)
 except ImportError as e:
     logger.warning(f"Real-time voice engine unavailable ({e}); using the classic /ws/web-call engine.")
 

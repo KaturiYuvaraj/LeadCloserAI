@@ -47,6 +47,7 @@ from pipecat.transports.smallwebrtc.request_handler import (
 from pipecat.runner.utils import parse_telephony_websocket
 
 from voice_agent.session import BaseCallSession, PhoneCallSession, VobizCallSession, WebCallSession
+from voice_agent.dialer import call_queue
 from voice_agent.vobiz import build_answer_xml, parse_start_message
 
 router = APIRouter(tags=["voice"])
@@ -174,6 +175,33 @@ async def voice_summary(session_id: str, wait_seconds: int = 25):
     return session.result
 
 
+@router.api_route("/api/voice/exotel/status", methods=["GET", "POST"])
+async def exotel_voice_status(request: Request):
+    """Exotel StatusCallback for calls placed by the dialer (terminal events)."""
+    params = dict(request.query_params)
+    try:
+        body = await request.json()
+        if isinstance(body, dict):
+            params.update({k: str(v) for k, v in body.items() if not isinstance(v, (dict, list))})
+    except Exception:
+        try:
+            form = await request.form()
+            params.update({k: str(v) for k, v in form.items()})
+        except Exception:
+            pass
+    status = params.get("Status") or params.get("CallStatus") or ""
+    duration = params.get("ConversationDuration") or params.get("Duration") or "0"
+    logger.info(f"Exotel status · call {params.get('CallSid')} · {status} · {duration}s · job {params.get('job_id')}")
+    job_id = params.get("job_id", "")
+    if job_id.isdigit():
+        try:
+            seconds = int(float(duration))
+        except ValueError:
+            seconds = 0
+        await asyncio.to_thread(call_queue.on_provider_hangup, int(job_id), status, seconds, "")
+    return {"success": True}
+
+
 @router.websocket("/api/voice/exotel/stream")
 async def exotel_voice_stream(websocket: WebSocket):
     """Exotel Voicebot applet stream: one phone call on the real-time engine."""
@@ -194,6 +222,8 @@ async def exotel_voice_stream(websocket: WebSocket):
     session = PhoneCallSession(websocket, call_data, dict(websocket.query_params))
     _sessions[session.session_id] = session
     _session_created[session.session_id] = time.time()
+    if session.job_id:
+        await asyncio.to_thread(call_queue.on_answered, session.job_id)
     logger.info(
         f"Phone call {session.session_id} · Exotel call {session.call_sid} · "
         f"{session.direction} · from {session.caller} to {session.callee} · lead {session.lead_id}"
@@ -202,6 +232,12 @@ async def exotel_voice_stream(websocket: WebSocket):
 
 
 # ---------------------------------------------------------------------------- Vobiz
+
+def _to_int(value: Any) -> int:
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return 0
 
 def _public_ws_base(request: Request) -> str:
     """wss://host for the stream URL, honouring tunnels/proxies (or VOICE_PUBLIC_WS_BASE)."""
@@ -235,8 +271,11 @@ async def vobiz_answer(request: Request):
             "from": params.get("From", params.get("from", "")),
             "to": params.get("To", params.get("to", "")),
             "call_id": params.get("CallUUID", params.get("call_id", "")),
+            "job_id": params.get("job_id", ""),
         }.items() if value
     }
+    if stream_query.get("job_id", "").isdigit():
+        await asyncio.to_thread(call_queue.on_answered, int(stream_query["job_id"]))
     stream_url = f"{_public_ws_base(request)}/api/voice/vobiz/stream"
     if stream_query:
         stream_url += "?" + urlencode(stream_query)
@@ -250,6 +289,12 @@ async def vobiz_hangup(request: Request):
     params = await _request_params(request)
     logger.info(f"Vobiz hangup · call {params.get('CallUUID')} · status {params.get('CallStatus')} · "
                 f"duration {params.get('Duration')}s · cause {params.get('HangupCause')}")
+    job_id = params.get("job_id", "")
+    if job_id.isdigit():
+        await asyncio.to_thread(
+            call_queue.on_provider_hangup, int(job_id), params.get("CallStatus", ""),
+            _to_int(params.get("Duration")), params.get("HangupCause", ""),
+        )
     return {"success": True}
 
 
