@@ -1026,7 +1026,7 @@ Your registered phone / client phone will ring shortly.`);
 
   
   // ===================================================================
-  // CRM VIEW SWITCHER (Dashboard, Leads, Calling Station, Campaigns, Automations, Analytics, Integrations)
+  // CRM VIEW SWITCHER (Dashboard, Leads, Calling Station, Campaigns, Automations, Analytics)
   // ===================================================================
   window.switchCrmView = (viewName) => {
     // 1. Update left sidebar active button
@@ -1041,8 +1041,7 @@ Your registered phone / client phone will ring shortly.`);
       leads: document.getElementById("crmViewLeads"),
       campaigns: document.getElementById("crmViewCampaigns"),
       automations: document.getElementById("crmViewAutomations"),
-      analytics: document.getElementById("crmViewAnalytics"),
-      integrations: document.getElementById("crmViewIntegrations")
+      analytics: document.getElementById("crmViewAnalytics")
     };
 
     Object.keys(views).forEach(k => {
@@ -1082,10 +1081,7 @@ Your registered phone / client phone will ring shortly.`);
         pageSub.innerText = "Conversion funnels, speech sentiment breakdown, and agent performance";
         if (pageActions) pageActions.style.display = "none";
         if (window.loadAnalyticsDashboard) window.loadAnalyticsDashboard();
-      } else if (viewName === "integrations") {
-        pageTitle.innerText = "Ecosystem & Business Integrations";
-        pageSub.innerText = "Connect LeadCloser AI seamlessly with your CRMs, spreadsheets, and messaging platforms";
-        if (pageActions) pageActions.style.display = "none";
+
       }
     }
   };
@@ -1104,11 +1100,7 @@ Your registered phone / client phone will ring shortly.`);
       window.switchCrmView("analytics");
       return;
     }
-    if (tabName === "integrations") {
-      window.switchMainTab("crm");
-      window.switchCrmView("integrations");
-      return;
-    }
+
     if (tabName === "crm") {
       document.body.classList.add("crm-mode");
       if (viewLanding) viewLanding.style.display = "none";
@@ -1143,9 +1135,7 @@ Your registered phone / client phone will ring shortly.`);
         const btn = document.getElementById("tabBtnEmployees");
         if (btn) btn.classList.add("active");
         window.scrollToSection("employeesSection");
-      } else if (targetSectionId === "integrationsSection") {
-        window.switchMainTab("crm");
-        window.switchCrmView("integrations");
+
       } else {
         const btn = document.getElementById("tabBtnLanding");
         if (btn) btn.classList.add("active");
@@ -1524,10 +1514,10 @@ Please check your API keys or network connection in Settings.`);
     }
   };
 
-    // Admin Console / System Settings Modal -> Securely route to Business Integrations
+    // Admin Console / System Settings Modal -> Redirect to Dashboard
   window.openAdminSettingsModal = () => {
     window.switchMainTab("crm");
-    window.switchCrmView("integrations");
+    window.switchCrmView("dashboard");
   };
 
   window.closeAdminSettingsModal = () => {};
@@ -1655,11 +1645,7 @@ Please check your API keys or network connection in Settings.`);
       const data = await resp.json();
       if (!resp.ok || !data.success) {
         if (data.error && data.error.includes("not configured")) {
-          const goSetup = confirm(`⚠️ ${data.error}\n\nWould you like to open Integrations Settings now to configure ${provider.toUpperCase()}?`);
-          if (goSetup) {
-            document.getElementById("discoverLeadsModal")?.classList.remove("open");
-            window.openAdminSettingsModal();
-          }
+          alert(`⚠️ ${data.error}\nPlease ensure your provider credentials are set in your environment file.`);
         } else {
           alert(`Discovery Search Failed: ${data.error || data.detail || 'Unknown error'}`);
         }
@@ -1795,10 +1781,7 @@ Please check your API keys or network connection in Settings.`);
 
       if (!resp.ok || !data.success) {
         if (data.error && data.error.includes("Neither Apollo nor Apify is configured")) {
-          const goSetup = confirm(`⚠️ ${data.error}\n\nWould you like to configure Apollo or Apify now in Integrations Settings?`);
-          if (goSetup) {
-            window.openAdminSettingsModal();
-          }
+          alert(`⚠️ ${data.error}\nPlease configure Apollo or Apify in your environment file.`);
         } else {
           alert(`Enrichment failed: ${data.error || data.detail || 'Unknown error'}`);
         }
@@ -2445,9 +2428,7 @@ Lead updated to DEMO_BOOKED.`);
   } else if (activeRoute === "analytics") {
     window.switchMainTab("crm");
     window.switchCrmView("analytics");
-  } else if (activeRoute === "integrations") {
-    window.switchMainTab("crm");
-    window.switchCrmView("integrations");
+
   }
 
 });
