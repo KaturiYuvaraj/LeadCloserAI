@@ -1,0 +1,42 @@
+{
+  "include": [
+    "telugu-ai-caller",
+    "scripts"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "telugu-ai-caller/venv"
+  ],
+  "extraPaths": [
+    "telugu-ai-caller",
+    "telugu-ai-caller/venv/Lib/site-packages",
+    "scripts"
+  ],
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "extraPaths": [
+        "telugu-ai-caller",
+        "telugu-ai-caller/venv/Lib/site-packages",
+        "scripts"
+      ]
+    },
+    {
+      "root": "scripts",
+      "extraPaths": [
+        "telugu-ai-caller",
+        "telugu-ai-caller/venv/Lib/site-packages"
+      ]
+    },
+    {
+      "root": "telugu-ai-caller",
+      "extraPaths": [
+        "telugu-ai-caller",
+        "telugu-ai-caller/venv/Lib/site-packages"
+      ]
+    }
+  ],
+  "venvPath": "telugu-ai-caller",
+  "venv": "venv"
+}
