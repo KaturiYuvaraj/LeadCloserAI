@@ -44,6 +44,55 @@ Routes: `POST /api/voice/offer` (start a call), `POST /api/voice/sessions/{id}/h
 `GET /api/voice/sessions/{id}/summary`, `GET /api/voice/config.js`. The engine lives in
 `voice_agent/` (`session.py` builds the pipeline, `language.py` routes languages).
 
+### Phone calls (Exotel)
+
+The same engine answers phone calls through Exotel's **Voicebot** applet, at
+`wss://<your-host>/api/voice/exotel/stream`.
+
+1. Expose the app over HTTPS. For development, use `cloudflared tunnel --url http://localhost:8000`.
+2. In Exotel, go to **App Bazaar** and create the flow **Call Start → Voicebot → Hangup**.
+   Set the Voicebot URL to `wss://<tunnel-host>/api/voice/exotel/stream`.
+3. In **ExoPhones**, set your number's **Installed App** to that flow.
+
+Outbound calls pass the lead as a custom parameter (`lead_id`), or append
+`?lead_id=<id>&lang=te-IN` to the stream URL. For inbound calls, the caller's
+number is matched to an existing lead (last 10 digits). Calls are saved with
+`call_type = phone` and the Exotel call SID.
+
+**Test without an Exotel account** using the fake Exotel caller. It streams a
+WAV file as 8 kHz phone audio, records the bot, and measures the reply gap:
+
+```powershell
+python tests/fake_exotel/client.py --wav tests/fake_exotel/samples/three_questions.wav --lead-id 1
+python tests/fake_exotel/client.py --wav tests/fake_exotel/samples/three_questions.wav --parallel 3   # load test
+```
+
+Add `--url ws://127.0.0.1:<port>/api/voice/exotel/stream` if the app isn't on port 8000.
+These runs use real Sarvam calls, so they cost a few rupees each.
+
+### Phone calls (Vobiz, including numbers rented from Sarvam)
+
+Sarvam's "Rent from Sarvam" numbers are Vobiz numbers. With a Vobiz number connected to
+your own application, calls run on this engine with 16 kHz Linear16 audio:
+
+1. Expose the app over HTTPS (as above).
+2. In Vobiz, create an **application**:
+   - **Answer URL:** `https://<tunnel-host>/api/voice/vobiz/answer` (POST)
+   - **Hangup URL:** `https://<tunnel-host>/api/voice/vobiz/hangup` (POST)
+3. Attach your number to that application.
+
+The Answer URL returns `<Stream>` XML pointing at `wss://<host>/api/voice/vobiz/stream`
+(the same host the request came in on; set `VOICE_PUBLIC_WS_BASE=wss://your-host` to
+override). Add `?lead_id=<id>&lang=te-IN` to the Answer URL for outbound calls to a lead.
+
+Test it without an account. The fake caller fetches the Answer URL like Vobiz does:
+
+```powershell
+python tests/fake_exotel/client.py --provider vobiz --wav tests/fake_exotel/samples/three_questions.wav --lead-id 1
+```
+
+Use `--answer-url http://127.0.0.1:<port>/api/voice/vobiz/answer` if the app isn't on port 8000.
+
 ## Main routes
 
 - `GET /api/leads`, `POST /api/leads`, `PUT /api/leads/{id}`: manage CRM leads.

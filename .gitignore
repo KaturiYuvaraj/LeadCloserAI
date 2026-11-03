@@ -46,3 +46,6 @@ desktop.ini
 *.wav
 *.mp3
 
+
+# Test fixtures: sample caller audio for the fake Exotel client (not call recordings)
+!telugu-ai-caller/tests/fake_exotel/samples/*.wav

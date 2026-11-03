@@ -1,12 +1,23 @@
 """
 Voice Router - real-time browser calls on the Pipecat engine.
 
-Flow:
+Browser flow:
   1. POST /api/voice/offer        browser sends its WebRTC offer (+ lead, language, reply wait)
                                   → server starts a WebCallSession, returns the SDP answer + session id
   2. live audio both ways over WebRTC; transcripts / speaking / latency events on the data channel
   3. POST /api/voice/sessions/{id}/hangup    end the call
   4. GET  /api/voice/sessions/{id}/summary   waits for the post-call summary and saved call id
+
+Phone flow (Exotel):
+  Exotel Voicebot applet → wss://<host>/api/voice/exotel/stream[?lead_id=..&lang=..]
+  The Exotel handshake (connected/start) is parsed, then a PhoneCallSession runs the
+  same conversation core over 8 kHz PCM and saves the call when Exotel hangs up.
+
+Phone flow (Vobiz, also numbers rented from Sarvam):
+  Vobiz application Answer URL → POST https://<host>/api/voice/vobiz/answer[?lead_id=..&lang=..]
+  We return <Stream> XML pointing at wss://<host>/api/voice/vobiz/stream; Vobiz streams
+  16 kHz Linear16 audio there and a VobizCallSession runs the same conversation core.
+  Hangup URL → POST https://<host>/api/voice/vobiz/hangup
 
 GET /api/voice/config.js tells the dashboard which engine to use (VOICE_ENGINE env:
 "pipecat" default, or "classic" to fall back to the /ws/web-call engine).
@@ -17,7 +28,10 @@ import os
 import time
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException
+import json
+from urllib.parse import urlencode
+
+from fastapi import APIRouter, HTTPException, Request, WebSocket
 from fastapi.responses import Response
 from loguru import logger
 from pydantic import BaseModel
@@ -30,7 +44,10 @@ from pipecat.transports.smallwebrtc.request_handler import (
     SmallWebRTCRequestHandler,
 )
 
-from voice_agent.session import WebCallSession
+from pipecat.runner.utils import parse_telephony_websocket
+
+from voice_agent.session import BaseCallSession, PhoneCallSession, VobizCallSession, WebCallSession
+from voice_agent.vobiz import build_answer_xml, parse_start_message
 
 router = APIRouter(tags=["voice"])
 
@@ -39,7 +56,7 @@ ICE_SERVERS = [IceServer(urls=url.strip()) for url in os.getenv(
     "VOICE_ICE_SERVERS", "stun:stun.l.google.com:19302").split(",") if url.strip()]
 
 _webrtc_handler = SmallWebRTCRequestHandler(ice_servers=ICE_SERVERS)
-_sessions: Dict[str, WebCallSession] = {}
+_sessions: Dict[str, BaseCallSession] = {}
 _session_created: Dict[str, float] = {}
 _session_tasks: Dict[str, asyncio.Task] = {}
 SESSION_TTL_SECONDS = 2 * 60 * 60
@@ -73,7 +90,7 @@ def _prune_sessions():
         _session_created.pop(sid, None)
 
 
-def _get_session(session_id: str) -> WebCallSession:
+def _get_session(session_id: str) -> BaseCallSession:
     session = _sessions.get(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Voice session not found or expired.")
@@ -155,3 +172,122 @@ async def voice_summary(session_id: str, wait_seconds: int = 25):
     except asyncio.TimeoutError:
         raise HTTPException(status_code=202, detail="Summary not ready yet.")
     return session.result
+
+
+@router.websocket("/api/voice/exotel/stream")
+async def exotel_voice_stream(websocket: WebSocket):
+    """Exotel Voicebot applet stream: one phone call on the real-time engine."""
+    await websocket.accept()
+    try:
+        transport_type, call_data = await asyncio.wait_for(parse_telephony_websocket(websocket), timeout=10)
+    except Exception as e:
+        logger.warning(f"Exotel stream rejected: could not read the call handshake ({e})")
+        await websocket.close(code=1008)
+        return
+
+    if transport_type != "exotel":
+        logger.warning(f"Exotel stream rejected: unexpected transport '{transport_type}'")
+        await websocket.close(code=1008)
+        return
+
+    _prune_sessions()
+    session = PhoneCallSession(websocket, call_data, dict(websocket.query_params))
+    _sessions[session.session_id] = session
+    _session_created[session.session_id] = time.time()
+    logger.info(
+        f"Phone call {session.session_id} · Exotel call {session.call_sid} · "
+        f"{session.direction} · from {session.caller} to {session.callee} · lead {session.lead_id}"
+    )
+    await session.run()
+
+
+# ---------------------------------------------------------------------------- Vobiz
+
+def _public_ws_base(request: Request) -> str:
+    """wss://host for the stream URL, honouring tunnels/proxies (or VOICE_PUBLIC_WS_BASE)."""
+    override = os.getenv("VOICE_PUBLIC_WS_BASE", "").strip().rstrip("/")
+    if override:
+        return override
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("x-forwarded-host", request.headers.get("host", request.url.netloc))
+    return f"{'wss' if proto == 'https' else 'ws'}://{host}"
+
+
+async def _request_params(request: Request) -> Dict[str, str]:
+    params = {k: v for k, v in request.query_params.items()}
+    if request.method == "POST":
+        try:
+            form = await request.form()
+            params.update({k: str(v) for k, v in form.items()})
+        except Exception:
+            pass
+    return params
+
+
+@router.api_route("/api/voice/vobiz/answer", methods=["GET", "POST"])
+async def vobiz_answer(request: Request):
+    """Vobiz Answer URL: tell Vobiz to stream this call to the real-time engine."""
+    params = await _request_params(request)
+    stream_query = {
+        key: value for key, value in {
+            "lead_id": params.get("lead_id", ""),
+            "lang": params.get("lang", ""),
+            "from": params.get("From", params.get("from", "")),
+            "to": params.get("To", params.get("to", "")),
+            "call_id": params.get("CallUUID", params.get("call_id", "")),
+        }.items() if value
+    }
+    stream_url = f"{_public_ws_base(request)}/api/voice/vobiz/stream"
+    if stream_query:
+        stream_url += "?" + urlencode(stream_query)
+    logger.info(f"Vobiz answer · call {stream_query.get('call_id')} · from {stream_query.get('from')} "
+                f"to {stream_query.get('to')} · lead {stream_query.get('lead_id')}")
+    return Response(content=build_answer_xml(stream_url), media_type="application/xml")
+
+
+@router.api_route("/api/voice/vobiz/hangup", methods=["GET", "POST"])
+async def vobiz_hangup(request: Request):
+    params = await _request_params(request)
+    logger.info(f"Vobiz hangup · call {params.get('CallUUID')} · status {params.get('CallStatus')} · "
+                f"duration {params.get('Duration')}s · cause {params.get('HangupCause')}")
+    return {"success": True}
+
+
+@router.websocket("/api/voice/vobiz/stream")
+async def vobiz_voice_stream(websocket: WebSocket):
+    """Vobiz bidirectional stream: one phone call on the real-time engine."""
+    await websocket.accept()
+    query = dict(websocket.query_params)
+
+    async def wait_for_start():
+        while True:
+            message = json.loads(await websocket.receive_text())
+            if message.get("event") == "start":
+                return message
+
+    try:
+        start_message = await asyncio.wait_for(wait_for_start(), timeout=10)
+    except Exception as e:
+        logger.warning(f"Vobiz stream rejected: no start event ({e})")
+        await websocket.close(code=1008)
+        return
+
+    call_data = parse_start_message(start_message)
+    call_data["from"] = call_data.get("from") or query.get("from", "")
+    call_data["to"] = call_data.get("to") or query.get("to", "")
+    call_data["call_id"] = call_data.get("call_id") or query.get("call_id", "")
+    if not call_data.get("stream_id"):
+        logger.warning("Vobiz stream rejected: start event has no streamId")
+        await websocket.close(code=1008)
+        return
+
+    _prune_sessions()
+    session = VobizCallSession(websocket, call_data, query)
+    _sessions[session.session_id] = session
+    _session_created[session.session_id] = time.time()
+    logger.info(
+        f"Phone call {session.session_id} · Vobiz call {session.call_sid} · {session.direction} · "
+        f"from {session.caller} to {session.callee} · lead {session.lead_id} · "
+        f"audio {session.inbound_encoding}@{session.inbound_sample_rate}"
+    )
+    await session.run()

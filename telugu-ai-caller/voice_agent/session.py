@@ -1,14 +1,20 @@
 """
-One real-time browser call: Pipecat pipeline + live UI events + post-call save.
+Real-time call sessions: one shared Pipecat conversation core, two transports.
 
-Pipeline:
-  WebRTC in → Sarvam streaming STT → LanguageRouter → user context (Silero VAD)
-  → Sarvam LLM → reply tap → Sarvam streaming TTS → WebRTC out → assistant context
+Pipeline (same for both):
+  audio in → Sarvam streaming STT → LanguageRouter → user context (Silero VAD)
+  → Sarvam LLM → reply tap → Sarvam streaming TTS → audio out → assistant context
 
-Live events go to the browser over the WebRTC data channel as JSON with an
-`lc` field: status, transcript, speaking, latency, language. When the call ends
-the transcript is summarized with the existing sales agent and saved through
-the existing `save_call_record`, exactly like the classic engine.
+- WebCallSession:   dashboard browser calls over WebRTC. Live UI events go to the
+                    browser on the data channel as JSON with an `lc` field.
+- PhoneCallSession: phone calls over the Exotel Voicebot WebSocket (8 kHz PCM).
+                    The lead comes from the `lead_id` custom parameter (outbound)
+                    or is matched by the caller's number (inbound).
+- VobizCallSession: phone calls over a Vobiz bidirectional stream (16 kHz Linear16),
+                    including numbers rented from Sarvam (powered by Vobiz).
+
+When a call ends the transcript is summarized with the existing sales agent and
+saved through `save_call_record`, exactly like the classic engine.
 """
 
 import asyncio
@@ -17,6 +23,7 @@ import os
 import time
 import uuid
 from typing import Any, Dict, List, Optional
+from urllib.parse import parse_qs
 
 from loguru import logger
 
@@ -46,22 +53,26 @@ from pipecat.processors.aggregators.llm_response_universal import (
     LLMUserAggregatorParams,
 )
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
+from pipecat.serializers.exotel import ExotelFrameSerializer
 from pipecat.services.sarvam.llm import SarvamLLMService
 from pipecat.services.sarvam.stt import SarvamSTTService
 from pipecat.services.sarvam.tts import SarvamTTSService
-from pipecat.transports.base_transport import TransportParams
+from pipecat.transports.base_transport import BaseTransport, TransportParams
 from pipecat.transports.smallwebrtc.connection import SmallWebRTCConnection
 from pipecat.transports.smallwebrtc.transport import SmallWebRTCTransport
+from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams, FastAPIWebsocketTransport
 
 from config import SARVAM_API_KEY
-from database import get_lead_by_id, save_call_record
+from database import clean_phone, get_all_leads, get_lead_by_id, save_call_record
 from services.language_utils import detect_language as detect_text_language
 from services.sales_agent import sales_agent
 from voice_agent.language import VOICES, LanguageRouter
+from voice_agent.vobiz import VOBIZ_SAMPLE_RATE, VobizFrameSerializer
 
 STT_MODEL = os.getenv("VOICE_STT_MODEL", "saaras:v3")
 LLM_MODEL = os.getenv("VOICE_LLM_MODEL", "sarvam-105b-conversations")
 TTS_MODEL = os.getenv("VOICE_TTS_MODEL", "bulbul:v4-flash")
+PHONE_SAMPLE_RATE = 8000  # Exotel Voicebot streams 8 kHz mono PCM
 
 DISCLOSURE = {
     "te-IN": "ఈ కాల్ రికార్డ్ అవుతోంది, నేను AI అసిస్టెంట్‌ని.",
@@ -87,6 +98,47 @@ def wait_ms_to_vad_stop_secs(wait_ms: Optional[int]) -> float:
     except (TypeError, ValueError):
         ms = 900
     return round(min(1.2, max(0.3, (ms - 400) / 1000)), 2)
+
+
+def as_text(value: Any) -> str:
+    """
+    The summary LLM sometimes returns lists (e.g. several requirements) or None where
+    the database expects text; join/serialize them so the call is never lost on save.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, (list, tuple, set)):
+        return ", ".join(as_text(v) for v in value if v not in (None, ""))
+    if isinstance(value, dict):
+        return json.dumps(value, ensure_ascii=False)
+    return str(value)
+
+
+def find_lead_by_phone(phone: str) -> Optional[Dict[str, Any]]:
+    """Match a caller's number to an existing lead (last 10 digits, so +91/0 prefixes don't matter)."""
+    digits = "".join(ch for ch in clean_phone(phone or "") if ch.isdigit())[-10:]
+    if len(digits) < 10:
+        return None
+    for lead in get_all_leads():
+        lead_digits = "".join(ch for ch in str(lead.get("phone") or "") if ch.isdigit())[-10:]
+        if lead_digits == digits:
+            return lead
+    return None
+
+
+def parse_custom_parameters(raw: Any) -> Dict[str, str]:
+    """Exotel custom parameters may arrive as a dict or as a 'key=value&key2=value2' string."""
+    if isinstance(raw, dict):
+        return {str(k): str(v) for k, v in raw.items()}
+    if isinstance(raw, str) and raw.strip():
+        text = raw.strip()
+        if text.startswith("{"):
+            try:
+                return {str(k): str(v) for k, v in json.loads(text).items()}
+            except ValueError:
+                pass
+        return {k: v[0] for k, v in parse_qs(text.lstrip("?")).items() if v}
+    return {}
 
 
 class ReplyTap(FrameProcessor):
@@ -122,7 +174,7 @@ class ReplyTap(FrameProcessor):
 class SpeakingObserver(BaseObserver):
     """Turns speaking frames into a single state-change event for the UI."""
 
-    def __init__(self, session: "WebCallSession", **kwargs):
+    def __init__(self, session: "BaseCallSession", **kwargs):
         super().__init__(**kwargs)
         self._session = session
         self._bot = False
@@ -144,21 +196,17 @@ class SpeakingObserver(BaseObserver):
             self._session.send_event("speaking", who="user", active=False)
 
 
-class WebCallSession:
-    """A single browser call handled by the real-time engine."""
+class BaseCallSession:
+    """Conversation core shared by browser and phone calls."""
 
-    def __init__(
-        self,
-        connection: SmallWebRTCConnection,
-        lead_id: Optional[int] = None,
-        language: Optional[str] = None,
-        wait_ms: Optional[int] = None,
-    ):
+    call_type = "web"
+
+    def __init__(self, lead: Optional[Dict[str, Any]] = None, language: Optional[str] = None,
+                 wait_ms: Optional[int] = None):
         self.session_id = uuid.uuid4().hex
-        self.connection = connection
-        self.lead_id = lead_id
-        self.lead = get_lead_by_id(lead_id) if lead_id else None
-        preferred = language or (self.lead or {}).get("preferred_language") or "te-IN"
+        self.lead = lead
+        self.lead_id = lead.get("id") if lead else None
+        preferred = language or (lead or {}).get("preferred_language") or "te-IN"
         self.language = preferred if preferred in VOICES else "te-IN"
         self.vad_stop_secs = wait_ms_to_vad_stop_secs(wait_ms)
 
@@ -171,13 +219,24 @@ class WebCallSession:
         self.result: Optional[Dict[str, Any]] = None
         self.done = asyncio.Event()
 
-    # ------------------------------------------------------------------ UI events
+    # ------------------------------------------------------------------ hooks for subclasses
     def send_event(self, kind: str, **payload):
-        try:
-            self.connection.send_app_message({"lc": kind, **payload})
-        except Exception as e:  # data channel not open yet / closed
-            logger.debug(f"UI event '{kind}' not sent: {e}")
+        """Live UI event. Browser calls send it on the data channel; phone calls only log."""
+        logger.trace(f"[{self.session_id}] {kind} {payload}")
 
+    def create_transport(self) -> BaseTransport:
+        raise NotImplementedError
+
+    def pipeline_params(self) -> PipelineParams:
+        return PipelineParams(enable_metrics=True, enable_usage_metrics=True)
+
+    def register_transport_handlers(self, transport: BaseTransport):
+        """Extra transport event handlers (e.g. browser app messages)."""
+
+    def phone_number(self) -> str:
+        return (self.lead or {}).get("phone") or "Web Browser"
+
+    # ------------------------------------------------------------------ transcript
     async def _on_user_text(self, text: str, language: str):
         self.transcript.append({"role": "user", "content": text})
         self.send_event("transcript", role="user", text=text, language=language)
@@ -197,9 +256,9 @@ class WebCallSession:
         greeting = f"{greeting} {DISCLOSURE.get(self.language, DISCLOSURE['en-IN'])}"
         return system_prompt, greeting
 
-    # ------------------------------------------------------------------ text input
+    # ------------------------------------------------------------------ controls
     async def handle_text_input(self, text: str):
-        """Typed reply from the dashboard's text box (same path as a spoken turn)."""
+        """Typed reply (dashboard text box): same path as a spoken turn."""
         text = (text or "").strip()
         if not text or not self.task or not self.router:
             return
@@ -221,18 +280,14 @@ class WebCallSession:
         try:
             await self._run_pipeline()
         except Exception as e:
-            logger.exception(f"Voice session {self.session_id} failed: {e}")
+            logger.exception(f"Call session {self.session_id} failed: {e}")
             self.send_event("status", text="Connection problem — call ended.")
         finally:
             await self._finish_call()
 
     async def _run_pipeline(self):
         system_prompt, greeting = await self._build_prompt_and_greeting()
-
-        transport = SmallWebRTCTransport(
-            webrtc_connection=self.connection,
-            params=TransportParams(audio_in_enabled=True, audio_out_enabled=True),
-        )
+        transport = self.create_transport()
 
         stt = SarvamSTTService(
             api_key=SARVAM_API_KEY,
@@ -293,13 +348,15 @@ class WebCallSession:
 
         self.task = PipelineTask(
             pipeline,
-            params=PipelineParams(enable_metrics=True, enable_usage_metrics=True),
+            params=self.pipeline_params(),
             observers=[latency_observer, SpeakingObserver(self)],
         )
 
         @transport.event_handler("on_client_connected")
         async def on_connected(transport, client):
-            logger.info(f"Voice session {self.session_id} connected · lead {self.lead_id} · {self.language}")
+            logger.info(
+                f"{self.call_type.title()} call {self.session_id} connected · lead {self.lead_id} · {self.language}"
+            )
             self.started_at = time.time()
             self.transcript.append({"role": "assistant", "content": greeting})
             self.send_event("transcript", role="assistant", text=greeting, language=self.language)
@@ -311,28 +368,18 @@ class WebCallSession:
                 self.ended_by = "caller"
             await self.task.cancel()
 
-        @transport.event_handler("on_app_message")
-        async def on_app_message(transport, message, sender=None):
-            payload = message if isinstance(message, dict) else {}
-            if isinstance(message, str):
-                try:
-                    payload = json.loads(message)
-                except ValueError:
-                    payload = {}
-            kind = payload.get("lc")
-            if kind == "text_input":
-                await self.handle_text_input(payload.get("text", ""))
-            elif kind == "hangup":
-                await self.hangup()
-
+        self.register_transport_handlers(transport)
         await PipelineRunner(handle_sigint=False).run(self.task)
 
     # ------------------------------------------------------------------ after the call
+    def extra_result_fields(self) -> Dict[str, Any]:
+        return {}
+
     async def _finish_call(self):
         duration = int(time.time() - self.started_at)
         avg_latency = round(sum(self.latencies) / len(self.latencies), 2) if self.latencies else None
         logger.info(
-            f"Voice session {self.session_id} ended by {self.ended_by} · {duration}s · "
+            f"{self.call_type.title()} call {self.session_id} ended by {self.ended_by} · {duration}s · "
             f"{len(self.latencies)} turns · avg reply gap {avg_latency}s"
         )
 
@@ -340,16 +387,13 @@ class WebCallSession:
             intel = await sales_agent.extract_call_intelligence(self.transcript)
         except Exception as e:
             logger.error(f"Intelligence extraction failed: {e}")
-            intel = {
-                "summary": "Completed browser call.",
-                "sentiment": "neutral",
-                "deal_stage": "qualifying",
-            }
+            intel = {"summary": "Completed call.", "sentiment": "neutral", "deal_stage": "qualifying"}
+        intel = {key: as_text(value) for key, value in (intel or {}).items()}
 
         call_record = {
             "lead_id": self.lead_id,
-            "call_type": "web",
-            "phone_number": (self.lead or {}).get("phone", "Web Browser") if self.lead else "Web Browser",
+            "call_type": self.call_type,
+            "phone_number": self.phone_number(),
             "duration_seconds": duration,
             "status": "completed",
             "summary": intel.get("summary", ""),
@@ -361,6 +405,7 @@ class WebCallSession:
             "objections_raised": intel.get("objections_raised", ""),
             "action_items": intel.get("action_items", ""),
             "transcript": json.dumps(self.transcript, ensure_ascii=False),
+            **self.extra_result_fields(),
         }
 
         try:
@@ -379,3 +424,132 @@ class WebCallSession:
         }
         self.send_event("call_summary", **self.result)
         self.done.set()
+
+
+class WebCallSession(BaseCallSession):
+    """Dashboard browser call over WebRTC."""
+
+    call_type = "web"
+
+    def __init__(self, connection: SmallWebRTCConnection, lead_id: Optional[int] = None,
+                 language: Optional[str] = None, wait_ms: Optional[int] = None):
+        super().__init__(get_lead_by_id(lead_id) if lead_id else None, language, wait_ms)
+        self.connection = connection
+
+    def send_event(self, kind: str, **payload):
+        try:
+            self.connection.send_app_message({"lc": kind, **payload})
+        except Exception as e:  # data channel not open yet / closed
+            logger.debug(f"UI event '{kind}' not sent: {e}")
+
+    def create_transport(self) -> BaseTransport:
+        return SmallWebRTCTransport(
+            webrtc_connection=self.connection,
+            params=TransportParams(audio_in_enabled=True, audio_out_enabled=True),
+        )
+
+    def register_transport_handlers(self, transport: BaseTransport):
+        @transport.event_handler("on_app_message")
+        async def on_app_message(transport, message, sender=None):
+            payload = message if isinstance(message, dict) else {}
+            if isinstance(message, str):
+                try:
+                    payload = json.loads(message)
+                except ValueError:
+                    payload = {}
+            kind = payload.get("lc")
+            if kind == "text_input":
+                await self.handle_text_input(payload.get("text", ""))
+            elif kind == "hangup":
+                await self.hangup()
+
+
+class PhoneCallSession(BaseCallSession):
+    """Phone call over the Exotel Voicebot WebSocket (bidirectional 8 kHz PCM)."""
+
+    call_type = "phone"
+    provider = "exotel"
+
+    def __init__(self, websocket, call_data: Dict[str, Any], query_params: Optional[Dict[str, str]] = None):
+        custom = parse_custom_parameters(call_data.get("custom_parameters"))
+        params = {**(query_params or {}), **custom}
+
+        lead = None
+        lead_id = params.get("lead_id")
+        if lead_id and str(lead_id).isdigit():
+            lead = get_lead_by_id(int(lead_id))
+        caller = str(call_data.get("from") or "")
+        callee = str(call_data.get("to") or "")
+        self.direction = "out" if lead else "in"
+        if not lead:
+            lead = find_lead_by_phone(caller)
+
+        super().__init__(lead, params.get("lang"), params.get("wait_ms"))
+        self.websocket = websocket
+        self.stream_sid = str(call_data.get("stream_id") or "")
+        self.call_sid = str(call_data.get("call_id") or "")
+        self.caller = caller
+        self.callee = callee
+
+    def create_transport(self) -> BaseTransport:
+        serializer = ExotelFrameSerializer(stream_sid=self.stream_sid, call_sid=self.call_sid)
+        return FastAPIWebsocketTransport(
+            websocket=self.websocket,
+            params=FastAPIWebsocketParams(
+                audio_in_enabled=True,
+                audio_out_enabled=True,
+                add_wav_header=False,
+                serializer=serializer,
+            ),
+        )
+
+    def pipeline_params(self) -> PipelineParams:
+        return PipelineParams(
+            enable_metrics=True,
+            enable_usage_metrics=True,
+            audio_in_sample_rate=PHONE_SAMPLE_RATE,
+            audio_out_sample_rate=PHONE_SAMPLE_RATE,
+        )
+
+    def phone_number(self) -> str:
+        if self.direction == "out":
+            return (self.lead or {}).get("phone") or self.callee
+        return self.caller or (self.lead or {}).get("phone") or ""
+
+    def extra_result_fields(self) -> Dict[str, Any]:
+        return {"call_sid": self.call_sid}
+
+
+class VobizCallSession(PhoneCallSession):
+    """Phone call over a Vobiz bidirectional stream (also Sarvam-rented numbers)."""
+
+    provider = "vobiz"
+
+    def __init__(self, websocket, call_data: Dict[str, Any], query_params: Optional[Dict[str, str]] = None):
+        super().__init__(websocket, call_data, query_params)
+        self.inbound_encoding = call_data.get("encoding", "l16")
+        self.inbound_sample_rate = int(call_data.get("sample_rate") or VOBIZ_SAMPLE_RATE)
+
+    def create_transport(self) -> BaseTransport:
+        serializer = VobizFrameSerializer(
+            stream_id=self.stream_sid,
+            inbound_encoding=self.inbound_encoding,
+            inbound_sample_rate=self.inbound_sample_rate,
+        )
+        return FastAPIWebsocketTransport(
+            websocket=self.websocket,
+            params=FastAPIWebsocketParams(
+                audio_in_enabled=True,
+                audio_out_enabled=True,
+                add_wav_header=False,
+                serializer=serializer,
+            ),
+        )
+
+    def pipeline_params(self) -> PipelineParams:
+        return PipelineParams(
+            enable_metrics=True,
+            enable_usage_metrics=True,
+            audio_in_sample_rate=VOBIZ_SAMPLE_RATE,
+            audio_out_sample_rate=VOBIZ_SAMPLE_RATE,
+        )
