@@ -19,7 +19,7 @@ if str(ROOT_DIR) not in sys.path:
 from core.db import DATABASE_URL, Base
 from main import app
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

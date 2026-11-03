@@ -1,26 +1,34 @@
 """
 Database Connection & SQLAlchemy Session Management.
-Supports PostgreSQL (with connection pooling) and fallback for local testing.
+Supports PostgreSQL (with connection pooling) when configured,
+and canonical SQLite for seamless zero-delay local operation and testing.
 """
 
 import os
 from pathlib import Path
 from typing import Generator
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
-from loguru import logger
+
+try:
+    from loguru import logger  # type: ignore
+except ImportError:
+    import logging
+    logger = logging.getLogger("core.db")  # type: ignore
+
+from sqlalchemy import create_engine  # type: ignore
+from sqlalchemy.orm import sessionmaker, Session, declarative_base  # type: ignore
 
 Base = declarative_base()
 
-# Canonical absolute path for SQLite fallback so all processes share the exact same database
+# Canonical absolute path for SQLite database so all processes share the exact same database
 CANONICAL_SQLITE_PATH = (Path(__file__).resolve().parent.parent / "leads_crm.db").resolve()
+CANONICAL_SQLITE_URL = f"sqlite:///{CANONICAL_SQLITE_PATH.as_posix()}"
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+psycopg://postgres:postgres@localhost:5432/leadcloser"
-)
+# If DATABASE_URL is not set, default directly to canonical SQLite for local development
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL or not DATABASE_URL.strip():
+    DATABASE_URL = CANONICAL_SQLITE_URL
 
-# Engine configuration with connection pooling for PostgreSQL
+# Engine configuration
 connect_args = {}
 engine_kwargs = {"echo": False}
 
@@ -42,12 +50,11 @@ else:
         logger.info(f"Connected to PostgreSQL database: {DATABASE_URL.split('@')[-1]}")
     except Exception as exc:
         logger.warning(
-            f"Could not connect to PostgreSQL ({exc}). "
-            "Falling back to local SQLite database so the app continues working."
+            f"Could not connect to configured PostgreSQL ({exc}). "
+            f"Falling back to canonical SQLite database ({CANONICAL_SQLITE_PATH.name})."
         )
-        sqlite_url = f"sqlite:///{CANONICAL_SQLITE_PATH.as_posix()}"
-        DATABASE_URL = sqlite_url
-        engine = create_engine(sqlite_url, connect_args={"check_same_thread": False}, echo=False)
+        DATABASE_URL = CANONICAL_SQLITE_URL
+        engine = create_engine(CANONICAL_SQLITE_URL, connect_args={"check_same_thread": False}, echo=False)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

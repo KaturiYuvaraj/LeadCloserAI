@@ -9,7 +9,7 @@ import pytest
 
 from core.db import SessionLocal
 from database import create_lead
-from models import Account, CallJob, Lead, OptOut
+from models import Account, Call, CallJob, Lead, OptOut
 from voice_agent import dialer as dialer_module
 from voice_agent.dialer import CallQueue
 from voice_agent.rules import IST, check_can_call, is_dialable_number, next_window_start
@@ -104,6 +104,7 @@ def test_rules_block(kwargs, reason):
 def test_opt_out_list_blocks_even_if_lead_flag_is_off():
     lead_id = make_lead(phone="+919812300016")
     session, account, lead = account_and_lead(lead_id)
+    session.query(OptOut).filter_by(account_id=1, phone_e164=lead.phone_e164).delete()
     session.add(OptOut(account_id=1, phone_e164=lead.phone_e164, reason="asked on call"))
     session.commit()
     assert check_can_call(session, account, lead, MONDAY_11_IST).reason == "opted_out"
@@ -160,6 +161,7 @@ def queue(monkeypatch):
     account.calling_approved = True
     account.calling_start, account.calling_end, account.calling_days = time(9, 0), time(19, 0), list(range(7))
     session.query(CallJob).delete()
+    session.query(Call).delete()
     session.commit()
     session.close()
     return q
