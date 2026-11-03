@@ -176,6 +176,7 @@ class VoiceCallClient {
       this.ws.onerror = (err) => {
         console.error("WebSocket error:", err);
         if (this.onStatusChange) this.onStatusChange("కనెక్షన్ సమస్య వచ్చింది. (Connection Error)");
+        this.endCall(false);
       };
 
     } catch (err) {

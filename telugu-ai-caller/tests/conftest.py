@@ -25,8 +25,13 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database():
-    """Ensure all database tables exist before running test suite."""
+    """Ensure all database tables exist and baseline seeded employees are populated."""
     Base.metadata.create_all(bind=engine)
+    try:
+        from database import init_db
+        init_db()
+    except Exception as e:
+        print(f"Warning: init_db failed during test setup: {e}")
     yield
 
 

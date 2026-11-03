@@ -259,9 +259,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===================================================================
   window.selectLead = (lead) => {
     selectedLead = lead;
-    document.querySelectorAll(".lead-card").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(".lead-card").forEach(el => {
+      el.classList.remove("active");
+      const dot = el.querySelector(".crm-lead-dot");
+      if (dot) { dot.classList.remove("dot-orange"); dot.classList.add("dot-gray"); }
+    });
     const card = document.getElementById(`lead-card-${lead.id}`);
-    if (card) card.classList.add("active");
+    if (card) {
+      card.classList.add("active");
+      const dot = card.querySelector(".crm-lead-dot");
+      if (dot) { dot.classList.remove("dot-gray"); dot.classList.add("dot-orange"); }
+    }
 
     if (activeLeadName) activeLeadName.innerText = lead.name;
     if (activeLeadCompany) activeLeadCompany.innerText = `${lead.company || 'Business'} • ${lead.service_needed || 'Software'}`;
@@ -942,17 +950,16 @@ Your registered phone / client phone will ring shortly.`);
           `;
         }
 
+        const isSelected = selectedLead && selectedLead.id === lead.id;
+        card.className = `crm-lead-item lead-card ${isSelected ? 'active' : ''}`;
         card.innerHTML = `
-          <div class="lead-header">
-            <span class="lead-name">${lead.name}</span>
-            <span class="lead-status status-${(lead.status || 'new').toLowerCase()}">${lead.status || 'NEW'}</span>
+          <div class="crm-lead-row">
+            <span class="crm-lead-dot ${isSelected ? 'dot-orange' : 'dot-gray'}">●</span>
+            <span class="crm-lead-item-name">${lead.name}</span>
           </div>
-          <div class="lead-company">${lead.company || 'Business'} • ${lead.service_needed || 'Software'}</div>
-          <div class="lead-details-row">
-            <span>💰 ${lead.budget || 'Flexible'}</span>
-            <span>⏱️ ${lead.timeline || 'Immediate'}</span>
+          <div class="crm-lead-badge-wrap">
+            <span class="crm-lead-badge badge-${(lead.status || 'new').toLowerCase()}">${lead.status || 'NEW'}</span>
           </div>
-          ${summaryHtml}
         `;
         container.appendChild(card);
       });
@@ -980,13 +987,23 @@ Your registered phone / client phone will ring shortly.`);
         item.className = "tip-item cs-call-item";
         item.onclick = () => window.openCallDetails(call.id);
         item.title = "Click to view summary, transcript and recording";
+        const stageUpper = (call.deal_stage || 'QUALIFIED').toUpperCase();
+        const isQualified = stageUpper.includes('QUALIFIED') || stageUpper.includes('DEMO');
+        item.className = "crm-recent-item cs-call-item";
         item.innerHTML = `
-          <div class="cs-call-top">
-            <span class="tip-title">${call.lead_name || 'Web Call'}</span>
-            <span class="cs-call-meta">${call.recording_url ? '🎙 ' : ''}${call.duration_seconds}s ↗</span>
+          <div class="crm-recent-left">
+            <div class="crm-recent-top-line">
+              <span class="crm-recent-dot ${isQualified ? 'dot-green' : 'dot-orange'}">●</span>
+              <span class="crm-recent-name">${call.lead_name || 'Web Lead'}</span>
+            </div>
+            <div class="crm-recent-badge-wrap">
+              <span class="crm-recent-badge badge-${(call.deal_stage || 'qualified').toLowerCase()}">${stageUpper}</span>
+            </div>
           </div>
-          <div class="cs-call-stage">Stage: <strong>${(call.deal_stage || '').toUpperCase()}</strong></div>
-          <div class="cs-call-summary">${call.summary || 'Call recorded successfully.'}</div>
+          <div class="crm-recent-right">
+            <span class="crm-recent-dur">${call.recording_url ? '🎙 ' : ''}${call.duration_seconds}s ↗</span>
+            <span class="crm-recent-time">12:46 PM</span>
+          </div>
         `;
         list.appendChild(item);
       });
@@ -1017,6 +1034,7 @@ Your registered phone / client phone will ring shortly.`);
     document.querySelectorAll(".nav-tab-btn").forEach(btn => btn.classList.remove("active"));
 
     if (tabName === "crm") {
+      document.body.classList.add("crm-mode");
       if (viewLanding) viewLanding.style.display = "none";
       if (viewCrm) viewCrm.style.display = "block";
       const btnCrm = document.getElementById("tabBtnCrm");
@@ -1026,6 +1044,7 @@ Your registered phone / client phone will ring shortly.`);
       if (navCreditChip) navCreditChip.style.display = "inline-flex";
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
+      document.body.classList.remove("crm-mode");
       if (viewLanding) viewLanding.style.display = "block";
       if (viewCrm) viewCrm.style.display = "none";
       if (navLaunchCrmText) navLaunchCrmText.innerText = "Start Free Trial ↗";
@@ -1883,32 +1902,17 @@ Please check your API keys or network connection in Settings.`);
     leads.forEach(lead => {
       const card = document.createElement("div");
       card.id = `lead-card-${lead.id}`;
-      card.className = `lead-card ${selectedLead && selectedLead.id === lead.id ? 'active' : ''}`;
+      const isSelected = selectedLead && selectedLead.id === lead.id;
+      card.className = `crm-lead-item lead-card ${isSelected ? 'active' : ''}`;
       card.onclick = () => window.selectLead(lead);
-
-      let summaryHtml = "";
-      if (lead.last_call_summary) {
-        summaryHtml = `
-          <div style="margin-top: 6px; padding-top: 5px; border-top: 1px dashed var(--border-light); font-size: 0.73rem; color: var(--primary); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            ?? <strong>Summary:</strong> ${lead.last_call_summary}
-          </div>
-        `;
-      }
-
       card.innerHTML = `
-        <div class="lead-header">
-          <span class="lead-name">${lead.name}</span>
-          <span class="lead-status status-${(lead.status || 'new').toLowerCase()}">${lead.status || 'NEW'}</span>
+        <div class="crm-lead-row">
+          <span class="crm-lead-dot ${isSelected ? 'dot-orange' : 'dot-gray'}">●</span>
+          <span class="crm-lead-item-name">${lead.name}</span>
         </div>
-        <div class="lead-company">
-          <svg class="icon icon-sm" style="color: var(--text-muted);" viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M9 3h6v4H9z"></path></svg>
-          ${lead.company || 'Business'} ? ${lead.service_needed || 'Software'}
+        <div class="crm-lead-badge-wrap">
+          <span class="crm-lead-badge badge-${(lead.status || 'new').toLowerCase()}">${lead.status || 'NEW'}</span>
         </div>
-        <div class="lead-details-row">
-          <span>?? ${lead.budget || 'Flexible'}</span>
-          <span>?? ${lead.timeline || 'Immediate'}</span>
-        </div>
-        ${summaryHtml}
       `;
       container.appendChild(card);
     });
