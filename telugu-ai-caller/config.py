@@ -11,6 +11,9 @@ BASE_DIR = Path(__file__).resolve().parent
 ENV_PATH = BASE_DIR / ".env"
 load_dotenv(dotenv_path=ENV_PATH)
 
+# Database & Redis Settings
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/leadcloser")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 # Use an absolute, configurable location so the app works from any launch folder.
 DATABASE_PATH = Path(os.getenv("DATABASE_PATH", str(BASE_DIR / "leads_crm.db"))).expanduser()
 
