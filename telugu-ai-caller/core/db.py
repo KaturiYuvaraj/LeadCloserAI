@@ -4,12 +4,16 @@ Supports PostgreSQL (with connection pooling) and fallback for local testing.
 """
 
 import os
+from pathlib import Path
 from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from loguru import logger
 
 Base = declarative_base()
+
+# Canonical absolute path for SQLite fallback so all processes share the exact same database
+CANONICAL_SQLITE_PATH = (Path(__file__).resolve().parent.parent / "leads_crm.db").resolve()
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
@@ -41,8 +45,9 @@ else:
             f"Could not connect to PostgreSQL ({exc}). "
             "Falling back to local SQLite database so the app continues working."
         )
-        DATABASE_URL = "sqlite:///leads_crm.db"
-        engine = create_engine("sqlite:///leads_crm.db", connect_args={"check_same_thread": False}, echo=False)
+        sqlite_url = f"sqlite:///{CANONICAL_SQLITE_PATH.as_posix()}"
+        DATABASE_URL = sqlite_url
+        engine = create_engine(sqlite_url, connect_args={"check_same_thread": False}, echo=False)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

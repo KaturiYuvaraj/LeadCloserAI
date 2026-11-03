@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const caller = usePipecat ? new PipecatCallClient() : new VoiceCallClient();
   console.info(`Voice engine: ${usePipecat ? "pipecat (real-time)" : "classic"}`);
   let selectedLead = null;
+  let allLeadsData = [];
+  let activeStageFilter = "ALL";
   let campaignPollInterval = null;
   let selectedCallLanguage = ""; // auto-detect
 
@@ -272,8 +274,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (activeLeadName) activeLeadName.innerText = lead.name;
-    if (activeLeadCompany) activeLeadCompany.innerText = `${lead.company || 'Business'} • ${lead.service_needed || 'Software'}`;
-    if (activeLeadAvatar) activeLeadAvatar.innerText = lead.name.charAt(0);
+    const roleBadge = document.getElementById("activeLeadRoleBadge");
+    if (roleBadge) roleBadge.innerText = lead.owner_name || "Key Decision Maker";
+    if (activeLeadCompany) activeLeadCompany.innerText = `${lead.company || lead.name} • ${lead.service_needed || 'Software Services'}`;
+    if (activeLeadAvatar) activeLeadAvatar.innerText = (lead.name || 'L').charAt(0);
+    const pitchText = document.getElementById("activeLeadPitchText");
+    if (pitchText) pitchText.innerText = lead.pitch || lead.notes || "Pitch custom web development, mobile app automation, and multilingual AI voice caller.";
 
     // Populate the Stored Call Summary Bar
     const leadLastSummaryText = document.getElementById("leadLastSummaryText");
@@ -572,7 +578,9 @@ document.addEventListener("DOMContentLoaded", () => {
         excelFileInput.files = e.dataTransfer.files;
         if (uploadFileBtn) {
           uploadFileBtn.disabled = false;
-          uploadFileBtn.innerText = `Upload & Import (${e.dataTransfer.files[0].name})`;
+          const fn = e.dataTransfer.files[0].name;
+          const sFn = fn.length > 25 ? fn.slice(0, 22) + "..." : fn;
+          uploadFileBtn.innerText = `Upload & Import (${sFn})`;
         }
       }
     });
@@ -581,7 +589,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (excelFileInput.files && excelFileInput.files.length > 0) {
         if (uploadFileBtn) {
           uploadFileBtn.disabled = false;
-          uploadFileBtn.innerText = `Upload & Import (${excelFileInput.files[0].name})`;
+          const fn = excelFileInput.files[0].name;
+          const sFn = fn.length > 25 ? fn.slice(0, 22) + "..." : fn;
+          uploadFileBtn.innerText = `Upload & Import (${sFn})`;
         }
       }
     });
@@ -608,12 +618,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await resp.json();
 
         if (resp.ok && data.success) {
-          alert(`? Import Complete!
-Total Parsed: ${data.total_parsed} leads
-Inserted: ${data.inserted}
-Updated: ${data.updated}`);
+          alert(`🎉 Import Complete!\nTotal Parsed: ${data.total_parsed} leads\nInserted: ${data.inserted}\nUpdated: ${data.updated}`);
           window.closeExcelModal();
-          await refreshLeads();
+          await refreshLeads(true);
         } else {
           alert(data.detail || data.error || (data.errors ? data.errors.join(", ") : "Failed to import leads."));
         }
@@ -1089,54 +1096,135 @@ Your registered phone / client phone will ring shortly.`);
     });
   }
 
-  // Refresh functions
-  async function refreshLeads() {
+  // ===================================================================
+  // REFRESH & RENDER LEADS (PIPELINE & TABLE)
+  // ===================================================================
+  window.renderLeadsTable = (leads) => {
+    const tbody = document.getElementById("crmLeadsTableBody");
+    if (!tbody) return;
+    if (!leads || leads.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">No leads matching criteria.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = leads.map(lead => {
+      const bizName = lead.company || lead.name || "Business";
+      const ownerName = lead.owner_name || lead.name || "Key Decision Maker";
+      const phoneDisplay = lead.display_phone || lead.phone || lead.phone_e164 || "Not Provided";
+      const emailDisplay = (lead.email && lead.email !== "N/A") ? lead.email : `Lead ID #${lead.id}`;
+      const statusClass = (lead.status || "NEW").toLowerCase();
+      
+      let webBadge = `<span class="crm-lead-badge" style="background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; display: inline-flex; align-items: center; gap: 3px;">🚫 No Website</span>`;
+      if (lead.website && lead.website !== "N/A") {
+        const webUrl = lead.website.startsWith('http') ? lead.website : 'https://' + lead.website;
+        webBadge = `<a href="${webUrl}" target="_blank" rel="noopener noreferrer" class="crm-lead-badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;">🌐 Website ↗</a>`;
+      } else if (lead.has_website === "Yes") {
+        webBadge = `<span class="crm-lead-badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">🌐 Active Web</span>`;
+      }
+
+      const leadJson = JSON.stringify(lead).replace(/'/g, "&#39;");
+
+      return `
+        <tr>
+          <td style="font-weight: 700; color: #0f172a; min-width: 180px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: #fff7ed; border: 1px solid #fed7aa; color: #ea580c; font-size: 0.82rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                🏢
+              </div>
+              <div>
+                <div style="font-weight: 700; color: #0f172a; font-size: 0.85rem;">${bizName}</div>
+                <div style="font-size: 0.72rem; color: #64748b;">${emailDisplay}</div>
+              </div>
+            </div>
+          </td>
+          <td style="min-width: 170px;">
+            <div style="font-weight: 700; color: #1e293b; font-size: 0.84rem; display: flex; align-items: center; gap: 6px;">
+              <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ea580c;"></span>
+              <span>${ownerName}</span>
+            </div>
+            <div style="font-size: 0.72rem; color: #ea580c; font-weight: 600; margin-top: 2px;">
+              Key Decision Maker
+            </div>
+          </td>
+          <td style="min-width: 140px;">
+            <div style="font-family: monospace; font-size: 0.78rem; font-weight: 700; color: #0f172a;">
+              ${phoneDisplay}
+            </div>
+            <div style="font-size: 0.7rem; color: #64748b;">E.164 Cleaned</div>
+          </td>
+          <td style="min-width: 130px;">
+            ${webBadge}
+          </td>
+          <td style="min-width: 120px;">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-weight: 800; font-size: 0.78rem; color: #0f172a;">
+                Score: <span style="color: #ea580c;">${lead.score || '100'}</span>
+              </span>
+              <span style="font-size: 0.72rem; color: #f59e0b; font-weight: 600;">
+                ★ ${lead.reviews || '0'} Reviews
+              </span>
+            </div>
+          </td>
+          <td style="min-width: 220px; max-width: 280px;">
+            <div style="font-weight: 700; color: #0f172a; font-size: 0.78rem;">
+              ${lead.service_needed || 'Software Services'}
+            </div>
+            <div style="font-size: 0.72rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${lead.pitch || lead.notes || ''}">
+              ${lead.pitch || lead.notes || 'Outbound software sales opportunity'}
+            </div>
+          </td>
+          <td>
+            <span class="crm-lead-badge badge-${statusClass}">${lead.status || 'NEW'}</span>
+          </td>
+          <td style="min-width: 140px;">
+            <div style="display: flex; gap: 6px;">
+              <button class="crm-action-pill" onclick='window.selectLead(${leadJson}); window.switchCrmView("calling");' style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #ea580c; border-color: #fed7aa; background: #fff7ed; cursor: pointer;">
+                Dial 📞
+              </button>
+              <button class="crm-action-pill" onclick='window.openBusinessIntelModal(${leadJson})' style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #0284c7; border-color: #bae6fd; background: #f0f9ff; cursor: pointer;" title="View Business & Decision Maker Intel">
+                Intel 🔍
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  };
+
+  async function refreshLeads(forceSelectFirst = false) {
     try {
       const resp = await fetch("/api/leads");
       const data = await resp.json();
-      const container = document.getElementById("leadsListContainer");
-      const leadsCountBadge = document.getElementById("leadsCountBadge");
+      if (!data || !data.leads) return;
 
-      if (leadsCountBadge && data.leads) {
+      allLeadsData = data.leads;
+
+      const leadsCountBadge = document.getElementById("leadsCountBadge");
+      if (leadsCountBadge) {
         leadsCountBadge.innerText = `${data.leads.length} Total`;
       }
 
-      if (!container || !data.leads || data.leads.length === 0) return;
+      // Re-render Calling Station pipeline sidebar list
+      if (typeof window.renderLeadsList === "function") {
+        window.renderLeadsList(data.leads);
+      }
 
-      container.innerHTML = "";
-      data.leads.forEach(lead => {
-        const card = document.createElement("div");
-        card.id = `lead-card-${lead.id}`;
-        card.className = `lead-card ${selectedLead && selectedLead.id === lead.id ? 'active' : ''}`;
-        card.onclick = () => window.selectLead(lead);
+      // Re-render Leads Table view if present
+      if (typeof window.renderLeadsTable === "function") {
+        window.renderLeadsTable(data.leads);
+      }
 
-        let summaryHtml = "";
-        if (lead.last_call_summary) {
-          summaryHtml = `
-            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border-color); font-size: 0.74rem; color: #93c5fd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-              📝 <strong>Summary:</strong> ${lead.last_call_summary}
-            </div>
-          `;
+      // Automatically select top newly imported lead if forced or none selected
+      if (forceSelectFirst || !selectedLead) {
+        if (data.leads.length > 0) {
+          window.selectLead(data.leads[0]);
         }
-
-        const isSelected = selectedLead && selectedLead.id === lead.id;
-        card.className = `crm-lead-item lead-card ${isSelected ? 'active' : ''}`;
-        card.innerHTML = `
-          <div class="crm-lead-row">
-            <span class="crm-lead-dot ${isSelected ? 'dot-orange' : 'dot-gray'}">●</span>
-            <span class="crm-lead-item-name">${lead.name}</span>
-          </div>
-          <div class="crm-lead-badge-wrap">
-            <span class="crm-lead-badge badge-${(lead.status || 'new').toLowerCase()}">${lead.status || 'NEW'}</span>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-
-      // Re-sync currently selected lead's summary if open
-      if (selectedLead) {
+      } else if (selectedLead) {
         const updated = data.leads.find(l => l.id === selectedLead.id);
-        if (updated) window.selectLead(updated);
+        if (updated) {
+          window.selectLead(updated);
+        } else if (data.leads.length > 0) {
+          window.selectLead(data.leads[0]);
+        }
       }
     } catch (e) {
       console.error("Failed to refresh leads:", e);
@@ -2121,9 +2209,6 @@ Please check your API keys or network connection in Settings.`);
   // ===================================================================
   // STAGE FILTERING & LEADS CACHE
   // ===================================================================
-  let allLeadsData = [];
-  let activeStageFilter = "ALL";
-
   window.renderLeadsList = (leads) => {
     const container = document.getElementById("leadsListContainer");
     if (!container) return;
@@ -2143,7 +2228,10 @@ Please check your API keys or network connection in Settings.`);
       card.innerHTML = `
         <div class="crm-lead-row">
           <span class="crm-lead-dot ${isSelected ? 'dot-orange' : 'dot-gray'}">●</span>
-          <span class="crm-lead-item-name">${lead.name}</span>
+          <div style="display:flex; flex-direction:column; overflow:hidden;">
+            <span class="crm-lead-item-name" style="font-weight:700;">${lead.company || lead.name}</span>
+            <span style="font-size:0.7rem; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${lead.owner_name || lead.name}</span>
+          </div>
         </div>
         <div class="crm-lead-badge-wrap">
           <span class="crm-lead-badge badge-${(lead.status || 'new').toLowerCase()}">${lead.status || 'NEW'}</span>
@@ -2583,6 +2671,70 @@ Lead updated to DEMO_BOOKED.`);
     }
   };
 
+
+
+  // ===================================================================
+  // BUSINESS & DECISION MAKER INTELLIGENCE DOSSIER MODAL
+  // ===================================================================
+  window.openBusinessIntelModal = (lead) => {
+    if (!lead) return;
+    const modal = document.getElementById("businessIntelModal");
+    if (!modal) return;
+
+    const bName = document.getElementById("intelBizName");
+    if (bName) bName.innerText = lead.company || lead.name || "-";
+
+    const oName = document.getElementById("intelOwnerName");
+    if (oName) oName.innerText = lead.owner_name || lead.name || "Key Decision Maker";
+
+    const ph = document.getElementById("intelPhone");
+    if (ph) ph.innerText = lead.display_phone || lead.phone || lead.phone_e164 || "Not Provided";
+
+    const em = document.getElementById("intelEmail");
+    if (em) em.innerText = lead.email && lead.email !== "N/A" ? lead.email : "Email: Not Provided";
+
+    const webStatus = document.getElementById("intelWebStatus");
+    if (webStatus) {
+      if (lead.website && lead.website !== "N/A") {
+        webStatus.innerHTML = `<a href="${lead.website.startsWith('http') ? lead.website : 'https://' + lead.website}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; font-weight:700; text-decoration:underline;">🌐 ${lead.website} ↗</a>`;
+      } else if (lead.has_website === "Yes") {
+        webStatus.innerHTML = `<span class="crm-lead-badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;">🌐 Active Website</span>`;
+      } else {
+        webStatus.innerHTML = `<span class="crm-lead-badge" style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;">🚫 No Website Available</span>`;
+      }
+    }
+
+    const scoreRev = document.getElementById("intelScoreReviews");
+    if (scoreRev) {
+      scoreRev.innerText = `Lead Score: ${lead.score || '100'} • ★ ${lead.reviews || '0'} Google Reviews`;
+    }
+
+    const srv = document.getElementById("intelServiceNeeded");
+    if (srv) {
+      srv.innerText = lead.service_needed || "Custom NGO Website & Donation Portal";
+    }
+
+    const ptch = document.getElementById("intelPitchText");
+    if (ptch) {
+      ptch.innerText = lead.pitch || lead.notes || "Contact the leadership to introduce high-converting web design, donation management, and AI customer support automations.";
+    }
+
+    const dialBtn = document.getElementById("intelDialBtn");
+    if (dialBtn) {
+      dialBtn.onclick = () => {
+        window.closeBusinessIntelModal();
+        window.selectLead(lead);
+        window.switchCrmView("calling");
+      };
+    }
+
+    modal.style.display = "flex";
+  };
+
+  window.closeBusinessIntelModal = () => {
+    const modal = document.getElementById("businessIntelModal");
+    if (modal) modal.style.display = "none";
+  };
 
   // Auto-switch based on URL hash, query parameter or path
   const initialHash = (window.location.hash || "").replace("#", "").toLowerCase();

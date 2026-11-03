@@ -3492,11 +3492,23 @@ input[type="checkbox"] {
                   {% if leads %}{{ leads[0].name[0] }}{% else %}S{% endif %}
                 </div>
                 <div class="crm-lead-identity-text">
-                  <h2 class="crm-lead-name" id="activeLeadName">
-                    {% if leads %}{{ leads[0].name }}{% else %}Subba Rao{% endif %}
-                  </h2>
-                  <div class="crm-lead-subtitle" id="activeLeadCompany">
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <h2 class="crm-lead-name" id="activeLeadName" style="margin-bottom: 0;">
+                      {% if leads %}{{ leads[0].name }}{% else %}Subba Rao{% endif %}
+                    </h2>
+                    <span id="activeLeadRoleBadge" class="crm-lead-badge badge-demo" style="font-size: 0.7rem; font-weight: 700; background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;">
+                      {% if leads and leads[0].owner_name %}{{ leads[0].owner_name }}{% else %}Key Decision Maker{% endif %}
+                    </span>
+                    <button class="crm-action-pill" id="activeLeadIntelBtn" onclick="if(window.selectedLead) window.openBusinessIntelModal(window.selectedLead);" style="padding: 2px 8px; height: 22px; font-size: 0.68rem; color: #0284c7; border-color: #bae6fd; background: #f0f9ff; cursor: pointer;">
+                      Intel Dossier 🔍
+                    </button>
+                  </div>
+                  <div class="crm-lead-subtitle" id="activeLeadCompany" style="margin-top: 4px;">
                     {% if leads %}{{ leads[0].company or 'Business' }} • {{ leads[0].service_needed or 'Custom Web & SaaS Development, Mobile Apps, AI Voice...' }}{% else %}Business • Custom Web & SaaS Development, Mobile Apps, AI Voice...{% endif %}
+                  </div>
+                  <div id="activeLeadPitchStrip" style="margin-top: 6px; font-size: 0.72rem; color: #92400e; background: #fffbeb; padding: 4px 10px; border-radius: 6px; border-left: 3px solid #f59e0b; display: flex; align-items: center; gap: 6px;">
+                    <span style="font-weight: 800; flex-shrink: 0;">💡 Pitch Strategy:</span>
+                    <span id="activeLeadPitchText" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{% if leads and leads[0].pitch %}{{ leads[0].pitch }}{% else %}Pitch custom web development, mobile app automation, and multilingual AI voice caller.{% endif %}</span>
                   </div>
                 </div>
               </div>
@@ -3773,44 +3785,92 @@ input[type="checkbox"] {
               <table class="crm-table">
                 <thead>
                   <tr>
-                    <th>Lead Name</th>
-                    <th>Company & Requirement</th>
-                    <th>Phone</th>
-                    <th>Budget</th>
-                    <th>Timeline</th>
+                    <th>Business & Organization</th>
+                    <th>Decision Maker / Owner</th>
+                    <th>Contact Info</th>
+                    <th>Digital Presence</th>
+                    <th>Lead Intelligence</th>
+                    <th>Requirement & Pitch</th>
                     <th>Stage</th>
-                    <th>Last Summary</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="crmLeadsTableBody">
                   {% for lead in leads %}
                   <tr>
-                    <td style="font-weight: 700; color: #0f172a;">
+                    <td style="font-weight: 700; color: #0f172a; min-width: 180px;">
                       <div style="display: flex; align-items: center; gap: 8px;">
-                        <div style="width: 28px; height: 28px; border-radius: 50%; background: #ea580c; color: #fff; font-size: 0.76rem; font-weight: 800; display: flex; align-items: center; justify-content: center;">
-                          {{ lead.name[0] }}
+                        <div style="width: 32px; height: 32px; border-radius: 8px; background: #fff7ed; border: 1px solid #fed7aa; color: #ea580c; font-size: 0.82rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                          🏢
                         </div>
-                        <span>{{ lead.name }}</span>
+                        <div>
+                          <div style="font-weight: 700; color: #0f172a; font-size: 0.85rem;">{{ lead.company or lead.name }}</div>
+                          <div style="font-size: 0.72rem; color: #64748b;">
+                            {% if lead.email and lead.email != 'N/A' %}{{ lead.email }}{% else %}Lead ID #{{ lead.id }}{% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style="min-width: 170px;">
+                      <div style="font-weight: 700; color: #1e293b; font-size: 0.84rem; display: flex; align-items: center; gap: 6px;">
+                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ea580c;"></span>
+                        <span>{{ lead.owner_name or lead.name }}</span>
+                      </div>
+                      <div style="font-size: 0.72rem; color: #ea580c; font-weight: 600; margin-top: 2px;">
+                        Key Decision Maker
+                      </div>
+                    </td>
+                    <td style="min-width: 140px;">
+                      <div style="font-family: monospace; font-size: 0.78rem; font-weight: 700; color: #0f172a;">
+                        {{ lead.display_phone or lead.phone or lead.phone_e164 }}
+                      </div>
+                      <div style="font-size: 0.7rem; color: #64748b;">E.164 Cleaned</div>
+                    </td>
+                    <td style="min-width: 130px;">
+                      {% if lead.website and lead.website != 'N/A' %}
+                        <a href="{{ lead.website }}" target="_blank" rel="noopener noreferrer" class="crm-lead-badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;">
+                          🌐 Website ↗
+                        </a>
+                      {% elif lead.has_website == 'Yes' %}
+                        <span class="crm-lead-badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                          🌐 Active Web
+                        </span>
+                      {% else %}
+                        <span class="crm-lead-badge" style="background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; display: inline-flex; align-items: center; gap: 3px;">
+                          🚫 No Website
+                        </span>
+                      {% endif %}
+                    </td>
+                    <td style="min-width: 120px;">
+                      <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <span style="font-weight: 800; font-size: 0.78rem; color: #0f172a;">
+                          Score: <span style="color: #ea580c;">{{ lead.score or '100' }}</span>
+                        </span>
+                        <span style="font-size: 0.72rem; color: #f59e0b; font-weight: 600;">
+                          ★ {{ lead.reviews or '0' }} Reviews
+                        </span>
+                      </div>
+                    </td>
+                    <td style="min-width: 220px; max-width: 280px;">
+                      <div style="font-weight: 700; color: #0f172a; font-size: 0.78rem;">
+                        {{ lead.service_needed or 'Software Services' }}
+                      </div>
+                      <div style="font-size: 0.72rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ lead.pitch or lead.notes }}">
+                        {{ lead.pitch or lead.notes or 'Outbound software sales opportunity' }}
                       </div>
                     </td>
                     <td>
-                      <div style="font-weight: 600; color: #0f172a;">{{ lead.company or 'Business' }}</div>
-                      <div style="font-size: 0.72rem; color: #64748b;">{{ lead.service_needed or 'Software' }}</div>
-                    </td>
-                    <td style="font-family: monospace; font-size: 0.76rem;">{{ lead.phone or lead.phone_e164 or '+91 9848011223' }}</td>
-                    <td style="font-weight: 600; color: #0f172a;">{{ lead.budget or '₹50,000' }}</td>
-                    <td>{{ lead.timeline or 'Immediate' }}</td>
-                    <td>
                       <span class="crm-lead-badge badge-{{ (lead.status or 'NEW').lower() }}">{{ lead.status or 'NEW' }}</span>
                     </td>
-                    <td style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.74rem; color: #64748b;">
-                      {{ lead.last_call_summary or 'No call made yet' }}
-                    </td>
-                    <td>
-                      <button class="crm-action-pill" onclick="window.selectLead({{ lead | tojson }}); window.switchCrmView('calling');" style="padding: 4px 10px; height: 28px; font-size: 0.74rem; color: #ea580c; border-color: #fed7aa; background: #fff7ed;">
-                        Dial 📞
-                      </button>
+                    <td style="min-width: 140px;">
+                      <div style="display: flex; gap: 6px;">
+                        <button class="crm-action-pill" onclick="window.selectLead({{ lead | tojson }}); window.switchCrmView('calling');" style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #ea580c; border-color: #fed7aa; background: #fff7ed; cursor: pointer;">
+                          Dial 📞
+                        </button>
+                        <button class="crm-action-pill" onclick='window.openBusinessIntelModal({{ lead | tojson }})' style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #0284c7; border-color: #bae6fd; background: #f0f9ff; cursor: pointer;" title="View Business & Decision Maker Intel">
+                          Intel 🔍
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   {% endfor %}
@@ -4119,8 +4179,76 @@ input[type="checkbox"] {
   </div>
 
   <!-- MODAL 2: EXCEL / CSV UPLOAD -->
+  
+  <!-- MODAL: BUSINESS & DECISION MAKER INTELLIGENCE DOSSIER -->
+  <div class="modal-overlay" id="businessIntelModal" style="display: none; z-index: 99999 !important;">
+    <div class="modal-card" style="max-width: 620px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+      <div style="padding: 18px 24px; background: #0f172a; color: #fff; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.3rem;">🏢</span>
+          <div>
+            <h3 id="intelBizTitle" style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #fff;">Business & Decision Maker Intelligence</h3>
+            <p style="margin: 2px 0 0 0; font-size: 0.72rem; color: #94a3b8;">Autonomous digital audit, leadership profiling & sales pitch talking points</p>
+          </div>
+        </div>
+        <button onclick="window.closeBusinessIntelModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.3rem; cursor: pointer;">&times;</button>
+      </div>
+      
+      <div style="padding: 20px 24px; background: #fff; max-height: 75vh; overflow-y: auto;">
+        <!-- Grid of key details -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+          <div style="padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;">
+            <div style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Organization / Business</div>
+            <div id="intelBizName" style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin-top: 4px;">-</div>
+          </div>
+          <div style="padding: 12px 14px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;">
+            <div style="font-size: 0.7rem; font-weight: 700; color: #ea580c; text-transform: uppercase;">Key Decision Maker / Owner</div>
+            <div id="intelOwnerName" style="font-size: 0.95rem; font-weight: 800; color: #9a3412; margin-top: 4px;">-</div>
+          </div>
+          <div style="padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;">
+            <div style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Phone & Contact</div>
+            <div id="intelPhone" style="font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-top: 4px; font-family: monospace;">-</div>
+            <div id="intelEmail" style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">-</div>
+          </div>
+          <div style="padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;">
+            <div style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Digital Presence & Reviews</div>
+            <div id="intelWebStatus" style="margin-top: 4px;">-</div>
+            <div id="intelScoreReviews" style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">-</div>
+          </div>
+        </div>
+
+        <!-- Recommended Software Solution -->
+        <div style="padding: 14px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; margin-bottom: 16px;">
+          <div style="font-size: 0.72rem; font-weight: 800; color: #166534; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+            <span>🎯</span> Recommended Software Offering
+          </div>
+          <div id="intelServiceNeeded" style="font-size: 0.95rem; font-weight: 800; color: #14532d; margin-top: 4px;">
+            -
+          </div>
+        </div>
+
+        <!-- Sales Pitch Talking Points -->
+        <div style="padding: 14px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; margin-bottom: 16px;">
+          <div style="font-size: 0.72rem; font-weight: 800; color: #92400e; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+            <span>💡</span> AI Telephonic Pitch Talking Points
+          </div>
+          <div id="intelPitchText" style="font-size: 0.85rem; color: #78350f; line-height: 1.5; margin-top: 6px;">
+            -
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 14px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="crm-action-pill" onclick="window.closeBusinessIntelModal()" style="height: 36px; padding: 0 16px; cursor: pointer;">Close</button>
+        <button class="crm-btn-orange" id="intelDialBtn" style="height: 36px; padding: 0 18px; cursor: pointer;">
+          Dial Decision Maker 📞
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="excelUploadModal">
-    <div class="modal-card">
+    <div class="modal-card" style="width: 92%; max-width: 520px; box-sizing: border-box; overflow: hidden;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h3 style="font-size: 1.1rem; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 6px;">
           <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>

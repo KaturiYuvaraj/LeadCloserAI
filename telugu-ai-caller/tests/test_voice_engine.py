@@ -5,9 +5,12 @@ Offline: no Sarvam calls, no WebRTC connection.
 
 import pytest
 
-pytest.importorskip("pipecat", reason="Pipecat not installed (requires Python 3.10-3.13)")
+pytest.importorskip("pipecat.services.sarvam", reason="Pipecat Sarvam service not installed (requires Python 3.10-3.13 and pipecat-ai[sarvam])")
 
-from pipecat.frames.frames import TTSUpdateSettingsFrame  # noqa: E402
+try:
+    from pipecat.frames.frames import TTSUpdateSettingsFrame  # noqa: E402
+except ImportError:
+    TTSUpdateSettingsFrame = None
 
 from voice_agent.language import VOICES, LanguageRouter, detect_language  # noqa: E402
 from voice_agent.session import wait_ms_to_vad_stop_secs  # noqa: E402

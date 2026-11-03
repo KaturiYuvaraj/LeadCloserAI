@@ -42,12 +42,14 @@ def get_connection():
 
 
 def clean_phone(raw: Any) -> str:
-    """Normalize phone string into E.164-compatible format."""
+    """Normalize phone string into E.164-compatible format, handling Indian 10-digit, 11-digit with leading 0, and STD formats."""
     if not raw:
         return "+910000000000"
     digits = "".join(ch for ch in str(raw) if ch.isdigit())
     if len(digits) == 10:
         return f"+91{digits}"
+    elif len(digits) == 11 and digits.startswith("0"):
+        return f"+91{digits[1:]}"
     elif len(digits) == 12 and digits.startswith("91"):
         return f"+{digits}"
     elif digits:
@@ -75,9 +77,15 @@ def _lead_to_dict(lead: Lead) -> Dict[str, Any]:
         "callback_at": lead.callback_at.isoformat() if lead.callback_at else None,
         "created_at": lead.created_at.isoformat() if lead.created_at else None,
         "updated_at": lead.updated_at.isoformat() if lead.updated_at else None,
-        # Flatten variables
+        # Flatten business & contact intelligence
         "email": vars_dict.get("email", ""),
-        "company": vars_dict.get("company", ""),
+        "company": vars_dict.get("company", lead.name),
+        "owner_name": vars_dict.get("owner_name", vars_dict.get("company_owner", "")),
+        "website": vars_dict.get("website", ""),
+        "has_website": vars_dict.get("has_website", "Yes" if vars_dict.get("website") else "No"),
+        "reviews": vars_dict.get("reviews", ""),
+        "score": vars_dict.get("score", ""),
+        "pitch": vars_dict.get("pitch", lead.notes or ""),
         "service_needed": vars_dict.get("service_needed", "Software Services"),
         "budget": vars_dict.get("budget", "Flexible"),
         "timeline": vars_dict.get("timeline", "Immediate"),
@@ -87,8 +95,8 @@ def _lead_to_dict(lead: Lead) -> Dict[str, Any]:
         "designation": vars_dict.get("designation", ""),
         "industry": vars_dict.get("industry", ""),
         "location": vars_dict.get("location", ""),
-        "website": vars_dict.get("website", ""),
         "enrichment_data": vars_dict.get("enrichment_data", ""),
+        "display_phone": vars_dict.get("display_phone", lead.phone_e164),
         "last_call_summary": last_summary,
         "last_call_sentiment": vars_dict.get("last_call_sentiment", "neutral"),
         "objections_noted": obj_noted,
@@ -388,7 +396,7 @@ def init_db():
 def get_all_leads() -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        leads = session.query(Lead).order_by(Lead.updated_at.desc()).all()
+        leads = session.query(Lead).order_by(Lead.id.desc()).all()
         return [_lead_to_dict(l) for l in leads]
     finally:
         session.close()
@@ -450,7 +458,9 @@ def create_lead(lead_data: Dict[str, Any]) -> int:
         lead = Lead(
             account_id=1,
             name=lead_data.get("name", "Unknown"),
+            phone=phone,
             phone_e164=phone,
+            company=lead_data.get("company", ""),
             source=lead_data.get("source", "manual"),
             variables=variables,
             consent_source="manual_entry",
@@ -472,43 +482,66 @@ def batch_create_leads(leads: List[Dict[str, Any]]) -> Tuple[int, int]:
     inserted = 0
     updated = 0
     try:
-        for l_data in leads:
-            raw_phone = l_data.get("phone", "").strip()
-            if not raw_phone:
-                continue
-            phone = clean_phone(raw_phone)
-            existing = session.query(Lead).filter_by(account_id=1, phone_e164=phone).first()
+        for idx, l_data in enumerate(leads):
+            raw_phone = str(l_data.get("phone", "") or "").strip()
+            display_phone = raw_phone
+            if raw_phone:
+                phone = clean_phone(raw_phone)
+                display_phone = phone
+            else:
+                # Deterministic synthetic phone placeholder so non-phone business records are stored
+                seed_str = str(l_data.get("company") or l_data.get("name") or f"lead_{idx}")
+                hash_val = abs(hash(seed_str)) % 90000000 + 10000000
+                phone = f"+9100{hash_val}"
+                display_phone = "Not Provided"
+
+            # Check for existing lead by phone or by company/name
+            existing = session.query(Lead).filter(
+                Lead.account_id == 1,
+                (Lead.phone_e164 == phone) | (Lead.name == l_data.get("name"))
+            ).first()
+
+            lead_vars = {
+                "email": l_data.get("email", ""),
+                "company": l_data.get("company", l_data.get("name", "")),
+                "owner_name": l_data.get("owner_name", ""),
+                "website": l_data.get("website", ""),
+                "has_website": l_data.get("has_website", ""),
+                "reviews": l_data.get("reviews", ""),
+                "score": l_data.get("score", ""),
+                "pitch": l_data.get("pitch", ""),
+                "service_needed": l_data.get("service_needed", "Software Services"),
+                "budget": l_data.get("budget", "Flexible"),
+                "timeline": l_data.get("timeline", "Immediate"),
+                "status": l_data.get("status", "NEW"),
+                "priority": l_data.get("priority", "MEDIUM"),
+                "preferred_language": l_data.get("preferred_language", "te-IN"),
+                "display_phone": display_phone
+            }
 
             if existing:
                 cur_vars = dict(existing.variables or {})
-                if l_data.get("company"): cur_vars["company"] = l_data["company"]
-                if l_data.get("service_needed"): cur_vars["service_needed"] = l_data["service_needed"]
-                if l_data.get("budget"): cur_vars["budget"] = l_data["budget"]
-                if l_data.get("timeline"): cur_vars["timeline"] = l_data["timeline"]
-                if l_data.get("preferred_language"): cur_vars["preferred_language"] = l_data["preferred_language"]
+                for k, v in lead_vars.items():
+                    if v:
+                        cur_vars[k] = v
                 existing.variables = cur_vars
                 if l_data.get("name"): existing.name = l_data["name"]
-                if l_data.get("notes"): existing.notes = l_data["notes"]
+                if l_data.get("pitch"): existing.notes = l_data["pitch"]
+                elif l_data.get("notes"): existing.notes = l_data["notes"]
                 existing.updated_at = func.now()
                 updated += 1
             else:
-                variables = {
-                    "email": l_data.get("email", ""),
-                    "company": l_data.get("company", ""),
-                    "service_needed": l_data.get("service_needed", "Software Services"),
-                    "budget": l_data.get("budget", "Flexible"),
-                    "timeline": l_data.get("timeline", "Immediate"),
-                    "status": l_data.get("status", "NEW"),
-                    "priority": l_data.get("priority", "MEDIUM"),
-                    "preferred_language": l_data.get("preferred_language", "te-IN")
-                }
                 new_lead = Lead(
                     account_id=1,
-                    name=l_data.get("name", "Unknown"),
+                    name=l_data.get("name", l_data.get("company", "Unknown")),
+                    phone=phone,
                     phone_e164=phone,
+                    company=l_data.get("company", l_data.get("name", "")),
                     source=l_data.get("source", "csv"),
-                    variables=variables,
-                    notes=l_data.get("notes", "")
+                    variables=lead_vars,
+                    notes=l_data.get("pitch") or l_data.get("notes", ""),
+                    created_at=func.now(),
+                    updated_at=func.now()
                 )
                 session.add(new_lead)
                 inserted += 1

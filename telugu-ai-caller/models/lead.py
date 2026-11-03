@@ -10,7 +10,9 @@ class Lead(Base):
     account_id = Column(Integer, ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True)
     employee_id = Column(Integer, ForeignKey("employees.id", ondelete="SET NULL"), nullable=True, index=True)
     name = Column(String(255), nullable=False)
+    phone = Column(String(32), nullable=True)
     phone_e164 = Column(String(32), nullable=False, index=True)
+    company = Column(String(255), nullable=True)
     source = Column(String(64), nullable=False, default="manual")  # manual | csv | webhook | inbound
     variables = Column(JSON, nullable=True)
     consent_source = Column(String(255), nullable=True)

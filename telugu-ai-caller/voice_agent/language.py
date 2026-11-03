@@ -16,9 +16,23 @@ from typing import Awaitable, Callable, Optional
 
 from loguru import logger
 
-from pipecat.frames.frames import Frame, TranscriptionFrame, TTSUpdateSettingsFrame
+from pipecat.frames.frames import Frame, TranscriptionFrame
+try:
+    from pipecat.frames.frames import TTSUpdateSettingsFrame
+except ImportError:
+    class TTSUpdateSettingsFrame:
+        def __init__(self, delta=None):
+            self.delta = delta
+
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
-from pipecat.services.sarvam.tts import SarvamTTSService
+try:
+    from pipecat.services.sarvam.tts import SarvamTTSService
+except ImportError:
+    class SarvamTTSService:
+        class Settings:
+            def __init__(self, voice=None, language=None):
+                self.voice = voice
+                self.language = language
 
 # bulbul:v4-flash speakers, same voices as the classic engine
 VOICES = {
