@@ -17,6 +17,7 @@ from models.provider_usage_log import ProviderUsageLog
 from models.api_key import ApiKey
 from models.billing_order import BillingOrder
 from models.campaign import Campaign
+from models.call_job import CallJob
 
 __all__ = [
     "Base",
@@ -34,4 +35,5 @@ __all__ = [
     "ApiKey",
     "BillingOrder",
     "Campaign",
+    "CallJob",
 ]
