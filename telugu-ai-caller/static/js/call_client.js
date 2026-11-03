@@ -48,15 +48,54 @@ class VoiceCallClient {
     this.recordingDone = null;
     this.summaryWaitTimer = null;
 
+    // Auto-hangup state
+    this.pendingAutoHangup = false;
+    this.autoHangupTimer = null;
+
     // Callbacks
     this.onStatusChange = null;
     this.onTranscript = null;
     this.onCallEnd = null;
+    this.onCallEnding = null;
     this.onWaveformUpdate = null;
     this.onSpeakingStateChange = null; // notifies UI when customer is actively speaking
     this.onResponseTime = null;        // (totalMs, serverTiming) after each AI reply starts
     this.onRecordingStateChange = null; // (isRecording)
     this.onRecordingSaved = null;      // (callId, recordingUrl)
+  }
+
+  isClosingPhrase(text) {
+    if (!text || typeof text !== 'string') return false;
+    const lower = text.toLowerCase();
+
+    // Spoken farewell markers in Telugu
+    const teluguMarkers = [
+      'సెలవు', 'ఉంటానండి', 'ఉంటాను', 'వీడ్కోలు', 'మంచి రోజు',
+      'బై', 'బై బై', 'కాల్ ముగిస్తున్నాను', 'కలుద్దాం. ఉంటాను'
+    ];
+    for (const marker of teluguMarkers) {
+      if (text.includes(marker)) return true;
+    }
+
+    // Spoken farewell markers in Hindi
+    const hindiMarkers = [
+      'अलविदा', 'बाय', 'बाय बाय', 'शुभ दिन', 'दिन शुभ हो', 'फिर मिलेंगे'
+    ];
+    for (const marker of hindiMarkers) {
+      if (text.includes(marker)) return true;
+    }
+
+    // Spoken farewell markers in English
+    const englishMarkers = [
+      'goodbye', 'good-bye', 'have a great day', 'have a wonderful day',
+      'have a nice day', 'have a good day', 'take care, bye', 'take care!',
+      'talk to you tomorrow', 'talk soon', 'bye for now', 'bye!', 'bye.'
+    ];
+    for (const marker of englishMarkers) {
+      if (lower.includes(marker)) return true;
+    }
+
+    return false;
   }
 
   setSilenceTimeout(ms) {
@@ -68,6 +107,12 @@ class VoiceCallClient {
 
   async startCall(leadId = null, lang = null, options = {}) {
     if (this.isCallActive) return;
+
+    this.pendingAutoHangup = false;
+    if (this.autoHangupTimer) {
+      clearTimeout(this.autoHangupTimer);
+      this.autoHangupTimer = null;
+    }
 
     this.currentLeadId = leadId;
     this.recordEnabled = Boolean(options.record);
@@ -422,18 +467,38 @@ class VoiceCallClient {
       if (this.onTranscript) this.onTranscript("AI (Sales Closer)", data.text, "ai", data.language);
       this.lastTiming = data.timing || null;
 
+      // Detect call completion: explicit server flag or client-side farewell phrase detection
+      if (data.should_hangup || this.isClosingPhrase(data.text)) {
+        this.pendingAutoHangup = true;
+        console.log("[VoiceCallClient] Call completion signaled. Auto-hangup scheduled after final speech.");
+      }
+
       if (data.audio) {
         // First chunk of a reply: reply timing is measured when it starts playing
         this.audioQueue.push({ audio: data.audio, first: true });
         if (!this.isPlayingAudio) this.processAudioQueue();
       } else {
         this.reportResponseTime();
-        setTimeout(() => {
-          this.isListeningActive = true;
+        if (this.pendingAutoHangup) {
+          this.isListeningActive = false;
           if (this.onStatusChange) {
-            this.onStatusChange("🟢 వింటున్నాను... మీరు మాట్లాడండి (Listening... speak now)");
+            this.onStatusChange("📞 సంభాషణ ముగిసింది. కాల్ ముగుస్తోంది... (Call concluded. Hanging up...)");
           }
-        }, this.listenGapMs);
+          this.autoHangupTimer = setTimeout(() => {
+            if (this.isCallActive) {
+              this.endCall(true);
+            }
+          }, 1200);
+        } else {
+          setTimeout(() => {
+            if (this.isCallActive && !this.isPlayingAudio && !this.pendingAutoHangup) {
+              this.isListeningActive = true;
+              if (this.onStatusChange) {
+                this.onStatusChange("🟢 వింటున్నాను... మీరు మాట్లాడండి (Listening... speak now)");
+              }
+            }
+          }, this.listenGapMs);
+        }
       }
 
     } else if (event === "ai_audio") {
@@ -498,9 +563,24 @@ class VoiceCallClient {
       this.isPlayingAudio = false;
       if (this.onWaveformUpdate) this.onWaveformUpdate(false);
 
+      if (this.pendingAutoHangup) {
+        this.isListeningActive = false;
+        if (this.onStatusChange) {
+          this.onStatusChange("📞 సంభాషణ ముగిసింది. కాల్ ముగుస్తోంది... (Call concluded. Hanging up...)");
+        }
+        // Polite natural 1.2s pause after final speech finishes before hanging up
+        this.autoHangupTimer = setTimeout(() => {
+          if (this.isCallActive) {
+            console.log("[VoiceCallClient] Triggering auto-hangup now.");
+            this.endCall(true);
+          }
+        }, 1200);
+        return;
+      }
+
       // Short breathing gap before the mic reopens so the AI doesn't hear its own tail
       setTimeout(() => {
-        if (this.isCallActive && !this.isPlayingAudio) {
+        if (this.isCallActive && !this.isPlayingAudio && !this.pendingAutoHangup) {
           this.isListeningActive = true;
           if (this.onStatusChange) {
             this.onStatusChange("🟢 వింటున్నాను... మీరు మాట్లాడండి (Listening... speak now)");
@@ -564,6 +644,11 @@ class VoiceCallClient {
 
   stopPlayback() {
     this.audioQueue = [];
+    if (this.autoHangupTimer) {
+      clearTimeout(this.autoHangupTimer);
+      this.autoHangupTimer = null;
+    }
+    this.pendingAutoHangup = false;
     if (this.currentSourceNode) {
       try { this.currentSourceNode.onended = null; this.currentSourceNode.stop(); } catch (e) {}
       this.currentSourceNode = null;
@@ -585,6 +670,16 @@ class VoiceCallClient {
 
   endCall(notifyServer = true) {
     if (!this.isCallActive) return;
+
+    if (this.autoHangupTimer) {
+      clearTimeout(this.autoHangupTimer);
+      this.autoHangupTimer = null;
+    }
+    this.pendingAutoHangup = false;
+
+    if (this.onCallEnding) {
+      try { this.onCallEnding(); } catch (e) {}
+    }
 
     this.isCallActive = false;
     this.isListeningActive = false;

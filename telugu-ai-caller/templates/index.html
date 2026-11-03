@@ -15,50 +15,50 @@
 
 :root {
   /* Unique Aurora Light Canvas Palette */
-  --bg-app: #f8fafc;
+  --bg-app: #faf8f5;
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
-  --bg-subtle: #f8fafc;
+  --bg-card-hover: #faf6f0;
+  --bg-subtle: #f5f2eb;
   --bg-input: #ffffff;
 
-  --border-light: #e2e8f0;
-  --border-medium: #cbd5e1;
-  --border-focus: #4f46e5;
+  --border-light: #ece8df;
+  --border-medium: #ded8cc;
+  --border-focus: #ea580c;
 
-  --text-main: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
+  --text-main: #18181b;
+  --text-secondary: #44403c;
+  --text-muted: #78716c;
   --text-light: #94a3b8;
 
   /* Bespoke Royal Obsidian Sapphire & Vivid Emerald Jade (High-Tech Executive Precision) */
-  --bg-app: #fbfcfd;
+  --bg-app: #faf8f5;
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
-  --bg-subtle: #f1f5f9;
+  --bg-card-hover: #faf6f0;
+  --bg-subtle: #f5f2eb;
   --bg-input: #ffffff;
 
-  --border-light: #e2e8f0;
-  --border-medium: #cbd5e1;
-  --border-focus: #2563eb;
+  --border-light: #ece8df;
+  --border-medium: #ded8cc;
+  --border-focus: #ea580c;
 
-  --text-main: #090d16;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
+  --text-main: #18181b;
+  --text-secondary: #44403c;
+  --text-muted: #78716c;
   --text-light: #94a3b8;
 
   /* Royal Sapphire Primary */
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-soft: #eff6ff;
-  --primary-border: #bfdbfe;
+  --primary: #ea580c;
+  --primary-hover: #c2410c;
+  --primary-soft: #fff7ed;
+  --primary-border: #fed7aa;
 
   /* Emerald Jade Growth Accent */
-  --accent: #059669;
-  --accent-hover: #047857;
-  --accent-soft: #ecfdf5;
-  --accent-border: #a7f3d0;
+  --accent: #f97316;
+  --accent-hover: #ea580c;
+  --accent-soft: #ffedd5;
+  --accent-border: #fdba74;
 
   --teal: #0d9488;
   --teal-soft: #f0fdfa;
@@ -80,9 +80,9 @@
   /* Multi-layered Soft Shadows with subtle Sapphire glow */
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
-  --shadow-md: 0 8px 24px -4px rgba(37, 99, 235, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 16px 36px -6px rgba(37, 99, 235, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-  --shadow-glow: 0 0 25px rgba(37, 99, 235, 0.20);
+  --shadow-md: 0 8px 24px -4px rgba(234, 88, 12, 0.08), 0 2px 6px -1px rgba(24, 24, 27, 0.04);
+  --shadow-lg: 0 16px 36px -6px rgba(234, 88, 12, 0.12), 0 4px 12px -2px rgba(24, 24, 27, 0.04);
+  --shadow-glow: 0 0 25px rgba(234, 88, 12, 0.20);
 }
 
 * {
@@ -95,9 +95,9 @@
 body {
   background-color: var(--bg-app);
   background-image: 
-    radial-gradient(ellipse at 15% 0%, rgba(37, 99, 235, 0.07) 0%, rgba(251, 252, 253, 0) 55%),
-    radial-gradient(ellipse at 85% 15%, rgba(16, 185, 129, 0.06) 0%, rgba(251, 252, 253, 0) 50%),
-    radial-gradient(ellipse at 50% 90%, rgba(37, 99, 235, 0.04) 0%, rgba(251, 252, 253, 0) 60%);
+    radial-gradient(ellipse at 15% 0%, rgba(249, 115, 22, 0.06) 0%, rgba(250, 248, 245, 0) 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(234, 88, 12, 0.05) 0%, rgba(250, 248, 245, 0) 50%),
+    radial-gradient(ellipse at 50% 90%, rgba(249, 115, 22, 0.03) 0%, rgba(250, 248, 245, 0) 60%);
   color: var(--text-main);
   min-height: 100vh;
   display: flex;
@@ -150,16 +150,16 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
   color: #ffffff;
   border: none;
-  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 3px 12px rgba(234, 88, 12, 0.28);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.38);
 }
 
 .btn-outline {
@@ -225,9 +225,6 @@ body {
 }
 
 /* ===================================================================
-   TOP NAVBAR (FROSTED PORCELAIN GLASS)
-   =================================================================== */
-/* ===================================================================
    TOP NAVBAR (PIXEL-PERFECT EXECUTIVE HEADER)
    =================================================================== */
 .navbar {
@@ -264,11 +261,11 @@ body {
   height: 36px !important;
   min-width: 36px !important;
   border-radius: 9px !important;
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 55%, #059669 100%) !important;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 55%, #c2410c 100%) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.28) !important;
+  box-shadow: 0 3px 10px rgba(234, 88, 12, 0.28) !important;
   flex-shrink: 0 !important;
 }
 
@@ -305,9 +302,7 @@ body {
   letter-spacing: 0.04em !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
-  background: #eff6ff !important;
-  border: 1px solid #bfdbfe !important;
-  color: #1d4ed8 !important;
+  background: #fff7ed !important; border: 1px solid #fed7aa !important; color: #c2410c !important;
   white-space: nowrap !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -358,9 +353,7 @@ body {
 }
 
 .nav-tab-btn.active {
-  background: #eff6ff !important;
-  color: #1d4ed8 !important;
-  border-color: #bfdbfe !important;
+  background: #fff7ed !important; color: #ea580c !important; border-color: #fed7aa !important;
   font-weight: 700 !important;
 }
 
@@ -377,9 +370,7 @@ body {
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
-  background: #ecfdf5 !important;
-  border: 1px solid #a7f3d0 !important;
-  color: #047857 !important;
+  background: #fffbeb !important; border: 1px solid #fde68a !important; color: #92400e !important;
   font-size: 0.74rem !important;
   font-weight: 700 !important;
   padding: 0 10px !important;
@@ -393,14 +384,12 @@ body {
 }
 
 .credit-balance-chip:hover {
-  background: #d1fae5 !important;
-  border-color: #6ee7b7 !important;
+  background: #fef3c7 !important; border-color: #fcd34d !important;
   transform: translateY(-1px) !important;
 }
 
 .credit-balance-chip .add-icon {
-  background: #059669 !important;
-  color: #ffffff !important;
+  background: #d97706 !important; color: #ffffff !important;
   width: 15px !important;
   height: 15px !important;
   border-radius: 50% !important;
@@ -509,7 +498,7 @@ body {
 }
 
 .hero-title span.highlight {
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #059669 100%);
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -532,7 +521,7 @@ body {
 }
 
 .btn-hero-primary {
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
   color: #ffffff;
   border: none;
   font-weight: 700;
@@ -540,7 +529,7 @@ body {
   padding: 13px 28px;
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.35);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -549,7 +538,7 @@ body {
 
 .btn-hero-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(79, 70, 229, 0.45);
+  box-shadow: 0 10px 28px rgba(234, 88, 12, 0.45);
 }
 
 .btn-hero-secondary {
@@ -855,7 +844,7 @@ body {
   height: 42px;
   border-radius: 10px;
   background: #eef2ff;
-  color: #4f46e5;
+  color: #ea580c;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -911,7 +900,7 @@ body {
   top: -13px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 800;
@@ -1003,14 +992,14 @@ body {
 }
 
 .pricing-btn.primary {
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
   color: #ffffff;
   border: none;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
 }
 
 .pricing-btn.primary:hover {
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45);
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.45);
   transform: translateY(-1px);
 }
 
@@ -1095,7 +1084,7 @@ body {
 
 .code-lang-btn.active {
   background: #334155;
-  color: #38bdf8;
+  color: #fb923c;
 }
 
 .code-pre-box {
@@ -1105,7 +1094,7 @@ body {
   line-height: 1.5;
   overflow-x: auto;
   white-space: pre;
-  color: #38bdf8;
+  color: #fb923c;
 }
 
 /* API Key Dashboard Table */
@@ -1181,7 +1170,13 @@ body {
   margin-bottom: 5px;
 }
 
-.form-group input, .form-group select, .form-group textarea {
+/* ===================================================================
+   CRISP FORM CONTROLS & RADIO/CHECKBOX ALIGNMENT FIX
+   =================================================================== */
+
+.form-group input:not([type="radio"]):not([type="checkbox"]),
+.form-group select,
+.form-group textarea {
   width: 100%;
   background: #ffffff;
   border: 1px solid var(--border-medium);
@@ -1190,6 +1185,55 @@ body {
   color: var(--text-main);
   font-size: 0.86rem;
   transition: all 0.15s ease;
+}
+
+.form-group input[type="radio"],
+.form-group input[type="checkbox"],
+input[type="radio"],
+input[type="checkbox"] {
+  width: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  height: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 1.5px solid #d4d4d8 !important;
+  border-radius: 50% !important;
+  accent-color: #ea580c !important;
+  cursor: pointer !important;
+  flex: 0 0 18px !important;
+  box-shadow: none !important;
+  vertical-align: middle;
+}
+
+input[type="checkbox"] {
+  border-radius: 4px !important;
+}
+
+.radio-card-option {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 16px !important;
+  border: 1.5px solid var(--border-light, #ede8de) !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  user-select: none !important;
+  margin: 0 !important;
+}
+
+.radio-card-option:hover {
+  border-color: #fed7aa !important;
+  background: #fff7ed !important;
+}
+
+.radio-card-option:has(input:checked),
+.radio-card-option.active {
+  border-color: #ea580c !important;
+  background: #fffaf5 !important;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.08) !important;
 }
 
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
@@ -1284,7 +1328,7 @@ body {
 .campaign-progress-bar-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #4f46e5, #059669);
+  background: linear-gradient(90deg, #ea580c, #f97316);
   transition: width 0.3s ease;
 }
 
@@ -1442,7 +1486,7 @@ body {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -1899,97 +1943,1468 @@ body {
   background: var(--primary-soft);
 }
 .stage-pill-btn.active {
-  background: #4f46e5;
+  background: #ea580c;
   color: #ffffff;
-  border-color: #4f46e5;
-  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+  border-color: #ea580c;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.28);
+}
+/* Dark Obsidian Button */
+.btn-dark, .btn-obsidian {
+  background: #18181b !important;
+  color: #ffffff !important;
+  border: 1px solid #27272a !important;
+  box-shadow: 0 3px 12px rgba(24, 24, 27, 0.22);
+}
+.btn-dark:hover, .btn-obsidian:hover {
+  background: #27272a !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(24, 24, 27, 0.32);
+}
+
+/* ===================================================================
+   HERO SECTION (WARM ARCHITECTURAL 2-COLUMN SHOWCASE)
+   =================================================================== */
+.hero-section {
+  padding: 44px 24px 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.hero-layout-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  align-items: center;
+  gap: 44px;
+  margin-bottom: 36px;
+}
+
+.hero-left-col {
+  text-align: left;
+}
+
+.hero-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  padding: 6px 15px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #9a3412;
+  margin-bottom: 22px;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.08);
+}
+
+.hero-title {
+  font-size: 3.15rem;
+  line-height: 1.14;
+  font-weight: 800;
+  color: #18181b;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+}
+
+.hero-title .highlight-orange {
+  color: #ea580c;
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-sparkle {
+  color: #f97316;
+  font-size: 2.2rem;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 2px;
+  animation: sparkleTwinkle 2.5s infinite ease-in-out;
+}
+
+@keyframes sparkleTwinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+  50% { transform: scale(1.15) rotate(10deg); opacity: 1; }
+}
+
+.hero-subtitle {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+  max-width: 540px;
+}
+
+.hero-cta-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+
+.btn-hero-dark {
+  background: #18181b;
+  color: #ffffff;
+  border: 1px solid #27272a;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 13px 26px;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(24, 24, 27, 0.28);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-hero-dark:hover {
+  background: #27272a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(24, 24, 27, 0.38);
+}
+
+.btn-phone-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.4);
+}
+
+.btn-hero-glass {
+  background: rgba(255, 255, 255, 0.95);
+  color: #18181b;
+  border: 1px solid #ded8cc;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 13px 24px;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+
+.btn-hero-glass:hover {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #ea580c;
+  transform: translateY(-1px);
+}
+
+.hero-trust-list {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.orange-check {
+  color: #ea580c;
+  font-weight: 800;
+  margin-right: 3px;
+}
+
+/* Right Architectural Scene */
+.hero-scene-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 440px;
+}
+
+.archway-window {
+  width: 320px;
+  height: 420px;
+  border-radius: 160px 160px 24px 24px;
+  background: linear-gradient(180deg, #fed7aa 0%, #ffedd5 40%, #f5ece1 80%, #ebe2d3 100%);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.6), 0 20px 50px rgba(180, 140, 100, 0.18);
+  border: 1px solid #ded8cc;
+}
+
+.archway-scenery {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 60% 35%, rgba(255, 237, 213, 0.8) 0%, rgba(254, 215, 170, 0.4) 40%, transparent 70%),
+    linear-gradient(180deg, #fbcfe8 0%, #fed7aa 35%, #ffedd5 65%, #f4eae0 100%);
+}
+
+.archway-mountains {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 55%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 220' preserveAspectRatio='none'%3E%3Cpath d='M-10,220 L-10,120 Q60,70 120,110 T240,60 Q280,85 330,130 L330,220 Z' fill='%23e0cfc0' opacity='0.7'/%3E%3Cpath d='M-10,220 L-10,140 Q40,110 90,130 T210,100 Q260,120 330,150 L330,220 Z' fill='%23d6beaa' opacity='0.9'/%3E%3C/svg%3E") no-repeat bottom center;
+  background-size: cover;
+}
+
+.archway-ivy {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 420'%3E%3Cpath d='M20,120 Q35,60 80,30 T160,15' fill='none' stroke='%233f6212' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='40' cy='85' r='7' fill='%234d7c0f'/%3E%3Ccircle cx='70' cy='55' r='8' fill='%2365a30d'/%3E%3Ccircle cx='105' cy='32' r='7' fill='%234d7c0f'/%3E%3Ccircle cx='140' cy='20' r='6' fill='%2365a30d'/%3E%3C/svg%3E") no-repeat top left;
+  background-size: contain;
+}
+
+.floating-pod-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+.calling-pod-card {
+  width: 210px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  padding: 24px 18px;
+  text-align: center;
+  box-shadow: 0 20px 45px rgba(180, 130, 90, 0.22);
+}
+
+.pod-wave-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 36px;
+  margin-bottom: 12px;
+}
+
+.pod-wave-bar {
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+  animation: podWave 1.2s infinite ease-in-out alternate;
+}
+
+.pod-wave-bar:nth-child(1) { height: 14px; animation-delay: 0.1s; }
+.pod-wave-bar:nth-child(2) { height: 26px; animation-delay: 0.3s; }
+.pod-wave-bar:nth-child(3) { height: 34px; animation-delay: 0.0s; }
+.pod-wave-bar:nth-child(4) { height: 28px; animation-delay: 0.4s; }
+.pod-wave-bar:nth-child(5) { height: 18px; animation-delay: 0.2s; }
+.pod-wave-bar:nth-child(6) { height: 30px; animation-delay: 0.5s; }
+.pod-wave-bar:nth-child(7) { height: 12px; animation-delay: 0.25s; }
+
+@keyframes podWave {
+  0% { transform: scaleY(0.4); opacity: 0.7; }
+  100% { transform: scaleY(1.1); opacity: 1; }
+}
+
+.pod-title {
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #18181b;
+  margin-bottom: 2px;
+}
+
+.pod-subtitle {
+  font-size: 0.76rem;
+  color: #78716c;
+  margin-bottom: 16px;
+}
+
+.pod-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.pod-btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #ded8cc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #44403c;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transition: all 0.15s ease;
+}
+
+.pod-btn-icon:hover {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.pod-btn-end {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  transition: all 0.15s ease;
+}
+
+.pod-btn-end:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+/* Floating 3D Cards Stack */
+.floating-cards-stack {
+  position: absolute;
+  right: -24px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 15;
+}
+
+.feature-float-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.98);
+  border-radius: 16px;
+  padding: 10px 16px;
+  box-shadow: 0 10px 24px rgba(180, 140, 100, 0.12);
+  transform: perspective(600px) rotateY(-8deg) rotateX(2deg);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.feature-float-card:hover {
+  transform: perspective(600px) rotateY(-2deg) rotateX(0deg) translateX(-4px);
+  box-shadow: 0 14px 30px rgba(234, 88, 12, 0.16);
+}
+
+.float-card-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ea580c;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.float-card-text {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #18181b;
+}
+
+/* ===================================================================
+   KPI CAPSULE RIBBON (SINGLE FLOATING PORCELAIN CAPSULE)
+   =================================================================== */
+.kpi-capsule-ribbon {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #ede8de;
+  border-radius: 24px;
+  padding: 24px 36px;
+  box-shadow: 0 14px 40px -10px rgba(180, 140, 100, 0.12);
+  max-width: 1240px;
+  margin: 0 auto 55px;
+}
+
+.kpi-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kpi-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kpi-icon-orange {
+  font-size: 1.4rem;
+  color: #ea580c;
+  flex-shrink: 0;
+}
+
+.kpi-val {
+  font-size: 1.95rem;
+  font-weight: 800;
+  color: #18181b;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.kpi-lbl {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #78716c;
+}
+
+/* ===================================================================
+   PROCESS SECTION ("FROM LEAD TO CLOSED DEAL")
+   =================================================================== */
+.deal-process-section {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 40px;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 24px;
+  padding: 38px 36px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 50px;
+}
+
+.deal-process-title {
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.18;
+  color: #18181b;
+  margin-bottom: 12px;
+}
+
+.deal-process-desc {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin-bottom: 22px;
+}
+
+.btn-process-explore {
+  background: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 10px 18px;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-process-explore:hover {
+  background: #fed7aa;
+  transform: translateY(-1px);
+}
+
+.process-cards-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.process-track-line {
+  position: absolute;
+  top: 36px;
+  left: 30px;
+  right: 30px;
+  height: 2px;
+  border-top: 2px dashed #fdba74;
+  z-index: 1;
+}
+
+.process-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ede8de;
+  border-radius: 18px;
+  padding: 20px 16px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 4px 16px rgba(180, 150, 120, 0.08);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.process-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(234, 88, 12, 0.12);
+}
+
+.process-card.card-green-glow { border-color: #bbf7d0; box-shadow: 0 4px 18px rgba(34, 197, 94, 0.10); }
+.process-card.card-purple-glow { border-color: #e9d5ff; box-shadow: 0 4px 18px rgba(168, 85, 247, 0.10); }
+.process-card.card-blue-glow { border-color: #bae6fd; box-shadow: 0 4px 18px rgba(56, 189, 248, 0.10); }
+.process-card.card-orange-glow { border-color: #fed7aa; box-shadow: 0 4px 18px rgba(249, 115, 22, 0.12); }
+
+.process-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.badge-excel { background: #dcfce7; color: #15803d; font-weight: 800; font-size: 0.85rem; }
+.badge-purple { background: #f3e8ff; color: #7e22ce; }
+.badge-blue { background: #e0f2fe; color: #0284c7; }
+.badge-orange { background: #ffedd5; color: #c2410c; font-weight: 800; font-size: 0.9rem; }
+
+.process-card-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #18181b;
+  margin-bottom: 6px;
+}
+
+.process-card-sub {
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: #78716c;
+}
+
+@media (max-width: 1024px) {
+  .hero-layout-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .hero-left-col {
+    text-align: center;
+  }
+  .hero-subtitle {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-cta-group, .hero-trust-list {
+    justify-content: center;
+  }
+  .kpi-capsule-ribbon {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 20px 24px;
+  }
+  .deal-process-section {
+    grid-template-columns: 1fr;
+  }
+  .process-cards-track {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .process-track-line {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: 2.2rem;
+  }
+  .kpi-capsule-ribbon {
+    grid-template-columns: 1fr;
+  }
+  .process-cards-track {
+    grid-template-columns: 1fr;
+  }
+  .floating-cards-stack {
+    position: static;
+    transform: none;
+    margin-top: 14px;
+  }
+}
+
+/* ===================================================================
+   PIXEL-PERFECT OUTPERO LUXURY THEME (REFERENCE IMAGE 100% MATCH)
+   =================================================================== */
+
+:root {
+  --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  height: 72px !important;
+  padding: 0 48px !important;
+  background: rgba(250, 248, 245, 0.94) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  border-bottom: 1px solid rgba(236, 232, 223, 0.7) !important;
+}
+
+.brand-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.brand-logo-svg {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(234, 88, 12, 0.35));
+}
+
+.brand-title-text {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.16rem;
+  color: #18181b;
+  letter-spacing: -0.015em;
+  line-height: 1;
+}
+
+/* Nav links dropdowns */
+.nav-center-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 28px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.nav-link-item {
+  position: relative;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #27272a;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  transition: color 0.15s ease;
+  user-select: none;
+}
+
+.nav-link-item:hover {
+  color: var(--primary);
+}
+
+.nav-link-item svg {
+  transition: transform 0.2s ease;
+}
+
+.nav-link-item:hover svg {
+  transform: translateY(2px);
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: -12px;
+  min-width: 210px;
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 1100;
+}
+
+.nav-link-item:hover .nav-dropdown-menu {
+  display: flex;
+}
+
+.nav-dropdown-link {
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #27272a;
+  border-radius: 8px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.nav-dropdown-link:hover {
+  background: #fff7ed;
+  color: var(--primary);
+}
+
+/* Navbar Right */
+.nav-right-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-nav-login {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #18181b;
+  border-radius: 9999px;
+  padding: 8px 20px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.btn-nav-login:hover {
+  border-color: #d4d4d8;
+  background: #fafafa;
+}
+
+.btn-nav-trial {
+  background: #18181b;
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  padding: 8px 20px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 10px rgba(24, 24, 27, 0.22);
+}
+
+.btn-nav-trial:hover {
+  background: #27272a;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(24, 24, 27, 0.32);
+}
+
+/* Hero Section */
+.hero-wrapper {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 38px 36px 20px;
+}
+
+.hero-main-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.15fr;
+  align-items: center;
+  gap: 36px;
+  position: relative;
+}
+
+/* Left Hero */
+.hero-left-content {
+  text-align: left;
+  z-index: 5;
+}
+
+.hero-sales-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #27272a;
+  margin-bottom: 24px;
+}
+
+.hero-sales-pill .soundwave-icon {
+  color: #f97316;
+  width: 16px;
+  height: 16px;
+}
+
+.hero-h1-headline {
+  font-family: var(--font-heading);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  color: #18181b;
+  margin-bottom: 20px;
+}
+
+.hero-h1-headline .text-orange {
+  color: #ea580c;
+  display: inline;
+}
+
+.hero-sparkle-star {
+  display: inline-block;
+  color: #f97316;
+  font-size: 2.2rem;
+  vertical-align: middle;
+  animation: sparkleTwinkle 2.8s infinite ease-in-out;
+  margin-left: 2px;
+}
+
+@keyframes sparkleTwinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; }
+  50% { transform: scale(1.18) rotate(12deg); opacity: 1; filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.6)); }
+}
+
+.hero-desc-p {
+  font-family: var(--font-body);
+  font-size: 1.02rem;
+  line-height: 1.62;
+  color: #52525b;
+  margin-bottom: 28px;
+  max-width: 520px;
+}
+
+.hero-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.btn-hero-dark-pill {
+  background: #18181b;
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(24, 24, 27, 0.28);
+}
+
+.btn-hero-dark-pill:hover {
+  background: #27272a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(24, 24, 27, 0.36);
+}
+
+.btn-phone-orange-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.4);
+}
+
+.btn-hero-white-pill {
+  background: #ffffff;
+  color: #18181b;
+  border: 1.5px solid #e4e4e7;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.btn-hero-white-pill:hover {
+  border-color: #d4d4d8;
+  background: #fafafa;
+  transform: translateY(-1px);
+}
+
+.hero-checklist-row {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #52525b;
+}
+
+.check-orange {
+  color: #ea580c;
+  font-weight: 800;
+  margin-right: 4px;
+}
+
+/* Right Hero Visual Showcase */
+.hero-visual-col {
+  position: relative;
+  width: 100%;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-archway-backdrop {
+  width: 100%;
+  max-width: 580px;
+  border-radius: 28px;
+  display: block;
+  box-shadow: 0 20px 50px rgba(180, 140, 100, 0.14);
+}
+
+/* Floating Glass Calling Pod */
+.floating-calling-pod {
+  position: absolute;
+  left: 36%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 230px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 28px;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 20px 45px rgba(180, 130, 90, 0.20);
+  z-index: 10;
+  animation: floatPod 4.5s ease-in-out infinite alternate;
+}
+
+@keyframes floatPod {
+  0% { transform: translate(-50%, -50%) translateY(-5px); }
+  100% { transform: translate(-50%, -50%) translateY(5px); }
+}
+
+.pod-wave-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 38px;
+  margin-bottom: 12px;
+}
+
+.pod-wave-bar {
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+  animation: waveBarPulse 1.2s infinite ease-in-out alternate;
+}
+
+.pod-wave-bar:nth-child(1) { height: 14px; animation-delay: 0.1s; }
+.pod-wave-bar:nth-child(2) { height: 26px; animation-delay: 0.3s; }
+.pod-wave-bar:nth-child(3) { height: 36px; animation-delay: 0.0s; }
+.pod-wave-bar:nth-child(4) { height: 28px; animation-delay: 0.4s; }
+.pod-wave-bar:nth-child(5) { height: 18px; animation-delay: 0.2s; }
+.pod-wave-bar:nth-child(6) { height: 32px; animation-delay: 0.5s; }
+.pod-wave-bar:nth-child(7) { height: 12px; animation-delay: 0.25s; }
+
+@keyframes waveBarPulse {
+  0% { transform: scaleY(0.4); opacity: 0.7; }
+  100% { transform: scaleY(1.1); opacity: 1; }
+}
+
+.pod-agent-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #18181b;
+  margin-bottom: 2px;
+}
+
+.pod-agent-subtitle {
+  font-size: 0.78rem;
+  color: #71717a;
+  margin-bottom: 16px;
+}
+
+.pod-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.pod-action-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #27272a;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+
+.pod-action-circle:hover {
+  background: #fff7ed;
+  color: var(--primary);
+}
+
+.pod-hangup-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  transition: all 0.15s ease;
+  animation: callRingPulse 2s infinite;
+}
+
+@keyframes callRingPulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Floating 3D Cards Stack */
+.floating-3d-stack {
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%) perspective(1000px) rotateY(-8deg) rotateX(4deg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 15;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-3d-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 12px 18px;
+  box-shadow: 0 10px 25px rgba(180, 140, 100, 0.12);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+}
+
+.floating-3d-card:hover {
+  transform: translateX(-8px) scale(1.02);
+  box-shadow: 0 14px 32px rgba(234, 88, 12, 0.18);
+  background: #ffffff;
+}
+
+.float-card-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ea580c;
+  flex-shrink: 0;
+}
+
+.float-card-label {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #18181b;
+}
+
+/* KPI Capsule Ribbon */
+.kpi-ribbon-card {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #ede8de;
+  border-radius: 26px;
+  padding: 26px 42px;
+  box-shadow: 0 16px 40px -10px rgba(180, 140, 100, 0.12);
+  margin-top: 36px;
+  margin-bottom: 50px;
+}
+
+.kpi-metric-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kpi-metric-icon {
+  color: #ea580c;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.kpi-metric-val {
+  font-family: var(--font-heading);
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #18181b;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.kpi-metric-lbl {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #71717a;
+  margin-top: 4px;
+}
+
+/* Process Section */
+.process-section-wrap {
+  position: relative;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 36px;
+  align-items: center;
+  margin-bottom: 60px;
+}
+
+.process-corner-plant {
+  position: absolute;
+  left: -40px;
+  bottom: -40px;
+  width: 220px;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.process-heading-h2 {
+  font-family: var(--font-heading);
+  font-size: 2.3rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #18181b;
+  margin-bottom: 12px;
+}
+
+.process-desc-p {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #52525b;
+  margin-bottom: 22px;
+}
+
+.btn-explore-pill {
+  background: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 10px 20px;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-explore-pill:hover {
+  background: #fed7aa;
+  transform: translateY(-1px);
+}
+
+.process-cards-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  z-index: 2;
+}
+
+.process-dashed-line {
+  position: absolute;
+  top: 38px;
+  left: 40px;
+  right: 40px;
+  height: 2px;
+  border-top: 2px dashed #fdba74;
+  z-index: 1;
+}
+
+.process-step-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid #ede8de;
+  border-radius: 20px;
+  padding: 22px 18px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 4px 16px rgba(180, 150, 120, 0.08);
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.process-step-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(234, 88, 12, 0.14);
+}
+
+.process-step-card.glow-green { border-color: #bbf7d0; box-shadow: 0 4px 20px rgba(34, 197, 94, 0.12); }
+.process-step-card.glow-purple { border-color: #e9d5ff; box-shadow: 0 4px 20px rgba(168, 85, 247, 0.12); }
+.process-step-card.glow-blue { border-color: #bae6fd; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.12); }
+.process-step-card.glow-orange { border-color: #fed7aa; box-shadow: 0 4px 20px rgba(249, 115, 22, 0.14); }
+
+.step-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.badge-excel-green { background: #dcfce7; color: #16a34a; }
+.badge-purple-sound { background: #f3e8ff; color: #9333ea; }
+.badge-blue-chat { background: #e0f2fe; color: #0284c7; }
+.badge-orange-check { background: #ffedd5; color: #ea580c; }
+
+.step-card-title {
+  font-family: var(--font-heading);
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #18181b;
+  margin-bottom: 6px;
+}
+
+.step-card-subtext {
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: #71717a;
+}
+
+@media (max-width: 1024px) {
+  .hero-main-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .hero-left-content {
+    text-align: center;
+  }
+  .hero-desc-p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-actions-row, .hero-checklist-row {
+    justify-content: center;
+  }
+  .floating-3d-stack {
+    position: static;
+    transform: none;
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .kpi-ribbon-card {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 22px 24px;
+  }
+  .process-section-wrap {
+    grid-template-columns: 1fr;
+  }
+  .process-cards-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .process-dashed-line {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    padding: 0 16px !important;
+  }
+  .nav-center-menu {
+    display: none;
+  }
+  .hero-h1-headline {
+    font-size: 2.3rem;
+  }
+  .floating-3d-stack {
+    grid-template-columns: 1fr;
+  }
+  .kpi-ribbon-card {
+    grid-template-columns: 1fr;
+  }
+  .process-cards-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 </style>
   <link rel="stylesheet" href="/static/css/calling-station.css?v=1.5">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <!-- ================================================================= -->
   <!-- TOP NAVIGATION BAR (OUTPERO STYLE) -->
   <!-- ================================================================= -->
-  <header class="navbar">
-    <div class="navbar-left">
-      <div class="logo-icon">
-        <svg class="icon icon-md" viewBox="0 0 24 24" style="color: #ffffff;">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-          <line x1="12" y1="19" x2="12" y2="23"></line>
-          <line x1="8" y1="23" x2="16" y2="23"></line>
-        </svg>
-      </div>
-      <div class="brand-text" onclick="window.switchMainTab('landing')">
-        <div class="brand-title-wrap">
-          <span class="brand-title">LEADCLOSER<span style="color: var(--primary);">.AI</span></span>
-          <span class="brand-tag">SP ASSOCIATES</span>
-        </div>
-        <div class="brand-subtitle">Autonomous Multilingual AI Telecaller</div>
-      </div>
+      <header class="navbar">
+    <div class="brand-wrap" onclick="window.switchMainTab('landing')">
+      <!-- Origami Diamond SVG Mark -->
+      <svg class="brand-logo-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navOriG1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f97316" />
+            <stop offset="100%" stop-color="#ea580c" />
+          </linearGradient>
+          <linearGradient id="navOriG2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fb923c" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+          <linearGradient id="navOriG3" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ea580c" />
+            <stop offset="100%" stop-color="#c2410c" />
+          </linearGradient>
+        </defs>
+        <polygon points="16,2 29,11 16,16" fill="url(#navOriG2)" />
+        <polygon points="16,2 3,11 16,16" fill="url(#navOriG1)" />
+        <polygon points="3,11 16,30 16,16" fill="url(#navOriG3)" />
+        <polygon points="29,11 16,30 16,16" fill="url(#navOriG1)" />
+      </svg>
+      <span class="brand-title-text">LEADCLOSER.AI</span>
     </div>
 
-    <!-- Navigation Tab Buttons -->
-    <nav class="nav-links-row">
-      <button class="nav-tab-btn active" id="tabBtnLanding" onclick="window.switchMainTab('landing')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        Overview
-      </button>
-      <button class="nav-tab-btn" id="tabBtnVoice" onclick="window.switchMainTab('landing', 'voiceSection')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-        Voice Agents
-      </button>
-      <button class="nav-tab-btn" id="tabBtnCrm" onclick="window.switchMainTab('crm')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        Live CRM
-      </button>
-      <button class="nav-tab-btn" id="tabBtnAnalytics" onclick="window.switchMainTab('analytics')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-        Analytics
-      </button>
-      <button class="nav-tab-btn" id="tabBtnApi" onclick="window.switchMainTab('landing', 'apiSection')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-        Developer API
-      </button>
-      <button class="nav-tab-btn" id="tabBtnEmployees" onclick="window.switchMainTab('landing', 'employeesSection')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-        AI Employees
-      </button>
-      <button class="nav-tab-btn" id="tabBtnPricing" onclick="window.switchMainTab('landing', 'pricingSection')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+    <!-- Center Navigation Links (Matching Image: Product ⌵, Solutions ⌵, Resources ⌵, Pricing) -->
+    <nav class="nav-center-menu">
+      <div class="nav-link-item">
+        <span>Product</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        <div class="nav-dropdown-menu">
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('crm')">
+            <i data-lucide="layout-dashboard" style="width: 15px; height: 15px;"></i> CRM Calling Station
+          </a>
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('landing', 'employeesSection')">
+            <i data-lucide="bot" style="width: 15px; height: 15px;"></i> AI Sales Employees
+          </a>
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('landing', 'voiceSection')">
+            <i data-lucide="audio-lines" style="width: 15px; height: 15px;"></i> Voice Agent Demos
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-link-item">
+        <span>Solutions</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        <div class="nav-dropdown-menu">
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('crm')">
+            <i data-lucide="phone" style="width: 15px; height: 15px;"></i> 30s Outbound Telephony
+          </a>
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.openDiscoverLeadsModal()">
+            <i data-lucide="search" style="width: 15px; height: 15px;"></i> Apollo & Apify Discovery
+          </a>
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('analytics')">
+            <i data-lucide="chart-column-increasing" style="width: 15px; height: 15px;"></i> Executive Analytics
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-link-item">
+        <span>Resources</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        <div class="nav-dropdown-menu">
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.switchMainTab('landing', 'apiSection')">
+            <i data-lucide="code-xml" style="width: 15px; height: 15px;"></i> Developer REST API
+          </a>
+          <a href="javascript:void(0)" class="nav-dropdown-link" onclick="window.openGenerateKeyModal()">
+            <i data-lucide="key-round" style="width: 15px; height: 15px;"></i> API Key Generator
+          </a>
+          <a href="/api/leads/template" class="nav-dropdown-link" download>
+            <i data-lucide="download" style="width: 15px; height: 15px;"></i> Excel Batch Template
+          </a>
+        </div>
+      </div>
+
+      <a href="javascript:void(0)" class="nav-link-item" onclick="window.scrollToSection('pricingSection')">
         Pricing
-      </button>
+      </a>
     </nav>
 
-    <!-- Top Right Actions & Live Credit Balance (Single Line) -->
-    <div class="navbar-right">
+    <!-- Right Actions (Matching Image: Login & Start Free Trial ↗) -->
+    <div class="nav-right-actions">
       <!-- Live API Balance Pill -->
-      <div class="credit-balance-chip" onclick="window.openCheckoutModal('Credit Top-Up', 1000)" title="Click to purchase additional talk-time API credits">
+      <div class="credit-balance-chip" id="navCreditChip" onclick="window.openCheckoutModal('Credit Top-Up', 1000)" title="Click to purchase additional talk-time API credits" style="display: none; height: 36px; padding: 0 12px;">
         <span>🪙 ₹<span id="navCreditBalance">{{ "%.2f"|format(primary_key.credits_inr if primary_key else 2500.0) }}</span></span>
-        <span class="chip-mins" style="color: #047857; font-weight: 500;">(~<span id="navMinutesBalance">{{ "%.0f"|format((primary_key.credits_inr if primary_key else 2500.0) / 5.0) }}</span>m)</span>
+        <span class="chip-mins" style="color: #92400e; font-weight: 600;">(~<span id="navMinutesBalance">{{ "%.0f"|format((primary_key.credits_inr if primary_key else 2500.0) / 5.0) }}</span>m)</span>
         <span class="add-icon" title="Add Credits">+</span>
       </div>
 
-      <!-- Quick Action Buttons -->
-      <button class="btn btn-outline" id="navGetApiKeyBtn" onclick="window.switchMainTab('landing', 'apiSection')" style="font-size: 0.76rem; font-weight: 700; height: 32px; padding: 0 10px; white-space: nowrap;">
-        ⚡ API Keys
+      <button class="btn-nav-login" onclick="window.openAdminSettingsModal()" title="System Architecture & Backend Telephony Config">
+        Login
       </button>
 
-      <button class="btn btn-primary" id="navLaunchCrmBtn" onclick="window.switchMainTab('crm')" style="font-size: 0.76rem; font-weight: 700; height: 32px; padding: 0 12px; white-space: nowrap;">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-        <span id="navLaunchCrmText">Launch CRM</span>
-      </button>
-
-      <!-- Admin Console (Discreetly Gated for System Architecture & Providers) -->
-      <button class="btn btn-outline" id="adminSystemBtn" onclick="window.openAdminSettingsModal()" title="System Architecture & Backend Telephony Config" style="padding: 0 9px; height: 32px; font-size: 0.74rem; color: var(--text-muted); white-space: nowrap;">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        <span style="font-weight:600;">System</span>
+      <button class="btn-nav-trial" onclick="window.switchMainTab('crm')">
+        <span id="navLaunchCrmText">Start Free Trial ↗</span>
       </button>
     </div>
   </header>
@@ -2000,117 +3415,210 @@ body {
   <!-- ================================================================= -->
   <div id="viewLanding" class="view-landing-wrapper">
     
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-pill-badge">
-        <span class="pulse-dot"></span>
-        🇮🇳 India's #1 Multilingual AI Telecalling & Lead Closing Platform
+    <!-- Hero Section (Warm Architectural Showcase) -->
+        <!-- Hero Section (Pixel-Perfect Outpero Luxury Design) -->
+    <div class="hero-wrapper">
+      <div class="hero-main-grid">
+        
+        <!-- Left Column: Copy & Actions -->
+        <div class="hero-left-content">
+          <div class="hero-sales-pill">
+            <svg class="soundwave-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v20M17 5v14M7 5v14M22 10v4M2 10v4"/></svg>
+            <span>AI Voice Sales Platform for Modern Businesses</span>
+          </div>
+
+          <h1 class="hero-h1-headline">
+            Turn Leads into<br>
+            Revenue with <span class="text-orange">AI</span> <span class="hero-sparkle-star">✦</span><br>
+            Voice Employees
+          </h1>
+
+          <p class="hero-desc-p">
+            Deploy human-like AI voice agents that call, qualify, follow up, and close deals — in Telugu, Hindi, and <strong>Indian English</strong>. Fully automated. CRM ready. Developer friendly.
+          </p>
+
+          <div class="hero-actions-row">
+            <button class="btn-hero-dark-pill" onclick="window.switchMainTab('crm')">
+              <span class="btn-phone-orange-circle">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              </span>
+              <span>Try Live AI Caller ↗</span>
+            </button>
+
+            <button class="btn-hero-white-pill" onclick="window.playVoiceScenario('te', 1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#18181b"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Watch Demo</span>
+            </button>
+          </div>
+
+          <div class="hero-checklist-row">
+            <span><span class="check-orange">✓</span> No Setup Complexity</span>
+            <span><span class="check-orange">✓</span> Works with Your CRM</span>
+            <span><span class="check-orange">✓</span> Multilingual (TEL, HIN, EN)</span>
+          </div>
+        </div>
+
+        <!-- Right Column: 3D Architectural Scene with Floating Pod & Tilted Cards -->
+        <div class="hero-visual-col">
+          <!-- Realistic 3D Archway Render Backdrop -->
+          <img src="/static/img/hero-archway.jpg" alt="AI Voice Architecture" class="hero-archway-backdrop" />
+
+          <!-- Center Floating Frosted Glass Calling Pod -->
+          <div class="floating-calling-pod">
+            <div class="pod-wave-container">
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+              <div class="pod-wave-bar"></div>
+            </div>
+            <div class="pod-agent-title">AI Voice Agent</div>
+            <div class="pod-agent-subtitle">Calling your leads...</div>
+            <div class="pod-actions-row">
+              <button class="pod-action-circle" title="Mic status" onclick="window.switchMainTab('crm')">
+                <i data-lucide="mic" style="width: 15px; height: 15px;"></i>
+              </button>
+              <button class="pod-hangup-btn" title="End / Trigger Call" onclick="window.switchMainTab('crm')">
+                <i data-lucide="phone-off" style="width: 16px; height: 16px; stroke-width: 2.5;"></i>
+              </button>
+              <button class="pod-action-circle" title="Speaker volume" onclick="window.switchMainTab('crm')">
+                <i data-lucide="volume-2" style="width: 15px; height: 15px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Floating 3D Perspective Cards Stack -->
+          <div class="floating-3d-stack">
+            <div class="floating-3d-card" onclick="window.switchMainTab('crm')">
+              <span class="float-card-badge">
+                <i data-lucide="phone" style="width: 14px; height: 14px;"></i>
+              </span>
+              <span class="float-card-label">Call Leads Instantly</span>
+            </div>
+
+            <div class="floating-3d-card" onclick="window.openCalendarModal()">
+              <span class="float-card-badge">
+                <i data-lucide="calendar-days" style="width: 14px; height: 14px;"></i>
+              </span>
+              <span class="float-card-label">Book Live Demos</span>
+            </div>
+
+            <div class="floating-3d-card" onclick="window.switchMainTab('crm')">
+              <span class="float-card-badge">
+                <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+              </span>
+              <span class="float-card-label">Sync with CRM</span>
+            </div>
+
+            <div class="floating-3d-card" onclick="window.switchMainTab('crm')">
+              <span class="float-card-badge">
+                <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+              </span>
+              <span class="float-card-label">Get Call Summaries</span>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <h1 class="hero-title">
-        Turn Leads into Closed Projects in <span class="highlight">30 Seconds</span> with Autonomous AI Voice Agents
-      </h1>
-
-      <p class="hero-subtitle">
-        Deploy human-like AI voice employees that call new leads instantly, speak fluent <strong>Telugu</strong>, <strong>Hindi</strong>, and <strong>Indian English</strong>, handle price objections, book live demos, and sync executive summaries directly to CRM or via REST API.
-      </p>
-
-      <div class="hero-cta-group">
-        <button class="btn-hero-primary" onclick="window.switchMainTab('crm')">
-          <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-          Try Live AI Caller (Web Mic)
-        </button>
-        <button class="btn-hero-secondary" onclick="window.openCheckoutModal('Business Growth Tier', 4999)">
-          <svg class="icon icon-md" viewBox="0 0 24 24" style="color: #059669;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-          Buy API Credits (₹5/min)
-        </button>
-        <button class="btn-hero-secondary" onclick="window.scrollToSection('apiSection')">
-          <svg class="icon icon-md" viewBox="0 0 24 24" style="color: var(--primary);"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-          View Developer API Docs
-        </button>
-      </div>
-
-      <!-- Core Metrics Row (Outpero Proof Points) -->
-      <div class="metrics-grid">
-        <div class="metric-item">
-          <div class="metric-val">⚡ 30s</div>
-          <div class="metric-lbl">Lead Callback Speed</div>
+      <!-- KPI Capsule Floating Ribbon -->
+      <div class="kpi-ribbon-card">
+        <div class="kpi-metric-item">
+          <i data-lucide="zap" class="kpi-metric-icon" style="stroke-width: 2.5;"></i>
+          <div>
+            <div class="kpi-metric-val">30s</div>
+            <div class="kpi-metric-lbl">Lead Callback Speed</div>
+          </div>
         </div>
-        <div class="metric-item">
-          <div class="metric-val">₹5.00</div>
-          <div class="metric-lbl">Per Connected Talk-Time Min</div>
+
+        <div class="kpi-metric-item">
+          <i data-lucide="layers" class="kpi-metric-icon" style="stroke-width: 2.2;"></i>
+          <div>
+            <div class="kpi-metric-val">₹5.00</div>
+            <div class="kpi-metric-lbl">Per Connected Talk-Time Min</div>
+          </div>
         </div>
-        <div class="metric-item">
-          <div class="metric-val">3.4x</div>
-          <div class="metric-lbl">Higher Demo Booking Rate</div>
+
+        <div class="kpi-metric-item">
+          <i data-lucide="chart-column" class="kpi-metric-icon" style="stroke-width: 2.2;"></i>
+          <div>
+            <div class="kpi-metric-val">3.4x</div>
+            <div class="kpi-metric-lbl">Higher Demo Booking Rate</div>
+          </div>
         </div>
-        <div class="metric-item">
-          <div class="metric-val">100%</div>
-          <div class="metric-lbl">English Executive CRM Summaries</div>
+
+        <div class="kpi-metric-item">
+          <i data-lucide="target" class="kpi-metric-icon" style="stroke-width: 2.2;"></i>
+          <div>
+            <div class="kpi-metric-val">100%</div>
+            <div class="kpi-metric-lbl">English Executive CRM Summaries</div>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
 
     <div class="saas-container">
 
       <!-- ============================================================= -->
-      <!-- 30-SECOND LEAD DIALING SHOWCASE (OUTPERO VALUE PROP) -->
+      <!-- "FROM LEAD TO CLOSED DEAL" CONNECTED PROCESS SECTION -->
       <!-- ============================================================= -->
-      <section class="dialing-flow-card">
-        <div class="section-header-center">
-          <span class="section-tag">Instant Speed to Lead</span>
-          <h2 class="section-title">How Indian Businesses Close Deals 5x Faster</h2>
-          <p class="section-desc">When a customer requests a quote on Meta Ads, Google Ads, IndiaMART, or your website, our AI agent calls them in under 30 seconds while their intent is peak.</p>
+      <section class="process-section-wrap">
+        <!-- Corner Plant & Stones Asset (Matching Reference) -->
+        <img src="/static/img/corner-plant.jpg" alt="Botanical Corner Accent" class="process-corner-plant" />
+
+        <div style="z-index: 2;">
+          <h2 class="process-heading-h2">
+            From Lead to<br>
+            <span style="color: #ea580c;">Closed Deal</span>
+          </h2>
+          <p class="process-desc-p">
+            A complete AI sales workforce that calls, engages, qualifies, and closes — while you focus on growth.
+          </p>
+          <button class="btn-explore-pill" onclick="window.scrollToSection('voiceSection')">
+            Explore How It Works ↗
+          </button>
         </div>
 
-        <!-- 5-Step Process Flow -->
-        <div class="flow-steps-grid">
-          <div class="flow-step-item">
-            <div class="flow-step-number">1</div>
-            <div class="flow-step-title">Lead Ingestion</div>
-            <div class="flow-step-desc">Meta Ads, Google Ads, IndiaMART, or Excel Sheet upload into CRM.</div>
-          </div>
-          <div class="flow-step-item active">
-            <div class="flow-step-number" style="background: #2563eb;">2</div>
-            <div class="flow-step-title">30s Auto-Dial</div>
-            <div class="flow-step-desc">AI caller dials customer mobile number via Twilio/carrier stream.</div>
-          </div>
-          <div class="flow-step-item">
-            <div class="flow-step-number">3</div>
-            <div class="flow-step-title">Language Match</div>
-            <div class="flow-step-desc">Natively converses in Telugu, Hindi, or English matching the client.</div>
-          </div>
-          <div class="flow-step-item">
-            <div class="flow-step-number">4</div>
-            <div class="flow-step-title">Objection Handled</div>
-            <div class="flow-step-desc">Explains milestone pricing, timelines, and schedules Zoom demo.</div>
-          </div>
-          <div class="flow-step-item">
-            <div class="flow-step-number" style="background: #059669;">5</div>
-            <div class="flow-step-title">Deal Closed</div>
-            <div class="flow-step-desc">English executive summary & WhatsApp link dispatched immediately.</div>
-          </div>
-        </div>
+        <div class="process-cards-row">
+          <!-- Horizontal dashed connector line -->
+          <div class="process-dashed-line"></div>
 
-        <!-- Comparison: Traditional Call Center vs LeadCloser AI -->
-        <div class="comparison-grid">
-          <div class="compare-card compare-bad">
-            <span class="compare-badge">❌ Traditional Human Call Centers</span>
-            <ul class="compare-list">
-              <li>⚠️ <strong>Slow Dialing:</strong> Takes 4 to 24 hours to follow up on web enquiries; lead goes cold.</li>
-              <li>⚠️ <strong>High Overhead:</strong> ₹25,000 to ₹40,000 monthly salary per telecaller plus hardware and seat licenses.</li>
-              <li>⚠️ <strong>Language Barriers:</strong> Finding reps fluent in Telugu, Hindi, and English simultaneously is expensive and hard.</li>
-              <li>⚠️ <strong>Inconsistent Closing:</strong> Sales reps skip objection playbooks and forget CRM notes.</li>
-            </ul>
+          <!-- Step 1: Import Leads -->
+          <div class="process-step-card glow-green" onclick="window.openExcelModal()">
+            <div class="step-icon-badge badge-excel-green">
+              <span>X</span>
+            </div>
+            <div class="step-card-title">Import Leads</div>
+            <div class="step-card-subtext">Upload from Excel or sync your CRM</div>
           </div>
-          <div class="compare-card compare-good">
-            <span class="compare-badge">✅ LeadCloser AI Voice Employee</span>
-            <ul class="compare-list">
-              <li>⚡ <strong>Instant 30s Dial:</strong> Calls leads while they are still browsing your services.</li>
-              <li>💰 <strong>Pay Only for Talk-Time:</strong> Just ₹5 per connected minute. Unanswered calls are ₹0!</li>
-              <li>🗣️ <strong>Native Trilingual Fluency:</strong> Flawless code-switching in Telugu, Hindi, and Indian English with 0.8s response loops.</li>
-              <li>🎯 <strong>100% CRM Discipline:</strong> Every call logs executive English summaries, objections, and Zoom demos automatically.</li>
-            </ul>
+
+          <!-- Step 2: AI Calls & Qualifies -->
+          <div class="process-step-card glow-purple" onclick="window.switchMainTab('crm')">
+            <div class="step-icon-badge badge-purple-sound">
+              <i data-lucide="audio-lines" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div class="step-card-title">AI Calls & Qualifies</div>
+            <div class="step-card-subtext">Our AI agents talk, understand and collect key details</div>
+          </div>
+
+          <!-- Step 3: Handles Objections -->
+          <div class="process-step-card glow-blue" onclick="window.switchMainTab('landing', 'voiceSection')">
+            <div class="step-icon-badge badge-blue-chat">
+              <i data-lucide="message-circle-more" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div class="step-card-title">Handles Objections</div>
+            <div class="step-card-subtext">Answers questions, shares pricing and builds interest</div>
+          </div>
+
+          <!-- Step 4: Closes & Updates -->
+          <div class="process-step-card glow-orange" onclick="window.switchMainTab('crm')">
+            <div class="step-icon-badge badge-orange-check">
+              <i data-lucide="circle-check" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div class="step-card-title">Closes & Updates</div>
+            <div class="step-card-subtext">Books demos, closes deals and logs everything in CRM</div>
           </div>
         </div>
       </section>
@@ -2209,7 +3717,7 @@ body {
           </div>
 
           <div class="feature-box">
-            <div class="feature-icon-circle" style="background: rgba(99, 102, 241, 0.12); color: #2563eb;">
+            <div class="feature-icon-circle" style="background: #fff7ed; color: #ea580c;">
               <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
             </div>
             <div class="feature-title">Executive English Call Summaries</div>
@@ -2251,8 +3759,8 @@ body {
             <div>
               <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a;">Active API Keys & Credit Balance</div>
               <div style="font-size: 0.78rem; color: var(--text-muted);">
-                Primary Key: <code style="background: #eef2ff; padding: 3px 8px; border-radius: 6px; font-weight: 700; color: #4338ca; border: 1px solid #c7d2fe;">{{ primary_key.api_key if primary_key else 'lc_live_sp_assoc_7894a1b2' }}</code>
-                <button class="btn btn-outline" style="padding: 2px 7px; font-size: 0.7rem; margin-left: 6px;" onclick="navigator.clipboard.writeText('{{ primary_key.api_key if primary_key else "lc_live_sp_assoc_7894a1b2" }}'); alert('API Key copied to clipboard!')">Copy</button>
+                Primary Key: <code style="background: #fff7ed; padding: 3px 8px; border-radius: 6px; font-weight: 700; color: #ea580c; border: 1px solid #fed7aa;">{{ primary_key.api_key if primary_key else 'lc_live_sp_assoc_7894a1b2' }}</code>
+                <button class="btn btn-outline" style="padding: 2px 7px; font-size: 0.7rem; margin-left: 6px;" onclick="navigator.clipboard.writeText('{{ primary_key.api_key if primary_key else 'lc_live_sp_assoc_7894a1b2' }}'); alert('API Key copied to clipboard!')">Copy</button>
               </div>
             </div>
 
@@ -2282,7 +3790,7 @@ body {
               {% for k in api_keys %}
               <tr>
                 <td><strong>{{ k.key_name }}</strong></td>
-                <td><span class="badge-tag" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe;">{{ k.plan_tier }}</span></td>
+                <td><span class="badge-tag" style="background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa;">{{ k.plan_tier }}</span></td>
                 <td><strong style="color: #059669;">₹{{ "%.2f"|format(k.credits_inr) }}</strong></td>
                 <td>₹{{ "%.2f"|format(k.rate_per_min) }}/min</td>
                 <td>{{ k.total_calls }} calls</td>
@@ -2358,7 +3866,7 @@ body {
           </div>
 
           <!-- Sandbox Live JSON Response Area -->
-          <div id="sandboxResponseBox" style="display: none; margin-top: 14px; background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.78rem; max-height: 180px; overflow-y: auto;">
+          <div id="sandboxResponseBox" style="display: none; margin-top: 14px; background: #0f172a; color: #fb923c; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.78rem; max-height: 180px; overflow-y: auto;">
           </div>
         </div>
       </section>
@@ -2375,13 +3883,13 @@ body {
         </div>
 
         <!-- AI Assistant Generator Bar -->
-        <div class="card-panel" style="padding: 18px 24px; margin-top: 24px; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); border: 1.5px solid #c7d2fe;">
+        <div class="card-panel" style="padding: 18px 24px; margin-top: 24px; background: linear-gradient(135deg, #faf8f5 0%, #fff7ed 100%); border: 1.5px solid #fed7aa;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 280px;">
-              <div style="font-weight: 800; font-size: 0.95rem; color: #1e1b4b; display: flex; align-items: center; gap: 8px;">
+              <div style="font-weight: 800; font-size: 0.95rem; color: #18181b; display: flex; align-items: center; gap: 8px;">
                 ✨ AI Employee Creation Assistant
               </div>
-              <div style="font-size: 0.76rem; color: #4338ca; margin-top: 3px;">
+              <div style="font-size: 0.76rem; color: #ea580c; margin-top: 3px;">
                 Describe your desired persona in plain words — the assistant configures prompt, script & BANT criteria automatically.
               </div>
             </div>
@@ -2397,7 +3905,7 @@ body {
         <!-- Employees Grid -->
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; margin-top: 24px;" id="employeesGridContainer">
           {% for emp in employees %}
-          <div class="card-panel" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border: {% if emp.is_active %}2px solid #4f46e5{% else %}1px solid var(--border-light){% endif %};">
+          <div class="card-panel" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border: {% if emp.is_active %}2px solid #ea580c{% else %}1px solid var(--border-light){% endif %};">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                 <div>
@@ -2445,7 +3953,7 @@ body {
 
             <div style="display: flex; gap: 8px;">
               {% if emp.is_active %}
-              <button class="btn btn-outline" disabled style="flex: 1; justify-content: center; font-size: 0.76rem; background: #e0e7ff; color: #3730a3; border-color: #c7d2fe;">
+              <button class="btn btn-outline" disabled style="flex: 1; justify-content: center; font-size: 0.76rem; background: #fff7ed; color: #c2410c; border-color: #fed7aa;">
                 ✓ Deployed in Production
               </button>
               {% elif emp.status == 'approved' %}
@@ -2581,7 +4089,7 @@ body {
     <footer class="saas-footer">
       <div class="footer-content">
         <div>
-          <div class="footer-brand-title">LEADCLOSER<span style="color: #38bdf8;">.AI</span></div>
+          <div class="footer-brand-title">LEADCLOSER<span style="color: #ea580c;">.AI</span></div>
           <p class="footer-brand-desc">
             Autonomous Multilingual AI Telecalling and Deal Closing CRM. Built by <strong>S P Associates Software Company</strong> to help businesses scale outbound sales and close high-ticket software projects.
           </p>
@@ -2660,7 +4168,7 @@ body {
         <div class="campaign-counters">
           <span style="color: var(--text-muted);">Progress: <strong id="campaignProgressText" style="color: var(--text-main);">0 / 0</strong></span>
           <span style="color: #059669;">Demos Booked: <strong id="campaignDemosCount">0</strong></span>
-          <span style="color: #2563eb;">Closed Won: <strong id="campaignWonCount">0</strong></span>
+          <span style="color: #ea580c;">Closed Won: <strong id="campaignWonCount">0</strong></span>
           <span style="color: #d97706;">Follow Up: <strong id="campaignFollowCount">0</strong></span>
         </div>
       </div>
@@ -2683,7 +4191,7 @@ body {
           <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Template (.xlsx)
         </a>
-        <button class="btn btn-outline" id="openDiscoverLeadsBtn" onclick="window.openDiscoverLeadsModal()" style="font-size: 0.75rem; font-weight: 700; color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; height: 32px; padding: 0 11px;">
+        <button class="btn btn-outline" id="openDiscoverLeadsBtn" onclick="window.openDiscoverLeadsModal()" style="font-size: 0.75rem; font-weight: 700; color: #c2410c; border-color: #fed7aa; background: #fff7ed; height: 32px; padding: 0 11px;">
           <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           🔍 Discover Leads
         </button>
@@ -2936,7 +4444,7 @@ body {
         <details class="intel-card cs-side-card" open>
           <summary>
             <span class="cs-section-title">
-              <svg class="icon icon-sm" style="color: #2563eb;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <svg class="icon icon-sm" style="color: #ea580c;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               Recent calls
             </span>
             <span class="cs-meta">Click to review</span>
@@ -3065,7 +4573,7 @@ body {
     <!-- 6 KPI Stat Cards -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 24px;">
       
-      <div class="card-panel" style="padding: 18px 20px; border-left: 4px solid #4f46e5;">
+      <div class="card-panel" style="padding: 18px 20px; border-left: 4px solid #ea580c;">
         <div style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Leads in Pipeline</div>
         <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 6px;" id="statTotalLeads">--</div>
         <div style="font-size: 0.72rem; color: #059669; font-weight: 600; margin-top: 4px;">? 100% Ingested & Verified</div>
@@ -3077,10 +4585,10 @@ body {
         <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Avg Duration: <strong id="statAvgDuration">--s</strong></div>
       </div>
 
-      <div class="card-panel" style="padding: 18px 20px; border-left: 4px solid #2563eb;">
+      <div class="card-panel" style="padding: 18px 20px; border-left: 4px solid #ea580c;">
         <div style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Live Demos Booked</div>
-        <div style="font-size: 1.8rem; font-weight: 800; color: #2563eb; margin-top: 6px;" id="statDemosBooked">--</div>
-        <div style="font-size: 0.72rem; color: #2563eb; font-weight: 600; margin-top: 4px;">?? Google Meet Auto-Scheduled</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: #ea580c; margin-top: 6px;" id="statDemosBooked">--</div>
+        <div style="font-size: 0.72rem; color: #ea580c; font-weight: 600; margin-top: 4px;">?? Google Meet Auto-Scheduled</div>
       </div>
 
       <div class="card-panel" style="padding: 18px 20px; border-left: 4px solid #059669;">
@@ -3113,7 +4621,7 @@ body {
             <h3 style="font-size: 0.98rem; font-weight: 800; color: #0f172a;">Outbound Sales Conversion Funnel</h3>
             <span style="font-size: 0.74rem; color: var(--text-muted);">From cold Apollo/Apify discovery to locked revenue</span>
           </div>
-          <span class="badge-tag" style="background: #eef2ff; color: #4338ca; border-color: #c7d2fe;">Automated Pipeline</span>
+          <span class="badge-tag" style="background: #fff7ed; color: #ea580c; border-color: #c7d2fe;">Automated Pipeline</span>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 12px;" id="funnelContainer">
@@ -3138,7 +4646,7 @@ body {
               <span id="langTeluguStat">--</span>
             </div>
             <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
-              <div id="langTeluguBar" style="height: 100%; width: 50%; background: linear-gradient(90deg, #4f46e5, #7c3aed); border-radius: 4px;"></div>
+              <div id="langTeluguBar" style="height: 100%; width: 50%; background: linear-gradient(90deg, #ea580c, #f97316); border-radius: 4px;"></div>
             </div>
           </div>
 
@@ -3158,7 +4666,7 @@ body {
               <span id="langEnglishStat">--</span>
             </div>
             <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
-              <div id="langEnglishBar" style="height: 100%; width: 20%; background: linear-gradient(90deg, #2563eb, #38bdf8); border-radius: 4px;"></div>
+              <div id="langEnglishBar" style="height: 100%; width: 20%; background: linear-gradient(90deg, #ea580c, #f97316); border-radius: 4px;"></div>
             </div>
           </div>
 
@@ -3339,43 +4847,52 @@ body {
 
   <!-- MODAL 3: AUTONOMOUS CALLING CAMPAIGN -->
   <div class="modal-overlay" id="campaignModal">
-    <div class="modal-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h3 style="font-size: 1.1rem; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-          <svg class="icon icon-md" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+    <div class="modal-card" style="max-width: 520px; padding: 26px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15); border: 1px solid var(--border-light);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-light); padding-bottom: 14px;">
+        <h3 style="font-size: 1.18rem; color: #18181b; font-weight: 800; display: flex; align-items: center; gap: 10px; margin: 0;">
+          <span style="display: inline-flex; width: 34px; height: 34px; border-radius: 10px; background: #fff7ed; border: 1px solid #fed7aa; align-items: center; justify-content: center; color: #ea580c; flex-shrink: 0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          </span>
           Launch Auto-Calling Campaign
         </h3>
-        <button class="btn btn-outline" id="closeCampaignModal" style="padding: 4px 8px;">✕</button>
+        <button class="btn btn-outline" id="closeCampaignModal" style="padding: 4px 8px; border-radius: 50%; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;">✕</button>
       </div>
 
-      <div class="form-group">
-        <label>Select Target Leads:</label>
-        <select id="campaignTargetSelect">
+      <div class="form-group" style="margin-bottom: 18px;">
+        <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #27272a; margin-bottom: 6px;">Select Target Leads:</label>
+        <select id="campaignTargetSelect" style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--border-medium); border-radius: 10px; font-size: 0.88rem; background: #ffffff; color: #18181b;">
           <option value="new">All NEW Leads (Not yet called)</option>
           <option value="all">All Imported Leads in CRM</option>
           <option value="selected">Currently Selected Lead</option>
         </select>
       </div>
 
-      <div class="form-group">
-        <label>Calling Mode:</label>
-        <div style="display: flex; gap: 10px; margin-top: 5px;">
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; cursor: pointer;">
+      <div class="form-group" style="margin-bottom: 22px;">
+        <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #27272a; margin-bottom: 8px;">Calling Mode:</label>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <label class="radio-card-option">
             <input type="radio" name="campMode" value="simulation" checked />
-            ⚡ AI Simulation Mode (Instant qualification & zero phone cost)
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-weight: 700; font-size: 0.88rem; color: #18181b;">⚡ AI Simulation Mode</span>
+              <span style="font-size: 0.76rem; color: #71717a;">Instant qualification & zero phone carrier cost</span>
+            </div>
           </label>
-        </div>
-        <div style="display: flex; gap: 10px; margin-top: 5px;">
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; cursor: pointer;">
+
+          <label class="radio-card-option">
             <input type="radio" name="campMode" value="phone" />
-            📞 Real Phone Telephony (Twilio Outbound Calling)
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-weight: 700; font-size: 0.88rem; color: #18181b;">📞 Real Phone Telephony</span>
+              <span style="font-size: 0.76rem; color: #71717a;">Twilio / Exotel Outbound Telephony to Real Mobile Devices</span>
+            </div>
           </label>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;">
-        <button class="btn btn-outline" id="cancelCampaignBtn" onclick="window.closeCampaignModal()">Cancel</button>
-        <button class="btn btn-campaign" id="startCampaignActionBtn">▶️ Launch Campaign Now</button>
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 22px; border-top: 1px solid var(--border-light); padding-top: 16px;">
+        <button class="btn btn-outline" id="cancelCampaignBtn" onclick="window.closeCampaignModal()" style="padding: 10px 22px; border-radius: 9999px; font-weight: 600; font-size: 0.88rem;">Cancel</button>
+        <button class="btn btn-campaign" id="startCampaignActionBtn" style="padding: 10px 24px; border-radius: 9999px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px;">
+          <span>▶</span> Launch Campaign Now
+        </button>
       </div>
     </div>
   </div>
@@ -3460,7 +4977,7 @@ body {
       </div>
 
       <div id="modalCallRecording"></div>
-      <div class="tip-item" style="margin-bottom: 10px; border-left-color: var(--primary); background: #eff6ff;">
+      <div class="tip-item" style="margin-bottom: 10px; border-left-color: var(--primary); background: #fff7ed;">
         <div class="tip-title" style="color: #1e3a8a;">📝 Call Summary:</div>
         <div id="modalCallSummaryText" style="font-size: 0.84rem; color: #1e293b; line-height: 1.45;"></div>
       </div>
@@ -3625,7 +5142,7 @@ body {
     <div class="modal-card" style="max-width: 720px; width: 95%;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="width: 36px; height: 36px; border-radius: 8px; background: #eef2ff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+          <div style="width: 36px; height: 36px; border-radius: 8px; background: #fff7ed; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
             🔍
           </div>
           <div>
@@ -3792,7 +5309,7 @@ body {
     <div class="modal-card" style="max-width: 520px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <div style="width: 32px; height: 32px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb;">
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: #fff7ed; display: flex; align-items: center; justify-content: center; color: #ea580c;">
             <svg class="icon icon-md" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
           </div>
           <div>
@@ -3836,7 +5353,7 @@ body {
 
       <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
         <button class="btn btn-outline" onclick="window.closeCalendarModal()">Close</button>
-        <button class="btn btn-primary" id="bookCalendarSubmitBtn" onclick="window.bookCalendarMeeting()" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+        <button class="btn btn-primary" id="bookCalendarSubmitBtn" onclick="window.bookCalendarMeeting()" style="background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);">
           <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
           Confirm & Create Google Meet
         </button>
@@ -3868,7 +5385,7 @@ body {
     <div class="modal-card" style="max-width: 960px; width: 95%; max-height: 90vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #1d4ed8; font-size: 1.15rem;">
+          <div style="width: 36px; height: 36px; border-radius: 8px; background: #fff7ed; display: flex; align-items: center; justify-content: center; color: #ea580c; font-size: 1.15rem;">
             ⚙️
           </div>
           <div>
@@ -3953,5 +5470,7 @@ body {
     </div>
   </div>
 
+  <script src="/static/js/vendor/lucide.min.js"></script>
+  <script>if (window.lucide) { lucide.createIcons(); }</script>
 </body>
 </html>
