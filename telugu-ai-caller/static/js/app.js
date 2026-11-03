@@ -1024,6 +1024,72 @@ Your registered phone / client phone will ring shortly.`);
   let selectedCheckoutAmount = 4999;
   let selectedCheckoutPlan = "Business Growth";
 
+  
+  // ===================================================================
+  // CRM VIEW SWITCHER (Dashboard, Leads, Calling Station, Campaigns, Automations, Analytics, Integrations)
+  // ===================================================================
+  window.switchCrmView = (viewName) => {
+    // 1. Update left sidebar active button
+    document.querySelectorAll(".crm-sidebar-menu .crm-nav-item").forEach(btn => btn.classList.remove("active"));
+    const activeBtn = document.getElementById("navItem" + viewName.charAt(0).toUpperCase() + viewName.slice(1));
+    if (activeBtn) activeBtn.classList.add("active");
+
+    // 2. Hide all sub-views and show the selected one
+    const views = {
+      calling: document.getElementById("crmViewCalling"),
+      dashboard: document.getElementById("crmViewDashboard"),
+      leads: document.getElementById("crmViewLeads"),
+      campaigns: document.getElementById("crmViewCampaigns"),
+      automations: document.getElementById("crmViewAutomations"),
+      analytics: document.getElementById("crmViewAnalytics"),
+      integrations: document.getElementById("crmViewIntegrations")
+    };
+
+    Object.keys(views).forEach(k => {
+      if (views[k]) {
+        views[k].style.display = (k === viewName) ? (k === "calling" ? "grid" : "flex") : "none";
+      }
+    });
+
+    // 3. Update Page Title & Subtitle based on active view
+    const pageTitle = document.getElementById("crmPageTitle");
+    const pageSub = document.getElementById("crmPageSub");
+    const pageActions = document.getElementById("crmPageActions");
+
+    if (pageTitle && pageSub) {
+      if (viewName === "calling") {
+        pageTitle.innerText = "Live Sales Pipeline & Calling Station";
+        pageSub.innerText = "AI-powered calling, follow-ups, and deal closure";
+        if (pageActions) pageActions.style.display = "flex";
+      } else if (viewName === "dashboard") {
+        pageTitle.innerText = "Executive Sales Dashboard";
+        pageSub.innerText = "Real-time revenue metrics, active agents & pipeline velocity";
+        if (pageActions) pageActions.style.display = "flex";
+      } else if (viewName === "leads") {
+        pageTitle.innerText = "Leads Pipeline & Contact Management";
+        pageSub.innerText = "Manage prospect records, upload CSV/Excel & enrich contact intelligence";
+        if (pageActions) pageActions.style.display = "none";
+      } else if (viewName === "campaigns") {
+        pageTitle.innerText = "Autonomous Outbound Campaigns";
+        pageSub.innerText = "Batch dial prospects with multilingual AI sales employees";
+        if (pageActions) pageActions.style.display = "none";
+      } else if (viewName === "automations") {
+        pageTitle.innerText = "Workflow Automations & Event Triggers";
+        pageSub.innerText = "WhatsApp brochures, calendar sync, and post-call notifications";
+        if (pageActions) pageActions.style.display = "none";
+      } else if (viewName === "analytics") {
+        pageTitle.innerText = "Executive Sales Intelligence & Voice Analytics";
+        pageSub.innerText = "Conversion funnels, speech sentiment breakdown, and agent performance";
+        if (pageActions) pageActions.style.display = "none";
+        if (window.loadAnalyticsDashboard) window.loadAnalyticsDashboard();
+      } else if (viewName === "integrations") {
+        pageTitle.innerText = "System Architecture & Provider Console";
+        pageSub.innerText = "Manage backend telephony carriers, speech models, lead discovery & webhook connectors";
+        if (pageActions) pageActions.style.display = "none";
+      }
+    }
+  };
+
   window.switchMainTab = (tabName, targetSectionId = null) => {
     currentMainTab = tabName;
     const viewLanding = document.getElementById("viewLanding");
@@ -1033,6 +1099,16 @@ Your registered phone / client phone will ring shortly.`);
     // Remove active from all nav tab buttons
     document.querySelectorAll(".nav-tab-btn").forEach(btn => btn.classList.remove("active"));
 
+    if (tabName === "analytics") {
+      window.switchMainTab("crm");
+      window.switchCrmView("analytics");
+      return;
+    }
+    if (tabName === "integrations") {
+      window.switchMainTab("crm");
+      window.switchCrmView("integrations");
+      return;
+    }
     if (tabName === "crm") {
       document.body.classList.add("crm-mode");
       if (viewLanding) viewLanding.style.display = "none";
@@ -2347,5 +2423,33 @@ Lead updated to DEMO_BOOKED.`);
       console.error("Failed to load analytics dashboard:", err);
     }
   };
+
+
+  // Auto-switch based on URL hash or tab query parameter
+  const initialHash = (window.location.hash || "").replace("#", "").toLowerCase();
+  const initialTab = (new URLSearchParams(window.location.search).get("tab") || "").toLowerCase();
+  const activeRoute = initialHash || initialTab;
+  if (activeRoute === "crm" || activeRoute === "calling") {
+    window.switchMainTab("crm");
+    window.switchCrmView("calling");
+  } else if (activeRoute === "dashboard") {
+    window.switchMainTab("crm");
+    window.switchCrmView("dashboard");
+  } else if (activeRoute === "leads") {
+    window.switchMainTab("crm");
+    window.switchCrmView("leads");
+  } else if (activeRoute === "campaigns") {
+    window.switchMainTab("crm");
+    window.switchCrmView("campaigns");
+  } else if (activeRoute === "automations") {
+    window.switchMainTab("crm");
+    window.switchCrmView("automations");
+  } else if (activeRoute === "analytics") {
+    window.switchMainTab("crm");
+    window.switchCrmView("analytics");
+  } else if (activeRoute === "integrations") {
+    window.switchMainTab("crm");
+    window.switchCrmView("integrations");
+  }
 
 });
