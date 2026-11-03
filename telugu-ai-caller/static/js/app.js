@@ -694,10 +694,173 @@ Updated: ${data.updated}`);
   const startCampaignActionBtn = document.getElementById("startCampaignActionBtn");
   if (startCampaignActionBtn) startCampaignActionBtn.addEventListener("click", window.startAutonomousCampaign);
 
+  
+  // ===================================================================
+  // CAMPAIGN PAUSE, STOP & REFRESH ACTIONS (INTERACTIVE CONTROLLER)
+  // ===================================================================
+  window.refreshCampaignStatus = async () => {
+    try {
+      const resp = await fetch("/api/campaign/status");
+      if (!resp.ok) return null;
+      const status = await resp.json();
+      if (!status) return null;
+
+      const isRunning = Boolean(status.is_running);
+      const isPaused = Boolean(status.is_paused);
+
+      // 1. Status badge & dot in Campaigns view
+      const badge = document.getElementById("campViewStatusBadge");
+      const dot = document.getElementById("campViewStatusDot");
+      if (badge) {
+        if (isRunning && !isPaused) {
+          badge.className = "crm-lead-badge badge-qualified";
+          badge.style.background = "#ecfdf5";
+          badge.style.color = "#059669";
+          badge.innerText = "RUNNING";
+          if (dot) dot.style.color = "#059669";
+        } else if (isRunning && isPaused) {
+          badge.className = "crm-lead-badge badge-demo";
+          badge.style.background = "#fef3c7";
+          badge.style.color = "#d97706";
+          badge.innerText = "PAUSED";
+          if (dot) dot.style.color = "#d97706";
+        } else {
+          badge.className = "crm-lead-badge";
+          badge.style.background = "#f1f5f9";
+          badge.style.color = "#64748b";
+          badge.innerText = "IDLE";
+          if (dot) dot.style.color = "#94a3b8";
+        }
+      }
+
+      // 2. Pause / Resume button
+      const pauseText = document.getElementById("campViewPauseText");
+      const pauseIcon = document.getElementById("campViewPauseIcon");
+      if (pauseText && pauseIcon) {
+        if (isPaused) {
+          pauseText.innerText = "Resume";
+          pauseIcon.innerText = "▶";
+        } else {
+          pauseText.innerText = "Pause";
+          pauseIcon.innerText = "⏸";
+        }
+      }
+
+      // Sync top banner pause button if active
+      const bannerPause = document.getElementById("pauseCampaignBtn");
+      if (bannerPause) {
+        bannerPause.innerText = isPaused ? "▶ Resume" : "⏸ Pause";
+      }
+
+      // 3. Current Lead Dialing text
+      const currText = document.getElementById("campViewCurrentLeadText");
+      if (currText) {
+        if (status.current_lead) {
+          const lName = typeof status.current_lead === 'object' ? status.current_lead.name : status.current_lead;
+          const lPhone = typeof status.current_lead === 'object' ? (status.current_lead.phone || "") : "";
+          currText.innerHTML = `📞 <strong>Currently Dialing:</strong> <span style="color:#0f172a; font-weight:700;">${lName}</span> (${lPhone}) - Trilingual AI pitch in progress...`;
+        } else if (isRunning) {
+          currText.innerHTML = `⏳ <em>Dialing next queued lead in pipeline...</em>`;
+        } else if (status.completed_leads > 0 && status.completed_leads >= status.total_leads) {
+          currText.innerHTML = `✅ <strong style="color:#059669;">Campaign Complete!</strong> All ${status.total_leads} leads contacted, qualified, and logged to CRM.`;
+        } else {
+          currText.innerHTML = `System ready. Click <strong>+ New Campaign</strong> above to launch autonomous batch calling across pipeline leads.`;
+        }
+      }
+
+      // 4. Progress bar
+      const pBar = document.getElementById("campViewProgressBar");
+      const pct = status.progress_percent || 0;
+      if (pBar) {
+        pBar.style.width = `${pct}%`;
+      }
+
+      // 5. Counters
+      const cText = document.getElementById("campViewContactedText");
+      if (cText) {
+        cText.innerText = `${status.completed_leads || 0} / ${status.total_leads || 0} Leads`;
+      }
+
+      const res = status.results || {};
+      const dElem = document.getElementById("campViewDemos");
+      if (dElem) dElem.innerText = res.demo_scheduled || 0;
+
+      const wElem = document.getElementById("campViewWon");
+      if (wElem) wElem.innerText = res.closed_won || 0;
+
+      const fElem = document.getElementById("campViewFollow");
+      if (fElem) fElem.innerText = res.follow_up || 0;
+
+      // 6. Logs Feed
+      const logsFeed = document.getElementById("campViewLogsFeed");
+      if (logsFeed && Array.isArray(status.logs) && status.logs.length > 0) {
+        logsFeed.innerHTML = status.logs.slice(-15).map(l => {
+          const color = l.level === "warning" ? "#d97706" : (l.level === "error" ? "#dc2626" : "#334155");
+          return `<div style="display:flex; gap:8px; align-items:flex-start;">
+            <span style="color:#94a3b8; flex-shrink:0;">[${l.time}]</span>
+            <span style="color:${color};">${l.message}</span>
+          </div>`;
+        }).join("");
+        logsFeed.scrollTop = logsFeed.scrollHeight;
+      }
+
+      return status;
+    } catch (err) {
+      console.warn("refreshCampaignStatus error:", err);
+      return null;
+    }
+  };
+
+  window.toggleCampaignPause = async () => {
+    try {
+      const resp = await fetch("/api/campaign/status");
+      const status = await resp.json();
+      if (!status || !status.is_running) {
+        const startNow = confirm("No campaign is currently running.\n\nWould you like to launch a new outbound AI calling campaign now?");
+        if (startNow) {
+          window.openCampaignModal();
+        }
+        return;
+      }
+
+      const endpoint = status.is_paused ? "/api/campaign/resume" : "/api/campaign/pause";
+      await fetch(endpoint, { method: "POST" });
+      await window.refreshCampaignStatus();
+    } catch (err) {
+      alert("Error toggling campaign pause state: " + err.message);
+    }
+  };
+
+  window.stopActiveCampaign = async () => {
+    try {
+      const resp = await fetch("/api/campaign/status");
+      const status = await resp.json();
+      if (!status || !status.is_running) {
+        alert("No auto-calling campaign is currently running.");
+        return;
+      }
+
+      if (confirm("⚠️ Are you sure you want to STOP the running campaign?\n\nOngoing calls will conclude and remaining queue will be cancelled.")) {
+        await fetch("/api/campaign/stop", { method: "POST" });
+        if (campaignPollInterval) {
+          clearInterval(campaignPollInterval);
+          campaignPollInterval = null;
+        }
+        const banner = document.getElementById("campaignBanner");
+        if (banner) banner.style.display = "none";
+        await window.refreshCampaignStatus();
+        await refreshLeads();
+      }
+    } catch (err) {
+      alert("Error stopping campaign: " + err.message);
+    }
+  };
+
   function startCampaignPolling() {
     if (campaignPollInterval) clearInterval(campaignPollInterval);
 
     campaignPollInterval = setInterval(async () => {
+        if (window.refreshCampaignStatus) await window.refreshCampaignStatus();
       try {
         const resp = await fetch("/api/campaign/status");
         const status = await resp.json();
@@ -1072,6 +1235,7 @@ Your registered phone / client phone will ring shortly.`);
         pageTitle.innerText = "Autonomous Outbound Campaigns";
         pageSub.innerText = "Batch dial prospects with multilingual AI sales employees";
         if (pageActions) pageActions.style.display = "none";
+        if (window.refreshCampaignStatus) window.refreshCampaignStatus();
       } else if (viewName === "automations") {
         pageTitle.innerText = "Workflow Automations & Event Triggers";
         pageSub.innerText = "WhatsApp brochures, calendar sync, and post-call notifications";
