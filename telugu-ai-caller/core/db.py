@@ -6,7 +6,7 @@ and canonical SQLite for seamless zero-delay local operation and testing.
 
 import os
 from pathlib import Path
-from typing import Generator
+from typing import Any, Dict, Generator
 
 try:
     from loguru import logger  # type: ignore
@@ -17,7 +17,7 @@ except ImportError:
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy.orm import sessionmaker, Session, declarative_base  # type: ignore
 
-Base = declarative_base()
+Base: Any = declarative_base()
 
 # Canonical absolute path for SQLite database so all processes share the exact same database
 CANONICAL_SQLITE_PATH = (Path(__file__).resolve().parent.parent / "leads_crm.db").resolve()
@@ -28,9 +28,9 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL or not DATABASE_URL.strip():
     DATABASE_URL = CANONICAL_SQLITE_URL
 
-# Engine configuration
-connect_args = {}
-engine_kwargs = {"echo": False}
+# Engine configuration with explicit polymorphic dict typing for static analyzers
+connect_args: Dict[str, Any] = {}
+engine_kwargs: Dict[str, Any] = {"echo": False}
 
 if DATABASE_URL.startswith("sqlite"):
     connect_args["check_same_thread"] = False
