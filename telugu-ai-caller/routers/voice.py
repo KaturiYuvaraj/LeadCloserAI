@@ -1,12 +1,17 @@
 """
 Voice Router - real-time browser calls on the Pipecat engine.
 
-Flow:
+Browser flow:
   1. POST /api/voice/offer        browser sends its WebRTC offer (+ lead, language, reply wait)
                                   → server starts a WebCallSession, returns the SDP answer + session id
   2. live audio both ways over WebRTC; transcripts / speaking / latency events on the data channel
   3. POST /api/voice/sessions/{id}/hangup    end the call
   4. GET  /api/voice/sessions/{id}/summary   waits for the post-call summary and saved call id
+
+Phone flow (Exotel):
+  Exotel Voicebot applet → wss://<host>/api/voice/exotel/stream[?lead_id=..&lang=..]
+  The Exotel handshake (connected/start) is parsed, then a PhoneCallSession runs the
+  same conversation core over 8 kHz PCM and saves the call when Exotel hangs up.
 
 GET /api/voice/config.js tells the dashboard which engine to use (VOICE_ENGINE env:
 "pipecat" default, or "classic" to fall back to the /ws/web-call engine).
@@ -17,7 +22,7 @@ import os
 import time
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, WebSocket
 from fastapi.responses import Response
 from loguru import logger
 from pydantic import BaseModel
@@ -30,7 +35,9 @@ from pipecat.transports.smallwebrtc.request_handler import (
     SmallWebRTCRequestHandler,
 )
 
-from voice_agent.session import WebCallSession
+from pipecat.runner.utils import parse_telephony_websocket
+
+from voice_agent.session import BaseCallSession, PhoneCallSession, WebCallSession
 
 router = APIRouter(tags=["voice"])
 
@@ -39,7 +46,7 @@ ICE_SERVERS = [IceServer(urls=url.strip()) for url in os.getenv(
     "VOICE_ICE_SERVERS", "stun:stun.l.google.com:19302").split(",") if url.strip()]
 
 _webrtc_handler = SmallWebRTCRequestHandler(ice_servers=ICE_SERVERS)
-_sessions: Dict[str, WebCallSession] = {}
+_sessions: Dict[str, BaseCallSession] = {}
 _session_created: Dict[str, float] = {}
 _session_tasks: Dict[str, asyncio.Task] = {}
 SESSION_TTL_SECONDS = 2 * 60 * 60
@@ -73,7 +80,7 @@ def _prune_sessions():
         _session_created.pop(sid, None)
 
 
-def _get_session(session_id: str) -> WebCallSession:
+def _get_session(session_id: str) -> BaseCallSession:
     session = _sessions.get(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Voice session not found or expired.")
@@ -155,3 +162,30 @@ async def voice_summary(session_id: str, wait_seconds: int = 25):
     except asyncio.TimeoutError:
         raise HTTPException(status_code=202, detail="Summary not ready yet.")
     return session.result
+
+
+@router.websocket("/api/voice/exotel/stream")
+async def exotel_voice_stream(websocket: WebSocket):
+    """Exotel Voicebot applet stream: one phone call on the real-time engine."""
+    await websocket.accept()
+    try:
+        transport_type, call_data = await asyncio.wait_for(parse_telephony_websocket(websocket), timeout=10)
+    except Exception as e:
+        logger.warning(f"Exotel stream rejected: could not read the call handshake ({e})")
+        await websocket.close(code=1008)
+        return
+
+    if transport_type != "exotel":
+        logger.warning(f"Exotel stream rejected: unexpected transport '{transport_type}'")
+        await websocket.close(code=1008)
+        return
+
+    _prune_sessions()
+    session = PhoneCallSession(websocket, call_data, dict(websocket.query_params))
+    _sessions[session.session_id] = session
+    _session_created[session.session_id] = time.time()
+    logger.info(
+        f"Phone call {session.session_id} · Exotel call {session.call_sid} · "
+        f"{session.direction} · from {session.caller} to {session.callee} · lead {session.lead_id}"
+    )
+    await session.run()
