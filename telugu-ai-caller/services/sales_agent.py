@@ -291,6 +291,13 @@ class SalesAgent:
                 "summary": "No conversation took place on this call.",
                 "sentiment": "neutral",
                 "deal_stage": "qualifying",
+                "outcome_label": "no_answer",
+                "outcome_bucket": "not_reachable",
+                "outcome_reason": "No speech captured",
+                "confidence": 1.0,
+                "needs_human_review": False,
+                "callback_at": None,
+                "whatsapp_opt_in": False,
                 "extracted_budget": "Not specified",
                 "extracted_timeline": "Not specified",
                 "extracted_requirements": "Software Services",
@@ -298,14 +305,16 @@ class SalesAgent:
                 "action_items": "Place follow-up call."
             }
 
+        from services.outcomes import normalize_outcome, parse_callback_time_ist
+
         transcript_text = "\n".join([f"{m['role'].upper()}: {m['content']}" for m in conversation_history])
 
         prompt = f"""
-You are an expert sales CRM intelligence engine. Analyze the following telephone sales conversation (which may be conducted in Telugu, Hindi, English, or mixed languages) and extract structured sales insights.
+You are an expert sales CRM intelligence engine. Analyze the following telephone sales conversation (which may be conducted in Telugu, Hindi, English, Tamil, Kannada, Malayalam, or mixed languages) and extract structured sales insights.
 
 CRITICAL REQUIREMENT:
-All JSON field values ('summary', 'extracted_requirements', 'objections_raised', 'action_items') MUST BE WRITTEN IN CLEAR, PROFESSIONAL ENGLISH, even if the spoken dialogue was in Telugu or Hindi.
-Never output Telugu, Hindi, or non-English script in the JSON values. Always summarize and translate into fluent English for executive CRM records.
+All JSON field values ('summary', 'extracted_requirements', 'objections_raised', 'action_items', 'outcome_reason') MUST BE WRITTEN IN CLEAR, PROFESSIONAL ENGLISH, even if the spoken dialogue was in an Indian language.
+Never output Telugu, Hindi, Tamil, Kannada, Malayalam, or non-English script in the JSON values. Always summarize and translate into fluent English for executive CRM records.
 
 TRANSCRIPT:
 \"\"\"
@@ -317,6 +326,11 @@ Return ONLY valid JSON matching this exact structure (no markdown fences, no bac
   "summary": "1-2 sentence concise executive summary in English of what was discussed, client needs, and what was agreed upon",
   "sentiment": "positive / neutral / hesitant / negative",
   "deal_stage": "closed_won / demo_scheduled / qualified / follow_up / lost",
+  "outcome_label": "interested_now | meeting_booked | human_requested | callback_scheduled | interested_later | send_details_first | decision_maker | busy_no_time | not_interested | do_not_call | wrong_person | invalid_lead",
+  "outcome_reason": "Short English reason for the outcome (e.g. Agreed to demo tomorrow, Price concern, Busy driving, Requested WhatsApp brochure)",
+  "callback_at": "Requested callback time in English or ISO 8601 (e.g. tomorrow 6 PM, or null)",
+  "whatsapp_opt_in": true,
+  "confidence": 0.9,
   "extracted_budget": "Budget discussed in English (e.g. ₹50,000 or Not specified)",
   "extracted_timeline": "Timeline discussed in English (e.g. 2 weeks, Immediate, or Not specified)",
   "extracted_requirements": "Specific services required in English (e.g. E-Commerce Web, Mobile App, AI Calling Agent)",
@@ -331,7 +345,7 @@ Return ONLY valid JSON matching this exact structure (no markdown fences, no bac
         ]
 
         try:
-            raw_response = await sarvam_client.chat_completion(messages=messages, temperature=0.2, max_tokens=350)
+            raw_response = await sarvam_client.chat_completion(messages=messages, temperature=0.2, max_tokens=400)
             clean_json = raw_response.strip()
             if clean_json.startswith("```json"):
                 clean_json = clean_json[7:]
@@ -345,7 +359,7 @@ Return ONLY valid JSON matching this exact structure (no markdown fences, no bac
 
             # Strict CRM guarantee: Ensure summary and action items are 100% in professional English
             indic_pattern = re.compile(r'[\u0900-\u0D7F]')
-            for key in ["summary", "action_items", "objections_raised", "extracted_requirements"]:
+            for key in ["summary", "action_items", "objections_raised", "extracted_requirements", "outcome_reason"]:
                 val = str(data.get(key, ""))
                 if val and indic_pattern.search(val):
                     try:
@@ -366,6 +380,17 @@ Return ONLY valid JSON matching this exact structure (no markdown fences, no bac
                         logger.warning(f"Translation fallback for {key}: {te}")
                         data[key] = "Discussed software project requirements and agreed on next steps."
 
+            raw_label = data.get("outcome_label") or data.get("deal_stage")
+            norm = normalize_outcome(raw_label, transcript_text=transcript_text, confidence=data.get("confidence", 0.9))
+            data["outcome_label"] = norm["outcome_label"]
+            data["outcome_bucket"] = norm["outcome_bucket"]
+            data["confidence"] = norm["confidence"]
+            data["needs_human_review"] = norm["needs_human_review"]
+            data["opt_out_requested"] = norm["opt_out_requested"]
+            if not data.get("deal_stage"):
+                data["deal_stage"] = norm["legacy_stage"]
+            parsed_cb = parse_callback_time_ist(str(data.get("callback_at") or ""))
+            data["callback_at"] = parsed_cb.isoformat() if parsed_cb else None
             return data
         except Exception as e:
             logger.error(f"Intelligence extraction failed, using heuristic: {e}")
@@ -383,10 +408,21 @@ Return ONLY valid JSON matching this exact structure (no markdown fences, no bac
                 deal_stage = "lost"
                 sentiment = "negative"
 
+            norm = normalize_outcome(deal_stage, transcript_text=transcript_text, confidence=0.75)
+            parsed_cb = parse_callback_time_ist(transcript_text) if norm["outcome_bucket"] == "follow_up" else None
+
             return {
                 "summary": "Discussed custom software requirements and agreed to schedule an upcoming project review.",
                 "sentiment": sentiment,
                 "deal_stage": deal_stage,
+                "outcome_label": norm["outcome_label"],
+                "outcome_bucket": norm["outcome_bucket"],
+                "outcome_reason": "Heuristic classification from conversation transcript",
+                "confidence": norm["confidence"],
+                "needs_human_review": norm["needs_human_review"],
+                "opt_out_requested": norm["opt_out_requested"],
+                "callback_at": parsed_cb.isoformat() if parsed_cb else None,
+                "whatsapp_opt_in": any(w in lower_transcript for w in ["whatsapp", "వాట్సాప్", "व्हाट्सएप"]),
                 "extracted_budget": "Flexible",
                 "extracted_timeline": "Standard",
                 "extracted_requirements": "Software & AI Solutions",

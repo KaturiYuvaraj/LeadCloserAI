@@ -59,22 +59,36 @@ def clean_phone(raw: Any) -> str:
 
 def _lead_to_dict(lead: Lead) -> Dict[str, Any]:
     """Flattens a Lead model into a CRM lead dictionary."""
+    from services.outcomes import normalize_outcome
     vars_dict = lead.variables if isinstance(lead.variables, dict) else {}
     last_summary = lead.last_call_summary or vars_dict.get("last_call_summary", None)
     act_items = lead.action_items or vars_dict.get("action_items", None)
     obj_noted = lead.objections_noted or vars_dict.get("objections_noted", None)
+
+    raw_outcome = vars_dict.get("outcome_label") or lead.last_outcome or ""
+    norm = normalize_outcome(raw_outcome, confidence=vars_dict.get("outcome_confidence", 0.9)) if raw_outcome else None
+    outcome_bucket = vars_dict.get("outcome_bucket") or (norm["outcome_bucket"] if norm else "uncalled")
+    outcome_label = vars_dict.get("outcome_label") or (norm["outcome_label"] if norm else "")
+
     data = {
         "id": lead.id,
+        "account_id": lead.account_id,
         "name": lead.name,
         "phone": lead.phone_e164,
         "phone_e164": lead.phone_e164,
         "source": lead.source or "manual",
         "notes": lead.notes or "",
-        "is_hot": lead.is_hot,
+        "is_hot": bool(lead.is_hot or outcome_bucket == "hot"),
         "last_call_stage": lead.last_outcome or "",
         "last_outcome": lead.last_outcome or "",
+        "outcome_label": outcome_label,
+        "outcome_bucket": outcome_bucket,
+        "outcome_reason": vars_dict.get("outcome_reason", ""),
+        "outcome_confidence": vars_dict.get("outcome_confidence", 1.0),
+        "needs_human_review": bool(vars_dict.get("needs_human_review", False)),
+        "whatsapp_opt_in": bool(vars_dict.get("whatsapp_opt_in", False)),
         "opt_out": lead.opt_out,
-        "callback_at": lead.callback_at.isoformat() if lead.callback_at else None,
+        "callback_at": lead.callback_at.isoformat() if lead.callback_at else vars_dict.get("callback_at", None),
         "created_at": lead.created_at.isoformat() if lead.created_at else None,
         "updated_at": lead.updated_at.isoformat() if lead.updated_at else None,
         # Flatten business & contact intelligence
@@ -108,6 +122,7 @@ def _lead_to_dict(lead: Lead) -> Dict[str, Any]:
 
 def _call_to_dict(call: Call, lead: Optional[Lead] = None) -> Dict[str, Any]:
     """Flattens a Call model into a call record dictionary."""
+    from services.outcomes import normalize_outcome
     cap = call.captured if isinstance(call.captured, dict) else {}
     transcript_val = call.transcript
     if isinstance(transcript_val, (dict, list)):
@@ -119,8 +134,12 @@ def _call_to_dict(call: Call, lead: Optional[Lead] = None) -> Dict[str, Any]:
     obj_raised = call.objections_raised or cap.get("objections_raised", "")
     ext_reqs = call.extracted_requirements or cap.get("extracted_requirements", "")
 
+    raw_label = cap.get("outcome_label") or call.outcome or "busy_no_time"
+    norm = normalize_outcome(raw_label, confidence=cap.get("confidence", 0.9))
+
     return {
         "id": call.id,
+        "account_id": call.account_id,
         "lead_id": call.lead_id,
         "call_type": "web" if call.channel == "manual" else "phone",
         "phone_number": (lead.phone_e164 if lead else "") or "",
@@ -129,6 +148,13 @@ def _call_to_dict(call: Call, lead: Optional[Lead] = None) -> Dict[str, Any]:
         "summary": call.summary or "",
         "sentiment": call.sentiment or "neutral",
         "deal_stage": call.outcome or "qualifying",
+        "outcome_label": cap.get("outcome_label", norm["outcome_label"]),
+        "outcome_bucket": cap.get("outcome_bucket", norm["outcome_bucket"]),
+        "outcome_reason": cap.get("outcome_reason", ""),
+        "confidence": cap.get("confidence", norm["confidence"]),
+        "needs_human_review": bool(cap.get("needs_human_review", norm["needs_human_review"])),
+        "callback_at": cap.get("callback_at", None),
+        "whatsapp_opt_in": bool(cap.get("whatsapp_opt_in", False)),
         "extracted_budget": cap.get("extracted_budget", ""),
         "extracted_timeline": cap.get("extracted_timeline", ""),
         "extracted_requirements": ext_reqs,
@@ -393,33 +419,40 @@ def init_db():
 
 # ---------------- CRUD FOR LEADS ----------------
 
-def get_all_leads() -> List[Dict[str, Any]]:
+def get_all_leads(account_id: Optional[int] = None) -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        leads = session.query(Lead).order_by(Lead.id.desc()).all()
+        query = session.query(Lead)
+        if account_id is not None:
+            query = query.filter(Lead.account_id == account_id)
+        leads = query.order_by(Lead.id.desc()).all()
         return [_lead_to_dict(l) for l in leads]
     finally:
         session.close()
 
 
-def get_lead_by_id(lead_id: int) -> Optional[Dict[str, Any]]:
+def get_lead_by_id(lead_id: int, account_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        lead = session.query(Lead).filter_by(id=lead_id).first()
+        query = session.query(Lead).filter_by(id=lead_id)
+        if account_id is not None:
+            query = query.filter(Lead.account_id == account_id)
+        lead = query.first()
         return _lead_to_dict(lead) if lead else None
     finally:
         session.close()
 
 
-def create_lead(lead_data: Dict[str, Any]) -> int:
+def create_lead(lead_data: Dict[str, Any], account_id: int = 1) -> int:
     session = SessionLocal()
     try:
+        acc_id = int(lead_data.get("account_id", account_id) or 1)
         enrichment = lead_data.get("enrichment_data")
         if isinstance(enrichment, dict):
             enrichment = json.dumps(enrichment, ensure_ascii=False)
 
         phone = clean_phone(lead_data.get("phone", ""))
-        existing = session.query(Lead).filter_by(account_id=1, phone_e164=phone).first()
+        existing = session.query(Lead).filter_by(account_id=acc_id, phone_e164=phone).first()
 
         variables = {
             "email": lead_data.get("email", ""),
@@ -456,14 +489,14 @@ def create_lead(lead_data: Dict[str, Any]) -> int:
             return existing.id
 
         lead = Lead(
-            account_id=1,
+            account_id=acc_id,
             name=lead_data.get("name", "Unknown"),
             phone=phone,
             phone_e164=phone,
             company=lead_data.get("company", ""),
             source=lead_data.get("source", "manual"),
             variables=variables,
-            consent_source="manual_entry",
+            consent_source=lead_data.get("consent_source", "manual_entry"),
             notes=lead_data.get("notes", "")
         )
         session.add(lead)
@@ -477,12 +510,13 @@ def create_lead(lead_data: Dict[str, Any]) -> int:
         session.close()
 
 
-def batch_create_leads(leads: List[Dict[str, Any]]) -> Tuple[int, int]:
+def batch_create_leads(leads: List[Dict[str, Any]], account_id: int = 1) -> Tuple[int, int]:
     session = SessionLocal()
     inserted = 0
     updated = 0
     try:
         for idx, l_data in enumerate(leads):
+            acc_id = int(l_data.get("account_id", account_id) or 1)
             raw_phone = str(l_data.get("phone", "") or "").strip()
             display_phone = raw_phone
             if raw_phone:
@@ -497,7 +531,7 @@ def batch_create_leads(leads: List[Dict[str, Any]]) -> Tuple[int, int]:
 
             # Check for existing lead by phone or by company/name
             existing = session.query(Lead).filter(
-                Lead.account_id == 1,
+                Lead.account_id == acc_id,
                 (Lead.phone_e164 == phone) | (Lead.name == l_data.get("name"))
             ).first()
 
@@ -532,13 +566,14 @@ def batch_create_leads(leads: List[Dict[str, Any]]) -> Tuple[int, int]:
                 updated += 1
             else:
                 new_lead = Lead(
-                    account_id=1,
+                    account_id=acc_id,
                     name=l_data.get("name", l_data.get("company", "Unknown")),
                     phone=phone,
                     phone_e164=phone,
                     company=l_data.get("company", l_data.get("name", "")),
                     source=l_data.get("source", "csv"),
                     variables=lead_vars,
+                    consent_source=l_data.get("consent_source", "import_confirmed"),
                     notes=l_data.get("pitch") or l_data.get("notes", ""),
                     created_at=func.now(),
                     updated_at=func.now()
@@ -555,10 +590,13 @@ def batch_create_leads(leads: List[Dict[str, Any]]) -> Tuple[int, int]:
         session.close()
 
 
-def update_lead(lead_id: int, updates: Dict[str, Any]) -> bool:
+def update_lead(lead_id: int, updates: Dict[str, Any], account_id: Optional[int] = None) -> bool:
     session = SessionLocal()
     try:
-        lead = session.query(Lead).filter_by(id=lead_id).first()
+        query = session.query(Lead).filter_by(id=lead_id)
+        if account_id is not None:
+            query = query.filter(Lead.account_id == account_id)
+        lead = query.first()
         if not lead:
             return False
 
@@ -567,12 +605,15 @@ def update_lead(lead_id: int, updates: Dict[str, Any]) -> bool:
         if "notes" in updates: lead.notes = updates["notes"]
         if "source" in updates: lead.source = updates["source"]
         if "last_call_stage" in updates: lead.last_outcome = updates["last_call_stage"]
+        if "opt_out" in updates: lead.opt_out = bool(updates["opt_out"])
 
         cur_vars = dict(lead.variables or {})
         for k in ["email", "company", "service_needed", "budget", "timeline", "status", "priority",
                   "preferred_language", "designation", "industry", "location", "website",
                   "enrichment_data", "action_items", "last_call_summary", "last_call_stage",
-                  "last_call_sentiment", "objections_noted", "last_called_at"]:
+                  "last_call_sentiment", "objections_noted", "last_called_at",
+                  "outcome_label", "outcome_bucket", "outcome_reason", "outcome_confidence",
+                  "needs_human_review", "whatsapp_opt_in", "callback_at"]:
             if k in updates:
                 cur_vars[k] = updates[k]
 
@@ -588,10 +629,13 @@ def update_lead(lead_id: int, updates: Dict[str, Any]) -> bool:
         session.close()
 
 
-def delete_lead(lead_id: int) -> bool:
+def delete_lead(lead_id: int, account_id: Optional[int] = None) -> bool:
     session = SessionLocal()
     try:
-        lead = session.query(Lead).filter_by(id=lead_id).first()
+        query = session.query(Lead).filter_by(id=lead_id)
+        if account_id is not None:
+            query = query.filter(Lead.account_id == account_id)
+        lead = query.first()
         if not lead:
             return False
         session.delete(lead)
@@ -607,10 +651,17 @@ def delete_lead(lead_id: int) -> bool:
 
 # ---------------- CALLS & TRANSCRIPTS ----------------
 
-def save_call_record(call_data: Dict[str, Any]) -> int:
+def save_call_record(call_data: Dict[str, Any], account_id: int = 1) -> int:
+    from services.outcomes import normalize_outcome, parse_callback_time_ist
     session = SessionLocal()
     try:
         lead_id = call_data.get("lead_id")
+        acc_id = int(call_data.get("account_id", account_id) or 1)
+        if lead_id:
+            lead_obj = session.query(Lead).filter_by(id=lead_id).first()
+            if lead_obj and lead_obj.account_id:
+                acc_id = lead_obj.account_id
+
         duration = int(call_data.get("duration_seconds", 0))
         blocks = (duration + 59) // 60 if duration > 0 else 0
         credits = round(blocks * 5.0, 2)
@@ -621,11 +672,26 @@ def save_call_record(call_data: Dict[str, Any]) -> int:
                 transcript_parsed = json.loads(transcript)
             except Exception:
                 transcript_parsed = transcript
+            transcript_text = transcript
+        elif isinstance(transcript, list):
+            transcript_parsed = transcript
+            transcript_text = "\n".join(str(m.get("content") or m.get("text") or "") for m in transcript if isinstance(m, dict))
         else:
             transcript_parsed = transcript
+            transcript_text = str(transcript or "")
+
+        raw_outcome = (
+            call_data.get("outcome_label")
+            or call_data.get("deal_stage")
+            or call_data.get("disposition")
+            or "completed"
+        )
+        norm = normalize_outcome(raw_outcome, transcript_text=transcript_text, confidence=call_data.get("confidence", 0.9))
+        deal_stage = call_data.get("deal_stage") or norm["legacy_stage"]
+        parsed_cb = parse_callback_time_ist(str(call_data.get("callback_at") or ""))
 
         call = Call(
-            account_id=1,
+            account_id=acc_id,
             lead_id=lead_id,
             employee_id=call_data.get("employee_id"),
             direction=call_data.get("direction") or "out",
@@ -635,13 +701,20 @@ def save_call_record(call_data: Dict[str, Any]) -> int:
             talk_seconds=duration,
             billed_blocks=blocks,
             credits=credits,
-            outcome=call_data.get("deal_stage") or call_data.get("disposition") or "completed",
+            outcome=deal_stage,
             sentiment=call_data.get("sentiment", "neutral"),
             summary=call_data.get("summary", ""),
             action_items=call_data.get("action_items", ""),
             objections_raised=call_data.get("objections_raised", ""),
             extracted_requirements=call_data.get("extracted_requirements", ""),
             captured={
+                "outcome_label": norm["outcome_label"],
+                "outcome_bucket": norm["outcome_bucket"],
+                "outcome_reason": call_data.get("outcome_reason", ""),
+                "confidence": norm["confidence"],
+                "needs_human_review": norm["needs_human_review"],
+                "callback_at": parsed_cb.isoformat() if parsed_cb else call_data.get("callback_at"),
+                "whatsapp_opt_in": bool(call_data.get("whatsapp_opt_in", False)),
                 "extracted_budget": call_data.get("extracted_budget", ""),
                 "extracted_timeline": call_data.get("extracted_timeline", ""),
                 "extracted_requirements": call_data.get("extracted_requirements", ""),
@@ -662,7 +735,6 @@ def save_call_record(call_data: Dict[str, Any]) -> int:
         if lead_id:
             lead = session.query(Lead).filter_by(id=lead_id).first()
             if lead:
-                deal_stage = call_data.get("deal_stage", "qualifying")
                 status_map = {
                     "closed_won": "CLOSED_WON",
                     "demo_scheduled": "DEMO_BOOKED",
@@ -670,12 +742,29 @@ def save_call_record(call_data: Dict[str, Any]) -> int:
                     "follow_up": "CONTACTED",
                     "lost": "LOST"
                 }
-                new_status = status_map.get(deal_stage.lower() if deal_stage else "", None)
+                new_status = status_map.get(deal_stage.lower() if deal_stage else "", norm["crm_status"])
                 lead.last_outcome = deal_stage
+                lead.is_hot = bool(norm["is_hot"])
+                if parsed_cb:
+                    lead.callback_at = parsed_cb
                 lead.last_call_summary = call_data.get("summary", "")
                 lead.action_items = call_data.get("action_items", "")
                 if call_data.get("objections_raised"):
                     lead.objections_noted = call_data["objections_raised"]
+
+                # Honor Do-Not-Call / Opt-Out immediately (§3 & §4)
+                if norm["opt_out_requested"] or call_data.get("opt_out_requested"):
+                    lead.opt_out = True
+                    existing_opt = session.query(OptOut).filter_by(
+                        account_id=lead.account_id, phone_e164=lead.phone_e164
+                    ).first()
+                    if not existing_opt:
+                        session.add(OptOut(
+                            account_id=lead.account_id,
+                            phone_e164=lead.phone_e164,
+                            reason=norm["outcome_label"]
+                        ))
+
                 cur_vars = dict(lead.variables or {})
                 if new_status: cur_vars["status"] = new_status
                 if call_data.get("extracted_budget"): cur_vars["budget"] = call_data["extracted_budget"]
@@ -684,6 +773,14 @@ def save_call_record(call_data: Dict[str, Any]) -> int:
                 cur_vars["last_call_summary"] = call_data.get("summary", "")
                 cur_vars["last_call_stage"] = deal_stage
                 cur_vars["last_call_sentiment"] = call_data.get("sentiment", "neutral")
+                cur_vars["outcome_label"] = norm["outcome_label"]
+                cur_vars["outcome_bucket"] = norm["outcome_bucket"]
+                cur_vars["outcome_reason"] = call_data.get("outcome_reason", "")
+                cur_vars["outcome_confidence"] = norm["confidence"]
+                cur_vars["needs_human_review"] = norm["needs_human_review"]
+                cur_vars["whatsapp_opt_in"] = bool(call_data.get("whatsapp_opt_in", cur_vars.get("whatsapp_opt_in", False)))
+                if parsed_cb:
+                    cur_vars["callback_at"] = parsed_cb.isoformat()
                 if call_data.get("objections_raised"): cur_vars["objections_noted"] = call_data["objections_raised"]
                 cur_vars["action_items"] = call_data.get("action_items", "")
                 cur_vars["last_called_at"] = datetime.now().isoformat()
@@ -700,19 +797,132 @@ def save_call_record(call_data: Dict[str, Any]) -> int:
         session.close()
 
 
-def get_call_history(limit: int = 50) -> List[Dict[str, Any]]:
+def override_lead_outcome(
+    lead_id: int,
+    outcome_label: str,
+    reason: str = "",
+    callback_at: Optional[str] = None,
+    user_id: Optional[int] = None,
+    account_id: int = 1,
+) -> Optional[Dict[str, Any]]:
+    """
+    Rep override of a lead's call outcome (§3 & §7).
+    Updates the lead's bucket/label, honors do_not_call -> opt_outs, and logs an AuditLog row.
+    """
+    from services.outcomes import normalize_outcome, parse_callback_time_ist
     session = SessionLocal()
     try:
-        results = session.query(Call, Lead).outerjoin(Lead, Call.lead_id == Lead.id).order_by(Call.created_at.desc()).limit(limit).all()
+        lead = session.query(Lead).filter_by(id=lead_id).first()
+        if not lead:
+            return None
+        prev_vars = dict(lead.variables or {})
+        prev_label = prev_vars.get("outcome_label") or lead.last_outcome or ""
+        norm = normalize_outcome(outcome_label, confidence=1.0)
+        parsed_cb = parse_callback_time_ist(callback_at)
+
+        lead.last_outcome = norm["legacy_stage"]
+        lead.is_hot = bool(norm["is_hot"])
+        if parsed_cb:
+            lead.callback_at = parsed_cb
+
+        if norm["opt_out_requested"]:
+            lead.opt_out = True
+            existing_opt = session.query(OptOut).filter_by(
+                account_id=lead.account_id, phone_e164=lead.phone_e164
+            ).first()
+            if not existing_opt:
+                session.add(OptOut(
+                    account_id=lead.account_id,
+                    phone_e164=lead.phone_e164,
+                    reason=reason or norm["outcome_label"],
+                ))
+
+        prev_vars["outcome_label"] = norm["outcome_label"]
+        prev_vars["outcome_bucket"] = norm["outcome_bucket"]
+        prev_vars["outcome_reason"] = reason
+        prev_vars["outcome_confidence"] = 1.0
+        prev_vars["needs_human_review"] = False
+        prev_vars["status"] = norm["crm_status"]
+        if parsed_cb:
+            prev_vars["callback_at"] = parsed_cb.isoformat()
+        lead.variables = prev_vars
+        lead.updated_at = func.now()
+
+        session.add(AuditLog(
+            account_id=lead.account_id or account_id,
+            user_id=user_id,
+            action="override_outcome",
+            target=f"lead:{lead.id}",
+            details={
+                "previous_outcome": prev_label,
+                "new_outcome": norm["outcome_label"],
+                "new_bucket": norm["outcome_bucket"],
+                "reason": reason,
+                "callback_at": parsed_cb.isoformat() if parsed_cb else None,
+            },
+        ))
+        session.commit()
+        session.refresh(lead)
+        return _lead_to_dict(lead)
+    except Exception as e:
+        session.rollback()
+        logger.error(f"override_lead_outcome error: {e}")
+        return None
+    finally:
+        session.close()
+
+
+def get_outcome_bucket_summary(account_id: Optional[int] = None) -> Dict[str, Any]:
+    """
+    Aggregates leads into the 4 Plan v2 (§3) buckets:
+      hot · follow_up · closed · not_reachable (plus uncalled & needs_human_review).
+    """
+    from services.outcomes import OUTCOME_BUCKETS, OUTCOME_CATALOG
+    leads = get_all_leads(account_id=account_id)
+    buckets: Dict[str, int] = {"hot": 0, "follow_up": 0, "closed": 0, "not_reachable": 0, "uncalled": 0}
+    labels: Dict[str, int] = {k: 0 for k in OUTCOME_CATALOG}
+    review_list: List[Dict[str, Any]] = []
+
+    for l in leads:
+        b = l.get("outcome_bucket") or "uncalled"
+        if b not in buckets:
+            b = "uncalled"
+        buckets[b] += 1
+        lbl = l.get("outcome_label") or ""
+        if lbl in labels:
+            labels[lbl] += 1
+        if l.get("needs_human_review"):
+            review_list.append(l)
+
+    return {
+        "buckets": buckets,
+        "bucket_meta": OUTCOME_BUCKETS,
+        "labels": labels,
+        "human_review_count": len(review_list),
+        "human_review_leads": review_list[:50],
+        "total_leads": len(leads),
+    }
+
+
+def get_call_history(limit: int = 50, account_id: Optional[int] = None) -> List[Dict[str, Any]]:
+    session = SessionLocal()
+    try:
+        query = session.query(Call, Lead).outerjoin(Lead, Call.lead_id == Lead.id)
+        if account_id is not None:
+            query = query.filter(Call.account_id == account_id)
+        results = query.order_by(Call.created_at.desc()).limit(limit).all()
         return [_call_to_dict(c, l) for c, l in results]
     finally:
         session.close()
 
 
-def get_call_by_id(call_id: int) -> Optional[Dict[str, Any]]:
+def get_call_by_id(call_id: int, account_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        result = session.query(Call, Lead).outerjoin(Lead, Call.lead_id == Lead.id).filter(Call.id == call_id).first()
+        query = session.query(Call, Lead).outerjoin(Lead, Call.lead_id == Lead.id).filter(Call.id == call_id)
+        if account_id is not None:
+            query = query.filter(Call.account_id == account_id)
+        result = query.first()
         if not result:
             return None
         return _call_to_dict(result[0], result[1])
@@ -720,11 +930,17 @@ def get_call_by_id(call_id: int) -> Optional[Dict[str, Any]]:
         session.close()
 
 
-def get_calls_for_lead(lead_id: int) -> List[Dict[str, Any]]:
+def get_calls_for_lead(lead_id: int, account_id: Optional[int] = None) -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        lead = session.query(Lead).filter_by(id=lead_id).first()
-        calls = session.query(Call).filter_by(lead_id=lead_id).order_by(Call.created_at.desc()).all()
+        lead_q = session.query(Lead).filter_by(id=lead_id)
+        if account_id is not None:
+            lead_q = lead_q.filter(Lead.account_id == account_id)
+        lead = lead_q.first()
+        calls_q = session.query(Call).filter_by(lead_id=lead_id)
+        if account_id is not None:
+            calls_q = calls_q.filter(Call.account_id == account_id)
+        calls = calls_q.order_by(Call.created_at.desc()).all()
         return [_call_to_dict(c, lead) for c in calls]
     finally:
         session.close()

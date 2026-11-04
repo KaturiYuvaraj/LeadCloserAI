@@ -11,12 +11,13 @@ Live calls use the documents of the AI employee on the call (voice_agent/knowled
 
 from collections import Counter
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 
+from core.auth import get_request_account_id
 from core.db import SessionLocal
-from models import Call
+from models import Call, Employee
 from voice_agent.knowledge import ALLOWED_SUFFIXES, add_doc, delete_doc, extract_text, list_docs
 
 router = APIRouter(tags=["knowledge"])
@@ -24,8 +25,24 @@ router = APIRouter(tags=["knowledge"])
 MAX_UPLOAD_BYTES = 15 * 1024 * 1024
 
 
+def _check_employee(emp_id: int, request: Request) -> None:
+    """404 unless the AI employee belongs to the signed-in user's account."""
+    account_id = get_request_account_id(request)
+    session = SessionLocal()
+    try:
+        query = session.query(Employee.id).filter(Employee.id == emp_id)
+        if account_id is not None:
+            query = query.filter(Employee.account_id == account_id)
+        found = query.first()
+    finally:
+        session.close()
+    if not found:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+
 @router.get("/api/employees/{emp_id}/knowledge")
-async def api_list_knowledge(emp_id: int):
+async def api_list_knowledge(emp_id: int, request: Request):
+    _check_employee(emp_id, request)
     docs = list_docs(emp_id)
     if docs is None:
         raise HTTPException(status_code=404, detail="Employee not found")
@@ -33,7 +50,8 @@ async def api_list_knowledge(emp_id: int):
 
 
 @router.post("/api/employees/{emp_id}/knowledge")
-async def api_upload_knowledge(emp_id: int, file: UploadFile = File(...)):
+async def api_upload_knowledge(emp_id: int, request: Request, file: UploadFile = File(...)):
+    _check_employee(emp_id, request)
     data = await file.read()
     if not data:
         raise HTTPException(status_code=400, detail="The file is empty.")
@@ -50,18 +68,22 @@ async def api_upload_knowledge(emp_id: int, file: UploadFile = File(...)):
 
 
 @router.delete("/api/employees/{emp_id}/knowledge/{index}")
-async def api_delete_knowledge(emp_id: int, index: int):
+async def api_delete_knowledge(emp_id: int, index: int, request: Request):
+    _check_employee(emp_id, request)
     if not delete_doc(emp_id, index):
         raise HTTPException(status_code=404, detail="Document not found")
     return {"success": True}
 
 
-def call_analytics(days: int = 30) -> Dict[str, Any]:
+def call_analytics(days: int = 30, account_id: Optional[int] = None) -> Dict[str, Any]:
     """Totals over recent calls: connection, outcomes, end reasons, languages, actions, reply speed."""
     since = datetime.now(timezone.utc) - timedelta(days=max(1, days))
     session = SessionLocal()
     try:
-        calls = session.query(Call).filter(Call.created_at >= since.replace(tzinfo=None)).all()
+        query = session.query(Call).filter(Call.created_at >= since.replace(tzinfo=None))
+        if account_id is not None:
+            query = query.filter(Call.account_id == account_id)
+        calls = query.all()
     finally:
         session.close()
 
@@ -103,5 +125,5 @@ def call_analytics(days: int = 30) -> Dict[str, Any]:
 
 
 @router.get("/api/analytics/calls")
-async def api_call_analytics(days: int = 30):
-    return call_analytics(days)
+async def api_call_analytics(request: Request, days: int = 30):
+    return call_analytics(days, get_request_account_id(request))

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — LeadCloser AI · S P Associates</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent: #ea580c;
+      --accent-hover: #c2410c;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at top right, #fff7ed 0%, #f8fafc 55%, #f1f5f9 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .brand-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ea580c, #f97316);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 16px rgba(234, 88, 12, 0.25);
+    }
+    .brand-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+    .brand-sub {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+    p.subtitle {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      line-height: 1.45;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      background: #ffffff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.15s ease;
+    }
+    .btn-submit:hover {
+      background: var(--accent-hover);
+    }
+    .btn-submit:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+    .error-box {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .demo-hint {
+      margin-top: 20px;
+      padding: 12px 14px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 10px;
+      font-size: 0.76rem;
+      color: #9a3412;
+      line-height: 1.45;
+    }
+    .footer-links {
+      margin-top: 18px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+    }
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer-links a:hover {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="brand-row">
+      <div class="brand-badge">LC</div>
+      <div>
+        <div class="brand-title">LeadCloser AI</div>
+        <div class="brand-sub">S P Associates · Sales & Revenue Automation</div>
+      </div>
+    </div>
+
+    <h1>Team Sign In</h1>
+    <p class="subtitle">Sign in with your account credentials to access the Calling Station, Campaign Queue & Pipeline Board.</p>
+
+    <div id="loginErrorBox" class="error-box"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="loginEmail">Work Email</label>
+        <input type="email" id="loginEmail" name="email" required placeholder="admin@leadcloser.ai" value="admin@leadcloser.ai" />
+      </div>
+
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" name="password" required placeholder="••••••••" value="admin123" />
+      </div>
+
+      <button type="submit" id="loginSubmitBtn" class="btn-submit">Sign In to Workspace →</button>
+    </form>
+
+    <div class="demo-hint">
+      <strong>Default Owner Account (S P Associates):</strong><br />
+      Email: <code>admin@leadcloser.ai</code> · Password: <code>admin123</code>
+    </div>
+
+    <div class="footer-links">
+      <a href="/">← Back to Homepage</a>
+      <a href="/crm">Open CRM Workspace ↗</a>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const errBox = document.getElementById("loginErrorBox");
+    const submitBtn = document.getElementById("loginSubmitBtn");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errBox.style.display = "none";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Signing in...";
+
+      try {
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+        const resp = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) {
+          throw new Error(data.detail || data.error || "Sign in failed.");
+        }
+        if (data.access_token) {
+          localStorage.setItem("lc_access_token", data.access_token);
+          localStorage.setItem("lc_user", JSON.stringify(data.user || {}));
+        }
+        const nextUrl = new URLSearchParams(window.location.search).get("next") || "/crm";
+        window.location.href = nextUrl;
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Sign In to Workspace →";
+      }
+    });
+  </script>
+</body>
+</html>
+
