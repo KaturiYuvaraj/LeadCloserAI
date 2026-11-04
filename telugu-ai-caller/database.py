@@ -833,7 +833,7 @@ def remove_opt_out(item: str, account_id: int = 1) -> bool:
     session = SessionLocal()
     try:
         row = None
-        if str(item).isdigit():
+        if item.isdigit():
             row = session.query(OptOut).filter_by(id=int(item), account_id=account_id).first()
         if not row:
             cleaned = clean_phone(item)

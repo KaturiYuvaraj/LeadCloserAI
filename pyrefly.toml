@@ -1,0 +1,16 @@
+python-interpreter-path = "telugu-ai-caller/venv/Scripts/python.exe"
+project-includes = [
+    "telugu-ai-caller",
+    "scripts",
+]
+project-excludes = [
+    "**/node_modules",
+    "**/__pycache__",
+    "telugu-ai-caller/venv",
+]
+search-path = [
+    "telugu-ai-caller",
+    "telugu-ai-caller/venv/Lib/site-packages",
+    "scripts",
+]
+infer-with-first-use = false
