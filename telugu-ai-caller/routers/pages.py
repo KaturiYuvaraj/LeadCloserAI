@@ -24,8 +24,9 @@ router = APIRouter(tags=["pages"])
 @router.get("/", response_class=HTMLResponse)
 async def serve_landing(request: Request):
     """
-    Public SaaS Marketing Homepage (Outpero luxury architectural design).
-    Features AI voice synthesizer demo, 5 AI personas, feature highlights & pricing.
+    Public SaaS Marketing Homepage (Outpero design system).
+    Features AI employee builder, 7-language call simulator, 56 industry clips,
+    channel tabs, integrations, developer API & talk-time pricing.
     """
     profile = get_company_profile()
     api_keys = get_all_api_keys()
@@ -39,6 +40,57 @@ async def serve_landing(request: Request):
         "employees": employees,
         "active_employee": active_emp
     })
+
+
+@router.get("/voices", response_class=HTMLResponse)
+@router.get("/ai-voice-agents", response_class=HTMLResponse)
+@router.get("/ai-voice-agents/for/{industry_slug}", response_class=HTMLResponse)
+@router.get("/ai-voice-agents/language/{lang_slug}", response_class=HTMLResponse)
+@router.get("/telugu-ai-voice-agents", response_class=HTMLResponse)
+@router.get("/tamil-ai-voice-agents", response_class=HTMLResponse)
+@router.get("/kannada-ai-voice-agents", response_class=HTMLResponse)
+@router.get("/malayalam-ai-voice-agents", response_class=HTMLResponse)
+@router.get("/free-ai-voice-agent", response_class=HTMLResponse)
+async def serve_voices_page(request: Request):
+    """Serve the Outpero Voices showcase page."""
+    return templates.TemplateResponse(request, "voices.html", {})
+
+
+@router.get("/pricing", response_class=HTMLResponse)
+@router.get("/compare", response_class=HTMLResponse)
+async def serve_pricing_page(request: Request):
+    """Serve the Outpero Pricing & Talk-Time Calculator page."""
+    return templates.TemplateResponse(request, "pricing.html", {})
+
+
+@router.get("/contact", response_class=HTMLResponse)
+@router.get("/agency", response_class=HTMLResponse)
+@router.get("/privacy-policy", response_class=HTMLResponse)
+@router.get("/terms-and-conditions", response_class=HTMLResponse)
+@router.get("/refund-policy", response_class=HTMLResponse)
+@router.get("/blog", response_class=HTMLResponse)
+@router.get("/glossary", response_class=HTMLResponse)
+async def serve_contact_page(request: Request):
+    """Serve the Outpero Contact & Enquiries page."""
+    return templates.TemplateResponse(request, "contact.html", {})
+
+
+@router.get("/product/instant-leads", response_class=HTMLResponse)
+async def serve_product_instant_leads(request: Request):
+    """Serve the Outpero Product -> Instant Leads page."""
+    return templates.TemplateResponse(request, "product_instant_leads.html", {})
+
+
+@router.get("/product/campaigns", response_class=HTMLResponse)
+async def serve_product_campaigns(request: Request):
+    """Serve the Outpero Product -> Bulk Campaigns page."""
+    return templates.TemplateResponse(request, "product_campaigns.html", {})
+
+
+@router.get("/product/inbound", response_class=HTMLResponse)
+async def serve_product_inbound(request: Request):
+    """Serve the Outpero Product -> Inbound 24/7 Business Number page."""
+    return templates.TemplateResponse(request, "product_inbound.html", {})
 
 
 @router.get("/crm", response_class=HTMLResponse)

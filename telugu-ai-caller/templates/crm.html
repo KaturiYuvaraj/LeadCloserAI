@@ -3,62 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LeadCloser AI - Dedicated CRM Calling Station & Pipeline Dashboard</title>
+  <title>Outpero — CRM Calling Station & Pipeline Dashboard</title>
+  <link rel="icon" href="/static/logo.png">
   <link rel="stylesheet" href="/static/css/style.css?v=6.0">
   <link rel="stylesheet" href="../static/css/style.css">
   <style>
 /* ===================================================================
-   LEADCLOSER AI — BESPOKE AURORA LIGHT SAAS DESIGN SYSTEM
-   Unique, ultra-clean, modern light-theme with jewel-tone accents,
-   frosted surfaces, multi-layered soft shadows, and crisp typography.
+   OUTPERO CRM DESIGN SYSTEM
    =================================================================== */
 
 :root {
-  /* Unique Aurora Light Canvas Palette */
-  --bg-app: #faf8f5;
+  --bg-app: #F7F5F0;
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-hover: #faf6f0;
-  --bg-subtle: #f5f2eb;
+  --bg-card-hover: #F4EFFE;
+  --bg-subtle: #EFECE6;
   --bg-input: #ffffff;
 
-  --border-light: #ece8df;
-  --border-medium: #ded8cc;
-  --border-focus: #ea580c;
+  --border-light: #E6E1D8;
+  --border-medium: #D5CFC3;
+  --border-focus: #5B3BE0;
 
-  --text-main: #18181b;
-  --text-secondary: #44403c;
-  --text-muted: #78716c;
+  --text-main: #14111F;
+  --text-secondary: #494358;
+  --text-muted: #6E687F;
   --text-light: #94a3b8;
 
-  /* Bespoke Royal Obsidian Sapphire & Vivid Emerald Jade (High-Tech Executive Precision) */
-  --bg-app: #faf8f5;
-  --bg-surface: #ffffff;
-  --bg-card: #ffffff;
-  --bg-card-hover: #faf6f0;
-  --bg-subtle: #f5f2eb;
-  --bg-input: #ffffff;
+  /* Outpero Royal Purple Primary */
+  --primary: #5B3BE0;
+  --primary-hover: #4A2EC4;
+  --primary-soft: #F4EFFE;
+  --primary-border: #D9CBFB;
 
-  --border-light: #ece8df;
-  --border-medium: #ded8cc;
-  --border-focus: #ea580c;
-
-  --text-main: #18181b;
-  --text-secondary: #44403c;
-  --text-muted: #78716c;
-  --text-light: #94a3b8;
-
-  /* Royal Sapphire Primary */
-  --primary: #ea580c;
-  --primary-hover: #c2410c;
-  --primary-soft: #fff7ed;
-  --primary-border: #fed7aa;
-
-  /* Emerald Jade Growth Accent */
-  --accent: #f97316;
-  --accent-hover: #ea580c;
-  --accent-soft: #ffedd5;
-  --accent-border: #fdba74;
+  /* Outpero Accent */
+  --accent: #7A50DC;
+  --accent-hover: #5B3BE0;
+  --accent-soft: #EEE6FC;
+  --accent-border: #C8B2F8;
 
   --teal: #0d9488;
   --teal-soft: #f0fdfa;
@@ -3342,13 +3323,8 @@ input[type="checkbox"] {
       <!-- 1. LEFT SIDEBAR (PERSISTENT ~220px) -->
       <aside class="crm-app-sidebar">
         <div>
-          <div class="crm-sidebar-brand" onclick="window.switchCrmView('dashboard')">
-            <!-- Orange Flame / Spark Logo SVG -->
-            <svg class="crm-sidebar-logo-icon" viewBox="0 0 28 28" fill="none">
-              <path d="M14 2C14 2 17 7 17 10C17 11.66 15.66 13 14 13C12.34 13 11 11.66 11 10C11 7 14 2 14 2Z" fill="#f97316"/>
-              <path d="M14 2C9.58 2 6 5.58 6 10C6 14.5 10.5 17 10.5 21C10.5 22.93 12.07 24.5 14 24.5C15.93 24.5 17.5 22.93 17.5 21C17.5 17 22 14.5 22 10C22 5.58 18.42 2 14 2ZM14 22C13.45 22 13 21.55 13 21C13 18.5 10 16.5 10 12.5C10 10.29 11.79 8.5 14 8.5C16.21 8.5 18 10.29 18 12.5C18 16.5 15 18.5 15 21C15 21.55 14.55 22 14 22Z" fill="#ea580c"/>
-            </svg>
-            <span class="crm-brand-name"><strong>LeadCloser</strong><span class="ai-suffix">.ai</span></span>
+          <div class="crm-sidebar-brand" onclick="window.location.href='/'" style="cursor:pointer;">
+            <img src="/static/logo.png" alt="Outpero" style="height: 28px; width: auto; margin-left: -4px;" />
           </div>
 
           <nav class="crm-sidebar-menu">
