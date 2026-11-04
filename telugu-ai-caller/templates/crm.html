@@ -482,7 +482,7 @@ body {
   border-radius: 30px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #6d28d9;
+  color: #ea580c;
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
   margin-bottom: 22px;
 }
@@ -3313,7 +3313,7 @@ input[type="checkbox"] {
       <div class="campaign-header-row">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span class="pulse-dot"></span>
-          <strong style="color: #6d28d9; font-size: 0.92rem;">AUTONOMOUS AI CALLING CAMPAIGN IN PROGRESS</strong>
+          <strong style="color: #ea580c; font-size: 0.92rem;">AUTONOMOUS AI CALLING CAMPAIGN IN PROGRESS</strong>
           <span id="campaignModeBadge" class="lead-status status-qualified">SIMULATION</span>
         </div>
         <div style="display: flex; gap: 6px;">
@@ -3378,7 +3378,7 @@ input[type="checkbox"] {
             </button>
             <button class="crm-nav-item" id="navItemNewEmployee" onclick="window.switchCrmView('newEmployee')">
               <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              <span>+ New employee</span>
+              <span>New employee</span>
             </button>
             <button class="crm-nav-item" id="navItemTalkEmployee" onclick="window.switchCrmView('talkEmployee')">
               <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
@@ -3484,7 +3484,7 @@ input[type="checkbox"] {
             <div class="crm-telemetry-pill" id="crmLiveTelemetryPill" title="Live Outbound &amp; Inbound Telemetry">
               <div class="crm-telem-top">
                 <span class="crm-telem-dot"></span>
-                <span id="telemActiveCalls">0</span> on calls now · <span id="telemCallRate">0.0</span> calls/min
+                <span><span id="telemActiveCalls">0</span> on calls now · <span id="telemCallRate">0.0</span> calls/min</span>
               </div>
               <div class="crm-telem-sub">
                 <span id="telemTalkingCount">0</span> talking · <span id="telemRingingCount">0</span> ringing
@@ -3766,11 +3766,11 @@ input[type="checkbox"] {
                 <div class="crm-idle-state">
                   <div class="crm-idle-wave-icon">
                     <svg viewBox="0 0 48 32" fill="none">
-                      <line x1="8" y1="12" x2="8" y2="20" stroke="#8b5cf6" stroke-width="3" stroke-linecap="round"/>
-                      <line x1="16" y1="6" x2="16" y2="26" stroke="#8b5cf6" stroke-width="3" stroke-linecap="round"/>
-                      <line x1="24" y1="2" x2="24" y2="30" stroke="#8b5cf6" stroke-width="3.5" stroke-linecap="round"/>
-                      <line x1="32" y1="8" x2="32" y2="24" stroke="#8b5cf6" stroke-width="3" stroke-linecap="round"/>
-                      <line x1="40" y1="12" x2="40" y2="20" stroke="#8b5cf6" stroke-width="3" stroke-linecap="round"/>
+                      <line x1="8" y1="12" x2="8" y2="20" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/>
+                      <line x1="16" y1="6" x2="16" y2="26" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/>
+                      <line x1="24" y1="2" x2="24" y2="30" stroke="#ea580c" stroke-width="3.5" stroke-linecap="round"/>
+                      <line x1="32" y1="8" x2="32" y2="24" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/>
+                      <line x1="40" y1="12" x2="40" y2="20" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/>
                     </svg>
                   </div>
                   <h3 class="crm-idle-title">No call in progress</h3>
@@ -4051,6 +4051,10 @@ input[type="checkbox"] {
         <!-- VIEW 3: LEADS DIRECTORY & MANAGEMENT                          -->
         <!-- ============================================================= -->
         <div class="crm-view-section" id="crmViewLeads" style="display: none;">
+          <div style="margin-bottom: 18px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">Leads &amp; Results</h2>
+            <span style="font-size: 0.8rem; color: #64748b;">Manage prospect records, inspect qualification stages, and track conversion</span>
+          </div>
           <!-- Plan v2 (§3) 4-Bucket Outcome Filter Bar -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 12px; margin-bottom: 16px;">
             <button type="button" onclick="window.filterLeadsByBucket('all')" style="text-align: left; padding: 14px 16px; border-radius: 12px; border: 1.5px solid #cbd5e1; background: #ffffff; cursor: pointer;">
@@ -4350,6 +4354,10 @@ input[type="checkbox"] {
         <!-- VIEW 6: CALL INTELLIGENCE & ANALYTICS                         -->
         <!-- ============================================================= -->
         <div class="crm-view-section" id="crmViewAnalytics" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">Performance &amp; Conversion Analytics</h2>
+            <span style="font-size: 0.8rem; color: #64748b;">Verified deal metrics, call duration distributions, and objection intelligence</span>
+          </div>
           <div class="crm-kpi-row" style="margin-bottom: 16px;">
             <div class="crm-kpi-card" style="border-left: 4px solid #ea580c;">
               <span class="crm-kpi-title">Total Calls Analyzed</span>
@@ -4361,7 +4369,7 @@ input[type="checkbox"] {
               <span class="crm-kpi-val" id="statClosedWon">--</span>
               <span class="crm-kpi-sub">High-Ticket Software Contracts</span>
             </div>
-            <div class="crm-kpi-card" style="border-left: 4px solid #7c3aed;">
+            <div class="crm-kpi-card" style="border-left: 4px solid #ea580c;">
               <span class="crm-kpi-title">Pipeline Conversion Rate</span>
               <span class="crm-kpi-val" id="statConversionRate">--%</span>
               <span class="crm-kpi-sub">Across all telecalling campaigns</span>
@@ -4471,15 +4479,15 @@ input[type="checkbox"] {
         <div class="crm-view-section" id="crmViewEmployees" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <div>
-              <h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0;">AI Sales Employees & Personas</h2>
-              <span style="font-size: 0.78rem; color: #64748b;">Autonomous multilingual sales specialists with distinct qualification frameworks</span>
+              <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">AI Sales Employees &amp; Personas</h2>
+              <span style="font-size: 0.8rem; color: #64748b;">Autonomous multilingual sales specialists with distinct qualification frameworks</span>
             </div>
-            <button class="crm-btn-orange" onclick="window.openEmployeeBuilderModal ? window.openEmployeeBuilderModal() : alert('Persona Builder')" style="padding: 7px 14px; font-size: 0.78rem; cursor: pointer;">
+            <button class="crm-btn-orange" onclick="window.switchCrmView('newEmployee')" style="padding: 8px 16px; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              <span>+ Create AI Employee</span>
+              <span>Create AI Employee</span>
             </button>
           </div>
-          <div class="crm-employee-grid" id="crmEmployeesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
+          <div class="crm-employee-grid" id="crmEmployeesGrid">
             <!-- Populated dynamically via /api/employees -->
           </div>
         </div>
@@ -5319,7 +5327,7 @@ input[type="checkbox"] {
         </div>
         <div class="stat-item">
           <div class="stat-label">Requirement</div>
-          <div class="stat-value" id="summaryRequirements" style="font-size: 0.9rem; color: #7c3aed;">Mobile App</div>
+          <div class="stat-value" id="summaryRequirements" style="font-size: 0.9rem; color: #ea580c;">Mobile App</div>
         </div>
       </div>
 

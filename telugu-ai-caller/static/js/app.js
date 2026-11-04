@@ -1385,6 +1385,13 @@ Your registered phone / client phone will ring shortly.`);
     const pageTitle = document.getElementById("crmPageTitle");
     const pageSub = document.getElementById("crmPageSub");
     const pageActions = document.getElementById("crmPageActions");
+    const pageSubhead = document.querySelector(".crm-page-subhead");
+
+    // Only show pageSubhead for the 3-column calling station view.
+    // All other standalone views have their own dedicated, un-duplicated headers!
+    if (pageSubhead) {
+      pageSubhead.style.display = (viewName === "calling") ? "flex" : "none";
+    }
 
     if (pageTitle && pageSub) {
       if (viewName === "dashboard") {
@@ -1484,25 +1491,30 @@ Your registered phone / client phone will ring shortly.`);
       grid.innerHTML = emps.map(e => {
         const isActive = active && active.id === e.id;
         return `
-          <div class="crm-panel-card" style="padding: 20px; border-top: 4px solid ${isActive ? '#ea580c' : '#cbd5e1'};">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <div class="crm-employee-card ${isActive ? 'active-closer' : 'inactive-closer'}">
+            <div class="crm-employee-header">
               <div>
-                <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;">${e.name}</h3>
-                <span style="font-size: 0.74rem; color: #64748b;">${e.role || 'Sales Closer'}</span>
+                <h3 class="crm-employee-name">${e.name}</h3>
+                <span class="crm-employee-role">${e.role || 'Sales Closer'}</span>
               </div>
-              <span class="crm-badge ${isActive ? 'live' : 'draft'}" style="font-size: 0.72rem; padding: 3px 8px;">
+              <span class="crm-badge ${isActive ? 'live' : 'draft'}">
                 ${isActive ? 'ACTIVE CLOSER' : 'READY'}
               </span>
             </div>
-            <div style="font-size: 0.76rem; color: #475569; margin-bottom: 12px; line-height: 1.4;">
-              ${e.description || e.system_prompt || 'Trained on product qualification and deal closing.'}
+            <p class="crm-employee-desc">
+              ${e.description || e.system_prompt || 'Trained on product qualification, live script adaptation, and deal closing.'}
+            </p>
+            <div class="crm-employee-tags">
+              <span class="crm-employee-tag">🌐 ${e.language || 'te-IN'}</span>
+              <span class="crm-employee-tag">🎙️ ${e.voice_speaker || 'kavitha_te_conversation'}</span>
+              <span class="crm-employee-tag">⚡ Sarvam AI</span>
             </div>
-            <div style="display: flex; gap: 8px; font-size: 0.72rem; color: #64748b; margin-bottom: 14px;">
-              <span>🌐 ${e.language || 'te-IN'}</span>
-              <span>🎙️ ${e.voice_speaker || 'kavitha_te_conversation'}</span>
-            </div>
-            <div style="display: flex; gap: 8px;">
-              ${!isActive ? `<button class="crm-btn-orange" onclick="window.activateEmployee(${e.id})" style="padding: 5px 12px; font-size: 0.74rem; cursor: pointer;">Set as Active Closer</button>` : `<button class="crm-action-pill" style="padding: 5px 12px; font-size: 0.74rem; color: #059669; border-color: #a7f3d0; background: #ecfdf5;">Currently Active</button>`}
+            <div class="crm-employee-actions">
+              ${!isActive 
+                ? `<button class="crm-btn-orange" onclick="window.activateEmployee(${e.id})">Set as Active Closer</button>` 
+                : `<button class="crm-action-pill active-badge-btn" disabled>Currently Active</button>`
+              }
+              <button class="crm-action-pill" onclick="window.testCallEmployee(${e.id})" title="Test this employee in voice sandbox">Test Call</button>
             </div>
           </div>
         `;
@@ -3137,8 +3149,8 @@ Lead updated to DEMO_BOOKED.`);
     localStorage.setItem("lc_sidebar_collapsed", isCollapsed ? "1" : "0");
   };
 
-  // Restore sidebar state
-  if (localStorage.getItem("lc_sidebar_collapsed") === "1") {
+  // Restore sidebar state only on narrower screens or if user explicitly requested
+  if (localStorage.getItem("lc_sidebar_collapsed") === "1" && window.innerWidth < 1024) {
     const sidebar = document.getElementById("crmAppSidebar");
     if (sidebar) sidebar.classList.add("collapsed");
   }
