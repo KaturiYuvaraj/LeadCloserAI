@@ -1,7 +1,7 @@
 """
 AI Employees Router - Persona Management, Draft Generation & Lifecycle
 """
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Request
 from core.auth import get_request_account_id
 
@@ -120,3 +120,73 @@ async def api_delete_employee(emp_id: int, request: Request):
     delete_ai_employee(emp_id)
     return {"success": True, "message": "Employee deleted successfully."}
 
+
+
+@router.post("/api/employees/{emp_id}/duplicate")
+async def api_duplicate_employee(emp_id: int, request: Request):
+    """Duplicate an existing AI employee persona with a '(Copy)' suffix."""
+    acc_id = get_request_account_id(request) or 1
+    emp = get_ai_employee_by_id(emp_id)
+    if not emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    clone_payload = {
+        "account_id": acc_id,
+        "name": f"{emp.get('name', 'AI Employee')} (Copy)",
+        "role_title": emp.get("role_title", "Sales Specialist"),
+        "primary_language": emp.get("primary_language", "te-IN"),
+        "fallback_language": emp.get("fallback_language", "en-IN"),
+        "voice_gender": emp.get("voice_gender", "female"),
+        "speaker_id": emp.get("speaker_id", "meera"),
+        "tone": emp.get("tone", "Professional, warm, helpful"),
+        "system_prompt": emp.get("system_prompt", ""),
+        "greeting": emp.get("greeting", ""),
+        "offer_details": emp.get("offer_details", ""),
+        "status": "draft",
+        "is_active": False,
+        "created_by": "cloned",
+    }
+    new_id = create_ai_employee(clone_payload)
+    new_emp = get_ai_employee_by_id(new_id)
+    return {
+        "success": True,
+        "employee_id": new_id,
+        "employee": new_emp,
+        "message": f"Successfully duplicated '{emp.get('name')}' as draft."
+    }
+
+
+@router.post("/api/employees/{emp_id}/test")
+async def api_test_employee_voice(emp_id: int, payload: Optional[Dict[str, Any]] = None):
+    """
+    Synthesize the employee's greeting or custom test phrase via Sarvam TTS
+    and return base64-encoded audio for instant in-browser auditioning.
+    """
+    emp = get_ai_employee_by_id(emp_id)
+    if not emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    text = (payload or {}).get("text") or emp.get("greeting") or "Hello, this is a voice test."
+    lang = emp.get("primary_language", "te-IN")
+    speaker = emp.get("speaker_id", "meera")
+
+    try:
+        from services.sarvam_service import sarvam_service
+        audio_bytes = await sarvam_service.text_to_speech(text=text, language_code=lang, speaker=speaker)
+        import base64
+        audio_b64 = base64.b64encode(audio_bytes).decode("ascii") if audio_bytes else None
+        return {
+            "success": True,
+            "text": text,
+            "language": lang,
+            "speaker": speaker,
+            "audio_base64": audio_b64,
+            "mime_type": "audio/wav",
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "text": text,
+            "note": "TTS synthesis failed or mock audio fallback."
+        }

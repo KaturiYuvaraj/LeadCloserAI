@@ -1,3 +1,4 @@
+from typing import Optional
 """
 Calls Router - Call History, Call Records & Analytics
 """
@@ -73,14 +74,26 @@ async def api_get_call_recording(call_id: int, request: Request):
 
 
 @router.get("/api/analytics/overview")
-async def api_get_analytics_overview(request: Request):
+async def api_get_analytics_overview(
+    request: Request,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    source: Optional[str] = None,
+    campaign_id: Optional[int] = None,
+):
     """
     Return executive-level sales metrics, conversion funnel, objections breakdown,
-    sentiment distributions, and AI employee leaderboard.
+    sentiment distributions, and AI employee leaderboard with optional multi-dimensional filtering.
     """
     try:
         account_id = get_request_account_id(request)
-        data = get_analytics_summary(account_id=account_id)
+        data = get_analytics_summary(
+            account_id=account_id,
+            date_from=date_from,
+            date_to=date_to,
+            source=source,
+            campaign_id=campaign_id,
+        )
         return {"success": True, "data": data}
     except Exception as e:
         logger.error(f"Failed to generate analytics overview: {e}")

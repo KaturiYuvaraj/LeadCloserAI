@@ -23,7 +23,9 @@ from core.auth import (
     get_current_user,
     get_optional_user,
     hash_password,
+    login_limiter,
     require_role,
+    validate_password_strength,
     verify_password,
 )
 from core.db import SessionLocal
@@ -32,7 +34,7 @@ from models import Account, AuditLog, User
 
 router = APIRouter(tags=["auth"])
 
-VALID_ROLES = {"owner", "admin", "member"}
+VALID_ROLES = {"owner", "admin", "manager", "salesperson", "member"}
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -43,17 +45,43 @@ async def serve_login_page(request: Request):
 
 
 @router.post("/api/auth/login")
-async def api_login(payload: Dict[str, Any], response: Response):
+async def api_login(payload: Dict[str, Any], request: Request, response: Response):
     email = (payload.get("email") or "").strip().lower()
     password = payload.get("password") or ""
     if not email or not password:
         raise HTTPException(status_code=400, detail="Email and password are required.")
 
+    client_ip = request.client.host if request.client else "unknown"
+    rate_key = f"{client_ip}:{email}"
+
+    if login_limiter.is_rate_limited(rate_key) or login_limiter.is_rate_limited(email):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many failed login attempts. Please wait 5 minutes before trying again."
+        )
+
     session = SessionLocal()
     try:
         user = session.query(User).filter(User.email.ilike(email)).first()
         if not user or not verify_password(password, user.password_hash):
+            login_limiter.record_failure(rate_key)
+            login_limiter.record_failure(email)
+            # Log failed login attempt
+            try:
+                session.add(AuditLog(
+                    account_id=user.account_id if user else 1,
+                    user_id=user.id if user else None,
+                    action="login_failed",
+                    target=f"email:{email}",
+                    details={"email": email, "ip": client_ip, "reason": "invalid_credentials"},
+                ))
+                session.commit()
+            except Exception:
+                session.rollback()
             raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+        login_limiter.reset(rate_key)
+        login_limiter.reset(email)
 
         account = session.query(Account).filter_by(id=user.account_id).first()
         token = create_access_token(
@@ -68,7 +96,7 @@ async def api_login(payload: Dict[str, Any], response: Response):
             user_id=user.id,
             action="user_login",
             target=f"user:{user.id}",
-            details={"email": user.email, "role": user.role},
+            details={"email": user.email, "role": user.role, "ip": client_ip},
         ))
         session.commit()
 
@@ -90,6 +118,87 @@ async def api_login(payload: Dict[str, Any], response: Response):
                 "id": user.id,
                 "account_id": user.account_id,
                 "account_name": account.name if account else "S P Associates",
+                "email": user.email,
+                "role": user.role,
+            },
+        }
+    finally:
+        session.close()
+
+
+@router.post("/api/auth/register")
+async def api_register(payload: Dict[str, Any], request: Request, response: Response):
+    """
+    Self-service account registration:
+    Creates an Account and the initial Owner User with validated credentials.
+    """
+    company_name = (payload.get("company_name") or payload.get("account_name") or "").strip()
+    email = (payload.get("email") or "").strip().lower()
+    password = payload.get("password") or ""
+
+    if not company_name or len(company_name) < 2:
+        raise HTTPException(status_code=400, detail="Company or organization name is required (min 2 characters).")
+    if not email or "@" not in email or "." not in email:
+        raise HTTPException(status_code=400, detail="Valid email address is required.")
+
+    pw_err = validate_password_strength(password)
+    if pw_err:
+        raise HTTPException(status_code=400, detail=pw_err)
+
+    session = SessionLocal()
+    try:
+        existing = session.query(User).filter(User.email.ilike(email)).first()
+        if existing:
+            raise HTTPException(status_code=409, detail="An account with this email address already exists.")
+
+        account = Account(name=company_name, calling_approved=True)
+        session.add(account)
+        session.flush()
+
+        user = User(
+            account_id=account.id,
+            email=email,
+            password_hash=hash_password(password),
+            role="owner",
+        )
+        session.add(user)
+        session.flush()
+
+        token = create_access_token(
+            user_id=user.id,
+            account_id=account.id,
+            email=user.email,
+            role=user.role,
+        )
+
+        client_ip = request.client.host if request.client else "unknown"
+        session.add(AuditLog(
+            account_id=account.id,
+            user_id=user.id,
+            action="account_registered",
+            target=f"account:{account.id}",
+            details={"email": email, "company": company_name, "ip": client_ip},
+        ))
+        session.commit()
+
+        response.set_cookie(
+            key=COOKIE_NAME,
+            value=token,
+            httponly=True,
+            max_age=TOKEN_TTL_SECONDS,
+            samesite="lax",
+            path="/",
+        )
+
+        return {
+            "success": True,
+            "access_token": token,
+            "token_type": "bearer",
+            "expires_in": TOKEN_TTL_SECONDS,
+            "user": {
+                "id": user.id,
+                "account_id": account.id,
+                "account_name": account.name,
                 "email": user.email,
                 "role": user.role,
             },
@@ -146,8 +255,9 @@ async def api_invite_team_member(
 
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Valid email address is required.")
-    if len(password) < 6:
-        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+    pw_err = validate_password_strength(password)
+    if pw_err:
+        raise HTTPException(status_code=400, detail=pw_err)
     if role not in VALID_ROLES:
         raise HTTPException(status_code=400, detail=f"Role must be one of: {', '.join(sorted(VALID_ROLES))}")
 

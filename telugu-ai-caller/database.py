@@ -2051,7 +2051,13 @@ def update_campaign_status(
 
 # ---------------- ANALYTICS SUMMARY ----------------
 
-def get_analytics_summary(account_id: Optional[int] = None) -> Dict[str, Any]:
+def get_analytics_summary(
+    account_id: Optional[int] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    source: Optional[str] = None,
+    campaign_id: Optional[int] = None,
+) -> Dict[str, Any]:
     """Calculate real executive metrics, conversion funnel, objections, sentiments, and employee performance."""
     session = SessionLocal()
     try:
@@ -2060,6 +2066,12 @@ def get_analytics_summary(account_id: Optional[int] = None) -> Dict[str, Any]:
         lead_query = session.query(Lead)
         if acc_filter:
             lead_query = lead_query.filter(Lead.account_id == acc_filter)
+        if source:
+            lead_query = lead_query.filter(Lead.source.ilike(source.strip()))
+        if date_from:
+            lead_query = lead_query.filter(Lead.created_at >= date_from)
+        if date_to:
+            lead_query = lead_query.filter(Lead.created_at <= date_to)
         leads = lead_query.all()
         total_leads = len(leads)
 
@@ -2071,6 +2083,12 @@ def get_analytics_summary(account_id: Optional[int] = None) -> Dict[str, Any]:
         call_query = session.query(Call)
         if acc_filter:
             call_query = call_query.filter(Call.account_id == acc_filter)
+        if campaign_id is not None:
+            call_query = call_query.filter(Call.campaign_id == campaign_id)
+        if date_from:
+            call_query = call_query.filter(Call.created_at >= date_from)
+        if date_to:
+            call_query = call_query.filter(Call.created_at <= date_to)
         calls = call_query.all()
         total_calls = len(calls)
         total_duration_sec = sum(c.talk_seconds or 0 for c in calls)

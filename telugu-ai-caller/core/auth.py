@@ -216,16 +216,78 @@ def get_request_account_id(request: Request) -> Optional[int]:
 
 
 def require_role(*allowed_roles: str) -> Callable:
-    """Dependency factory that enforces `user.role` is one of `allowed_roles`."""
-    allowed = {r.lower() for r in allowed_roles}
+    """
+    Dependency factory that enforces `user.role` is one of `allowed_roles`
+    or satisfies the hierarchical role rank (owner > admin > manager > salesperson > member).
+    """
+    explicit_allowed = {r.lower() for r in allowed_roles}
+    # Hierarchically expand allowed roles so higher roles always qualify
+    expanded_allowed = set(explicit_allowed)
+    for r in explicit_allowed:
+        r_level = ROLE_LEVELS.get(r, 1)
+        for candidate_role, c_level in ROLE_LEVELS.items():
+            if c_level >= r_level:
+                expanded_allowed.add(candidate_role)
 
     def _checker(user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
-        if (user.get("role") or "").lower() not in allowed:
+        user_role = (user.get("role") or "").lower()
+        if user_role not in expanded_allowed:
             raise HTTPException(
                 status_code=403,
-                detail=f"Insufficient permissions. Required role: {', '.join(sorted(allowed))}.",
+                detail=f"Insufficient permissions. Required role: {', '.join(sorted(explicit_allowed))}.",
             )
         return user
 
     return _checker
 
+
+ROLE_LEVELS: Dict[str, int] = {
+    "owner": 5,
+    "admin": 4,
+    "manager": 3,
+    "salesperson": 2,
+    "member": 1,
+}
+
+
+def validate_password_strength(password: str) -> Optional[str]:
+    """Validate password length (>=8) and complexity (letters + digits)."""
+    if not password or len(password) < 8:
+        return "Password must be at least 8 characters long."
+    if not any(c.isalpha() for c in password):
+        return "Password must contain at least one letter."
+    if not any(c.isdigit() for c in password):
+        return "Password must contain at least one digit."
+    return None
+
+
+class LoginRateLimiter:
+    """Thread-safe in-memory sliding window rate limiter (max 5 failed attempts in 5 minutes)."""
+
+    def __init__(self, max_attempts: int = 5, window_seconds: int = 300):
+        self.max_attempts = max_attempts
+        self.window_seconds = window_seconds
+        self._failures: Dict[str, list] = {}
+        import threading
+        self._lock = threading.Lock()
+
+    def is_rate_limited(self, key: str) -> bool:
+        now = time.time()
+        with self._lock:
+            attempts = [t for t in self._failures.get(key, []) if now - t < self.window_seconds]
+            self._failures[key] = attempts
+            return len(attempts) >= self.max_attempts
+
+    def record_failure(self, key: str):
+        now = time.time()
+        with self._lock:
+            attempts = [t for t in self._failures.get(key, []) if now - t < self.window_seconds]
+            attempts.append(now)
+            self._failures[key] = attempts
+
+    def reset(self, key: str):
+        with self._lock:
+            self._failures.pop(key, None)
+
+
+login_limiter = LoginRateLimiter(max_attempts=5, window_seconds=300)

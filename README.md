@@ -1,42 +1,66 @@
 # 🎙️ LeadCloserAI: Multilingual Autonomous AI Voice Caller & Lead Closing CRM
 
-An autonomous, real-time AI Voice Calling & Deal Closing CRM built for Software, IT, and Agency Businesses representing **S P Associates Software Company**. 
+An autonomous, enterprise-grade AI Voice Calling & Deal Closing CRM built for Software, IT, Real Estate, Healthcare, Education, and Agency Businesses representing **S P Associates Software Company**. 
 
 It conducts fluent, human-like conversations in **Telugu**, **Hindi**, and **Indian English**, intelligently matches customer language in real time, handles price and timeline objections, schedules project demos, and automatically saves executive post-call intelligence and summaries in English.
 
-Powered by **Sarvam AI** (`sarvam-105b-conversations`, `bulbul:v4-flash`, `saaras:v3`) and **FastAPI**.
+Powered by **Sarvam AI** (`sarvam-105b-conversations`, `bulbul:v4-flash`, `saaras:v3`), **FastAPI**, **SQLAlchemy 2.0**, and **PostgreSQL / SQLite**.
 
 ---
 
 ## 🌟 Key Capabilities
 
-### 1. 📊 Excel & CSV Sheet Lead Ingestion
-- **Spreadsheet Upload:** Admin can upload `.xlsx`, `.xls`, or `.csv` files containing customer leads.
+### 1. 🎯 Explainable Lead Scoring System (Phase 7)
+- **Deterministic 0–100 Qualification**: Every lead receives an explainable qualification score across 5 transparent factors:
+  1. **Budget & Commercial Viability** (0–25 pts): Quantified budget thresholds (₹50k–₹2L+: 25 pts, ₹25k–₹50k: 18 pts, <₹25k: 10 pts, undefined: 5 pts).
+  2. **Need & Timeline Urgency** (0–20 pts): Immediate / < 1 week (20 pts), 1–4 weeks (15 pts), 1–3 months (10 pts), casual/exploratory (4 pts).
+  3. **Service Alignment** (0–20 pts): Direct match for core multilingual AI voice & sales closing (20 pts), CRM/automation (12 pts), general (5 pts).
+  4. **Engagement & Call Outcome** (0–25 pts): Demo requested / callback scheduled (25 pts), qualified discussion (18 pts), connected (10 pts), DND/disqualified (0 pts).
+  5. **Decision Maker Fit** (0–10 pts): C-Level / Founder / Managing Director (10 pts), Senior Manager / Head (7 pts), operational contact (3 pts).
+- **Three Core Categories**:
+  - **HOT (80–100)**: Immediate sales closing follow-up, assigned to human rep.
+  - **WARM (50–79)**: Enrolled in multilingual AI voice nurturing sequences.
+  - **COLD (<50)**: Low priority or educational drip messaging.
+- **Explainable Factor Breakdowns**: Each factor includes point contributions, max points, and human-readable reasoning strings.
+
+### 2. 🔐 Enterprise Authentication & Role-Based Access Control (Phase 3)
+- **Self-Service Registration** (`POST /api/auth/register`): Creates customer accounts and initial `owner` user with strict password validation (min 8 chars, alphanumeric).
+- **Login Rate-Limiting**: Thread-safe sliding window limiter blocks brute force attacks (max 5 failed attempts per IP/email in a 5-minute window, returns HTTP 429).
+- **Role Hierarchy**: Strict permission gates:
+  - `owner` (full organizational and billing control)
+  - `admin` (team management, campaigns, settings)
+  - `manager` (campaign configuration, employee management, CRM review)
+  - `salesperson` (CRM leads, call dispatch, callbacks)
+  - `member` (view-only operations)
+- **Tenant Isolation**: Every database query scopes `account_id` foreign keys, preventing cross-tenant access.
+
+### 3. 📊 Excel & CSV Sheet Lead Ingestion & Export
+- **Spreadsheet Upload:** Upload `.xlsx`, `.xls`, or `.csv` files containing customer leads with formula-injection sanitization (`sanitize_for_spreadsheet`).
 - **Smart Column Auto-Detection:** Automatically maps fields for Name, Phone Number, Company, Service Needed, Budget, Timeline, Preferred Language, and Notes.
 - **Sample Template:** Download a pre-formatted Excel template (`leads_template.xlsx`) directly from the UI.
 - **Duplicate Prevention:** Existing phone numbers are automatically detected and updated without creating duplicate entries.
 
-### 2. ⚡ Autonomous Auto-Calling Campaigns
-- **Batch Calling:** Click `▶️ Auto-Call Campaign` to dial through imported leads consecutively.
-- **Personalized Context:** AI dynamically pulls each customer's details (name, company, service requested, budget, and prior call history) into the conversation prompt.
-- **Live Real-Time Feedback:** Shows live progress, active call status, and live counters for Demos Booked, Closed Won, and Follow-ups.
-- **Campaign Controls:** Instant Pause, Resume, and Stop controls from the dashboard.
-- **Dual Calling Modes:**
-  - *Autonomous AI Simulation:* High-speed automated dialogue execution for batch lead closing and test campaigns.
-  - *Real Carrier Telephony (Twilio / WebSockets):* Dials real phone numbers with bidirectional audio streaming.
+### 4. ⚡ Autonomous Auto-Calling Campaigns (Phase 10)
+- **Persistent Campaign Model:** Database-backed campaigns (`Campaign`) supporting name, description, employee assignment, lead lists, concurrency limits, and retry policies.
+- **Restart-Safe Outbound Queue:** Persistent queue (`call_jobs` table via `voice_agent/dialer.py`), enforcing TRAI calling hours (9 AM–7 PM IST), DND screening, and weekly call frequency caps.
+- **Campaign Controls:** Real-time Pause, Resume, Stop, and Concurrency controls from the dashboard.
 
-### 3. 🗣️ Multilingual Conversational Engine (Telugu • Hindi • English)
+### 5. 🤖 Configurable AI Employees (Phase 9)
+- **Persona Customization:** Configure Telugu, Hindi, and Indian English AI sales reps with distinct tones, greetings, offers, and voice gender.
+- **Instant Duplication:** Clone any employee persona with a single click (`POST /api/employees/{id}/duplicate`) for rapid A/B testing.
+- **Voice Auditioning:** In-browser test synthesis (`POST /api/employees/{id}/test`) plays sample greetings via Sarvam TTS before deployment.
+
+### 6. 🗣️ Multilingual Conversational Engine
 - **Automatic Language Matching:** Seamlessly detects and answers in the customer's preferred language (**Telugu**, **Hindi**, or **English**) or immediately switches when asked.
 - **Natural Human Turn-Taking & Pacing:**
-  - Web Audio API Voice Activity Detection (VAD) with an adaptive 1.8s silence endpoint detector.
+  - Web Audio API Voice Activity Detection (VAD) with an adaptive silence endpoint detector.
   - Mic echo suppression during AI playback.
   - Empathetic acknowledgement openers before presenting solutions (*"సరేనండి, అర్థమైంది..."*, *"जी बिल्कुल सर, समझ गया..."*, *"Got it, absolutely..."*).
   - Short, focused responses (1-2 sentences) ending with a clear call-to-action.
 
-### 4. 📝 Executive Post-Call Summaries in English
-- Post-call sales intelligence extraction records **Call Summary**, **Deal Stage**, **Sentiment**, **Extracted Budget**, **Timeline**, **Objections**, and **Next Action Items**.
-- **100% Professional English:** Summaries and CRM tasks are strictly translated and formatted into fluent English for executive review, regardless of call language.
-- **Export to Excel:** Export all leads with updated call summaries and closing stages with one click.
+### 7. 📈 Zero-Fake-Data Analytics & Multi-Dimensional Filtering (Phase 17)
+- **100% Real Database Metrics:** Executive KPIs, conversion funnels, sentiment distributions, and objection analytics computed purely from real database rows (no synthetic mock fallbacks).
+- **Multi-Dimensional Filters:** Filter analytics by `date_from`, `date_to`, `source`, and `campaign_id`.
 
 ---
 
@@ -51,32 +75,48 @@ LeadCloserAI/
     ├── .env.example                # Sample environment configuration
     ├── requirements.txt            # Python dependencies
     ├── main.py                     # FastAPI application, WebSockets & REST routes
-    ├── database.py                 # SQLite CRM for Leads, Calls, Deals & Agency Profile
+    ├── database.py                 # SQLite/PostgreSQL CRM for Leads, Calls, Deals & Agency Profile
     ├── config.py                   # Configuration and environment loader
-    ├── migrate_to_english_summaries.py # Database summary migration script
+    ├── core/
+    │   ├── auth.py                 # JWT, PBKDF2 hashing, login rate limiting, role hierarchy
+    │   ├── db.py                   # SQLAlchemy 2.0 engine, PostgreSQL & SQLite support
+    │   └── web.py                  # Jinja2 template environment
+    ├── models/                     # SQLAlchemy models with tenant account_id scoping
+    │   ├── account.py              # Account tenant model
+    │   ├── user.py                 # User & team model
+    │   ├── lead.py                 # CRM Lead model
+    │   ├── call.py                 # Call records & transcripts
+    │   ├── campaign.py             # Persistent Campaign model
+    │   └── employee.py             # AI Employee persona model
     ├── services/
+    │   ├── lead_scoring.py         # Explainable 0-100 qualification engine (5 transparent factors)
     │   ├── sarvam_service.py       # Sarvam STT, TTS, and 105B LLM async client
     │   ├── sales_agent.py          # Sales dialogue engine, objection handler & extractor
     │   ├── campaign_service.py     # Background auto-calling campaign engine
-    │   ├── excel_service.py        # Excel/CSV parser and summary exporter
-    │   ├── language_utils.py       # Language detection and voice mapping
-    │   ├── audio_processor.py      # Audio conversion (PCM, WAV, mu-law)
-    │   └── telephony_service.py    # Twilio outbound calling and TwiML generator
+    │   ├── excel_service.py        # Excel/CSV parser and summary exporter with formula sanitization
+    │   └── audio_processor.py      # Audio conversion (PCM, WAV, mu-law)
+    ├── routers/
+    │   ├── auth.py                 # Self-registration, login, team management, rate limiting
+    │   ├── leads.py                # Leads CRUD, search, pagination, explainable scoring
+    │   ├── campaigns.py            # Persistent campaign management and queue dispatch
+    │   ├── employees.py            # AI employee personas, duplication, voice audition
+    │   └── calls.py                # Call records and filtered analytics overview
     ├── static/
-    │   ├── css/style.css           # Clean modern CRM dashboard styles
+    │   ├── css/style.css           # Floating glassmorphism navbar & clean CRM dashboard styles
     │   └── js/
-    │       ├── app.js              # CRM UI state, lead selection, and modals
+    │       ├── app.js              # CRM 11-view UI state, Lucide icons, lead selection
     │       └── call_client.js      # Web Audio mic streaming and turn-taking VAD
     ├── templates/
-    │   └── index.html              # Responsive CRM Dashboard & Calling Station
+    │   ├── index.html              # Floating glassmorphism landing showcase
+    │   ├── crm.html                # Unified 11-view CRM Station with Lucide icons
+    │   └── login.html              # Secure team authentication interface
     └── tests/
+        ├── test_lead_scoring_and_production_improvements.py # Scoring, registration, rate limiting
+        ├── test_multi_tenant_security.py # Tenant data isolation tests
         ├── test_developer_api.py   # Tests API key generation, billing & call dispatch
         ├── test_english_summaries.py # Verifies 100% English CRM summary storage
         ├── test_pacing_and_turn_taking.py # Verifies conversational timing & human pacing
-        ├── test_campaign_and_excel.py # Tests Excel import/export & auto campaigns
-        ├── test_multilingual.py    # Tests Telugu, Hindi, and English interactions
-        ├── test_api.py             # Unit tests for CRM REST endpoints
-        └── test_pipeline.py        # End-to-end integration test
+        └── test_campaign_and_excel.py # Tests Excel import/export & auto campaigns
 ```
 
 ---
@@ -94,8 +134,10 @@ Copy `.env.example` to `.env` inside `telugu-ai-caller/`:
 ```bash
 cp telugu-ai-caller/.env.example telugu-ai-caller/.env
 ```
-Open `telugu-ai-caller/.env` and insert your Sarvam API key:
+Open `telugu-ai-caller/.env` and insert your credentials:
 ```env
+APP_ENV=development
+SECRET_KEY=your-secure-random-jwt-signing-key
 SARVAM_API_KEY=your_sarvam_api_key_here
 ```
 
@@ -126,55 +168,14 @@ Open your browser at:
 
 ## 🧪 Running the Automated Test Suite
 
-Run tests to verify multilingual sales flow, turn-taking, and summary extraction:
+Run pytest to verify the full suite of unit, integration, and security tests:
 
 ```bash
-# Developer API & Credit Billing test
-python tests/test_developer_api.py
-
-# English summaries & CRM database test
-python tests/test_english_summaries.py
-
-# Turn-taking pacing & VAD test
-python tests/test_pacing_and_turn_taking.py
-
-# Excel template & Auto-call campaign test
-python tests/test_campaign_and_excel.py
+cd telugu-ai-caller
+.\venv\Scripts\pytest -v
 ```
 
----
-
-## ⚡ Developer REST API Endpoints
-
-Clients can purchase API credits and trigger calls programmatically:
-
-### 1. Trigger Outbound AI Call
-```bash
-POST /api/v1/calls/dispatch
-Header: Authorization: Bearer lc_live_...
-Content-Type: application/json
-
-{
-  "lead_name": "Ramesh Naidu",
-  "phone": "+919848011223",
-  "company": "Naidu Supermarkets",
-  "service": "Mobile App & Billing",
-  "budget": "₹75,000",
-  "language": "te-IN"
-}
-```
-
-### 2. Purchase API Credits (₹ INR)
-```bash
-POST /api/v1/billing/purchase-credits
-{
-  "api_key_id": 1,
-  "plan_name": "Business Growth",
-  "amount_inr": 4999.0,
-  "payment_method": "Instant UPI / Razorpay",
-  "customer_email": "developer@client.com"
-}
-```
+All 119 unit tests pass automatically with zero external network dependencies.
 
 ---
 

@@ -1,3 +1,4 @@
+from services.lead_scoring import score_lead, score_leads_batch
 """
 Leads Router - Lead Management, Ingestion (Excel/CSV/Paste), DND/Opt-Out & Plan v2 (§3) Outcomes
 """
@@ -239,9 +240,17 @@ async def api_get_leads(
     source: Optional[str] = None,
     campaign: Optional[str] = None,
     marketer: Optional[str] = None,
+    search: Optional[str] = None,
+    score_category: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: int = 0,
+    sort_by: str = "id",
+    order: str = "desc",
 ):
     account_id = get_request_account_id(request)
     leads = get_all_leads(account_id=account_id)
+
+    # 1. Bucket & Outcome filters
     if bucket:
         b = bucket.strip().lower()
         leads = [l for l in leads if (l.get("outcome_bucket") or "").lower() == b]
@@ -261,7 +270,52 @@ async def api_get_leads(
     if marketer:
         m = marketer.strip().lower()
         leads = [l for l in leads if (l.get("marketer_tag") or "").lower() == m]
-    return {"leads": leads}
+
+    # 2. Text search across name, company, phone, notes
+    if search:
+        q = search.strip().lower()
+        leads = [
+            l for l in leads
+            if q in (l.get("name") or "").lower()
+            or q in (l.get("company") or "").lower()
+            or q in (l.get("phone") or "").lower()
+            or q in (l.get("notes") or "").lower()
+        ]
+
+    # 3. Score Category filter (HOT, WARM, COLD)
+    if score_category:
+        cat = score_category.strip().upper()
+        if cat == "HOT":
+            leads = [l for l in leads if (float(l.get("score") or 0) >= 80)]
+        elif cat == "WARM":
+            leads = [l for l in leads if (50 <= float(l.get("score") or 0) < 80)]
+        elif cat == "COLD":
+            leads = [l for l in leads if (float(l.get("score") or 0) < 50)]
+
+    # 4. Sorting
+    reverse = (order.lower() == "desc")
+    try:
+        if sort_by in {"id", "score"}:
+            leads.sort(key=lambda x: float(x.get(sort_by) or 0), reverse=reverse)
+        else:
+            leads.sort(key=lambda x: str(x.get(sort_by) or "").lower(), reverse=reverse)
+    except Exception:
+        pass
+
+    total = len(leads)
+
+    # 5. Pagination
+    if limit is not None and limit > 0:
+        paginated_leads = leads[offset: offset + limit]
+    else:
+        paginated_leads = leads[offset:] if offset > 0 else leads
+
+    return {
+        "leads": paginated_leads,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @router.get("/api/leads/{lead_id}")
@@ -460,3 +514,108 @@ async def api_delete_lead(lead_id: int, request: Request):
     if not ok and account_id is not None:
         raise HTTPException(status_code=404, detail="Lead not found")
     return {"success": ok}
+
+
+# ---------------- EXPLAINABLE SCORING & BULK ACTIONS ----------------
+
+@router.post("/api/leads/{lead_id}/score")
+async def api_score_single_lead(lead_id: int, request: Request, payload: Optional[Dict[str, Any]] = None):
+    """
+    Compute an explainable 0–100 score for a lead across the 5 transparent factors,
+    store the score and factor breakdown on the lead, and return the report.
+    """
+    account_id = get_request_account_id(request)
+    lead = get_lead_by_id(lead_id, account_id=account_id)
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    weights = (payload or {}).get("weights")
+    scoring_result = score_lead(lead, weights=weights)
+
+    # Persist score and scoring breakdown in variables
+    variables = lead.get("variables") or {}
+    variables["scoring"] = scoring_result
+    update_lead(lead_id, {"score": scoring_result["total_score"], "variables": variables}, account_id=account_id)
+
+    return {"success": True, "lead_id": lead_id, "score": scoring_result}
+
+
+@router.post("/api/leads/score-all")
+async def api_score_all_leads(request: Request, payload: Optional[Dict[str, Any]] = None):
+    """
+    Batch-score all leads for the account and update their qualification scores.
+    """
+    account_id = get_request_account_id(request)
+    leads = get_all_leads(account_id=account_id)
+    weights = (payload or {}).get("weights")
+
+    results = []
+    hot = warm = cold = 0
+
+    for l in leads:
+        sc = score_lead(l, weights=weights)
+        variables = l.get("variables") or {}
+        variables["scoring"] = sc
+        update_lead(l["id"], {"score": sc["total_score"], "variables": variables}, account_id=account_id)
+
+        cat = sc["category"]
+        if cat == "HOT":
+            hot += 1
+        elif cat == "WARM":
+            warm += 1
+        else:
+            cold += 1
+
+        results.append({"id": l["id"], "score": sc["total_score"], "category": cat})
+
+    return {
+        "success": True,
+        "scored_count": len(leads),
+        "hot_count": hot,
+        "warm_count": warm,
+        "cold_count": cold,
+        "results": results,
+    }
+
+
+@router.post("/api/leads/bulk-delete")
+async def api_bulk_delete_leads(payload: Dict[str, Any], request: Request):
+    """Delete multiple leads safely within tenant scope."""
+    lead_ids = payload.get("lead_ids", [])
+    if not lead_ids or not isinstance(lead_ids, list):
+        raise HTTPException(status_code=400, detail="lead_ids array is required")
+
+    account_id = get_request_account_id(request)
+    deleted = 0
+    for lid in lead_ids:
+        try:
+            ok = delete_lead(int(lid), account_id=account_id)
+            if ok:
+                deleted += 1
+        except Exception as e:
+            logger.warning(f"Failed deleting lead {lid}: {e}")
+
+    return {"success": True, "deleted_count": deleted}
+
+
+@router.post("/api/leads/bulk-assign")
+async def api_bulk_assign_leads(payload: Dict[str, Any], request: Request):
+    """Assign multiple leads to a team member or salesperson."""
+    lead_ids = payload.get("lead_ids", [])
+    assigned_to = (payload.get("assigned_to") or "").strip()
+    if not lead_ids or not isinstance(lead_ids, list):
+        raise HTTPException(status_code=400, detail="lead_ids array is required")
+    if not assigned_to:
+        raise HTTPException(status_code=400, detail="assigned_to name or email is required")
+
+    account_id = get_request_account_id(request)
+    assigned = 0
+    for lid in lead_ids:
+        try:
+            ok = update_lead(int(lid), {"assigned_to": assigned_to}, account_id=account_id)
+            if ok:
+                assigned += 1
+        except Exception as e:
+            logger.warning(f"Failed assigning lead {lid}: {e}")
+
+    return {"success": True, "assigned_count": assigned, "assigned_to": assigned_to}
