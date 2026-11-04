@@ -3272,7 +3272,7 @@ Lead updated to DEMO_BOOKED.`);
         if (data && streamBox) {
           const reply = data.reply || data.response || "Our AI sales employee is connected on the live audio channel.";
           const msgDiv = document.createElement("div");
-          msgDiv.style.cssText = "padding: 10px 14px; background: #f3e8ff; border-radius: 8px; border: 1px solid #ddd6fe; align-self: flex-start; max-width: 80%; margin-top: 8px;";
+          msgDiv.style.cssText = "padding: 10px 14px; background: #fff7ed; border-radius: 8px; border: 1px solid #fed7aa; align-self: flex-start; max-width: 80%; margin-top: 8px;";
           msgDiv.innerHTML = `<strong>AI Rep (${data.language || 'te-IN'}):</strong> ${reply}`;
           streamBox.appendChild(msgDiv);
         }
@@ -3282,9 +3282,9 @@ Lead updated to DEMO_BOOKED.`);
     } else {
       window._sandboxActive = false;
       if (btn) {
-        btn.style.background = "#f3e8ff";
-        btn.style.borderColor = "#7c3aed";
-        btn.style.color = "#7c3aed";
+        btn.style.background = "#fff7ed";
+        btn.style.borderColor = "#ea580c";
+        btn.style.color = "#ea580c";
         btn.innerText = "🎙️";
       }
       if (status) status.innerText = "Call ended · Ready to test";

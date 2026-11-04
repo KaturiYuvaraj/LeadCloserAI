@@ -94,3 +94,4 @@ def test_save_quick_setup_profile(client):
     )
     assert resp.status_code == 200
     assert resp.json().get("success") is True
+
