@@ -3502,11 +3502,11 @@ input[type="checkbox"] {
         Contact
       </a>
 
-      <a href="javascript:void(0)" class="nav-link-item" onclick="window.switchMainTab('landing', 'apiSection')">
+      <a href="/docs" target="_blank" class="nav-link-item">
         Docs
       </a>
 
-      <a href="javascript:void(0)" class="nav-link-item" onclick="window.openGenerateKeyModal()">
+      <a href="/crm" class="nav-link-item">
         API
       </a>
     </nav>
@@ -3860,137 +3860,7 @@ input[type="checkbox"] {
       </section>
 
 
-      <!-- ============================================================= -->
-      <!-- DEVELOPER API & SDK PLATFORM SECTION (PURCHASE OUR APIS) -->
-      <!-- ============================================================= -->
-      <section class="api-portal-card" id="apiSection">
-        <div class="section-header-center">
-          <span class="section-tag">Developer Platform & APIs</span>
-          <h2 class="section-title">Integrate LeadCloser AI into Your Systems</h2>
-          <p class="section-desc">Purchase API keys, trigger calls programmatically, receive webhook transcripts, and sync deal intelligence into any CRM or web app.</p>
-        </div>
-
-        <!-- API Key Management Bar -->
-        <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: 12px; padding: 18px 20px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-            <div>
-              <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a;">Active API Keys & Credit Balance</div>
-              <div style="font-size: 0.78rem; color: var(--text-muted);">
-                Primary Key: <code style="background: #fff7ed; padding: 3px 8px; border-radius: 6px; font-weight: 700; color: #ea580c; border: 1px solid #fed7aa;">{{ primary_key.api_key if primary_key else 'lc_live_sp_assoc_7894a1b2' }}</code>
-                <button class="btn btn-outline" style="padding: 2px 7px; font-size: 0.7rem; margin-left: 6px;" onclick="navigator.clipboard.writeText('{{ primary_key.api_key if primary_key else 'lc_live_sp_assoc_7894a1b2' }}'); alert('API Key copied to clipboard!')">Copy</button>
-              </div>
-            </div>
-
-            <div style="display: flex; gap: 8px;">
-              <button class="btn btn-outline" onclick="window.openGenerateKeyModal()">
-                + Generate New API Key
-              </button>
-              <button class="btn btn-primary" onclick="window.openCheckoutModal('Developer Credits', 1000)">
-                💳 Buy Talk-Time Credits
-              </button>
-            </div>
-          </div>
-
-          <!-- Keys Table -->
-          <table class="api-keys-table">
-            <thead>
-              <tr>
-                <th>Key Name</th>
-                <th>Plan Tier</th>
-                <th>Balance (INR)</th>
-                <th>Rate / Min</th>
-                <th>Total Calls</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for k in api_keys %}
-              <tr>
-                <td><strong>{{ k.key_name }}</strong></td>
-                <td><span class="badge-tag" style="background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa;">{{ k.plan_tier }}</span></td>
-                <td><strong style="color: #059669;">₹{{ "%.2f"|format(k.credits_inr) }}</strong></td>
-                <td>₹{{ "%.2f"|format(k.rate_per_min) }}/min</td>
-                <td>{{ k.total_calls }} calls</td>
-                <td><span class="lead-status status-qualified">{{ k.status.upper() }}</span></td>
-              </tr>
-              {% else %}
-              <tr>
-                <td colspan="6" style="text-align: center; color: var(--text-muted);">No custom API keys generated yet.</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Interactive Code Snippet Tabs -->
-        <div class="code-snippet-box">
-          <div class="code-header-bar">
-            <div class="code-tabs-group">
-              <button class="code-lang-btn active" id="btnCodeCurl" onclick="window.switchCodeTab('curl')">cURL</button>
-              <button class="code-lang-btn" id="btnCodePython" onclick="window.switchCodeTab('python')">Python (httpx)</button>
-              <button class="code-lang-btn" id="btnCodeJs" onclick="window.switchCodeTab('js')">Node.js (JavaScript)</button>
-            </div>
-            <button class="btn btn-outline" style="padding: 2px 8px; font-size: 0.72rem; color: #94a3b8; border-color: #475569;" onclick="window.copyActiveCode()">
-              📋 Copy Code
-            </button>
-          </div>
-
-          <pre class="code-pre-box" id="codeDisplayPre">curl -X POST http://localhost:8000/api/v1/calls/dispatch \
-  -H "Authorization: Bearer {{ primary_key.api_key if primary_key else 'lc_live_sp_assoc_7894a1b2' }}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "lead_name": "Ramesh Naidu",
-    "phone": "+919848011223",
-    "company": "Naidu Supermarkets",
-    "service": "Mobile App & Billing",
-    "budget": "₹75,000",
-    "language": "te-IN"
-  }'</pre>
-        </div>
-
-        <!-- API Sandbox Dispatch Tester -->
-        <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; margin-top: 20px; box-shadow: var(--shadow-sm);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div>
-              <strong style="color: #0f172a; font-size: 0.92rem;">⚡ Live API Dispatch Sandbox</strong>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">Test triggering a real-time AI sales call directly through our REST API:</div>
-            </div>
-            <span class="badge-tag live"><span class="pulse-dot"></span> Live API Ready</span>
-          </div>
-
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 10px; align-items: flex-end;">
-            <div>
-              <label style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);">Customer Name:</label>
-              <input type="text" id="sandboxName" value="Kalyan Kumar" style="width: 100%; padding: 7px; border: 1px solid var(--border-medium); border-radius: 6px; font-size: 0.82rem;" />
-            </div>
-            <div>
-              <label style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);">Phone Number:</label>
-              <input type="text" id="sandboxPhone" value="+91 9848011223" style="width: 100%; padding: 7px; border: 1px solid var(--border-medium); border-radius: 6px; font-size: 0.82rem;" />
-            </div>
-            <div>
-              <label style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);">Company:</label>
-              <input type="text" id="sandboxCompany" value="Kalyan Textiles" style="width: 100%; padding: 7px; border: 1px solid var(--border-medium); border-radius: 6px; font-size: 0.82rem;" />
-            </div>
-            <div>
-              <label style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);">Service Needed:</label>
-              <input type="text" id="sandboxService" value="E-Commerce & Billing" style="width: 100%; padding: 7px; border: 1px solid var(--border-medium); border-radius: 6px; font-size: 0.82rem;" />
-            </div>
-            <div>
-              <button class="btn btn-primary" onclick="window.runApiSandboxTest()" id="sandboxRunBtn" style="padding: 7px 16px; font-size: 0.82rem; height: 34px;">
-                🚀 Dispatch Call via API
-              </button>
-            </div>
-          </div>
-
-          <!-- Sandbox Live JSON Response Area -->
-          <div id="sandboxResponseBox" style="display: none; margin-top: 14px; background: #0f172a; color: #fb923c; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.78rem; max-height: 180px; overflow-y: auto;">
-          </div>
-        </div>
-      </section>
-
-
-      <!-- ============================================================= -->
-      <!-- AI EMPLOYEES BUILDER & MANAGEMENT (MODULE 6 - OUTPERO STYLE) -->
+<!-- AI EMPLOYEES BUILDER & MANAGEMENT (MODULE 6 - OUTPERO STYLE) -->
       <!-- ============================================================= -->
       <section style="margin-bottom: 55px;" id="employeesSection">
         <div class="section-header-center">
@@ -4228,10 +4098,10 @@ input[type="checkbox"] {
         <div>
           <div class="footer-col-title">Developers & API</div>
           <ul class="footer-links-list">
-            <li><a href="javascript:void(0)" onclick="window.switchMainTab('landing', 'apiSection')">REST API Documentation</a></li>
-            <li><a href="javascript:void(0)" onclick="window.openGenerateKeyModal()">Generate API Key</a></li>
+            <li><a href="/docs" target="_blank">REST API Documentation</a></li>
+            <li><a href="/crm">Generate API Key</a></li>
             <li><a href="javascript:void(0)" onclick="window.switchMainTab('landing', 'pricingSection')">Buy Talk-Time Credits</a></li>
-            <li><a href="javascript:void(0)" onclick="window.switchMainTab('landing', 'apiSection')">Webhooks Guide</a></li>
+            <li><a href="/docs" target="_blank">Webhooks Guide</a></li>
           </ul>
         </div>
 
