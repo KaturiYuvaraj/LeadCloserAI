@@ -14,15 +14,17 @@ Implements:
 """
 
 import json
+import logging
 import re
 import textwrap
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Set
 
-from loguru import logger
 from sqlalchemy import text
 
 from core.db import engine
+
+logger = logging.getLogger(__name__)
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
