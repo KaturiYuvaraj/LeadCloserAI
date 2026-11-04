@@ -29,19 +29,17 @@ router = APIRouter()
 IST = timezone(timedelta(hours=5, minutes=30))
 
 _MEETINGS_STORE: Dict[int, Dict[str, Any]] = {}
-_MEETING_SEQ: int = 500
+_ADMIN_STATE: Dict[str, int] = {"meeting_seq": 500, "round_robin_idx": 0}
 
 DEFAULT_REPS: List[Dict[str, Any]] = [
     {"id": 1, "name": "Karthik Reddy", "email": "karthik@spassociates.com", "languages": ["te-IN", "en-IN"], "services": ["Web Development", "E-Commerce"], "backup": "manager@spassociates.com"},
     {"id": 2, "name": "Priya Sharma", "email": "priya@spassociates.com", "languages": ["hi-IN", "en-IN"], "services": ["Mobile App", "AI Automation"], "backup": "manager@spassociates.com"},
     {"id": 3, "name": "Arun Kumar", "email": "arun@spassociates.com", "languages": ["ta-IN", "kn-IN", "ml-IN", "en-IN"], "services": ["ERP & Billing", "Software Services"], "backup": "manager@spassociates.com"},
 ]
-_ROUND_ROBIN_IDX: int = 0
 
 
 def select_rep_for_lead(lead: Dict[str, Any]) -> Dict[str, Any]:
     """Selects best rep by language or service, falling back to round-robin (§7)."""
-    global _ROUND_ROBIN_IDX
     lang = lead.get("preferred_language") or "te-IN"
     service = (lead.get("service_needed") or "").lower()
 
@@ -52,8 +50,9 @@ def select_rep_for_lead(lead: Dict[str, Any]) -> Dict[str, Any]:
         if lang in rep["languages"]:
             return rep
 
-    chosen = DEFAULT_REPS[_ROUND_ROBIN_IDX % len(DEFAULT_REPS)]
-    _ROUND_ROBIN_IDX += 1
+    rr_idx = _ADMIN_STATE["round_robin_idx"]
+    chosen = DEFAULT_REPS[rr_idx % len(DEFAULT_REPS)]
+    _ADMIN_STATE["round_robin_idx"] = rr_idx + 1
     return chosen
 
 
@@ -318,17 +317,16 @@ async def api_list_meetings(request: Request, status: Optional[str] = None):
 @router.post("/api/admin/meetings")
 async def api_create_meeting(request: Request, payload: Dict[str, Any] = Body(...)):
     """Books a meeting with 1-day and 1-hour reminders (§5 item 4)."""
-    global _MEETING_SEQ
     acc_id = get_request_account_id(request) or 1
     lead_id = int(payload.get("lead_id") or 0)
     lead = get_lead_by_id(lead_id, account_id=acc_id) if lead_id else None
 
-    _MEETING_SEQ += 1
-    mid = _MEETING_SEQ
+    _ADMIN_STATE["meeting_seq"] = _ADMIN_STATE["meeting_seq"] + 1
+    mid = _ADMIN_STATE["meeting_seq"]
     scheduled_at = payload.get("scheduled_at") or (datetime.now(IST) + timedelta(days=1)).replace(hour=11, minute=0).isoformat()
     rep = select_rep_for_lead(lead or {})
 
-    meeting = {
+    meeting: Dict[str, Any] = {
         "id": mid,
         "account_id": acc_id,
         "lead_id": lead_id,
@@ -496,7 +494,7 @@ async def api_team_performance(request: Request):
     quotes = list_quotations(account_id=acc_id)
     meetings = [m for m in _MEETINGS_STORE.values() if m.get("account_id") == acc_id]
 
-    reps_report = []
+    reps_report: List[Dict[str, Any]] = []
     for rep in DEFAULT_REPS:
         r_meetings = [m for m in meetings if m.get("assigned_rep") == rep["name"]]
         reps_report.append({

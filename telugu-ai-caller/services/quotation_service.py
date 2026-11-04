@@ -81,14 +81,12 @@ DEFAULT_PRICE_BOOK: List[Dict[str, Any]] = [
 
 _CUSTOM_PRICE_BOOK_BY_ACCOUNT: Dict[int, List[Dict[str, Any]]] = {}
 _QUOTATIONS_STORE: Dict[int, Dict[str, Any]] = {}
-_QUOTE_SEQ: int = 1040
-_DB_TABLES_READY: bool = False
+_STATE: Dict[str, Any] = {"quote_seq": 1040, "db_tables_ready": False}
 
 
 def _ensure_tables() -> None:
     """Ensures SQLite/PostgreSQL persistence tables exist and loads stored rows into memory."""
-    global _DB_TABLES_READY, _QUOTE_SEQ
-    if _DB_TABLES_READY:
+    if _STATE["db_tables_ready"]:
         return
     try:
         with engine.begin() as conn:
@@ -144,12 +142,12 @@ def _ensure_tables() -> None:
                     q_obj = json.loads(payload_str)
                     qid_int = int(qid)
                     _QUOTATIONS_STORE[qid_int] = q_obj
-                    if qid_int > _QUOTE_SEQ:
-                        _QUOTE_SEQ = qid_int
+                    if qid_int > int(_STATE["quote_seq"]):
+                        _STATE["quote_seq"] = qid_int
                 except Exception as e:
                     logger.warning(f"Failed to parse quotations_store row: {e}")
 
-        _DB_TABLES_READY = True
+        _STATE["db_tables_ready"] = True
     except Exception as e:
         logger.warning(f"Quotation persistence table init warning: {e}")
 
@@ -239,7 +237,7 @@ def _persist_price_book_item(account_id: int, entry: Dict[str, Any]) -> None:
 
 def _parse_iso_ist(raw_iso: Optional[str]) -> Optional[datetime]:
     """Python 3.9+ safe ISO-8601 parser that always returns a timezone-aware IST datetime."""
-    if not raw_iso or not isinstance(raw_iso, str):
+    if not raw_iso:
         return None
     cleaned = raw_iso.strip().replace("Z", "+00:00")
     try:
@@ -310,7 +308,6 @@ def create_quotation(
       status is set to `pending_approval` and `requires_manager_approval = True`.
     - Otherwise, status is `sent` (auto-approved) if `whatsapp_opt_in` is True, or `approved_ready`.
     """
-    global _QUOTE_SEQ
     _ensure_tables()
     book = get_price_book(account_id)
     pkg: Optional[Dict[str, Any]] = next((p for p in book if p.get("code") == package_code), None)
@@ -360,8 +357,8 @@ def create_quotation(
 
     valid_until = (now_ist + timedelta(days=max(1, int(validity_days or 7)))).strftime("%Y-%m-%d")
 
-    _QUOTE_SEQ += 1
-    quote_id = _QUOTE_SEQ
+    _STATE["quote_seq"] = int(_STATE["quote_seq"]) + 1
+    quote_id = int(_STATE["quote_seq"])
     quote_number = f"Q-{quote_id}"
 
     if requires_approval:
