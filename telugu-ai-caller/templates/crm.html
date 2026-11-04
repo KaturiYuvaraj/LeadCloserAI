@@ -3403,6 +3403,15 @@ input[type="checkbox"] {
           </div>
 
           <div class="crm-topbar-right">
+            {% if current_user %}
+            <a href="/login" class="crm-action-pill" style="text-decoration: none; height: 32px; font-size: 0.74rem; font-weight: 700; color: #059669; border-color: #a7f3d0; background: #ecfdf5;" title="Signed in as {{ current_user.email }} ({{ current_user.role }})">
+              <span>👤 {{ current_user.email }} · {{ current_user.role|upper }}</span>
+            </a>
+            {% else %}
+            <a href="/login" class="crm-action-pill" style="text-decoration: none; height: 32px; font-size: 0.74rem; font-weight: 700; color: #ea580c; border-color: #fed7aa; background: #fff7ed;" title="Sign in to your team account">
+              <span>🔐 Team Sign In</span>
+            </a>
+            {% endif %}
             <button class="crm-notif-btn" title="Notifications">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
               <span class="crm-notif-dot"></span>
@@ -3762,6 +3771,35 @@ input[type="checkbox"] {
         <!-- VIEW 3: LEADS DIRECTORY & MANAGEMENT                          -->
         <!-- ============================================================= -->
         <div class="crm-view-section" id="crmViewLeads" style="display: none;">
+          <!-- Plan v2 (§3) 4-Bucket Outcome Filter Bar -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 12px; margin-bottom: 16px;">
+            <button type="button" onclick="window.filterLeadsByBucket('all')" style="text-align: left; padding: 14px 16px; border-radius: 12px; border: 1.5px solid #cbd5e1; background: #ffffff; cursor: pointer;">
+              <div style="font-size: 0.75rem; font-weight: 700; color: #64748b;">📋 ALL LEADS</div>
+              <div style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin-top: 4px;" id="bucketCountAll">{{ leads|length }}</div>
+              <div style="font-size: 0.7rem; color: #64748b;">Total pipeline contacts</div>
+            </button>
+            <button type="button" onclick="window.filterLeadsByBucket('hot')" style="text-align: left; padding: 14px 16px; border-radius: 12px; border: 1.5px solid #fed7aa; background: #fff7ed; cursor: pointer;">
+              <div style="font-size: 0.75rem; font-weight: 800; color: #c2410c;">🔥 HOT LEADS</div>
+              <div style="font-size: 1.35rem; font-weight: 800; color: #ea580c; margin-top: 4px;" id="bucketCountHot">{{ outcome_summary.buckets.hot if outcome_summary else 0 }}</div>
+              <div style="font-size: 0.7rem; color: #9a3412;">Interested now · Meeting · Human</div>
+            </button>
+            <button type="button" onclick="window.filterLeadsByBucket('follow_up')" style="text-align: left; padding: 14px 16px; border-radius: 12px; border: 1.5px solid #fde68a; background: #fffbeb; cursor: pointer;">
+              <div style="font-size: 0.75rem; font-weight: 800; color: #b45309;">⏳ FOLLOW-UP</div>
+              <div style="font-size: 1.35rem; font-weight: 800; color: #d97706; margin-top: 4px;" id="bucketCountFollowUp">{{ outcome_summary.buckets.follow_up if outcome_summary else 0 }}</div>
+              <div style="font-size: 0.7rem; color: #92400e;">Callback · Details · Smart cadence</div>
+            </button>
+            <button type="button" onclick="window.filterLeadsByBucket('closed')" style="text-align: left; padding: 14px 16px; border-radius: 12px; border: 1.5px solid #fecaca; background: #fef2f2; cursor: pointer;">
+              <div style="font-size: 0.75rem; font-weight: 800; color: #b91c1c;">❌ CLOSED</div>
+              <div style="font-size: 1.35rem; font-weight: 800; color: #dc2626; margin-top: 4px;" id="bucketCountClosed">{{ outcome_summary.buckets.closed if outcome_summary else 0 }}</div>
+              <div style="font-size: 0.7rem; color: #991b1b;">Not interested · Do-Not-Call</div>
+            </button>
+            <button type="button" onclick="window.filterLeadsByBucket('not_reachable')" style="text-align: left; padding: 14px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #f8fafc; cursor: pointer;">
+              <div style="font-size: 0.75rem; font-weight: 800; color: #475569;">📵 NOT REACHABLE</div>
+              <div style="font-size: 1.35rem; font-weight: 800; color: #334155; margin-top: 4px;" id="bucketCountNotReachable">{{ outcome_summary.buckets.not_reachable if outcome_summary else 0 }}</div>
+              <div style="font-size: 0.7rem; color: #64748b;">No answer · Busy · Switched off</div>
+            </button>
+          </div>
+
           <div class="crm-leads-table-card">
             <div style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -4338,29 +4376,21 @@ input[type="checkbox"] {
       </div>
 
       <div class="form-group" style="margin-bottom: 22px;">
-        <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #27272a; margin-bottom: 8px;">Calling Mode:</label>
+        <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #27272a; margin-bottom: 8px;">Outbound Campaign Queue Engine:</label>
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <label class="radio-card-option">
-            <input type="radio" name="campMode" value="simulation" checked />
+            <input type="radio" name="campMode" value="phone" checked />
             <div style="display: flex; flex-direction: column; gap: 2px;">
-              <span style="font-weight: 700; font-size: 0.88rem; color: #18181b;">⚡ AI Simulation Mode</span>
-              <span style="font-size: 0.76rem; color: #71717a;">Instant qualification & zero phone carrier cost</span>
-            </div>
-          </label>
-
-          <label class="radio-card-option">
-            <input type="radio" name="campMode" value="phone" />
-            <div style="display: flex; flex-direction: column; gap: 2px;">
-              <span style="font-weight: 700; font-size: 0.88rem; color: #18181b;">📞 Real Phone Telephony</span>
-              <span style="font-size: 0.76rem; color: #71717a;">Real calls to clients' phones via Sarvam / Vobiz or Exotel · calling hours, Do-Not-Call and retries applied</span>
+              <span style="font-weight: 700; font-size: 0.88rem; color: #18181b;">📞 Real Phone Campaign Queue (Sarvam / Vobiz / Exotel)</span>
+              <span style="font-size: 0.76rem; color: #71717a;">Enforces 9 AM–9 PM IST window, Do-Not-Call list, consent check, weekly call cap (max 4/wk), and automatic retries (+2h, next day, +2d)</span>
             </div>
           </label>
         </div>
       </div>
 
       <label for="campaignConsent" style="display: flex; gap: 10px; align-items: flex-start; font-size: 0.8rem; color: #3f3f46; line-height: 1.4; cursor: pointer;">
-        <input type="checkbox" id="campaignConsent" style="margin-top: 3px;" />
-        <span>I confirm these contacts <strong>consented to be called</strong> by us (they enquired, filled a form, or are existing customers). Calling people who haven't consented can breach telemarketing rules. <em>Required for Real Phone mode.</em></span>
+        <input type="checkbox" id="campaignConsent" style="margin-top: 3px;" checked />
+        <span>I confirm these contacts <strong>consented to be called</strong> by us (they enquired, filled a form, or are existing customers). Calling people who haven't consented can breach telemarketing rules.</span>
       </label>
       <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 22px; border-top: 1px solid var(--border-light); padding-top: 16px;">
         <button class="btn btn-outline" id="cancelCampaignBtn" onclick="window.closeCampaignModal()" style="padding: 10px 22px; border-radius: 9999px; font-weight: 600; font-size: 0.88rem;">Cancel</button>

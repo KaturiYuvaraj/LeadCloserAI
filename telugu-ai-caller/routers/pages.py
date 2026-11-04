@@ -4,6 +4,7 @@ Pages Router - Separate Landing Page (Homepage) and Dedicated CRM Dashboard
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
+from core.auth import get_optional_user, get_request_account_id
 from core.web import templates
 from database import (
     get_company_profile,
@@ -14,6 +15,7 @@ from database import (
     get_billing_orders,
     get_all_ai_employees,
     get_active_ai_employee,
+    get_outcome_bucket_summary,
 )
 
 router = APIRouter(tags=["pages"])
@@ -52,9 +54,12 @@ async def serve_crm(request: Request):
     Contains the 3-column Calling Station, Executive Dashboard, Leads Table,
     Autonomous Campaigns Manager, Automations, and Analytics.
     """
+    current_user = get_optional_user(request)
+    account_id = get_request_account_id(request)
     profile = get_company_profile()
-    leads = get_all_leads()
-    calls = get_call_history(limit=20)
+    leads = get_all_leads(account_id=account_id)
+    calls = get_call_history(limit=20, account_id=account_id)
+    outcome_summary = get_outcome_bucket_summary(account_id=account_id)
     api_keys = get_all_api_keys()
     primary_key = get_primary_api_key()
     billing_orders = get_billing_orders()
@@ -64,6 +69,8 @@ async def serve_crm(request: Request):
         "profile": profile,
         "leads": leads,
         "calls": calls,
+        "outcome_summary": outcome_summary,
+        "current_user": current_user,
         "api_keys": api_keys,
         "primary_key": primary_key,
         "billing_orders": billing_orders,

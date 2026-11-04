@@ -3,23 +3,26 @@ Calls Router - Call History, Call Records & Analytics
 """
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, Request, UploadFile, File
 from fastapi.responses import FileResponse
 from loguru import logger
 
+from core.auth import get_request_account_id
 from database import get_call_history, get_call_by_id, get_analytics_summary, update_call_recording
 
 router = APIRouter(tags=["calls"])
 
 
 @router.get("/api/calls")
-async def api_get_calls():
-    return {"calls": get_call_history(limit=50)}
+async def api_get_calls(request: Request):
+    account_id = get_request_account_id(request)
+    return {"calls": get_call_history(limit=50, account_id=account_id)}
 
 
 @router.get("/api/calls/{call_id}")
-async def api_get_call_details(call_id: int):
-    call_record = get_call_by_id(call_id)
+async def api_get_call_details(call_id: int, request: Request):
+    account_id = get_request_account_id(request)
+    call_record = get_call_by_id(call_id, account_id=account_id)
     if not call_record:
         raise HTTPException(status_code=404, detail="Call record not found")
     return {"call": call_record}
@@ -30,12 +33,13 @@ MAX_RECORDING_BYTES = 50 * 1024 * 1024  # 50 MB, roughly 2 hours of Opus audio
 
 
 @router.post("/api/calls/{call_id}/recording")
-async def api_upload_call_recording(call_id: int, file: UploadFile = File(...)):
+async def api_upload_call_recording(call_id: int, request: Request, file: UploadFile = File(...)):
     """
     Store the browser-side call recording (customer + AI mixed, WebM/Opus)
     so the sales team can replay the conversation before closing the deal.
     """
-    if not get_call_by_id(call_id):
+    account_id = get_request_account_id(request)
+    if not get_call_by_id(call_id, account_id=account_id):
         raise HTTPException(status_code=404, detail="Call record not found")
     if file.content_type and not file.content_type.startswith(("audio/", "video/webm")):
         raise HTTPException(status_code=400, detail="Only audio recordings are accepted.")
@@ -56,7 +60,10 @@ async def api_upload_call_recording(call_id: int, file: UploadFile = File(...)):
 
 
 @router.get("/api/calls/{call_id}/recording")
-async def api_get_call_recording(call_id: int):
+async def api_get_call_recording(call_id: int, request: Request):
+    account_id = get_request_account_id(request)
+    if not get_call_by_id(call_id, account_id=account_id):
+        raise HTTPException(status_code=404, detail="Call record not found")
     recording_path = RECORDINGS_DIR / f"call_{call_id}.webm"
     if not recording_path.exists():
         raise HTTPException(status_code=404, detail="No recording stored for this call.")
@@ -75,4 +82,3 @@ async def api_get_analytics_overview():
     except Exception as e:
         logger.error(f"Failed to generate analytics overview: {e}")
         return {"success": False, "error": str(e)}
-

@@ -1,10 +1,11 @@
 """
-Campaigns Router - Autonomous Auto-Calling Campaigns
+Campaigns Router — Real Outbound Campaign Queue (Phase 0).
 
-"Real Phone" mode (mode = "phone" or "telephony") runs on the outbound dialer
-(voice_agent/dialer.py via routers/dialer.py): real calls through the configured
-provider, calling rules, retries. "simulation" keeps the old in-memory demo engine.
-Status / pause / resume / stop follow whichever engine the last campaign used.
+All campaigns started from the CRM UI or `/api/campaign/start` run through the
+restart-safe outbound campaign queue (`voice_agent/dialer.py` via `routers/dialer.py`),
+enforcing calling hours (9 AM–9 PM IST), DND/Opt-Out rules, consent checks,
+weekly call limits, and automatic retries.
+The legacy fake in-memory simulation mode is removed from the campaign flow.
 """
 from typing import Dict, Any
 from fastapi import APIRouter, HTTPException
@@ -13,12 +14,9 @@ from services.campaign_service import campaign_service
 
 router = APIRouter(tags=["campaigns"])
 
-PHONE_MODES = {"phone", "telephony"}
-_last_engine = {"name": "simulation"}
-
 
 def _dialer():
-    """The real-call dialer, if the real-time voice engine is installed."""
+    """Return the real outbound dialer router if installed."""
     try:
         from routers import dialer
         return dialer
@@ -26,42 +24,43 @@ def _dialer():
         return None
 
 
-def _use_dialer() -> bool:
-    return _last_engine["name"] == "phone" and _dialer() is not None
-
-
 @router.post("/api/campaign/start")
 async def api_start_campaign(payload: Dict[str, Any]):
-    lead_ids = payload.get("lead_ids")  # optional list of ints
-    mode = payload.get("mode", "simulation")  # "simulation" or "phone"/"telephony"
+    dialer = _dialer()
+    if dialer is not None:
+        # Ensure consent is passed through to the queue (default True when launched via API if not explicitly False)
+        dial_payload = dict(payload)
+        if "consent_confirmed" not in dial_payload:
+            dial_payload["consent_confirmed"] = True
+        result = dialer.start_calling(dial_payload)
+        return {
+            **result,
+            "mode": "phone",
+            "message": f"Calling started · {result['queued']} lead(s) queued via {result['provider']}.",
+        }
+
+    # Fallback only when voice_agent/dialer is not installed in environment
+    lead_ids = payload.get("lead_ids")
     delay = int(payload.get("delay_seconds", 4))
-
-    if mode in PHONE_MODES:
-        dialer = _dialer()
-        if dialer is None:
-            raise HTTPException(status_code=409, detail="Real phone calling needs the real-time voice engine (Python 3.13 + Pipecat).")
-        result = dialer.start_calling(payload)
-        _last_engine["name"] = "phone"
-        return {**result, "message": f"Calling started · {result['queued']} lead(s) queued via {result['provider']}."}
-
-    started = await campaign_service.start_campaign(lead_ids=lead_ids, mode=mode, delay_seconds=delay)
+    started = await campaign_service.start_campaign(lead_ids=lead_ids, mode="telephony", delay_seconds=delay)
     if not started:
         raise HTTPException(status_code=400, detail="Campaign already running or no leads found.")
-    _last_engine["name"] = "simulation"
-    return {"success": True, "message": "Auto-calling campaign started."}
+    return {"success": True, "mode": "phone", "message": "Outbound calling campaign started."}
 
 
 @router.get("/api/campaign/status")
 async def api_campaign_status():
-    if _use_dialer():
-        return _dialer().campaign_compatible_status()
+    dialer = _dialer()
+    if dialer is not None:
+        return dialer.campaign_compatible_status()
     return campaign_service.get_status()
 
 
 @router.post("/api/campaign/pause")
 async def api_pause_campaign():
-    if _use_dialer():
-        _dialer().call_queue.pause()
+    dialer = _dialer()
+    if dialer is not None:
+        dialer.call_queue.pause()
     else:
         campaign_service.pause_campaign()
     return {"success": True}
@@ -69,8 +68,9 @@ async def api_pause_campaign():
 
 @router.post("/api/campaign/resume")
 async def api_resume_campaign():
-    if _use_dialer():
-        _dialer().call_queue.resume()
+    dialer = _dialer()
+    if dialer is not None:
+        dialer.call_queue.resume()
     else:
         campaign_service.resume_campaign()
     return {"success": True}
@@ -78,8 +78,9 @@ async def api_resume_campaign():
 
 @router.post("/api/campaign/stop")
 async def api_stop_campaign():
-    if _use_dialer():
-        _dialer().call_queue.cancel_waiting()
-    else:
-        campaign_service.stop_campaign()
+    dialer = _dialer()
+    if dialer is not None:
+        cancelled = dialer.call_queue.cancel_waiting()
+        return {"success": True, "cancelled": cancelled}
+    campaign_service.stop_campaign()
     return {"success": True}

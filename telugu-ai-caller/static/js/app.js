@@ -659,10 +659,10 @@ document.addEventListener("DOMContentLoaded", () => {
   window.startAutonomousCampaign = async () => {
     const targetSel = document.getElementById("campaignTargetSelect")?.value || "new";
     const modeRadio = document.querySelector('input[name="campMode"]:checked');
-    const mode = modeRadio ? modeRadio.value : "simulation";
+    const mode = modeRadio ? modeRadio.value : "phone";
     const consentConfirmed = Boolean(document.getElementById("campaignConsent")?.checked);
-    if ((mode === "phone" || mode === "telephony") && !consentConfirmed) {
-      alert("Please confirm these contacts consented to be called before starting real phone calls.");
+    if (!consentConfirmed) {
+      alert("Please confirm these contacts consented to be called before starting outbound calls.");
       return;
     }
 
@@ -1102,6 +1102,41 @@ Your registered phone / client phone will ring shortly.`);
   // ===================================================================
   // REFRESH & RENDER LEADS (PIPELINE & TABLE)
   // ===================================================================
+  window.refreshOutcomeBuckets = async () => {
+    try {
+      const resp = await fetch("/api/leads/outcomes/summary");
+      if (!resp.ok) return;
+      const summary = await resp.json();
+      const b = summary.buckets || {};
+      const elAll = document.getElementById("bucketCountAll");
+      const elHot = document.getElementById("bucketCountHot");
+      const elFollow = document.getElementById("bucketCountFollowUp");
+      const elClosed = document.getElementById("bucketCountClosed");
+      const elUnreach = document.getElementById("bucketCountNotReachable");
+      if (elAll) elAll.innerText = summary.total_leads || 0;
+      if (elHot) elHot.innerText = b.hot || 0;
+      if (elFollow) elFollow.innerText = b.follow_up || 0;
+      if (elClosed) elClosed.innerText = b.closed || 0;
+      if (elUnreach) elUnreach.innerText = b.not_reachable || 0;
+    } catch (err) {
+      console.warn("refreshOutcomeBuckets warning:", err);
+    }
+  };
+
+  window.filterLeadsByBucket = async (bucket) => {
+    try {
+      const url = (!bucket || bucket === "all") ? "/api/leads" : `/api/leads?bucket=${encodeURIComponent(bucket)}`;
+      const resp = await fetch(url);
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (typeof window.renderLeadsTable === "function") {
+        window.renderLeadsTable(data.leads || []);
+      }
+    } catch (err) {
+      console.error("filterLeadsByBucket error:", err);
+    }
+  };
+
   window.renderLeadsTable = (leads) => {
     const tbody = document.getElementById("crmLeadsTableBody");
     if (!tbody) return;
@@ -1214,6 +1249,10 @@ Your registered phone / client phone will ring shortly.`);
       // Re-render Leads Table view if present
       if (typeof window.renderLeadsTable === "function") {
         window.renderLeadsTable(data.leads);
+      }
+
+      if (typeof window.refreshOutcomeBuckets === "function") {
+        window.refreshOutcomeBuckets();
       }
 
       // Automatically select top newly imported lead if forced or none selected
