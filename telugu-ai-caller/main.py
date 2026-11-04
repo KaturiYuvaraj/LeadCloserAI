@@ -25,6 +25,8 @@ from routers import (
     calls,
     campaigns,
     dialer,
+    quotations,
+    admin_panel,
     integrations,
     messaging,
     developer,
@@ -82,6 +84,8 @@ app.include_router(employees.router)
 app.include_router(calls.router)
 app.include_router(campaigns.router)
 app.include_router(dialer.router)
+app.include_router(quotations.router)
+app.include_router(admin_panel.router)
 app.include_router(integrations.router)
 app.include_router(messaging.router)
 app.include_router(developer.router)

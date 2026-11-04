@@ -1,8 +1,8 @@
 """
-Leads Router - Lead Management, Ingestion, Discovery, Enrichment & Plan v2 (§3) Outcomes
+Leads Router - Lead Management, Ingestion (Excel/CSV/Paste), DND/Opt-Out & Plan v2 (§3) Outcomes
 """
-from typing import Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, UploadFile, File, Response, Request
+from typing import Optional, Dict, Any, List
+from fastapi import APIRouter, Form, HTTPException, UploadFile, File, Response, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 
@@ -12,19 +12,32 @@ from database import (
     get_lead_by_id,
     create_lead,
     batch_create_leads,
+    import_leads_with_report,
     update_lead,
     delete_lead,
     get_calls_for_lead,
     update_lead_enrichment,
     override_lead_outcome,
     get_outcome_bucket_summary,
+    get_opt_outs,
+    add_opt_out,
+    remove_opt_out,
 )
-from services.excel_service import parse_excel_or_csv, generate_sample_excel_template, generate_leads_export_excel
+from services.excel_service import (
+    parse_excel_or_csv,
+    parse_pasted_leads,
+    generate_sample_excel_template,
+    generate_leads_export_excel,
+    generate_rejected_rows_csv,
+)
 from services.outcomes import OUTCOME_BUCKETS, OUTCOME_CATALOG
 from providers import registry, ProviderType
 from schemas.lead import UnifiedLead
 
 router = APIRouter(tags=["leads"])
+
+# Store latest import rejected rows per account for instant CSV download
+_LAST_REJECTED_BY_ACCOUNT: Dict[int, List[Dict[str, Any]]] = {}
 
 
 @router.get("/api/leads/outcomes/summary")
@@ -38,6 +51,17 @@ async def api_get_outcome_summary(request: Request):
 async def api_get_outcome_catalog():
     """Return the official Plan v2 (§3) 4 buckets and 13 outcome labels."""
     return {"buckets": OUTCOME_BUCKETS, "outcomes": OUTCOME_CATALOG}
+
+
+@router.get("/api/leads/human-review")
+async def api_get_human_review_leads(request: Request):
+    """Return leads flagged with low-confidence outcome labels for human review (§3 & §7)."""
+    account_id = get_request_account_id(request)
+    summary = get_outcome_bucket_summary(account_id=account_id)
+    return {
+        "count": summary["human_review_count"],
+        "leads": summary["human_review_leads"],
+    }
 
 
 @router.get("/api/leads/template")
@@ -68,10 +92,19 @@ async def api_export_leads_excel(request: Request):
 
 
 @router.post("/api/leads/upload-excel")
-async def api_upload_excel_leads(request: Request, file: UploadFile = File(...)):
+async def api_upload_excel_leads(
+    request: Request,
+    file: UploadFile = File(...),
+    source_tag: str = Form("csv"),
+    campaign_tag: str = Form(""),
+    marketer_tag: str = Form(""),
+    consent_confirmed: bool = Form(True),
+    strict_phone: bool = Form(False),
+):
     """
-    Upload Excel (.xlsx) or CSV file with lead details.
-    Parses customer name, phone, service needed, budget, notes, etc.
+    Upload Excel (.xlsx) or CSV file with lead details (Phase A / Y6).
+    Cleans +91 numbers, merges duplicates, checks Do-Not-Call / Opt-Out list,
+    tags source/campaign/marketer, and returns an import report + rejected rows.
     """
     if not file.filename.endswith((".xlsx", ".xls", ".csv")):
         raise HTTPException(status_code=400, detail="Only .xlsx, .xls, and .csv files are supported.")
@@ -83,23 +116,129 @@ async def api_upload_excel_leads(request: Request, file: UploadFile = File(...))
     if not leads and errors:
         return JSONResponse(status_code=400, content={"success": False, "errors": errors})
 
-    inserted, updated = batch_create_leads(leads, account_id=account_id)
-    logger.info(f"Ingested {len(leads)} leads from {file.filename}: {inserted} inserted, {updated} updated.")
+    consent_src = "import_confirmed" if consent_confirmed else ""
+    report = import_leads_with_report(
+        leads=leads,
+        account_id=account_id,
+        source_tag=source_tag or "csv",
+        campaign_tag=campaign_tag,
+        marketer_tag=marketer_tag,
+        consent_source=consent_src,
+        strict_phone=strict_phone,
+    )
+    _LAST_REJECTED_BY_ACCOUNT[account_id] = report.get("rejected_rows", [])
+
+    logger.info(
+        f"Ingested {len(leads)} rows from {file.filename}: "
+        f"{report['inserted']} inserted, {report['updated']} updated, {report['rejected_count']} rejected."
+    )
 
     return {
         "success": True,
         "total_parsed": len(leads),
-        "inserted": inserted,
-        "updated": updated,
-        "errors": errors
+        "inserted": report["inserted"],
+        "updated": report["updated"],
+        "merged_existing": report["updated"],
+        "rejected_count": report["rejected_count"],
+        "rejected_rows": report["rejected_rows"],
+        "rejected_csv_url": "/api/leads/import-report/rejected.csv" if report["rejected_count"] else None,
+        "source_tag": report["source_tag"],
+        "campaign_tag": report["campaign_tag"],
+        "marketer_tag": report["marketer_tag"],
+        "errors": errors,
     }
 
+
+@router.post("/api/leads/import-paste")
+async def api_import_pasted_leads(payload: Dict[str, Any], request: Request):
+    """
+    Import leads pasted from Excel, Google Sheets, or CSV text (Phase A).
+    """
+    raw_text = str(payload.get("raw_text") or payload.get("text") or "").strip()
+    if not raw_text:
+        raise HTTPException(status_code=400, detail="No text provided to import.")
+
+    account_id = get_request_account_id(request) or 1
+    leads, errors = parse_pasted_leads(raw_text)
+    if not leads and errors:
+        raise HTTPException(status_code=400, detail="; ".join(errors))
+
+    consent_confirmed = bool(payload.get("consent_confirmed", True))
+    report = import_leads_with_report(
+        leads=leads,
+        account_id=account_id,
+        source_tag=str(payload.get("source_tag") or "paste"),
+        campaign_tag=str(payload.get("campaign_tag") or ""),
+        marketer_tag=str(payload.get("marketer_tag") or ""),
+        consent_source=str(payload.get("consent_source") or ("import_confirmed" if consent_confirmed else "")),
+        strict_phone=bool(payload.get("strict_phone", True)),
+    )
+    _LAST_REJECTED_BY_ACCOUNT[account_id] = report.get("rejected_rows", [])
+
+    return {
+        "success": True,
+        "total_parsed": len(leads),
+        "inserted": report["inserted"],
+        "updated": report["updated"],
+        "merged_existing": report["updated"],
+        "rejected_count": report["rejected_count"],
+        "rejected_rows": report["rejected_rows"],
+        "rejected_csv_url": "/api/leads/import-report/rejected.csv" if report["rejected_count"] else None,
+        "errors": errors,
+    }
+
+
+@router.get("/api/leads/import-report/rejected.csv")
+async def api_download_rejected_rows_csv(request: Request):
+    """Download the rejected rows and reasons from the most recent import as a CSV file."""
+    account_id = get_request_account_id(request) or 1
+    rejected = _LAST_REJECTED_BY_ACCOUNT.get(account_id, [])
+    csv_bytes = generate_rejected_rows_csv(rejected)
+    return Response(
+        content=csv_bytes,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=rejected_leads_report.csv"},
+    )
+
+
+# ---------------- DO-NOT-CALL / OPT-OUT LIST (Phase A & Y7) ----------------
+
+@router.get("/api/opt-outs")
+async def api_list_opt_outs(request: Request):
+    account_id = get_request_account_id(request) or 1
+    return {"opt_outs": get_opt_outs(account_id=account_id)}
+
+
+@router.post("/api/opt-outs")
+async def api_create_opt_out(payload: Dict[str, Any], request: Request):
+    phone = str(payload.get("phone") or payload.get("phone_e164") or "").strip()
+    if not phone:
+        raise HTTPException(status_code=400, detail="phone is required")
+    reason = str(payload.get("reason") or "manual_dnd")
+    account_id = get_request_account_id(request) or 1
+    row = add_opt_out(phone=phone, reason=reason, account_id=account_id)
+    return {"success": True, "opt_out": row}
+
+
+@router.delete("/api/opt-outs/{item}")
+async def api_delete_opt_out(item: str, request: Request):
+    account_id = get_request_account_id(request) or 1
+    ok = remove_opt_out(item=item, account_id=account_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Opt-out entry not found")
+    return {"success": True}
+
+
+# ---------------- LEADS CRUD & FILTERS ----------------
 
 @router.get("/api/leads")
 async def api_get_leads(
     request: Request,
     bucket: Optional[str] = None,
     outcome: Optional[str] = None,
+    source: Optional[str] = None,
+    campaign: Optional[str] = None,
+    marketer: Optional[str] = None,
 ):
     account_id = get_request_account_id(request)
     leads = get_all_leads(account_id=account_id)
@@ -113,6 +252,15 @@ async def api_get_leads(
             if (l.get("outcome_label") or "").lower() == o
             or (l.get("last_outcome") or "").lower() == o
         ]
+    if source:
+        s = source.strip().lower()
+        leads = [l for l in leads if (l.get("source") or "").lower() == s]
+    if campaign:
+        c = campaign.strip().lower()
+        leads = [l for l in leads if (l.get("campaign_tag") or "").lower() == c]
+    if marketer:
+        m = marketer.strip().lower()
+        leads = [l for l in leads if (l.get("marketer_tag") or "").lower() == m]
     return {"leads": leads}
 
 

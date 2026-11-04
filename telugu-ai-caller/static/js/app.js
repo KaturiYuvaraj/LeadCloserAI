@@ -612,6 +612,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const formData = new FormData();
       formData.append("file", excelFileInput.files[0]);
+      const srcTag = document.getElementById("importSourceTag")?.value?.trim() || "excel_upload";
+      const campTag = document.getElementById("importCampaignTag")?.value?.trim() || "";
+      const mktTag = document.getElementById("importMarketerTag")?.value?.trim() || "";
+      formData.append("source_tag", srcTag);
+      formData.append("campaign_tag", campTag);
+      formData.append("marketer_tag", mktTag);
 
       try {
         const resp = await fetch("/api/leads/upload-excel", {
@@ -621,8 +627,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await resp.json();
 
         if (resp.ok && data.success) {
-          alert(`🎉 Import Complete!\nTotal Parsed: ${data.total_parsed} leads\nInserted: ${data.inserted}\nUpdated: ${data.updated}`);
-          window.closeExcelModal();
+          const rptBox = document.getElementById("importReportSummaryBox");
+          if (rptBox) {
+            rptBox.style.display = "block";
+            const rejLink = (data.rejected_count > 0 && data.rejected_csv_url)
+              ? `<br/><a href="${data.rejected_csv_url}" download style="color:#b91c1c; font-weight:700; text-decoration:underline;">📥 Download Rejected Rows (${data.rejected_count})</a>`
+              : "";
+            rptBox.innerHTML = `✅ <strong>Import Report:</strong> Inserted: <b>${data.inserted}</b> · Merged Existing: <b>${data.merged_existing || data.updated || 0}</b> · Rejected: <b>${data.rejected_count || 0}</b>${rejLink}`;
+          }
+          alert(`🎉 Import Complete!\nTotal Parsed: ${data.total_parsed} leads\nInserted: ${data.inserted}\nMerged Existing: ${data.merged_existing || data.updated || 0}\nRejected (Invalid / Duplicate / DND): ${data.rejected_count || 0}`);
+          if (!data.rejected_count) {
+            window.closeExcelModal();
+          }
           await refreshLeads(true);
         } else {
           alert(data.detail || data.error || (data.errors ? data.errors.join(", ") : "Failed to import leads."));

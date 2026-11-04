@@ -109,6 +109,9 @@ def _lead_to_dict(lead: Lead) -> Dict[str, Any]:
         "designation": vars_dict.get("designation", ""),
         "industry": vars_dict.get("industry", ""),
         "location": vars_dict.get("location", ""),
+        "campaign_tag": vars_dict.get("campaign_tag", ""),
+        "marketer_tag": vars_dict.get("marketer_tag", ""),
+        "consent_source": lead.consent_source or vars_dict.get("consent_source", ""),
         "enrichment_data": vars_dict.get("enrichment_data", ""),
         "display_phone": vars_dict.get("display_phone", lead.phone_e164),
         "last_call_summary": last_summary,
@@ -590,6 +593,265 @@ def batch_create_leads(leads: List[Dict[str, Any]], account_id: int = 1) -> Tupl
         session.close()
 
 
+def import_leads_with_report(
+    leads: List[Dict[str, Any]],
+    account_id: int = 1,
+    source_tag: str = "csv",
+    campaign_tag: str = "",
+    marketer_tag: str = "",
+    consent_source: str = "import_confirmed",
+    strict_phone: bool = False,
+) -> Dict[str, Any]:
+    """
+    Phase A (Y6) Lead Import Engine with:
+      - +91 E.164 normalization & validation
+      - Duplicate-in-file detection
+      - Existing DB lead merge
+      - Opt-Out / Do-Not-Call list check
+      - Source / Campaign / Marketer tagging & consent recording
+      - Detailed rejected rows report
+    """
+    from services.excel_service import clean_and_validate_indian_phone
+
+    session = SessionLocal()
+    inserted = 0
+    updated = 0
+    rejected_rows: List[Dict[str, Any]] = []
+    seen_phones_in_file: set = set()
+
+    try:
+        opt_out_phones = {
+            row.phone_e164
+            for row in session.query(OptOut.phone_e164).filter(OptOut.account_id == account_id).all()
+        }
+
+        for idx, l_data in enumerate(leads, start=1):
+            row_num = l_data.get("_row_number", idx + 1)
+            raw_phone = str(l_data.get("phone", "") or "").strip()
+            name_val = str(l_data.get("name") or l_data.get("company") or "Unknown").strip()
+
+            cleaned_phone, is_valid, err_reason = clean_and_validate_indian_phone(raw_phone)
+            if not is_valid:
+                rejected_rows.append({
+                    "row": row_num,
+                    "name": name_val,
+                    "phone": raw_phone,
+                    "code": "invalid_number",
+                    "reason": err_reason,
+                })
+                continue
+
+            if not cleaned_phone:
+                if strict_phone:
+                    rejected_rows.append({
+                        "row": row_num,
+                        "name": name_val,
+                        "phone": raw_phone,
+                        "code": "missing_phone",
+                        "reason": "Missing phone number",
+                    })
+                    continue
+                seed_str = str(l_data.get("company") or name_val or f"lead_{idx}")
+                hash_val = abs(hash(seed_str)) % 90000000 + 10000000
+                phone = f"+9100{hash_val}"
+                display_phone = "Not Provided"
+            else:
+                phone = cleaned_phone
+                display_phone = cleaned_phone
+
+                if phone in seen_phones_in_file:
+                    rejected_rows.append({
+                        "row": row_num,
+                        "name": name_val,
+                        "phone": raw_phone or phone,
+                        "code": "duplicate_in_file",
+                        "reason": f"Duplicate phone number ({phone}) in the same uploaded file",
+                    })
+                    continue
+                seen_phones_in_file.add(phone)
+
+                if phone in opt_out_phones:
+                    rejected_rows.append({
+                        "row": row_num,
+                        "name": name_val,
+                        "phone": raw_phone or phone,
+                        "code": "on_opt_out_list",
+                        "reason": f"Phone number ({phone}) is on the Do-Not-Call / Opt-Out list",
+                    })
+                    continue
+
+            existing = session.query(Lead).filter(
+                Lead.account_id == account_id,
+                (Lead.phone_e164 == phone) | (Lead.name == name_val)
+            ).first()
+
+            if existing and existing.opt_out:
+                rejected_rows.append({
+                    "row": row_num,
+                    "name": name_val,
+                    "phone": raw_phone or phone,
+                    "code": "on_opt_out_list",
+                    "reason": "Existing lead has opted out of calls (Do-Not-Call)",
+                })
+                continue
+
+            row_source = l_data.get("source") or source_tag or "csv"
+            row_campaign = l_data.get("campaign_tag") or campaign_tag or ""
+            row_marketer = l_data.get("marketer_tag") or marketer_tag or ""
+
+            lead_vars = {
+                "email": l_data.get("email", ""),
+                "company": l_data.get("company", name_val),
+                "owner_name": l_data.get("owner_name", ""),
+                "website": l_data.get("website", ""),
+                "has_website": l_data.get("has_website", ""),
+                "reviews": l_data.get("reviews", ""),
+                "score": l_data.get("score", ""),
+                "pitch": l_data.get("pitch", ""),
+                "service_needed": l_data.get("service_needed", "Software Services"),
+                "budget": l_data.get("budget", "Flexible"),
+                "timeline": l_data.get("timeline", "Immediate"),
+                "status": l_data.get("status", "NEW"),
+                "priority": l_data.get("priority", "MEDIUM"),
+                "preferred_language": l_data.get("preferred_language", "te-IN"),
+                "location": l_data.get("location", ""),
+                "industry": l_data.get("industry", ""),
+                "campaign_tag": row_campaign,
+                "marketer_tag": row_marketer,
+                "consent_source": consent_source,
+                "display_phone": display_phone,
+            }
+
+            if existing:
+                cur_vars = dict(existing.variables or {})
+                for k, v in lead_vars.items():
+                    if v:
+                        cur_vars[k] = v
+                existing.variables = cur_vars
+                if name_val:
+                    existing.name = name_val
+                if row_source:
+                    existing.source = row_source
+                if consent_source and not existing.consent_source:
+                    existing.consent_source = consent_source
+                if l_data.get("pitch"):
+                    existing.notes = l_data["pitch"]
+                elif l_data.get("notes"):
+                    existing.notes = l_data["notes"]
+                existing.updated_at = func.now()
+                updated += 1
+            else:
+                new_lead = Lead(
+                    account_id=account_id,
+                    name=name_val,
+                    phone=phone,
+                    phone_e164=phone,
+                    company=l_data.get("company", name_val),
+                    source=row_source,
+                    variables=lead_vars,
+                    consent_source=consent_source,
+                    notes=l_data.get("pitch") or l_data.get("notes", ""),
+                    created_at=func.now(),
+                    updated_at=func.now(),
+                )
+                session.add(new_lead)
+                inserted += 1
+
+        session.commit()
+        return {
+            "inserted": inserted,
+            "updated": updated,
+            "rejected_count": len(rejected_rows),
+            "rejected_rows": rejected_rows,
+            "source_tag": source_tag,
+            "campaign_tag": campaign_tag,
+            "marketer_tag": marketer_tag,
+            "consent_source": consent_source,
+        }
+    except Exception as e:
+        session.rollback()
+        logger.error(f"import_leads_with_report error: {e}")
+        return {
+            "inserted": inserted,
+            "updated": updated,
+            "rejected_count": len(rejected_rows),
+            "rejected_rows": rejected_rows,
+            "error": str(e),
+        }
+    finally:
+        session.close()
+
+
+def get_opt_outs(account_id: int = 1) -> List[Dict[str, Any]]:
+    session = SessionLocal()
+    try:
+        rows = (
+            session.query(OptOut)
+            .filter(OptOut.account_id == account_id)
+            .order_by(OptOut.id.desc())
+            .all()
+        )
+        return [
+            {
+                "id": r.id,
+                "account_id": r.account_id,
+                "phone_e164": r.phone_e164,
+                "reason": r.reason or "manual",
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in rows
+        ]
+    finally:
+        session.close()
+
+
+def add_opt_out(phone: str, reason: str = "manual_dnd", account_id: int = 1) -> Dict[str, Any]:
+    cleaned = clean_phone(phone)
+    session = SessionLocal()
+    try:
+        existing = session.query(OptOut).filter_by(account_id=account_id, phone_e164=cleaned).first()
+        if not existing:
+            existing = OptOut(account_id=account_id, phone_e164=cleaned, reason=reason)
+            session.add(existing)
+            session.flush()
+        lead = session.query(Lead).filter_by(account_id=account_id, phone_e164=cleaned).first()
+        if lead:
+            lead.opt_out = True
+            lead.updated_at = func.now()
+        session.commit()
+        return {
+            "id": existing.id,
+            "account_id": existing.account_id,
+            "phone_e164": existing.phone_e164,
+            "reason": existing.reason,
+        }
+    finally:
+        session.close()
+
+
+def remove_opt_out(item: str, account_id: int = 1) -> bool:
+    session = SessionLocal()
+    try:
+        row = None
+        if str(item).isdigit():
+            row = session.query(OptOut).filter_by(id=int(item), account_id=account_id).first()
+        if not row:
+            cleaned = clean_phone(item)
+            row = session.query(OptOut).filter_by(account_id=account_id, phone_e164=cleaned).first()
+        if not row:
+            return False
+        phone_val = row.phone_e164
+        session.delete(row)
+        lead = session.query(Lead).filter_by(account_id=account_id, phone_e164=phone_val).first()
+        if lead:
+            lead.opt_out = False
+            lead.updated_at = func.now()
+        session.commit()
+        return True
+    finally:
+        session.close()
+
+
 def update_lead(lead_id: int, updates: Dict[str, Any], account_id: Optional[int] = None) -> bool:
     session = SessionLocal()
     try:
@@ -779,6 +1041,29 @@ def save_call_record(call_data: Dict[str, Any], account_id: int = 1) -> int:
                 if call_data.get("objections_raised"): cur_vars["objections_noted"] = call_data["objections_raised"]
                 cur_vars["action_items"] = call_data.get("action_items", "")
                 cur_vars["last_called_at"] = datetime.now().isoformat()
+                if norm["is_hot"] and not cur_vars.get("hot_marked_at"):
+                    cur_vars["hot_marked_at"] = datetime.now().isoformat()
+
+                # Compute & persist Plan v2 §4 Follow-Up Plan
+                try:
+                    from services.followup_engine import compute_next_followup_step
+                    prev_misses = int(cur_vars.get("consecutive_misses", 0) or 0)
+                    new_misses = (prev_misses + 1) if norm["outcome_bucket"] == "not_reachable" else 0
+                    cur_vars["consecutive_misses"] = new_misses
+                    attempt_num = int(cur_vars.get("attempt_count", 0) or 0) + 1
+                    cur_vars["attempt_count"] = attempt_num
+                    f_plan = compute_next_followup_step(
+                        outcome_label=norm["outcome_label"],
+                        callback_at=parsed_cb.isoformat() if parsed_cb else call_data.get("callback_at"),
+                        attempt_number=attempt_num,
+                        consecutive_misses=new_misses,
+                        is_opted_out=bool(lead.opt_out),
+                        is_converted=(new_status == "CLOSED_WON"),
+                    )
+                    cur_vars["followup_plan"] = f_plan
+                except Exception as fe_err:
+                    logger.warning(f"Follow-up engine plan warning: {fe_err}")
+
                 lead.variables = cur_vars
                 lead.updated_at = func.now()
 

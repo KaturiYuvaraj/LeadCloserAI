@@ -27,8 +27,50 @@ HEADER_MAPPINGS = {
     "budget": ["budget", "estimated budget", "price", "cost", "amount", "బడ్జెట్"],
     "timeline": ["timeline", "timeframe", "target date", "deadline", "duration", "సమయం"],
     "preferred_language": ["language", "preferred language", "customer language", "lang", "భాష"],
+    "source": ["source", "lead source", "channel", "platform", "utm_source"],
+    "campaign_tag": ["campaign", "campaign name", "campaign_tag", "utm_campaign", "ad campaign"],
+    "marketer_tag": ["marketer", "marketer name", "assigned to", "rep", "owner_rep", "marketing owner"],
+    "location": ["location", "city", "area", "address", "state", "district"],
+    "industry": ["industry", "category", "sector", "business type", "niche"],
     "notes": ["notes", "notes/details", "remarks", "comments", "details", "description", "వివరాలు"]
 }
+
+
+def clean_and_validate_indian_phone(raw_phone: Any) -> Tuple[str, bool, str]:
+    """
+    Clean a phone string into E.164 (+91XXXXXXXXXX) and validate whether it is dialable.
+    Returns: (cleaned_e164, is_valid, error_reason)
+    """
+    raw_str = str(raw_phone or "").strip()
+    if raw_str.endswith(".0"):
+        raw_str = raw_str[:-2].strip()
+    if not raw_str or raw_str.lower() in {"n/a", "na", "none", "null", "not provided", "-"}:
+        return "", True, "missing_phone_directory"
+
+    # Try phonenumbers library first (if installed)
+    try:
+        import phonenumbers
+        parsed = phonenumbers.parse(raw_str, "IN")
+        if phonenumbers.is_valid_number(parsed):
+            e164 = phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+            return e164, True, ""
+    except Exception:
+        pass
+
+    # Fallback deterministic Indian / E.164 digit check
+    digits = "".join(ch for ch in raw_str if ch.isdigit())
+    if len(digits) == 10 and digits[0] in "6789":
+        return f"+91{digits}", True, ""
+    if len(digits) == 10 and digits[0] in "12345":
+        return f"+91{digits}", True, ""
+    if len(digits) == 11 and digits.startswith("0") and digits[1] != "0":
+        return f"+91{digits[1:]}", True, ""
+    if len(digits) == 12 and digits.startswith("91") and digits[2] != "0":
+        return f"+{digits}", True, ""
+    if raw_str.startswith("+") and 11 <= len(digits) <= 15:
+        return f"+{digits}", True, ""
+
+    return raw_str, False, f"Invalid phone number '{raw_str}' (expected 10-digit Indian number or +E.164)"
 
 
 def extract_business_and_owner(raw_name: str, raw_company: str = "", raw_owner: str = "") -> Tuple[str, str]:
@@ -203,6 +245,7 @@ def parse_excel_or_csv(file_bytes: bytes, filename: str) -> Tuple[List[Dict[str,
                     lead.setdefault("phone", "")
                     lead.setdefault("budget", "Flexible")
                     lead.setdefault("status", "NEW")
+                    lead["_row_number"] = row_idx
                     lead["preferred_language"] = _clean_language(lead.get("preferred_language"))
                     lead = enrich_lead_record(lead)
                     leads.append(lead)
@@ -243,6 +286,7 @@ def parse_excel_or_csv(file_bytes: bytes, filename: str) -> Tuple[List[Dict[str,
                     lead.setdefault("phone", "")
                     lead.setdefault("budget", "Flexible")
                     lead.setdefault("status", "NEW")
+                    lead["_row_number"] = row_idx
                     lead["preferred_language"] = _clean_language(lead.get("preferred_language"))
                     lead = enrich_lead_record(lead)
                     leads.append(lead)
@@ -254,6 +298,77 @@ def parse_excel_or_csv(file_bytes: bytes, filename: str) -> Tuple[List[Dict[str,
             errors.append(f"Failed to parse Excel file: {str(e)}")
 
     return leads, errors
+
+
+def parse_pasted_leads(raw_text: str) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """
+    Parse pasted rows (from Excel, Google Sheets TSV, or CSV text) into lead dicts.
+    """
+    text = (raw_text or "").strip()
+    if not text:
+        return [], ["Pasted text is empty."]
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    if not lines:
+        return [], ["No valid lines found in pasted text."]
+
+    delimiter = "\t" if "\t" in lines[0] else ","
+    reader = csv.reader(io.StringIO(text), delimiter=delimiter)
+    rows = [r for r in reader if any(c.strip() for c in r)]
+    if not rows:
+        return [], ["No rows found."]
+
+    # Check if first row looks like a header row
+    first_matched = [_match_header(c) for c in rows[0]]
+    has_header = any(m in HEADER_MAPPINGS for m in first_matched) and not any(ch.isdigit() for ch in "".join(rows[0])[:6])
+
+    if has_header:
+        csv_buf = io.StringIO()
+        writer = csv.writer(csv_buf)
+        for r in rows:
+            writer.writerow(r)
+        return parse_excel_or_csv(csv_buf.getvalue().encode("utf-8"), "pasted.csv")
+
+    # Headerless rows: assume [Name, Phone, Company (optional), Service (optional), Budget (optional)]
+    leads: List[Dict[str, Any]] = []
+    errors: List[str] = []
+    for idx, r in enumerate(rows, start=1):
+        cols = [c.strip() for c in r]
+        name = cols[0] if len(cols) > 0 else ""
+        phone = cols[1] if len(cols) > 1 else ""
+        company = cols[2] if len(cols) > 2 else name
+        service = cols[3] if len(cols) > 3 else "Software Services"
+        budget = cols[4] if len(cols) > 4 else "Flexible"
+        if not name and not phone:
+            errors.append(f"Row {idx}: Empty row.")
+            continue
+        lead = enrich_lead_record({
+            "_row_number": idx,
+            "name": name or company or "Pasted Lead",
+            "phone": phone,
+            "company": company or name,
+            "service_needed": service,
+            "budget": budget,
+            "status": "NEW",
+            "preferred_language": "te-IN",
+        })
+        leads.append(lead)
+    return leads, errors
+
+
+def generate_rejected_rows_csv(rejected_rows: List[Dict[str, Any]]) -> bytes:
+    """Generate a downloadable CSV of rejected import rows with rejection reasons."""
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["Row Number", "Name / Business", "Raw Phone", "Rejection Code", "Rejection Reason"])
+    for item in rejected_rows:
+        writer.writerow([
+            item.get("row", ""),
+            item.get("name", ""),
+            item.get("phone", ""),
+            item.get("code", ""),
+            item.get("reason", ""),
+        ])
+    return buf.getvalue().encode("utf-8-sig")
 
 
 def generate_sample_excel_template() -> bytes:

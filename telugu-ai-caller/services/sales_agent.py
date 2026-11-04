@@ -120,6 +120,11 @@ class SalesAgent:
             lead_context += "Address the customer respectfully by name and tailor the conversation to close this specific project.\n"
             prompt += lead_context
 
+            from services.followup_engine import build_caller_memory_context
+            memory_block = build_caller_memory_context(lead_info)
+            if memory_block:
+                prompt += memory_block
+
         active_emp = get_active_ai_employee()
         if active_emp:
             prompt += f"\nACTIVE AI SALES EMPLOYEE PERSONA:\n"
@@ -172,7 +177,7 @@ class SalesAgent:
             lower_user = last_user_msg.lower()
 
             # If user was expressing rejection or concluding, provide a graceful farewell fallback
-            if any(p in lower_user for p in ["not interested", "dont call", "no need", "వద్దు", "లేదు", "नहीं", "bye", "బై", "11"]):
+            if any(p in lower_user for p in ["not interested", "dont call", "don't call", "no need", "వద్దు", "ఆసక్తి లేదు", "नहीं चाहिए", "कॉल मत करना", "bye", "goodbye"]):
                 if detected_lang == "hi-IN":
                     return "धन्यवाद सर! आपके समय के लिए बहुत-बहुत धन्यवाद। आपका दिन शुभ हो, अलविदा!"
                 elif detected_lang == "en-IN":
@@ -181,11 +186,17 @@ class SalesAgent:
                     return "సరేనండి, మీ సమయానికి చాలా ధన్యవాదాలు. ఉంటానండి, సెలవు!"
 
             if detected_lang == "hi-IN":
-                return "नमस्ते सर! हम आपकी आवश्यकता समझ गए हैं। क्या हम कल सुबह 11 बजे आपके साथ 10 मिनट का मुफ़्त डेमो कॉल शेड्यूल करें?"
+                return "जी बिल्कुल सर! हम आपकी आवश्यकता समझ गए हैं। क्या हम कल सुबह 11 बजे आपके साथ 10 मिनट का मुफ़्त डेमो कॉल शेड्यूल करें?"
+            elif detected_lang == "ta-IN":
+                return "நிச்சயமாக சார்! உங்கள் தேவையை நாங்கள் புரிந்துகொண்டோம். நாளை காலை 11 மணிக்கு 10 நிமிட இலவச டெமோ அழைப்பை திட்டமிடலாமா?"
+            elif detected_lang == "kn-IN":
+                return "ಖಂಡಿತವಾಗಿಯೂ ಸರ್! ನಿಮ್ಮ ಅವಶ್ಯಕತೆಯನ್ನು ನಾವು ಅರ್ಥಮಾಡಿಕೊಂಡಿದ್ದೇವೆ. ನಾಳೆ ಬೆಳಿಗ್ಗೆ 11 ಗಂಟೆಗೆ 10 ನಿమిಷದ ಉಚಿತ ಡೆಮೊ ಕರೆಯನ್ನು ನಿಗದಿಪಡಿಸೋಣವೇ?"
+            elif detected_lang == "ml-IN":
+                return "തീർച്ചയായും സാർ! നിങ്ങളുടെ ആവശ്യം ഞങ്ങൾ മനസ്സിലാക്കി. നാളെ രാവിലെ 11 മണിക്ക് 10 മിനിറ്റ് സൗജന്യ ഡെമോ കോൾ ഷെഡ്യൂൾ ചെയ്യട്ടെ?"
             elif detected_lang == "en-IN":
-                return "Thank you! We completely understand your requirements. Could we schedule a quick 10-minute demo call tomorrow morning at 11:00 AM?"
+                return "Got it, thank you! We completely understand your requirements. Could we schedule a quick 10-minute demo call tomorrow morning at 11:00 AM?"
             else:
-                return "నమస్కారం అండి! మీ ప్రాజెక్ట్ అవసరాలు మేము విన్నాము. మా సీనియర్ టెక్నాలజీ ఎక్స్‌పర్ట్‌తో రేపు 10 నిమిషాల ఉచిత డెమో కాల్ షెడ్యూల్ చేయమంటారా?"
+                return "నమస్కారం అండి! మీ ప్రాజెక్ట్ అవసరాలు మేము విన్నాము, ఖచ్చితంగా చేస్తాము. మా సీనియర్ టెక్నాలజీ ఎక్స్‌పర్ట్‌తో రేపు 10 నిమిషాల ఉచిత డెమో కాల్ షెడ్యూల్ చేయమంటారా?"
 
     def is_call_completed(
         self,
