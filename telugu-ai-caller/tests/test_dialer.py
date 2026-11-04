@@ -213,7 +213,12 @@ async def test_no_answer_retries_then_not_reachable(queue, monkeypatch):
     assert job.state == "dialing" and job.attempt == 2
 
     queue.on_provider_hangup(job.id, "busy", 0, "USER_BUSY")
-    assert job_for(lead).state == "not_reachable"
+    session = SessionLocal()
+    assert session.get(CallJob, job.id).state == "not_reachable"
+    session.close()
+    # then a missed-call WhatsApp and the smart cadence (voice_agent/followups.py)
+    follow_up = job_for(lead)
+    assert follow_up.id != job.id and follow_up.state == "scheduled" and follow_up.last_disposition == "followup"
 
 
 @pytest.mark.asyncio
