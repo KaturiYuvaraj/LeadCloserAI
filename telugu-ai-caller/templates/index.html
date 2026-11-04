@@ -3431,6 +3431,456 @@ input[type="checkbox"] {
   }
 }
 
+
+/* =====================================================================
+   PREMIUM AI WORKFORCE & PERSONA ARCHITECTURE (2026 LUXURY REDESIGN)
+   ===================================================================== */
+.ai-copilot-panel {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-radius: 20px;
+  padding: 26px 30px;
+  margin-top: 28px;
+  box-shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-copilot-panel::before {
+  content: "";
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(234, 88, 12, 0.3) 0%, rgba(234, 88, 12, 0) 70%);
+  pointer-events: none;
+}
+
+.ai-copilot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ai-copilot-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(234, 88, 12, 0.18);
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  color: #fb923c;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.ai-copilot-title {
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.015em;
+}
+
+.ai-copilot-desc {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  margin: 0;
+  line-height: 1.45;
+  max-width: 680px;
+}
+
+.ai-copilot-input-box {
+  display: flex;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  padding: 6px 6px 6px 16px;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.ai-copilot-input-box:focus-within {
+  border-color: #ea580c;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.25), 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.ai-copilot-input {
+  flex: 1;
+  background: transparent !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-size: 0.86rem;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 8px 0;
+}
+
+.ai-copilot-input::placeholder {
+  color: #64748b;
+}
+
+.btn-copilot-generate {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+  transition: all 0.18s ease;
+}
+
+.btn-copilot-generate:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.45);
+}
+
+.copilot-chips-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.copilot-chips-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.copilot-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.copilot-chip:hover {
+  background: rgba(234, 88, 12, 0.18);
+  border-color: rgba(251, 146, 60, 0.4);
+  color: #fed7aa;
+  transform: translateY(-1px);
+}
+
+/* ---------------------------------------------------------------------
+   LUXURY AI EMPLOYEE CARDS
+   --------------------------------------------------------------------- */
+.ai-emp-grid-v2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 24px;
+  margin-top: 28px;
+  align-items: stretch;
+}
+
+.ai-emp-card-v2 {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(226, 232, 240, 0.6);
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-emp-card-v2:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 36px -6px rgba(15, 23, 42, 0.09), 0 0 0 1px #cbd5e1;
+}
+
+.ai-emp-card-v2.active-closer {
+  border: 1.5px solid #fed7aa;
+  background: linear-gradient(180deg, #fffcf9 0%, #ffffff 35%);
+  box-shadow: 0 12px 32px -4px rgba(234, 88, 12, 0.1), 0 0 0 1.5px rgba(234, 88, 12, 0.25);
+}
+
+.ai-emp-card-v2.active-closer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ea580c 0%, #f97316 100%);
+}
+
+.ai-emp-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.ai-emp-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-emp-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #ffffff;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ai-emp-avatar .online-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.4);
+}
+
+.ai-emp-name-block {
+  min-width: 0;
+}
+
+.ai-emp-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.015em;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.ai-emp-specialty {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #ea580c;
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
+.ai-emp-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ai-emp-status-badge.active {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.ai-emp-status-badge.approved {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.ai-emp-description {
+  font-size: 0.8rem;
+  color: #475569;
+  line-height: 1.55;
+  margin: 0 0 14px 0;
+}
+
+.ai-emp-tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.ai-emp-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4px 9px;
+  font-size: 0.71rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Audio Waveform & Speech Preview Bubble */
+.ai-speech-preview-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  position: relative;
+  transition: border-color 0.15s ease;
+}
+
+.ai-speech-preview-card:hover {
+  border-color: #fed7aa;
+}
+
+.ai-speech-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ai-speech-preview-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #ea580c;
+}
+
+.btn-preview-audio {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ffffff;
+  border: 1px solid #fed7aa;
+  color: #c2410c;
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-preview-audio:hover {
+  background: #fff7ed;
+  border-color: #ea580c;
+  transform: scale(1.02);
+}
+
+.ai-speech-text {
+  font-size: 0.77rem;
+  color: #1e293b;
+  line-height: 1.5;
+  font-family: 'Noto Sans Telugu', 'Noto Sans Devanagari', 'Inter', sans-serif;
+  font-style: normal;
+  position: relative;
+  margin: 0;
+}
+
+/* Card Bottom Action Bar */
+.ai-emp-actions-row {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-emp-active-pill {
+  flex: 1;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1.5px solid #fed7aa;
+  border-radius: 10px;
+  font-size: 0.77rem;
+  font-weight: 800;
+  cursor: default;
+}
+
+.btn-emp-deploy {
+  flex: 1;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.77rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  transition: all 0.18s ease;
+}
+
+.btn-emp-deploy:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.35);
+}
+
+.btn-emp-details {
+  height: 38px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-emp-details:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
 </style>
   <link rel="stylesheet" href="/static/css/calling-station.css?v=1.5">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3862,98 +4312,137 @@ input[type="checkbox"] {
 
 <!-- AI EMPLOYEES BUILDER & MANAGEMENT (MODULE 6 - OUTPERO STYLE) -->
       <!-- ============================================================= -->
-      <section style="margin-bottom: 55px;" id="employeesSection">
+      <section style="margin-bottom: 65px;" id="employeesSection">
         <div class="section-header-center">
           <span class="section-tag">AI Workforce Architecture</span>
           <h2 class="section-title">Autonomous AI Sales Employees</h2>
-          <p class="section-desc">Deploy specialized sales agents with distinct personalities, native voices, custom pitches, and automated meeting booking capabilities.</p>
+          <p class="section-desc">Deploy hyper-realistic Indian-language voice agents tailored to your business vertical. Each persona masters opening hooks, qualification trees, objection handling, and live appointment booking.</p>
         </div>
 
-        <!-- AI Assistant Generator Bar -->
-        <div class="card-panel" style="padding: 18px 24px; margin-top: 24px; background: linear-gradient(135deg, #faf8f5 0%, #fff7ed 100%); border: 1.5px solid #fed7aa;">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 280px;">
-              <div style="font-weight: 800; font-size: 0.95rem; color: #18181b; display: flex; align-items: center; gap: 8px;">
-                ✨ AI Employee Creation Assistant
-              </div>
-              <div style="font-size: 0.76rem; color: #ea580c; margin-top: 3px;">
-                Describe your desired persona in plain words — the assistant configures prompt, script & BANT criteria automatically.
-              </div>
+        <!-- Luxury AI Persona Architect & Copilot Bar -->
+        <div class="ai-copilot-panel">
+          <div class="ai-copilot-header">
+            <div>
+              <span class="ai-copilot-tag">✨ Instant Persona Architect</span>
+              <h3 class="ai-copilot-title">Design &amp; Deploy AI Closers in Seconds</h3>
+              <p class="ai-copilot-desc">Describe your target industry, customer objection pattern, and desired language. LeadCloser AI generates opening pitches, qualification scripts, and voice parameters automatically.</p>
             </div>
-            <div style="display: flex; gap: 8px; flex: 2; min-width: 300px;">
-              <input type="text" id="aiEmpPromptInput" placeholder="e.g. 'Create a Telugu-speaking closer who calls business owners and books software demos'" style="flex: 1; font-size: 0.8rem; background: #ffffff;" />
-              <button class="btn btn-primary" onclick="window.generateEmployeeWithAi()" id="btnGenerateAiEmp" style="white-space: nowrap; font-size: 0.78rem; font-weight: 700;">
-                ⚡ Generate Draft
-              </button>
-            </div>
+          </div>
+
+          <div class="ai-copilot-input-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            <input type="text" id="aiEmpPromptInput" class="ai-copilot-input" placeholder="e.g. 'Build a Telugu closer who pitches mobile app &amp; billing software to supermarkets in Hyderabad'" />
+            <button class="btn-copilot-generate" onclick="window.generateEmployeeWithAi()" id="btnGenerateAiEmp">
+              <span>Generate Persona</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+          </div>
+
+          <div class="copilot-chips-row">
+            <span class="copilot-chips-label">Quick Templates:</span>
+            <button type="button" class="copilot-chip" onclick="window.fillCopilotPrompt('Telugu-speaking Closer who pitches custom websites and SaaS platforms to business owners in Vijayawada')">
+              ⚡ Telugu SaaS Closer
+            </button>
+            <button type="button" class="copilot-chip" onclick="window.fillCopilotPrompt('Hindi B2B Sales Specialist who qualifies wholesale distributors for inventory and billing software')">
+              ⚡ Hindi ERP Specialist
+            </button>
+            <button type="button" class="copilot-chip" onclick="window.fillCopilotPrompt('English High-Ticket Software Consultant booking product demos for enterprise clients')">
+              ⚡ English Demo Consultant
+            </button>
+            <button type="button" class="copilot-chip" onclick="window.fillCopilotPrompt('Telugu & Hindi Real Estate Consultant qualifying buyers for gated community plots and apartments')">
+              ⚡ Real Estate Qualifier
+            </button>
           </div>
         </div>
 
-        <!-- Employees Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; margin-top: 24px;" id="employeesGridContainer">
+        <!-- Luxury AI Employees Grid -->
+        <div class="ai-emp-grid-v2" id="employeesGridContainer">
           {% for emp in employees %}
-          <div class="card-panel" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border: {% if emp.is_active %}2px solid #ea580c{% else %}1px solid var(--border-light){% endif %};">
+          <div class="ai-emp-card-v2 {% if emp.is_active %}active-closer{% endif %}">
             <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                <div>
-                  <div style="font-weight: 800; font-size: 1rem; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                    🤖 {{ emp.name }}
+              <!-- Top Row: Identity & Status -->
+              <div class="ai-emp-top-row">
+                <div class="ai-emp-identity">
+                  <div class="ai-emp-avatar" style="background: {% if emp.is_active %}linear-gradient(135deg, #ea580c 0%, #f97316 100%){% elif loop.index % 2 == 0 %}linear-gradient(135deg, #7c3aed 0%, #ec4899 100%){% else %}linear-gradient(135deg, #0284c7 0%, #6366f1 100%){% endif %};">
+                    {{ emp.name[:2]|upper }}
+                    <span class="online-dot"></span>
                   </div>
-                  <div style="font-size: 0.74rem; color: var(--primary); font-weight: 700; margin-top: 2px;">
-                    {{ emp.role }}
+                  <div class="ai-emp-name-block">
+                    <h3 class="ai-emp-title">{{ emp.name }}</h3>
+                    <div class="ai-emp-specialty">{{ emp.role }}</div>
                   </div>
                 </div>
 
                 <div>
                   {% if emp.is_active %}
-                  <span class="badge-tag live"><span class="pulse-dot"></span> Active Closer</span>
+                  <span class="ai-emp-status-badge active"><span class="pulse-dot"></span> Active Closer</span>
                   {% elif emp.status == 'approved' %}
-                  <span class="badge-tag" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">Approved</span>
+                  <span class="ai-emp-status-badge approved">● Approved</span>
                   {% else %}
-                  <span class="lead-status status-qualified">Draft Review</span>
+                  <span class="lead-status status-qualified">Ready</span>
                   {% endif %}
                 </div>
               </div>
 
-              <p style="font-size: 0.77rem; color: var(--text-secondary); line-height: 1.45; margin-bottom: 12px;">
+              <!-- Persona Objective / Description -->
+              <p class="ai-emp-description">
                 {{ emp.description or emp.calling_objective }}
               </p>
 
-              <!-- Speech & Language Pill -->
-              <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
-                <span class="badge-tag" style="background: #f8fafc; font-size: 0.7rem;">
-                  🌐 {{ emp.language }}
+              <!-- Technical Specification Badges -->
+              <div class="ai-emp-tags-grid">
+                <span class="ai-emp-tag-pill">
+                  🌐 {% if emp.language == 'te-IN' %}Telugu (Native){% elif emp.language == 'hi-IN' %}Hindi (Indic){% elif emp.language == 'en-IN' %}Indian English{% else %}{{ emp.language }}{% endif %}
                 </span>
-                <span class="badge-tag" style="background: #f8fafc; font-size: 0.7rem;">
+                <span class="ai-emp-tag-pill">
                   🎙️ {{ emp.voice_speaker }}
                 </span>
-                <span class="badge-tag" style="background: #f8fafc; font-size: 0.7rem;">
+                <span class="ai-emp-tag-pill">
                   ⏰ {{ emp.working_hours }}
+                </span>
+                <span class="ai-emp-tag-pill" style="color: #ea580c; border-color: #fed7aa; background: #fff7ed;">
+                  ⚡ Sarvam Bulbul V2
                 </span>
               </div>
 
-              <!-- Greeting Preview Box -->
-              <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 12px; font-size: 0.75rem; color: #334155; margin-bottom: 14px; font-style: italic;">
-                "{{ emp.greeting }}"
+              <!-- Interactive Opening Pitch & Audio Preview Card -->
+              <div class="ai-speech-preview-card">
+                <div class="ai-speech-preview-header">
+                  <span class="ai-speech-preview-label">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Live Pitch Hook
+                  </span>
+                  <button type="button" class="btn-preview-audio" onclick="window.playVoicePersona(this, '{{ emp.voice_speaker }}', {{ emp.greeting|tojson }})">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>Listen Voice</span>
+                  </button>
+                </div>
+                <p class="ai-speech-text">
+                  "{{ emp.greeting }}"
+                </p>
               </div>
             </div>
 
-            <div style="display: flex; gap: 8px;">
+            <!-- Action Buttons Footer -->
+            <div class="ai-emp-actions-row">
               {% if emp.is_active %}
-              <button class="btn btn-outline" disabled style="flex: 1; justify-content: center; font-size: 0.76rem; background: #fff7ed; color: #c2410c; border-color: #fed7aa;">
-                ✓ Deployed in Production
+              <button class="btn-emp-active-pill" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Active in Production</span>
               </button>
               {% elif emp.status == 'approved' %}
-              <button class="btn btn-primary" onclick="window.activateEmployee({{ emp.id }})" style="flex: 1; justify-content: center; font-size: 0.76rem;">
-                ⚡ Deploy Employee
+              <button class="btn-emp-deploy" onclick="window.activateEmployee({{ emp.id }})">
+                <span>Deploy Closer</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </button>
               {% else %}
-              <button class="btn btn-outline" onclick="window.approveEmployee({{ emp.id }})" style="flex: 1; justify-content: center; font-size: 0.76rem; background: #ecfdf5; color: #065f46; border-color: #a7f3d0;">
-                ✓ Approve Draft
+              <button class="btn-emp-deploy" onclick="window.approveEmployee({{ emp.id }})">
+                <span>Approve &amp; Deploy</span>
               </button>
               {% endif %}
-              <button class="btn btn-outline" onclick="window.openEmployeeDetails({{ emp.id }})" style="padding: 7px 12px; font-size: 0.76rem;">
-                ⚙️ View Persona
+              <button class="btn-emp-details" onclick="window.openEmployeeDetails({{ emp.id }})" title="Inspect complete prompt, pitch framework & BANT qualification rules">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span>Persona Rules</span>
               </button>
             </div>
           </div>
@@ -4172,6 +4661,56 @@ input[type="checkbox"] {
   
   <!-- Scripts for Landing Page -->
   <script src="/static/js/vendor/lucide.min.js"></script>
+  <script>
+    // Helper to autofill prompt from copilot suggestion chips
+    window.fillCopilotPrompt = function(promptText) {
+      const input = document.getElementById('aiEmpPromptInput');
+      if (input) {
+        input.value = promptText;
+        input.focus();
+      }
+    };
+
+    // Live Voice Pitch preview player for persona cards
+    window.playVoicePersona = async function(btn, speaker, greetingText) {
+      let audio = document.getElementById('voiceDemoAudio');
+      if (!audio) {
+        audio = document.createElement('audio');
+        audio.id = 'voiceDemoAudio';
+        document.body.appendChild(audio);
+      }
+      if (!audio.paused && audio._activePersonaBtn === btn) {
+        audio.pause();
+        btn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span>Listen Voice</span>';
+        return;
+      }
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '⏳ <span>Synthesizing...</span>';
+      try {
+        const resp = await fetch('/api/tts/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            speaker: speaker || 'kavitha_te_conversation',
+            text: greetingText || 'నమస్కారం అండి! నేను ఎస్ పి అసోసియేట్స్ నుండి మాట్లాడుతున్నాను.'
+          })
+        });
+        if (resp.ok) {
+          const blob = await resp.blob();
+          audio.src = URL.createObjectURL(blob);
+          audio._activePersonaBtn = btn;
+          audio.play();
+          btn.innerHTML = '⏸ <span>Pause</span>';
+          audio.onended = () => { btn.innerHTML = originalHtml; };
+        } else {
+          btn.innerHTML = originalHtml;
+        }
+      } catch (e) {
+        btn.innerHTML = originalHtml;
+      }
+    };
+
+  </script>
   <script>
     if (window.lucide) { lucide.createIcons(); }
     window.scrollToSection = function(id) {
