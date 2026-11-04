@@ -29,10 +29,16 @@ MISSED_CALL_WHATSAPP = "missed_call: we tried calling you"
 def _context(session, lead: Lead, now_utc: datetime) -> Dict[str, Any]:
     """What the follow-up engine needs to know about the lead's call history."""
     rows = session.query(Call.created_at, Call.talk_seconds).filter(Call.lead_id == lead.id).all()
-    times = [(as_utc(created), talk or 0) for created, talk in rows if created]
-    first = min([t for t, _ in times] + [as_utc(lead.created_at) or now_utc])
+    times: list[tuple[datetime, int]] = []
+    for created, talk in rows:
+        utc = as_utc(created)
+        if utc is not None:
+            times.append((utc, int(talk or 0)))
+    lead_created = as_utc(lead.created_at) if lead.created_at else None
+    first_candidates = [t for t, _ in times] + ([lead_created] if lead_created else [now_utc])
+    first = min(first_candidates)
     today_ist = now_utc.astimezone(IST).date()
-    answered = sorted(t for t, talk in times if talk > 0)
+    answered = sorted([t for t, talk in times if talk > 0])
     return {
         "days_since_first_contact": max(1, (now_utc - first).days + 1),
         "calls_today": sum(1 for t, _ in times if t.astimezone(IST).date() == today_ist),
