@@ -10,7 +10,9 @@ Leads are queued as CallJob rows (restart-safe). A background loop runs every se
        allowed  → dial through the configured provider (voice_agent/outbound.py)
   4. provider callbacks and the voice engine move jobs on:
        answered → in_progress → completed (call saved by the engine)
-       no answer / busy / failed → retry_scheduled (+2 h, ~next day, +2 days) → not_reachable
+       no answer / busy / failed → retry_scheduled (+2 h, next day at another time) → not_reachable
+  5. follow-ups (voice_agent/followups.py): after a conversation, or once a lead stays
+     unreachable, the next call is queued on the smart cadence until the lead decides
 
 All database work runs in a worker thread so live calls' audio is never blocked.
 """
@@ -26,15 +28,13 @@ from loguru import logger
 from core.db import SessionLocal
 from database import save_call_record
 from models import Account, CallJob, Lead
+from voice_agent import followups
 from voice_agent.outbound import DialError, DialRequest, get_dialer
 from voice_agent.rules import IST, as_utc, check_can_call, db_time, next_window_start
 
 OPEN_STATES = ("queued", "scheduled", "retry_scheduled", "dialing", "in_progress")
 WAITING_STATES = ("queued", "scheduled", "retry_scheduled")
 ACTIVE_STATES = ("dialing", "in_progress")
-
-# Delay before attempt N+1 after attempt N was not answered
-RETRY_DELAYS = {1: timedelta(hours=2), 2: timedelta(hours=21), 3: timedelta(hours=44)}
 
 DISPOSITIONS = {
     "no-answer": "no_answer", "no_answer": "no_answer", "noanswer": "no_answer", "timeout": "no_answer",
@@ -184,8 +184,10 @@ class CallQueue:
                 account = accounts.get(job.account_id) or session.get(Account, job.account_id)
                 accounts[job.account_id] = account
 
-                # a callback the customer asked for is not held back by "called recently"
-                is_retry = job.attempt > 0 or job.last_disposition == "callback_requested"
+                # a callback the customer asked for, or a follow-up already spaced out by the cadence,
+                # is not held back by "called recently"
+                is_retry = job.attempt > 0 or job.last_disposition in ("callback_requested",
+                                                                       followups.FOLLOWUP_DISPOSITION)
                 result = check_can_call(session, account, lead, now, is_retry=is_retry)
                 if result.status == "blocked":
                     job.state, job.block_reason = "blocked", result.reason
@@ -254,13 +256,17 @@ class CallQueue:
             if lead:
                 lead.last_outcome = "not_reachable"
             self.log(f"📵 {name}: not reachable after {job.attempt} attempts", "warning", job.lead_id)
+            self._log_followup(name, job.lead_id, followups.after_unreachable(session, job, utcnow()))
             return
-        delay = RETRY_DELAYS.get(job.attempt, timedelta(hours=44))
-        retry_at = utcnow() + delay
+        retry_at = followups.retry_time(job.attempt, utcnow())
         job.state = "retry_scheduled"
         job.next_attempt_at = db_time(session, retry_at)
         self.log(f"🔁 {name}: {disposition.replace('_', ' ')} · retry at "
                  f"{retry_at.astimezone(IST):%d %b %H:%M} IST", "info", job.lead_id)
+
+    def _log_followup(self, name: str, lead_id: int, next_call: Optional[datetime]):
+        if next_call:
+            self.log(f"📅 {name}: follow-up call at {next_call.astimezone(IST):%d %b %H:%M} IST", "info", lead_id)
 
     # ------------------------------------------------------------------ callbacks
     def on_answered(self, job_id: int):
@@ -294,10 +300,13 @@ class CallQueue:
             job.call_id = call_id
             job.last_disposition = outcome or "completed"
             job.finished_at = db_time(session, utcnow())
+            next_call = followups.after_conversation(session, job, outcome, utcnow())
             session.commit()
             lead = session.get(Lead, job.lead_id)
-            self.log(f"✅ Call with {lead.name if lead else job.lead_id} done · {(outcome or 'completed').replace('_', ' ')}",
+            name = lead.name if lead else str(job.lead_id)
+            self.log(f"✅ Call with {name} done · {(outcome or 'completed').replace('_', ' ')}",
                      "success", job.lead_id)
+            self._log_followup(name, job.lead_id, next_call)
         finally:
             session.close()
 
