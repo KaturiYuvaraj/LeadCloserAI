@@ -1344,10 +1344,13 @@ Your registered phone / client phone will ring shortly.`);
   // CRM VIEW SWITCHER (Dashboard, Leads, Calling Station, Campaigns, Automations, Analytics)
   // ===================================================================
   window.switchCrmView = (viewName) => {
-    // 1. Update left sidebar active button
+    // 1. Update left sidebar & top Outpero pill menu active button
     document.querySelectorAll(".crm-sidebar-menu .crm-nav-item").forEach(btn => btn.classList.remove("active"));
     const activeBtn = document.getElementById("navItem" + viewName.charAt(0).toUpperCase() + viewName.slice(1));
     if (activeBtn) activeBtn.classList.add("active");
+    document.querySelectorAll(".crm-top-pill-nav .crm-top-pill-link[data-crm-view]").forEach(btn => {
+      btn.classList.toggle("active", btn.getAttribute("data-crm-view") === viewName);
+    });
 
     // 2. Hide all sub-views and show the selected one
     const views = {

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LeadCloser AI - Dedicated CRM Calling Station & Pipeline Dashboard</title>
@@ -3303,7 +3303,7 @@ input[type="checkbox"] {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&family=Noto+Sans+Malayalam:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-</hea
+</head>
 <body class="crm-mode">
 
   <div id="viewCrm" class="view-crm-wrapper">
@@ -3394,22 +3394,32 @@ input[type="checkbox"] {
 
       <!-- 2. MAIN CRM CONTENT VIEWPORT -->
       <main class="crm-app-main">
-        <!-- TOPBAR -->
-        <header class="crm-topbar">
+        <!-- TOPBAR (OUTPERO FLOATING PILL MENU BAR) -->
+        <header class="crm-topbar outpero-crm-pillbar">
           <div class="crm-top-search-wrap">
             <svg class="crm-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <input type="text" class="crm-top-search-input" id="globalCrmSearch" placeholder="Search leads, calls, or campaigns..." />
             <kbd class="crm-kbd-shortcut">⌘ K</kbd>
           </div>
 
+          <nav class="crm-top-pill-nav" id="crmTopPillNav" aria-label="CRM Workspace Menu">
+            <button type="button" class="crm-top-pill-link" data-crm-view="dashboard" onclick="window.switchCrmView('dashboard')">Dashboard</button>
+            <button type="button" class="crm-top-pill-link" data-crm-view="leads" onclick="window.switchCrmView('leads')">Leads</button>
+            <button type="button" class="crm-top-pill-link active" data-crm-view="calling" onclick="window.switchCrmView('calling')">Calling Station</button>
+            <button type="button" class="crm-top-pill-link" data-crm-view="campaigns" onclick="window.switchCrmView('campaigns')">Campaigns</button>
+            <button type="button" class="crm-top-pill-link" data-crm-view="automations" onclick="window.switchCrmView('automations')">Automations</button>
+            <button type="button" class="crm-top-pill-link" data-crm-view="analytics" onclick="window.switchCrmView('analytics')">Analytics</button>
+          </nav>
+
           <div class="crm-topbar-right">
+            <a href="/" class="crm-top-pill-link" style="text-decoration: none;" title="Back to Overview Website">Website ↗</a>
             {% if current_user %}
-            <a href="/login" class="crm-action-pill" style="text-decoration: none; height: 32px; font-size: 0.74rem; font-weight: 700; color: #059669; border-color: #a7f3d0; background: #ecfdf5;" title="Signed in as {{ current_user.email }} ({{ current_user.role }})">
+            <a href="/login" class="crm-action-pill" style="text-decoration: none; height: 34px; border-radius: 9999px; font-size: 0.74rem; font-weight: 700; color: #059669; border-color: #a7f3d0; background: #ecfdf5;" title="Signed in as {{ current_user.email }} ({{ current_user.role }})">
               <span>👤 {{ current_user.email }} · {{ current_user.role|upper }}</span>
             </a>
             {% else %}
-            <a href="/login" class="crm-action-pill" style="text-decoration: none; height: 32px; font-size: 0.74rem; font-weight: 700; color: #ea580c; border-color: #fed7aa; background: #fff7ed;" title="Sign in to your team account">
-              <span>🔐 Team Sign In</span>
+            <a href="/login" class="crm-action-pill" style="text-decoration: none; height: 34px; border-radius: 9999px; font-size: 0.74rem; font-weight: 700; color: #ea580c; border-color: #fed7aa; background: #fff7ed;" title="Sign in to your team account">
+              <span>🔐 Sign in</span>
             </a>
             {% endif %}
             <button class="crm-notif-btn" title="Notifications">
