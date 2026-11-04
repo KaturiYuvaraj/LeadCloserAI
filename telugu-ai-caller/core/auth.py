@@ -121,7 +121,7 @@ def _extract_raw_token(request: Request) -> Optional[str]:
     auth_header = request.headers.get("Authorization") or request.headers.get("authorization")
     if auth_header and auth_header.lower().startswith("bearer "):
         return auth_header.split(" ", 1)[1].strip()
-    cookie_token = request.cookies.get(COOKIE_NAME)
+    cookie_token = request.cookies.get(COOKIE_NAME) or request.cookies.get("lc_access_token")
     if cookie_token:
         return cookie_token.strip()
     return None
@@ -173,7 +173,7 @@ def get_optional_user(request: Request) -> Optional[Dict[str, Any]]:
     If no token is provided, raises 401 only when `AUTH_STRICT=true` or `X-Require-Auth: 1` is set.
     """
     auth_header = request.headers.get("Authorization") or request.headers.get("authorization")
-    cookie_token = request.cookies.get(COOKIE_NAME)
+    cookie_token = request.cookies.get(COOKIE_NAME) or request.cookies.get("lc_access_token")
     strict_mode = (
         os.getenv("AUTH_STRICT", "false").lower() == "true"
         or request.headers.get("X-Require-Auth") == "1"

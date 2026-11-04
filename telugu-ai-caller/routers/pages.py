@@ -51,10 +51,12 @@ async def serve_landing(request: Request):
 async def serve_crm(request: Request):
     """
     Dedicated CRM Application Shell.
-    Contains the 3-column Calling Station, Executive Dashboard, Leads Table,
-    Autonomous Campaigns Manager, Automations, and Analytics.
+    Redirects unauthenticated users to /login immediately.
     """
     current_user = get_optional_user(request)
+    if not current_user:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login?next=" + request.url.path, status_code=302)
     account_id = get_request_account_id(request)
     profile = get_company_profile()
     leads = get_all_leads(account_id=account_id)

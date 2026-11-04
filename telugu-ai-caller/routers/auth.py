@@ -39,8 +39,11 @@ VALID_ROLES = {"owner", "admin", "manager", "salesperson", "member"}
 
 @router.get("/login", response_class=HTMLResponse)
 async def serve_login_page(request: Request):
-    """Serve the LeadCloser AI team login page."""
+    """Serve the LeadCloser AI team login page. Redirects authenticated users to CRM."""
     user = get_optional_user(request)
+    if user:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/crm", status_code=302)
     return templates.TemplateResponse(request, "login.html", {"current_user": user})
 
 
@@ -102,6 +105,14 @@ async def api_login(payload: Dict[str, Any], request: Request, response: Respons
 
         response.set_cookie(
             key=COOKIE_NAME,
+            value=token,
+            httponly=True,
+            max_age=TOKEN_TTL_SECONDS,
+            samesite="lax",
+            path="/",
+        )
+        response.set_cookie(
+            key="lc_access_token",
             value=token,
             httponly=True,
             max_age=TOKEN_TTL_SECONDS,
@@ -189,6 +200,14 @@ async def api_register(payload: Dict[str, Any], request: Request, response: Resp
             samesite="lax",
             path="/",
         )
+        response.set_cookie(
+            key="lc_access_token",
+            value=token,
+            httponly=True,
+            max_age=TOKEN_TTL_SECONDS,
+            samesite="lax",
+            path="/",
+        )
 
         return {
             "success": True,
@@ -210,6 +229,7 @@ async def api_register(payload: Dict[str, Any], request: Request, response: Resp
 @router.post("/api/auth/logout")
 async def api_logout(response: Response):
     response.delete_cookie(key=COOKIE_NAME, path="/")
+    response.delete_cookie(key="lc_access_token", path="/")
     return {"success": True, "message": "Logged out successfully."}
 
 

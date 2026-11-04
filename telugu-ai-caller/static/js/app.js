@@ -1344,6 +1344,10 @@ Your registered phone / client phone will ring shortly.`);
   // CRM VIEW SWITCHER (Dashboard, Leads, Calling Station, Campaigns, Automations, Analytics)
   // ===================================================================
   window.switchCrmView = (viewName) => {
+    // Normalize aliases
+    if (viewName === "createEmployee") viewName = "newEmployee";
+    if (viewName === "training") viewName = "trainEmployees";
+
     // 1. Update left sidebar active button
     document.querySelectorAll(".crm-sidebar-menu .crm-nav-item").forEach(btn => btn.classList.remove("active"));
     const activeBtn = document.getElementById("navItem" + viewName.charAt(0).toUpperCase() + viewName.slice(1));
@@ -1356,6 +1360,12 @@ Your registered phone / client phone will ring shortly.`);
       leads: document.getElementById("crmViewLeads"),
       campaigns: document.getElementById("crmViewCampaigns"),
       employees: document.getElementById("crmViewEmployees"),
+      newEmployee: document.getElementById("crmViewNewEmployee"),
+      talkEmployee: document.getElementById("crmViewTalkEmployee"),
+      inbound: document.getElementById("crmViewInbound"),
+      conversations: document.getElementById("crmViewConversations"),
+      trainEmployees: document.getElementById("crmViewTrainEmployees"),
+      phoneNumbers: document.getElementById("crmViewPhoneNumbers"),
       followups: document.getElementById("crmViewFollowups") || document.getElementById("crmViewAutomations"),
       automations: document.getElementById("crmViewFollowups") || document.getElementById("crmViewAutomations"),
       analytics: document.getElementById("crmViewAnalytics"),
@@ -1377,18 +1387,18 @@ Your registered phone / client phone will ring shortly.`);
     const pageActions = document.getElementById("crmPageActions");
 
     if (pageTitle && pageSub) {
-      if (viewName === "calling") {
+      if (viewName === "dashboard") {
+        pageTitle.innerText = "Executive Sales Overview & Telemetry";
+        pageSub.innerText = "Real-time AI metrics, conversion funnel, priority leads, and team activity";
+        if (pageActions) pageActions.style.display = "flex";
+      } else if (viewName === "calling") {
         pageTitle.innerText = "Calling Station & Live AI Workspace";
         pageSub.innerText = "Real-time conversation pipeline, intelligent scripts, and live deal closing";
-        if (pageActions) pageActions.style.display = "flex";
-      } else if (viewName === "dashboard") {
-        pageTitle.innerText = "Executive Performance Overview";
-        pageSub.innerText = "Real-time metrics, conversion funnel, upcoming follow-ups, and deal activity";
         if (pageActions) pageActions.style.display = "flex";
       } else if (viewName === "leads") {
         pageTitle.innerText = "Lead Directory & Pipeline Management";
         pageSub.innerText = "Manage prospect records, upload CSV/Excel, and track conversion stages";
-        if (pageActions) pageActions.style.display = "none";
+        if (pageActions) pageActions.style.display = "flex";
       } else if (viewName === "campaigns") {
         pageTitle.innerText = "Outbound Batch Campaigns";
         pageSub.innerText = "Batch dial prospects with multilingual AI sales employees";
@@ -1399,6 +1409,30 @@ Your registered phone / client phone will ring shortly.`);
         pageSub.innerText = "Configure multi-lingual closing personas, pitch scripts, and voice models";
         if (pageActions) pageActions.style.display = "none";
         if (window.loadEmployeesView) window.loadEmployeesView();
+      } else if (viewName === "newEmployee") {
+        pageTitle.innerText = "Deploy New AI Sales Representative";
+        pageSub.innerText = "Define voice persona, target language, opening pitch, and objection handling rules";
+        if (pageActions) pageActions.style.display = "none";
+      } else if (viewName === "talkEmployee") {
+        pageTitle.innerText = "Interactive Voice Testing Sandbox";
+        pageSub.innerText = "Test speech-to-text, LLM responses, and voice output live in your browser";
+        if (pageActions) pageActions.style.display = "none";
+      } else if (viewName === "inbound") {
+        pageTitle.innerText = "Inbound Virtual Receptionist & Routing";
+        pageSub.innerText = "24/7 multilingual call answering, inquiry classification, and human escalation";
+        if (pageActions) pageActions.style.display = "none";
+      } else if (viewName === "conversations") {
+        pageTitle.innerText = "All Call Recordings & Summaries";
+        pageSub.innerText = "Inspect transcripts, listen to audio recordings, and view AI-generated insights";
+        if (pageActions) pageActions.style.display = "none";
+      } else if (viewName === "trainEmployees") {
+        pageTitle.innerText = "Train Employees · Knowledge Base & FAQs";
+        pageSub.innerText = "Upload company brochures, pricing documents, and objection resolutions";
+        if (pageActions) pageActions.style.display = "none";
+      } else if (viewName === "phoneNumbers") {
+        pageTitle.innerText = "Carrier Numbers & Outbound Caller IDs";
+        pageSub.innerText = "Virtual phone numbers, country codes, SMS enablement, and routing rules";
+        if (pageActions) pageActions.style.display = "none";
       } else if (viewName === "followups" || viewName === "automations") {
         pageTitle.innerText = "Follow-up Reminders & Cadence";
         pageSub.innerText = "Scheduled prospect callbacks, automated WhatsApp outreach, and review queues";
@@ -1425,7 +1459,7 @@ Your registered phone / client phone will ring shortly.`);
         if (pageActions) pageActions.style.display = "none";
         if (window.loadBillingView) window.loadBillingView();
       } else if (viewName === "settings") {
-        pageTitle.innerText = "Organization Settings & Compliance";
+        pageTitle.innerText = "Organization Settings & Profile";
         pageSub.innerText = "Company branding, operational calling hours, and opt-out registry";
         if (pageActions) pageActions.style.display = "none";
         if (window.loadSettingsView) window.loadSettingsView();
@@ -1433,7 +1467,6 @@ Your registered phone / client phone will ring shortly.`);
     }
   };
 
-  // 4. Data Loaders for New Views
   window.loadEmployeesView = async () => {
     const grid = document.getElementById("crmEmployeesGrid");
     if (!grid) return;
@@ -3050,22 +3083,266 @@ Lead updated to DEMO_BOOKED.`);
   if (!activeRoute && initialPath && initialPath !== "crm") {
     activeRoute = initialPath;
   }
-  if (!activeRoute && document.getElementById("viewCrm")) {
-    activeRoute = "calling";
+  if (!activeRoute && (document.getElementById("viewCrm") || document.getElementById("crmAppSidebar"))) {
+    activeRoute = "dashboard";
   }
 
-  if (activeRoute === "crm" || activeRoute === "calling") {
-    window.switchCrmView("calling");
-  } else if (activeRoute === "dashboard") {
+  if (activeRoute === "crm" || activeRoute === "dashboard") {
     window.switchCrmView("dashboard");
+  } else if (activeRoute === "calling") {
+    window.switchCrmView("calling");
   } else if (activeRoute === "leads") {
     window.switchCrmView("leads");
   } else if (activeRoute === "campaigns") {
     window.switchCrmView("campaigns");
-  } else if (activeRoute === "automations") {
-    window.switchCrmView("automations");
+  } else if (activeRoute === "employees") {
+    window.switchCrmView("employees");
+  } else if (activeRoute === "newemployee") {
+    window.switchCrmView("newEmployee");
+  } else if (activeRoute === "talkemployee") {
+    window.switchCrmView("talkEmployee");
+  } else if (activeRoute === "inbound") {
+    window.switchCrmView("inbound");
+  } else if (activeRoute === "conversations") {
+    window.switchCrmView("conversations");
+  } else if (activeRoute === "trainemployees" || activeRoute === "training") {
+    window.switchCrmView("trainEmployees");
+  } else if (activeRoute === "phonenumbers") {
+    window.switchCrmView("phoneNumbers");
+  } else if (activeRoute === "billing") {
+    window.switchCrmView("billing");
+  } else if (activeRoute === "settings") {
+    window.switchCrmView("settings");
+  } else if (activeRoute === "developer") {
+    window.switchCrmView("developer");
+  } else if (activeRoute === "automations" || activeRoute === "followups") {
+    window.switchCrmView("followups");
   } else if (activeRoute === "analytics") {
     window.switchCrmView("analytics");
+  } else {
+    window.switchCrmView("dashboard");
   }
+
+
+
+  // ===================================================================
+  // OUTPERO LUXURY CRM CONTROLS & TELEMETRY
+  // ===================================================================
+
+  // 1. Sidebar Collapse Toggle & State Persistence
+  window.toggleSidebar = () => {
+    const sidebar = document.getElementById("crmAppSidebar");
+    if (!sidebar) return;
+    const isCollapsed = sidebar.classList.toggle("collapsed");
+    localStorage.setItem("lc_sidebar_collapsed", isCollapsed ? "1" : "0");
+  };
+
+  // Restore sidebar state
+  if (localStorage.getItem("lc_sidebar_collapsed") === "1") {
+    const sidebar = document.getElementById("crmAppSidebar");
+    if (sidebar) sidebar.classList.add("collapsed");
+  }
+
+  // 2. Account Dropdown Toggle
+  window.toggleAccountDropdown = () => {
+    const dd = document.getElementById("crmAccountDropdown");
+    if (!dd) return;
+    dd.style.display = (dd.style.display === "none" || !dd.style.display) ? "block" : "none";
+  };
+
+  document.addEventListener("click", (e) => {
+    const wrapper = document.getElementById("crmAccountWrapper");
+    const dd = document.getElementById("crmAccountDropdown");
+    if (wrapper && dd && !wrapper.contains(e.target)) {
+      dd.style.display = "none";
+    }
+  });
+
+  // 3. User Sign Out
+  window.logoutUser = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (_) {}
+    localStorage.removeItem("lc_access_token");
+    localStorage.removeItem("lc_user");
+    window.location.href = "/login";
+  };
+
+  // 4. Setup Reminder Card Handlers (Optional, non-blocking)
+  window.dismissSetupReminder = () => {
+    const card = document.getElementById("crmSetupReminderCard");
+    if (card) card.style.display = "none";
+    localStorage.setItem("lc_setup_dismissed", "1");
+  };
+
+  if (localStorage.getItem("lc_setup_dismissed") === "1") {
+    const card = document.getElementById("crmSetupReminderCard");
+    if (card) card.style.display = "none";
+  }
+
+  window.saveQuickSetupReminder = async () => {
+    const name = (document.getElementById("setupReminderName")?.value || "").trim();
+    const biz = (document.getElementById("setupReminderBiz")?.value || "").trim();
+    const phone = (document.getElementById("setupReminderPhone")?.value || "").trim();
+
+    try {
+      const resp = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ company_name: biz, phone: phone, owner_name: name })
+      });
+      if (resp.ok) {
+        alert("Account setup details saved successfully!");
+        window.dismissSetupReminder();
+      } else {
+        alert("Failed to save profile details.");
+      }
+    } catch (err) {
+      alert("Network error: " + err.message);
+    }
+  };
+
+  // 5. Live Telemetry Poller (Dialer & Audio Pipeline Status)
+  window.pollLiveTelemetry = async () => {
+    try {
+      const resp = await fetch("/api/dialer/status");
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const counts = data.counts || {};
+      const inProgress = counts["in_progress"] || 0;
+      const ringing = counts["ringing"] || 0;
+      const activeTotal = inProgress + ringing;
+
+      const elActive = document.getElementById("telemActiveCalls");
+      const elRate = document.getElementById("telemCallRate");
+      const elTalking = document.getElementById("telemTalkingCount");
+      const elRinging = document.getElementById("telemRingingCount");
+      const elTeamWorking = document.getElementById("sidebarTeamWorkingPill");
+
+      if (elActive) elActive.innerText = activeTotal;
+      if (elRate) elRate.innerText = (activeTotal * 1.2).toFixed(1);
+      if (elTalking) elTalking.innerText = inProgress;
+      if (elRinging) elRinging.innerText = ringing;
+      if (elTeamWorking) {
+        elTeamWorking.innerText = `${activeTotal} working`;
+        if (activeTotal > 0) {
+          elTeamWorking.classList.add("active");
+        } else {
+          elTeamWorking.classList.remove("active");
+        }
+      }
+    } catch (_) {}
+  };
+
+  // Poll telemetry every 10 seconds
+  setInterval(window.pollLiveTelemetry, 10000);
+  setTimeout(window.pollLiveTelemetry, 1200);
+
+  // 6. Interactive Voice Sandbox for Talk to Employee View
+  window.toggleSandboxVoice = async () => {
+    const btn = document.getElementById("sandboxMicBtn");
+    const status = document.getElementById("sandboxStatusText");
+    const streamBox = document.getElementById("sandboxTranscriptBox");
+    const empSelect = document.getElementById("sandboxEmpSelect");
+    const empId = empSelect ? empSelect.value : 1;
+
+    if (!window._sandboxActive) {
+      window._sandboxActive = true;
+      if (btn) {
+        btn.style.background = "#dc2626";
+        btn.style.borderColor = "#ef4444";
+        btn.style.color = "#ffffff";
+        btn.innerText = "⏹️";
+      }
+      if (status) status.innerText = "Listening... Speak now";
+      if (streamBox) {
+        streamBox.innerHTML = `
+          <div style="padding: 10px 14px; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0; align-self: flex-start; max-width: 80%;">
+            <strong>AI Rep:</strong> నమస్కారం! నేను LeadCloser AI నుండి మాట్లాడుతున్నాను. మీ వ్యాపారం కోసం మేము ఎలా సహాయపడగలం?
+          </div>
+        `;
+      }
+      try {
+        const resp = await fetch(`/api/employees/${empId}/test`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: "Hello, testing the trilingual sales rep." })
+        });
+        const data = await resp.json();
+        if (data && streamBox) {
+          const reply = data.reply || data.response || "Our AI sales employee is connected on the live audio channel.";
+          const msgDiv = document.createElement("div");
+          msgDiv.style.cssText = "padding: 10px 14px; background: #f3e8ff; border-radius: 8px; border: 1px solid #ddd6fe; align-self: flex-start; max-width: 80%; margin-top: 8px;";
+          msgDiv.innerHTML = `<strong>AI Rep (${data.language || 'te-IN'}):</strong> ${reply}`;
+          streamBox.appendChild(msgDiv);
+        }
+      } catch (err) {
+        console.warn("Sandbox test call note:", err);
+      }
+    } else {
+      window._sandboxActive = false;
+      if (btn) {
+        btn.style.background = "#f3e8ff";
+        btn.style.borderColor = "#7c3aed";
+        btn.style.color = "#7c3aed";
+        btn.innerText = "🎙️";
+      }
+      if (status) status.innerText = "Call ended · Ready to test";
+    }
+  };
+
+  // 7. Deploy New AI Employee from Wizard
+  window.deployNewEmployee = async () => {
+    const name = document.getElementById("wizEmpName")?.value;
+    const role = document.getElementById("wizEmpRole")?.value;
+    const language = document.getElementById("wizEmpLanguage")?.value;
+    const voice = document.getElementById("wizEmpVoice")?.value;
+    const pitch = document.getElementById("wizEmpPitch")?.value;
+    const instructions = document.getElementById("wizEmpInstructions")?.value;
+
+    try {
+      const resp = await fetch("/api/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          role,
+          language,
+          voice,
+          prompt: `${pitch}\n\nGuidelines: ${instructions}`,
+          specialty: role
+        })
+      });
+      if (resp.ok) {
+        alert(`AI Employee '${name}' deployed successfully!`);
+        window.switchCrmView("employees");
+      } else {
+        alert("Failed to deploy employee. Check input fields.");
+      }
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
+
+  // 8. Test Call Employee Shortcut
+  window.testCallEmployee = (empId) => {
+    window.switchCrmView("talkEmployee");
+    const select = document.getElementById("sandboxEmpSelect");
+    if (select && empId) select.value = empId;
+  };
+
+  // 9. Global CRM Search Filter
+  window.handleGlobalSearch = (val) => {
+    val = (val || "").toLowerCase().trim();
+    if (!val) return;
+    // If user is searching and enters something, switch to leads or filter
+    if (val.length >= 2) {
+      const leadRows = document.querySelectorAll("#crmLeadsTableBody tr");
+      leadRows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(val) ? "" : "none";
+      });
+    }
+  };
 
 });

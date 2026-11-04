@@ -49,28 +49,52 @@ body.crm-mode {
   color: #0f172a;
 }
 
-/* ---------- LEFT SIDEBAR (~220px) ---------- */
+/* ---------- LEFT SIDEBAR (~240px Outpero Standard, Collapsible to 68px) ---------- */
 .crm-app-sidebar {
-  width: 220px;
-  min-width: 220px;
+  width: 240px;
+  min-width: 240px;
   height: 100vh;
   background: #ffffff;
   border-right: 1px solid #f1f5f9;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 18px 12px 16px 12px;
+  padding: 14px 10px 14px 10px;
   box-sizing: border-box;
   flex-shrink: 0;
   user-select: none;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  z-index: 100;
+}
+
+.crm-app-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+.crm-app-sidebar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 4px;
+}
+
+/* Sidebar Brand Header */
+.crm-sidebar-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 12px 6px;
+  border-bottom: 1px solid #f8fafc;
+  margin-bottom: 6px;
 }
 
 .crm-sidebar-brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 4px 8px 18px 8px;
   cursor: pointer;
+  text-decoration: none;
+  min-width: 0;
 }
 
 .crm-sidebar-logo-icon {
@@ -79,11 +103,18 @@ body.crm-mode {
   flex-shrink: 0;
 }
 
+.crm-brand-text-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .crm-brand-name {
-  font-size: 1.12rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .crm-brand-name strong {
@@ -93,15 +124,73 @@ body.crm-mode {
 
 .crm-brand-name .ai-suffix {
   font-weight: 500;
-  color: #64748b;
+  color: #7c3aed;
 }
 
+.crm-brand-subtag {
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: #059669;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.crm-brand-subtag-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+.crm-sidebar-toggle-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.crm-sidebar-toggle-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+/* Sidebar Sections & Navigation */
 .crm-sidebar-menu {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
-  padding-top: 6px;
+}
+
+.crm-sidebar-section-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 10px 10px 4px 10px;
+  user-select: none;
 }
 
 .crm-nav-item {
@@ -109,9 +198,9 @@ body.crm-mode {
   align-items: center;
   gap: 11px;
   width: 100%;
-  padding: 9px 14px;
-  border-radius: 9999px;
-  font-size: 0.84rem;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.83rem;
   font-weight: 500;
   color: #475569;
   background: transparent;
@@ -119,6 +208,8 @@ body.crm-mode {
   cursor: pointer;
   text-align: left;
   transition: all 0.15s ease;
+  position: relative;
+  text-decoration: none;
 }
 
 .crm-nav-item:hover {
@@ -126,14 +217,15 @@ body.crm-mode {
   color: #0f172a;
 }
 
+/* Outpero Luxury Active Nav Item Signature */
 .crm-nav-item.active {
-  background: #ffedd5 !important;
-  color: #ea580c !important;
+  background: #f3e8ff !important;
+  color: #7c3aed !important;
   font-weight: 700 !important;
 }
 
 .crm-nav-item.active svg {
-  stroke: #ea580c !important;
+  stroke: #7c3aed !important;
 }
 
 .crm-nav-icon {
@@ -142,16 +234,125 @@ body.crm-mode {
   flex-shrink: 0;
   stroke: currentColor;
   stroke-width: 2;
+  transition: stroke 0.15s ease;
 }
 
+.crm-nav-badge {
+  margin-left: auto;
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.crm-nav-item.active .crm-nav-badge {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+/* Bottom "Your team" Widget & Legal Footer */
 .crm-sidebar-footer {
   padding-top: 12px;
   border-top: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.crm-help-btn {
+.crm-team-widget {
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.crm-team-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+.crm-team-widget-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.crm-team-pill {
+  font-size: 0.67rem;
+  font-weight: 600;
   color: #64748b;
-  font-size: 0.82rem;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  padding: 2px 7px;
+}
+
+.crm-team-pill.active {
+  color: #059669;
+  background: #ecfdf5;
+}
+
+.crm-team-widget-sub {
+  font-size: 0.71rem;
+  color: #94a3b8;
+}
+
+.crm-sidebar-legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  padding: 0 4px;
+}
+
+.crm-sidebar-legal-links a {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.crm-sidebar-legal-links a:hover {
+  color: #7c3aed;
+}
+
+/* ---------- COLLAPSED SIDEBAR STATE (68px) ---------- */
+.crm-app-sidebar.collapsed {
+  width: 68px;
+  min-width: 68px;
+  padding: 14px 6px 14px 6px;
+}
+
+.crm-app-sidebar.collapsed .crm-brand-text-block,
+.crm-app-sidebar.collapsed .crm-sidebar-section-title,
+.crm-app-sidebar.collapsed .crm-nav-item span,
+.crm-app-sidebar.collapsed .crm-nav-badge,
+.crm-app-sidebar.collapsed .crm-team-widget,
+.crm-app-sidebar.collapsed .crm-sidebar-legal-links {
+  display: none !important;
+}
+
+.crm-app-sidebar.collapsed .crm-sidebar-header-row {
+  justify-content: center;
+  padding: 4px 0 12px 0;
+}
+
+.crm-app-sidebar.collapsed .crm-sidebar-brand {
+  margin: 0 auto;
+}
+
+.crm-app-sidebar.collapsed .crm-sidebar-toggle-btn {
+  display: none;
+}
+
+.crm-app-sidebar.collapsed .crm-nav-item {
+  justify-content: center;
+  padding: 10px;
+  width: 44px;
+  margin: 0 auto;
 }
 
 /* ---------- MAIN VIEWPORT AREA ---------- */
@@ -1430,4 +1631,470 @@ body.crm-mode {
 
 .modal-overlay.open {
   display: flex !important;
+}
+
+/* =====================================================================
+   OUTPERO TOPBAR & DASHBOARD LUXURY EXTENSIONS
+   ===================================================================== */
+
+/* Topbar Left Controls */
+.crm-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.crm-topbar-collapse-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.crm-topbar-collapse-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+/* Outpero Center/Right Live Telemetry Pill */
+.crm-telemetry-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 9999px;
+  padding: 4px 14px;
+  line-height: 1.25;
+  cursor: default;
+  user-select: none;
+  min-width: 140px;
+}
+
+.crm-telem-top {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #047857;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.crm-telem-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+.crm-telem-sub {
+  font-size: 0.66rem;
+  color: #059669;
+  font-weight: 500;
+}
+
+/* Outpero Usage / Talk-Time Wallet Pill */
+.crm-usage-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 4px 6px 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.crm-usage-pill:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.crm-wallet-minutes {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.crm-wallet-add-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #7c3aed;
+  color: #ffffff;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.crm-wallet-add-btn:hover {
+  background: #6d28d9;
+  transform: scale(1.08);
+}
+
+/* Outpero Topbar Circle Action Buttons */
+.crm-icon-circle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  text-decoration: none;
+}
+
+.crm-icon-circle-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.crm-icon-circle-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* User Account Chip & Outpero Dropdown */
+.crm-account-menu-wrapper {
+  position: relative;
+}
+
+.crm-account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 3px 12px 3px 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.crm-account-trigger:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.crm-account-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #7c3aed;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.crm-account-meta {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  max-width: 150px;
+}
+
+.crm-account-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.crm-account-email {
+  font-size: 0.68rem;
+  color: #64748b;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crm-account-chevron {
+  width: 14px;
+  height: 14px;
+  stroke: #94a3b8;
+  stroke-width: 2;
+}
+
+.crm-account-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 240px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  padding: 8px;
+  z-index: 1000;
+}
+
+.crm-account-dropdown-header {
+  padding: 8px 10px;
+}
+
+.crm-dropdown-user-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.crm-dropdown-user-email {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-bottom: 6px;
+  word-break: break-all;
+}
+
+.crm-role-tag {
+  display: inline-block;
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: #7c3aed;
+  background: #f3e8ff;
+  border-radius: 9999px;
+  padding: 2px 8px;
+}
+
+.crm-account-dropdown-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 6px 0;
+}
+
+.crm-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+
+.crm-dropdown-item:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.crm-dropdown-item-logout {
+  color: #dc2626;
+}
+
+.crm-dropdown-item-logout:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* Optional Setup Reminder Card */
+.crm-setup-reminder-card {
+  background: linear-gradient(135deg, #faf5ff 0%, #ffffff 100%);
+  border: 1.5px solid #e9d5ff;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.05);
+  position: relative;
+}
+
+.crm-setup-reminder-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.crm-setup-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.crm-setup-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.crm-setup-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.crm-setup-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.crm-setup-field label {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.crm-setup-field input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.crm-setup-field input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.crm-setup-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.crm-btn-purple {
+  padding: 9px 20px;
+  background: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.crm-btn-purple:hover {
+  background: #6d28d9;
+}
+
+.crm-btn-ghost {
+  padding: 9px 16px;
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.crm-btn-ghost:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* 6-Card KPI Grid */
+.crm-kpi-grid-6 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.crm-kpi-card-luxury {
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.crm-kpi-card-luxury:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.crm-kpi-card-luxury .kpi-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.crm-kpi-card-luxury .kpi-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.crm-kpi-card-luxury .kpi-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.crm-kpi-card-luxury .kpi-value {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.crm-kpi-card-luxury .kpi-sub {
+  font-size: 0.70rem;
+  color: #94a3b8;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }

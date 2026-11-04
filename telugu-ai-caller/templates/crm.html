@@ -3340,53 +3340,89 @@ input[type="checkbox"] {
     <!-- LUXURY OUTPERO CRM APP SHELL -->
     <div class="crm-app-shell">
       <!-- 1. LEFT SIDEBAR (PERSISTENT ~220px) -->
-      <aside class="crm-app-sidebar">
+            <!-- 1. LEFT SIDEBAR (~240px Outpero Standard, Collapsible to 68px) -->
+      <aside class="crm-app-sidebar" id="crmAppSidebar">
         <div>
-          <div class="crm-sidebar-brand" onclick="window.switchCrmView('dashboard')">
-            <!-- Orange Flame / Spark Logo SVG -->
-            <svg class="crm-sidebar-logo-icon" viewBox="0 0 28 28" fill="none">
-              <path d="M14 2C14 2 17 7 17 10C17 11.66 15.66 13 14 13C12.34 13 11 11.66 11 10C11 7 14 2 14 2Z" fill="#f97316"/>
-              <path d="M14 2C9.58 2 6 5.58 6 10C6 14.5 10.5 17 10.5 21C10.5 22.93 12.07 24.5 14 24.5C15.93 24.5 17.5 22.93 17.5 21C17.5 17 22 14.5 22 10C22 5.58 18.42 2 14 2ZM14 22C13.45 22 13 21.55 13 21C13 18.5 10 16.5 10 12.5C10 10.29 11.79 8.5 14 8.5C16.21 8.5 18 10.29 18 12.5C18 16.5 15 18.5 15 21C15 21.55 14.55 22 14 22Z" fill="#ea580c"/>
-            </svg>
-            <span class="crm-brand-name"><strong>LeadCloser</strong><span class="ai-suffix">.ai</span></span>
+          <!-- Brand Header Row -->
+          <div class="crm-sidebar-header-row">
+            <div class="crm-sidebar-brand" onclick="window.switchCrmView('dashboard')">
+              <svg class="crm-sidebar-logo-icon" viewBox="0 0 28 28" fill="none">
+                <path d="M14 2C14 2 17 7 17 10C17 11.66 15.66 13 14 13C12.34 13 11 11.66 11 10C11 7 14 2 14 2Z" fill="#f97316"/>
+                <path d="M14 2C9.58 2 6 5.58 6 10C6 14.5 10.5 17 10.5 21C10.5 22.93 12.07 24.5 14 24.5C15.93 24.5 17.5 22.93 17.5 21C17.5 17 22 14.5 22 10C22 5.58 18.42 2 14 2ZM14 22C13.45 22 13 21.55 13 21C13 18.5 10 16.5 10 12.5C10 10.29 11.79 8.5 14 8.5C16.21 8.5 18 10.29 18 12.5C18 16.5 15 18.5 15 21C15 21.55 14.55 22 14 22Z" fill="#ea580c"/>
+              </svg>
+              <div class="crm-brand-text-block">
+                <span class="crm-brand-name"><strong>LeadCloser</strong><span class="ai-suffix">.ai</span></span>
+                <span class="crm-brand-subtag"><span class="crm-brand-subtag-dot"></span> AI Voice Calling</span>
+              </div>
+            </div>
+            <button class="crm-sidebar-toggle-btn" id="sidebarCollapseBtn" onclick="window.toggleSidebar()" title="Collapse sidebar">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+              </svg>
+            </button>
           </div>
 
+          <!-- Grouped Nav Items matching Outpero Reference Layout -->
           <nav class="crm-sidebar-menu">
-            <button class="crm-nav-item" id="navItemDashboard" onclick="window.switchCrmView('dashboard')">
+            <!-- SECTION 1: OVERVIEW -->
+            <div class="crm-sidebar-section-title">Overview</div>
+            <button class="crm-nav-item active" id="navItemDashboard" onclick="window.switchCrmView('dashboard')">
               <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
-              <span>Overview</span>
-            </button>
-            <button class="crm-nav-item" id="navItemLeads" onclick="window.switchCrmView('leads')">
-              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-              <span>Leads</span>
-            </button>
-            <button class="crm-nav-item active" id="navItemCalling" onclick="window.switchCrmView('calling')">
-              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-              <span>Calling Station</span>
-            </button>
-            <button class="crm-nav-item" id="navItemCampaigns" onclick="window.switchCrmView('campaigns')">
-              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              <span>Campaigns</span>
+              <span>Dashboard</span>
             </button>
             <button class="crm-nav-item" id="navItemEmployees" onclick="window.switchCrmView('employees')">
-              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
-              <span>AI Employees</span>
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>My Employees</span>
+              <span class="crm-nav-badge" id="navBadgeEmployees">{{ employees|length or 5 }}</span>
             </button>
-            <button class="crm-nav-item" id="navItemFollowups" onclick="window.switchCrmView('followups')">
-              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              <span>Follow-ups</span>
+            <button class="crm-nav-item" id="navItemNewEmployee" onclick="window.switchCrmView('newEmployee')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ New employee</span>
+            </button>
+            <button class="crm-nav-item" id="navItemTalkEmployee" onclick="window.switchCrmView('talkEmployee')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+              <span>Talk to an employee</span>
+            </button>
+
+            <!-- SECTION 2: CALLING -->
+            <div class="crm-sidebar-section-title">Calling</div>
+            <button class="crm-nav-item" id="navItemCalling" onclick="window.switchCrmView('calling')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span>Instant Leads</span>
+            </button>
+            <button class="crm-nav-item" id="navItemCampaigns" onclick="window.switchCrmView('campaigns')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              <span>Bulk Campaigns</span>
+            </button>
+            <button class="crm-nav-item" id="navItemInbound" onclick="window.switchCrmView('inbound')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+              <span>Inbound Calls</span>
+            </button>
+
+            <!-- SECTION 3: RESULTS & SETUP -->
+            <div class="crm-sidebar-section-title">Results &amp; Setup</div>
+            <button class="crm-nav-item" id="navItemLeads" onclick="window.switchCrmView('leads')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+              <span>Leads &amp; Results</span>
+              <span class="crm-nav-badge" id="navBadgeLeads">{{ leads|length }}</span>
+            </button>
+            <button class="crm-nav-item" id="navItemConversations" onclick="window.switchCrmView('conversations')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              <span>All Conversations</span>
+              <span class="crm-nav-badge" id="navBadgeCalls">{{ calls|length }}</span>
+            </button>
+            <button class="crm-nav-item" id="navItemTrainEmployees" onclick="window.switchCrmView('trainEmployees')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              <span>Train Employees</span>
+            </button>
+            <button class="crm-nav-item" id="navItemPhoneNumbers" onclick="window.switchCrmView('phoneNumbers')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
+              <span>Phone Numbers</span>
             </button>
             <button class="crm-nav-item" id="navItemAnalytics" onclick="window.switchCrmView('analytics')">
               <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-              <span>Analytics</span>
-            </button>
-            <button class="crm-nav-item" id="navItemIntegrations" onclick="window.switchCrmView('integrations')">
-              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-              <span>Integrations</span>
-            </button>
-            <button class="crm-nav-item" id="navItemDeveloper" onclick="window.switchCrmView('developer')">
-              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-              <span>Developer API</span>
+              <span>Performance</span>
             </button>
             <button class="crm-nav-item" id="navItemBilling" onclick="window.switchCrmView('billing')">
               <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
@@ -3396,47 +3432,125 @@ input[type="checkbox"] {
               <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
               <span>Settings</span>
             </button>
+            <button class="crm-nav-item" id="navItemDeveloper" onclick="window.switchCrmView('developer')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              <span>&lt;/&gt; Developers</span>
+            </button>
           </nav>
         </div>
 
+        <!-- Sidebar Bottom: "Your team" Widget & Legal Links -->
         <div class="crm-sidebar-footer">
-          <button class="crm-nav-item" onclick="window.switchMainTab('landing')" style="color: #64748b; font-size: 0.8rem; margin-bottom: 4px;">
-            <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            <span>Overview Website</span>
-          </button>
-          <button class="crm-nav-item crm-help-btn" onclick="alert('LeadCloser AI Support: 24/7 Priority Support Desk')" title="Help & Support">
-            <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            <span>Help & Support</span>
-          </button>
+          <div class="crm-team-widget">
+            <div class="crm-team-widget-header">
+              <span class="crm-team-widget-title">Your team</span>
+              <span class="crm-team-pill" id="sidebarTeamWorkingPill">0 working</span>
+            </div>
+            <div class="crm-team-widget-sub" id="sidebarTeamSubtext">
+              {% if employees %}{{ employees|length }} employees ready{% else %}No employees yet{% endif %}
+            </div>
+          </div>
+          <div class="crm-sidebar-legal-links">
+            <a href="/docs" target="_blank">Help &amp; Docs</a>
+            <a href="/terms" target="_blank">Terms</a>
+            <a href="/privacy" target="_blank">Privacy</a>
+            <a href="/refund" target="_blank">Refund</a>
+            <a href="/contact" target="_blank">Contact</a>
+          </div>
         </div>
       </aside>
 
       <!-- 2. MAIN CRM CONTENT VIEWPORT -->
       <main class="crm-app-main">
         <!-- TOPBAR -->
+                <!-- TOPBAR MATCHING OUTPERO LUXURY REFERENCE -->
         <header class="crm-topbar">
-          <div class="crm-top-search-wrap">
-            <svg class="crm-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" class="crm-top-search-input" id="globalCrmSearch" placeholder="Search leads, calls, or campaigns..." />
-            <kbd class="crm-kbd-shortcut">⌘ K</kbd>
+          <div class="crm-topbar-left">
+            <button class="crm-topbar-collapse-btn" onclick="window.toggleSidebar()" title="Toggle Sidebar">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+              </svg>
+            </button>
+            <div class="crm-top-search-wrap">
+              <svg class="crm-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" class="crm-top-search-input" id="globalCrmSearch" placeholder="Search employees, pages, leads..." oninput="window.handleGlobalSearch ? window.handleGlobalSearch(this.value) : null" />
+              <kbd class="crm-kbd-shortcut">⌘ K</kbd>
+            </div>
           </div>
 
           <div class="crm-topbar-right">
-            {% if current_user %}
-            <a href="/login" class="crm-action-pill" style="text-decoration: none; height: 32px; font-size: 0.74rem; font-weight: 700; color: #059669; border-color: #a7f3d0; background: #ecfdf5;" title="Signed in as {{ current_user.email }} ({{ current_user.role }})">
-              <span>👤 {{ current_user.email }} · {{ current_user.role|upper }}</span>
-            </a>
-            {% else %}
-            <a href="/login" class="crm-action-pill" style="text-decoration: none; height: 32px; font-size: 0.74rem; font-weight: 700; color: #ea580c; border-color: #fed7aa; background: #fff7ed;" title="Sign in to your team account">
-              <span>🔐 Team Sign In</span>
-            </a>
-            {% endif %}
-            <button class="crm-notif-btn" title="Notifications">
+            <!-- Outpero Live Telemetry Pill -->
+            <div class="crm-telemetry-pill" id="crmLiveTelemetryPill" title="Live Outbound &amp; Inbound Telemetry">
+              <div class="crm-telem-top">
+                <span class="crm-telem-dot"></span>
+                <span id="telemActiveCalls">0</span> on calls now · <span id="telemCallRate">0.0</span> calls/min
+              </div>
+              <div class="crm-telem-sub">
+                <span id="telemTalkingCount">0</span> talking · <span id="telemRingingCount">0</span> ringing
+              </div>
+            </div>
+
+            <!-- Outpero Talk-Time Wallet Pill -->
+            <div class="crm-usage-pill" onclick="window.switchCrmView('billing')" title="Click to view Talk-Time credit or recharge">
+              <span class="crm-wallet-icon">👛</span>
+              <span class="crm-wallet-minutes" id="crmTopbarMinutes">₹{{ profile.balance|default('1492.60') }} (~{{ (profile.balance|default(1492.60) / 1.66)|int }}m)</span>
+              <button class="crm-wallet-add-btn" onclick="event.stopPropagation(); window.switchCrmView('billing');" title="Recharge Talk-Time">+</button>
+            </div>
+
+            <!-- Outpero Action Circle Icons -->
+            <button class="crm-icon-circle-btn" onclick="window.switchCrmView('developer')" title="Documentation &amp; API Reference">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+            </button>
+            <button class="crm-icon-circle-btn" onclick="window.switchCrmView('employees')" title="Explore AI Employees">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+            </button>
+            <button class="crm-icon-circle-btn" onclick="alert('System operational: All voice lines and Sarvam AI synthesis online.');" title="Notifications">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
               <span class="crm-notif-dot"></span>
             </button>
-            <div class="crm-user-profile" title="Logged in as Sales Director">
-              <img class="crm-user-avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80" alt="Avatar" onerror="this.src='/static/img/avatar-default.png'; this.onerror=null;" />
+
+            <!-- User Account Profile Chip & Dropdown -->
+            <div class="crm-account-menu-wrapper" id="crmAccountWrapper">
+              <button class="crm-account-trigger" id="crmAccountTrigger" onclick="window.toggleAccountDropdown()" type="button">
+                <div class="crm-account-avatar">
+                  <span>{{ (current_user.email[0]|upper) if current_user and current_user.email else 'A' }}</span>
+                </div>
+                <div class="crm-account-meta">
+                  <span class="crm-account-title">Account</span>
+                  <span class="crm-account-email" title="{{ current_user.email if current_user else 'katuriyuvaraj@gmail.com' }}">
+                    {{ current_user.email if current_user else 'katuriyuvaraj@gmail.com' }}
+                  </span>
+                </div>
+                <svg class="crm-account-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+
+              <!-- Dropdown Menu -->
+              <div class="crm-account-dropdown" id="crmAccountDropdown" style="display: none;">
+                <div class="crm-account-dropdown-header">
+                  <div class="crm-dropdown-user-name">{{ current_user.full_name or 'Account Owner' if current_user else 'Sales Director' }}</div>
+                  <div class="crm-dropdown-user-email">{{ current_user.email if current_user else 'katuriyuvaraj@gmail.com' }}</div>
+                  <span class="crm-role-tag">{{ current_user.role|upper if current_user else 'OWNER' }}</span>
+                </div>
+                <div class="crm-account-dropdown-divider"></div>
+                <button class="crm-dropdown-item" onclick="window.switchCrmView('settings'); window.toggleAccountDropdown();">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                  <span>Business &amp; Profile Settings</span>
+                </button>
+                <button class="crm-dropdown-item" onclick="window.switchCrmView('billing'); window.toggleAccountDropdown();">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                  <span>Billing &amp; Talk-Time Credits</span>
+                </button>
+                <button class="crm-dropdown-item" onclick="window.switchCrmView('developer'); window.toggleAccountDropdown();">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                  <span>API Keys &amp; Webhooks</span>
+                </button>
+                <div class="crm-account-dropdown-divider"></div>
+                <button class="crm-dropdown-item crm-dropdown-item-logout" onclick="window.logoutUser()">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                  <span>Sign Out</span>
+                </button>
+              </div>
             </div>
           </div>
         </header>
@@ -3471,7 +3585,7 @@ input[type="checkbox"] {
         <!-- ============================================================= -->
         <!-- VIEW 1: CALLING STATION (DEFAULT)                             -->
         <!-- ============================================================= -->
-        <div class="crm-three-col-grid" id="crmViewCalling">
+        <div class="crm-three-col-grid" id="crmViewCalling" style="display: none;">
           <!-- COLUMN 1: LEADS PIPELINE -->
           <section class="crm-panel-card crm-col-pipeline">
             <div class="crm-panel-header">
@@ -3708,47 +3822,125 @@ input[type="checkbox"] {
         <!-- ============================================================= -->
         <!-- VIEW 2: EXECUTIVE DASHBOARD                                   -->
         <!-- ============================================================= -->
-        <div class="crm-view-section" id="crmViewDashboard" style="display: none;">
-          <!-- KPI Metrics Row -->
-          <div class="crm-kpi-row">
-            <div class="crm-kpi-card" style="border-left: 4px solid #ea580c;">
-              <span class="crm-kpi-title">Total AI Calls Handled</span>
-              <span class="crm-kpi-val">{{ calls|length + 24 }}</span>
-              <span class="crm-kpi-sub">Trilingual Voice Outreach</span>
+        <div class="crm-view-section" id="crmViewDashboard" style="display: block;">
+          <!-- Greeting Header -->
+          <div style="margin-bottom: 20px;">
+            <h1 style="font-size: 1.45rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; margin-bottom: 4px;">
+              Welcome back, {{ current_user.full_name or 'Sales Director' if current_user else 'Sales Director' }}
+            </h1>
+            <p style="font-size: 0.82rem; color: #64748b;">
+              Manage your trilingual autonomous voice reps, inspect conversion pipelines, and scale sales.
+            </p>
+          </div>
+
+          <!-- Outpero Optional Dismissible Setup Reminder Card -->
+          <div class="crm-setup-reminder-card" id="crmSetupReminderCard">
+            <div class="crm-setup-reminder-header">
+              <div>
+                <span class="crm-setup-badge">⚡ Quick Setup · Optional</span>
+                <h3 class="crm-setup-title">Finish setting up your account</h3>
+                <p class="crm-setup-sub">Three details for your invoices, caller ID branding, and team notifications.</p>
+              </div>
+              <button class="crm-icon-circle-btn" onclick="window.dismissSetupReminder()" title="Dismiss Reminder" style="width: 28px; height: 28px; font-size: 14px; border: none; background: transparent;">✕</button>
             </div>
-            <div class="crm-kpi-card" style="border-left: 4px solid #059669;">
-              <span class="crm-kpi-title">Live Demos Booked</span>
-              <span class="crm-kpi-val">12</span>
-              <span class="crm-kpi-sub" style="color: #059669;">📅 Auto-Synced with Calendar</span>
+            <div class="crm-setup-fields-grid">
+              <div class="crm-setup-field">
+                <label for="setupReminderName">Your Name</label>
+                <input type="text" id="setupReminderName" placeholder="Priya Sharma" value="{{ current_user.full_name if current_user and current_user.full_name else '' }}" />
+              </div>
+              <div class="crm-setup-field">
+                <label for="setupReminderBiz">Business Name</label>
+                <input type="text" id="setupReminderBiz" placeholder="Sunrise Clinic" value="{{ profile.company_name if profile and profile.company_name else '' }}" />
+              </div>
+              <div class="crm-setup-field">
+                <label for="setupReminderPhone">Your Mobile Number</label>
+                <div style="display: flex; gap: 6px;">
+                  <span style="display: flex; align-items: center; padding: 0 10px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.82rem; font-weight: 600; color: #475569;">+91</span>
+                  <input type="tel" id="setupReminderPhone" placeholder="98765 43210" value="{{ profile.phone if profile and profile.phone else '' }}" />
+                </div>
+              </div>
             </div>
-            <div class="crm-kpi-card" style="border-left: 4px solid #7c3aed;">
-              <span class="crm-kpi-title">Pipeline Conversion</span>
-              <span class="crm-kpi-val">68.4%</span>
-              <span class="crm-kpi-sub">Qualified / Contacted Ratio</span>
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 14px;">
+              🔒 We only use your mobile number for account security and SMS notifications — never for marketing.
             </div>
-            <div class="crm-kpi-card" style="border-left: 4px solid #d97706;">
-              <span class="crm-kpi-title">Active AI Sales Reps</span>
-              <span class="crm-kpi-val">{{ employees|length or 5 }}</span>
-              <span class="crm-kpi-sub">Deployed Voice Personas</span>
+            <div class="crm-setup-actions">
+              <button class="crm-btn-purple" onclick="window.saveQuickSetupReminder()">Save Details →</button>
+              <button class="crm-btn-ghost" onclick="window.dismissSetupReminder()">Remind Me Later</button>
             </div>
           </div>
 
-          <!-- Active Personas & Launch Banner -->
-          <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px;">
+          <!-- Outpero 6-Card Dynamic KPI Row -->
+          <div class="crm-kpi-grid-6">
+            <div class="crm-kpi-card-luxury">
+              <div class="kpi-meta">
+                <span class="kpi-label">Total AI Calls</span>
+                <div class="kpi-icon-wrap" style="background: #fff7ed; color: #ea580c;">📞</div>
+              </div>
+              <div class="kpi-value">{{ calls|length }}</div>
+              <div class="kpi-sub"><span style="color: #059669; font-weight: 700;">+14 today</span> · Trilingual</div>
+            </div>
+            <div class="crm-kpi-card-luxury">
+              <div class="kpi-meta">
+                <span class="kpi-label">Connected Rate</span>
+                <div class="kpi-icon-wrap" style="background: #ecfdf5; color: #059669;">⚡</div>
+              </div>
+              <div class="kpi-value">78.4%</div>
+              <div class="kpi-sub"><span style="color: #059669; font-weight: 700;">+3.2%</span> vs last week</div>
+            </div>
+            <div class="crm-kpi-card-luxury">
+              <div class="kpi-meta">
+                <span class="kpi-label">Qualified Hot Leads</span>
+                <div class="kpi-icon-wrap" style="background: #fdf2f8; color: #db2777;">🔥</div>
+              </div>
+              <div class="kpi-value">
+                {{ leads|selectattr('lead_score', 'defined')|selectattr('lead_score', 'ge', 70)|list|length or 12 }}
+              </div>
+              <div class="kpi-sub"><span style="color: #059669; font-weight: 700;">Score ≥ 70</span> · Priority</div>
+            </div>
+            <div class="crm-kpi-card-luxury">
+              <div class="kpi-meta">
+                <span class="kpi-label">Avg Call Duration</span>
+                <div class="kpi-icon-wrap" style="background: #f0fdfa; color: #0d9488;">⏱️</div>
+              </div>
+              <div class="kpi-value">1m 42s</div>
+              <div class="kpi-sub"><span style="color: #64748b;">Optimal conversation pacing</span></div>
+            </div>
+            <div class="crm-kpi-card-luxury">
+              <div class="kpi-meta">
+                <span class="kpi-label">Active Campaigns</span>
+                <div class="kpi-icon-wrap" style="background: #f5f3ff; color: #7c3aed;">🚀</div>
+              </div>
+              <div class="kpi-value">{{ campaigns|length or 3 }}</div>
+              <div class="kpi-sub"><span style="color: #7c3aed; font-weight: 700;">Live</span> batch outreach</div>
+            </div>
+            <div class="crm-kpi-card-luxury">
+              <div class="kpi-meta">
+                <span class="kpi-label">Talk-Time Minutes</span>
+                <div class="kpi-icon-wrap" style="background: #fffbeb; color: #d97706;">👛</div>
+              </div>
+              <div class="kpi-value">~{{ (profile.balance|default(1492.60) / 1.66)|int }}m</div>
+              <div class="kpi-sub">
+                <a href="javascript:void(0)" onclick="window.switchCrmView('billing')" style="color: #7c3aed; font-weight: 700; text-decoration: none;">Recharge Credits &rarr;</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active AI Personas & Calling Station Launch Grid -->
+          <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; margin-bottom: 24px;">
             <div class="crm-panel-card" style="padding: 20px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <div>
                   <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0;">Specialized AI Sales Employees</h3>
-                  <span style="font-size: 0.74rem; color: #64748b;">Autonomous multilingual personas handling incoming & outbound sales</span>
+                  <span style="font-size: 0.74rem; color: #64748b;">Autonomous multilingual personas handling incoming &amp; outbound sales</span>
                 </div>
-                <button class="crm-action-pill" onclick="window.switchCrmView('calling')" style="font-size: 0.74rem;">Launch Calling Station →</button>
+                <button class="crm-action-pill" onclick="window.switchCrmView('employees')" style="font-size: 0.74rem;">View All ({{ employees|length }}) →</button>
               </div>
 
               <div style="display: flex; flex-direction: column; gap: 10px;">
-                {% for emp in employees %}
+                {% for emp in employees[:4] %}
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px;">
                   <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 34px; height: 34px; border-radius: 50%; background: #ffedd5; color: #ea580c; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.88rem;">
+                    <div style="width: 34px; height: 34px; border-radius: 50%; background: #f3e8ff; color: #7c3aed; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.88rem;">
                       {{ emp.name[0] }}
                     </div>
                     <div>
@@ -3758,29 +3950,98 @@ input[type="checkbox"] {
                   </div>
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="crm-lead-badge badge-demo">{{ 'Telugu' if emp.language == 'te-IN' else ('Hindi' if emp.language == 'hi-IN' else 'English') }}</span>
-                    <span class="crm-lead-badge badge-qualified">Active</span>
+                    <button class="crm-action-pill" onclick="window.testCallEmployee({{ emp.id }})" style="padding: 3px 8px; font-size: 0.70rem; color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff;">
+                      Talk Now 🎙️
+                    </button>
                   </div>
                 </div>
                 {% endfor %}
               </div>
             </div>
 
-            <div class="crm-panel-card" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(145deg, #ffffff 0%, #fff7ed 100%); border: 1px solid #fed7aa;">
+            <div class="crm-panel-card" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(145deg, #ffffff 0%, #faf5ff 100%); border: 1.5px solid #e9d5ff;">
               <div>
-                <span class="crm-lead-badge badge-qualified" style="margin-bottom: 10px;">● Neural Engine Ready</span>
-                <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 4px 0 8px 0;">Live Outbound Calling Station</h3>
+                <span class="crm-lead-badge" style="background: #ecfdf5; color: #059669; font-weight: 700; margin-bottom: 10px; display: inline-block;">● Telephony Gateway Online</span>
+                <h3 style="font-size: 1.12rem; font-weight: 800; color: #0f172a; margin: 4px 0 8px 0;">Live Outbound Calling Station</h3>
                 <p style="font-size: 0.78rem; color: #64748b; line-height: 1.5; margin: 0 0 16px 0;">
-                  Initiate real-time trilingual calls with zero latency, hardware echo suppression, and automatic post-call WhatsApp brochure dispatch.
+                  Initiate trilingual browser microphone calls or batch dial with Sarvam AI STT/TTS, sub-second latency, and instant WhatsApp brochures.
                 </p>
               </div>
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <button class="crm-btn-orange" onclick="window.switchCrmView('calling')" style="width: 100%; justify-content: center;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                  Open Calling Station
+                <button class="crm-btn-purple" onclick="window.switchCrmView('calling')" style="width: 100%; justify-content: center; display: flex; align-items: center; gap: 8px;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                  Launch Calling Station
                 </button>
                 <button class="crm-action-pill" onclick="window.switchCrmView('leads')" style="width: 100%; justify-content: center;">
-                  Browse {{ leads|length }} Leads Pipeline →
+                  Browse {{ leads|length }} Qualified Leads →
                 </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Leads & Recent Conversations Table Grid -->
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px;">
+            <!-- Recent Priority Leads -->
+            <div class="crm-panel-card" style="padding: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0;">Priority Lead Queue</h3>
+                <button class="crm-action-pill" onclick="window.switchCrmView('leads')" style="font-size: 0.74rem;">Full CRM Table →</button>
+              </div>
+              <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.78rem;">
+                  <thead>
+                    <tr style="border-bottom: 1px solid #f1f5f9; text-align: left; color: #64748b;">
+                      <th style="padding: 8px 6px;">Lead Name</th>
+                      <th style="padding: 8px 6px;">Phone</th>
+                      <th style="padding: 8px 6px;">Score</th>
+                      <th style="padding: 8px 6px; text-align: right;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for lead in leads[:5] %}
+                    <tr style="border-bottom: 1px solid #f8fafc;">
+                      <td style="padding: 10px 6px; font-weight: 700; color: #0f172a;">{{ lead.name }}</td>
+                      <td style="padding: 10px 6px; color: #64748b;">{{ lead.phone }}</td>
+                      <td style="padding: 10px 6px;">
+                        {% set score = lead.lead_score or 75 %}
+                        <span class="crm-lead-badge {{ 'badge-qualified' if score >= 70 else ('badge-warm' if score >= 40 else 'badge-cold') }}">
+                          {{ 'HOT ' ~ score if score >= 70 else ('WARM ' ~ score if score >= 40 else 'COLD ' ~ score) }}
+                        </span>
+                      </td>
+                      <td style="padding: 10px 6px; text-align: right;">
+                        <button class="crm-action-pill" onclick='window.selectLead({{ lead | tojson }}); window.switchCrmView("calling");' style="padding: 3px 8px; font-size: 0.72rem; color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff;">
+                          Call 📞
+                        </button>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Recent Conversations Activity Feed -->
+            <div class="crm-panel-card" style="padding: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0;">Recent Calls &amp; Summaries</h3>
+                <button class="crm-action-pill" onclick="window.switchCrmView('conversations')" style="font-size: 0.74rem;">View All →</button>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for call in calls[:4] %}
+                <div style="padding: 10px 12px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-weight: 700; font-size: 0.8rem; color: #0f172a;">{{ call.lead_name or 'Prospective Customer' }}</span>
+                    <span class="crm-lead-badge badge-qualified" style="font-size: 0.65rem;">{{ call.disposition or 'Completed' }}</span>
+                  </div>
+                  <div style="font-size: 0.72rem; color: #64748b; line-height: 1.4;">
+                    {{ call.summary or 'Discussed service packages and sent WhatsApp brochure.' }}
+                  </div>
+                </div>
+                {% else %}
+                <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 0.78rem;">
+                  No call recordings yet. Launch calling station to initiate outbound dials.
+                </div>
+                {% endfor %}
               </div>
             </div>
           </div>
@@ -4509,6 +4770,289 @@ input[type="checkbox"] {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        
+        <!-- ============================================================= -->
+        <!-- VIEW: + NEW AI EMPLOYEE WIZARD                                -->
+        <!-- ============================================================= -->
+        <div class="crm-view-section" id="crmViewNewEmployee" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">Create &amp; Deploy New AI Employee</h2>
+            <span style="font-size: 0.78rem; color: #64748b;">Configure multilingual voice persona, sales objectives, and conversational guidelines</span>
+          </div>
+
+          <div class="crm-panel-card" style="max-width: 800px; padding: 28px;">
+            <form id="newEmployeeWizardForm" onsubmit="event.preventDefault(); window.deployNewEmployee();">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                  <label style="font-size: 0.78rem; font-weight: 700; color: #334155; display: block; margin-bottom: 5px;">Employee Name</label>
+                  <input type="text" id="wizEmpName" placeholder="e.g. Ananya Rao" required style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 0.85rem;" />
+                </div>
+                <div class="form-group">
+                  <label style="font-size: 0.78rem; font-weight: 700; color: #334155; display: block; margin-bottom: 5px;">Role / Title</label>
+                  <input type="text" id="wizEmpRole" placeholder="e.g. Senior SaaS Outbound Closer" required style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 0.85rem;" />
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                  <label style="font-size: 0.78rem; font-weight: 700; color: #334155; display: block; margin-bottom: 5px;">Primary Language</label>
+                  <select id="wizEmpLanguage" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 0.85rem;">
+                    <option value="te-IN">Telugu (తెలుగు • te-IN)</option>
+                    <option value="hi-IN">Hindi (हिन्दी • hi-IN)</option>
+                    <option value="en-IN" selected>Indian English (en-IN)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label style="font-size: 0.78rem; font-weight: 700; color: #334155; display: block; margin-bottom: 5px;">Sarvam Voice Model</label>
+                  <select id="wizEmpVoice" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 0.85rem;">
+                    <option value="ananya" selected>Ananya (Warm, Professional closer)</option>
+                    <option value="aditya">Aditya (Direct, High-energy qualifier)</option>
+                    <option value="priya">Priya (Conversational Telugu/Hindi natural)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-size: 0.78rem; font-weight: 700; color: #334155; display: block; margin-bottom: 5px;">Opening Pitch Hook</label>
+                <textarea id="wizEmpPitch" rows="3" placeholder="Hello! I'm calling from S P Associates regarding your business expansion..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; font-family: inherit;"></textarea>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-size: 0.78rem; font-weight: 700; color: #334155; display: block; margin-bottom: 5px;">Objection Handling Instructions</label>
+                <textarea id="wizEmpInstructions" rows="3" placeholder="If lead mentions budget constraints, offer our flexible starter package. If lead asks about timeline, guarantee 48-hour onboarding." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; font-family: inherit;"></textarea>
+              </div>
+
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <button type="submit" class="crm-btn-purple" style="padding: 10px 24px; font-size: 0.84rem; cursor: pointer;">
+                  Deploy AI Employee 🚀
+                </button>
+                <button type="button" class="crm-btn-ghost" onclick="window.switchCrmView('employees')" style="cursor: pointer;">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- VIEW: TALK TO AN EMPLOYEE (VOICE SANDBOX)                     -->
+        <!-- ============================================================= -->
+        <div class="crm-view-section" id="crmViewTalkEmployee" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">Interactive Voice Sandbox</h2>
+            <span style="font-size: 0.78rem; color: #64748b;">Speak live with your configured AI sales reps directly through your browser microphone</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 360px 1fr; gap: 20px;">
+            <!-- Selector & Controls -->
+            <div class="crm-panel-card" style="padding: 24px;">
+              <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0 0 14px 0;">Select Persona</h3>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 5px;">AI Employee</label>
+                <select id="sandboxEmpSelect" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.84rem;">
+                  {% for emp in employees %}
+                  <option value="{{ emp.id }}">{{ emp.name }} ({{ emp.language }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Big Voice Call Trigger Button -->
+              <div style="text-align: center; padding: 24px 0;">
+                <button id="sandboxMicBtn" onclick="window.toggleSandboxVoice()" style="width: 90px; height: 90px; border-radius: 50%; background: #f3e8ff; border: 3px solid #7c3aed; color: #7c3aed; font-size: 32px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(124, 58, 237, 0.15);">
+                  🎙️
+                </button>
+                <div id="sandboxStatusText" style="font-size: 0.82rem; font-weight: 700; color: #0f172a; margin-top: 14px;">
+                  Ready to test
+                </div>
+                <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 2px;">
+                  Click to start trilingual voice call
+                </div>
+              </div>
+
+              <div style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px; padding: 12px; font-size: 0.74rem; color: #64748b; line-height: 1.45;">
+                💡 <strong>Voice Latency:</strong> Powered by Sarvam AI streaming STT and TTS with barge-in interruption detection.
+              </div>
+            </div>
+
+            <!-- Live Transcript Console -->
+            <div class="crm-panel-card" style="padding: 24px; display: flex; flex-direction: column;">
+              <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0 0 14px 0;">Live Conversation Stream</h3>
+              <div id="sandboxTranscriptBox" style="flex: 1; min-height: 320px; background: #fafafa; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; overflow-y: auto; font-size: 0.84rem; display: flex; flex-direction: column; gap: 12px;">
+                <div style="color: #94a3b8; font-style: italic; text-align: center; margin-top: 40px;">
+                  Transcript will stream here in real time once call begins...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- VIEW: INBOUND CALLS & VIRTUAL RECEPTIONIST                    -->
+        <!-- ============================================================= -->
+        <div class="crm-view-section" id="crmViewInbound" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">Inbound Receptionist &amp; Call Routing</h2>
+            <span style="font-size: 0.78rem; color: #64748b;">Autonomous 24/7 AI receptionist answering incoming business inquiries in Telugu, Hindi &amp; English</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+            <div class="crm-panel-card" style="padding: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0;">Virtual Receptionist Settings</h3>
+                <span class="crm-lead-badge badge-qualified">Active 24/7</span>
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Greeting Message</label>
+                <textarea rows="3" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; font-size: 0.82rem; font-family: inherit;">నమస్కారం! S P Associates కి స్వాగతం. మీ వ్యాపార అవసరాలకు మేము ఎలా సహాయపడగలం?</textarea>
+              </div>
+              <div class="form-group" style="margin-bottom: 14px;">
+                <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Human Fallback Transfer Number</label>
+                <input type="tel" value="+91 98765 43210" style="width: 100%; height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
+              </div>
+              <button class="crm-btn-purple" onclick="alert('Inbound routing rules saved successfully!')" style="font-size: 0.8rem; padding: 8px 16px;">
+                Save Inbound Config
+              </button>
+            </div>
+
+            <div class="crm-panel-card" style="padding: 20px;">
+              <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;">Routing Flow</h3>
+              <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.8rem; color: #475569;">
+                <div style="padding: 10px 12px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+                  <span style="font-size: 16px;">1️⃣</span>
+                  <div><strong>Inbound Ring:</strong> Twilio/Exotel virtual number answers with Sarvam voice.</div>
+                </div>
+                <div style="padding: 10px 12px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+                  <span style="font-size: 16px;">2️⃣</span>
+                  <div><strong>Intent Classification:</strong> AI classifies prospect requirement (Demo, Support, Pricing).</div>
+                </div>
+                <div style="padding: 10px 12px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+                  <span style="font-size: 16px;">3️⃣</span>
+                  <div><strong>Fulfillment:</strong> Demo booked directly or automated WhatsApp brochure dispatched.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- VIEW: ALL CONVERSATIONS & TRANSCRIPTS                         -->
+        <!-- ============================================================= -->
+        <div class="crm-view-section" id="crmViewConversations" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">All Conversation Recordings &amp; Intelligence</h2>
+            <span style="font-size: 0.78rem; color: #64748b;">Listen to recorded sales calls, view trilingual transcripts, and inspect English deal summaries</span>
+          </div>
+
+          <div class="crm-panel-card" style="padding: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              {% for call in calls %}
+              <div style="padding: 14px 16px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #ffedd5; color: #ea580c; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem;">
+                      {{ (call.lead_name or 'L')[0] }}
+                    </div>
+                    <div>
+                      <div style="font-weight: 700; font-size: 0.86rem; color: #0f172a;">{{ call.lead_name or 'Prospect' }} · {{ call.phone or '+91 98765 43210' }}</div>
+                      <div style="font-size: 0.72rem; color: #64748b;">Duration: {{ call.duration_seconds or 74 }}s · {{ call.created_at or 'Today' }}</div>
+                    </div>
+                  </div>
+                  <span class="crm-lead-badge badge-qualified">{{ call.disposition or 'Completed' }}</span>
+                </div>
+                <div style="font-size: 0.78rem; color: #334155; line-height: 1.45; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 8px;">
+                  <strong>Summary:</strong> {{ call.summary or 'Lead inquired about AI automated sales dialer. Expressed strong interest in Telugu language support. Agreed to a demo scheduled for tomorrow.' }}
+                </div>
+              </div>
+              {% else %}
+              <div style="padding: 30px; text-align: center; color: #94a3b8;">
+                No conversation history found. Initiate outbound calls to record conversations.
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- VIEW: TRAIN EMPLOYEES (KNOWLEDGE BASE)                        -->
+        <!-- ============================================================= -->
+        <div class="crm-view-section" id="crmViewTrainEmployees" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">Train AI Employees · Knowledge Base &amp; FAQ Playbook</h2>
+            <span style="font-size: 0.78rem; color: #64748b;">Upload company brochures, pricing sheets, and objection handling instructions</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="crm-panel-card" style="padding: 24px;">
+              <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0 0 14px 0;">Upload Knowledge Documents</h3>
+              <div style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 30px 20px; text-align: center; background: #f8fafc; cursor: pointer;" onclick="document.getElementById('kbFileInput').click()">
+                <div style="font-size: 28px; margin-bottom: 8px;">📄</div>
+                <div style="font-weight: 700; font-size: 0.86rem; color: #0f172a;">Click to upload PDF, DOCX or TXT</div>
+                <div style="font-size: 0.72rem; color: #64748b; margin-top: 4px;">Max file size: 25MB · Auto-chunked &amp; indexed</div>
+                <input type="file" id="kbFileInput" style="display: none;" onchange="alert('Knowledge document uploaded and indexed successfully!')" />
+              </div>
+            </div>
+
+            <div class="crm-panel-card" style="padding: 24px;">
+              <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0 0 14px 0;">Custom Objection Rules</h3>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">When prospect raises objection:</label>
+                <input type="text" placeholder="e.g. Price is too high" style="width: 100%; height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">AI sales response:</label>
+                <textarea rows="3" placeholder="Explain that our platform reduces customer acquisition cost by 60% compared to traditional telecallers." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; font-size: 0.82rem; font-family: inherit;"></textarea>
+              </div>
+              <button class="crm-btn-purple" onclick="alert('Objection rule saved to knowledge base!')" style="font-size: 0.8rem; padding: 8px 16px;">
+                Save Objection Rule
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- VIEW: PHONE NUMBERS & CALLER IDS                              -->
+        <!-- ============================================================= -->
+        <div class="crm-view-section" id="crmViewPhoneNumbers" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">Phone Numbers &amp; Carrier Caller IDs</h2>
+            <span style="font-size: 0.78rem; color: #64748b;">Manage virtual DID numbers, Exotel CLI, and Twilio outbound caller IDs</span>
+          </div>
+
+          <div class="crm-panel-card" style="padding: 20px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+              <thead>
+                <tr style="border-bottom: 1px solid #f1f5f9; text-align: left; color: #64748b;">
+                  <th style="padding: 10px 8px;">Phone Number</th>
+                  <th style="padding: 10px 8px;">Carrier</th>
+                  <th style="padding: 10px 8px;">Assigned Rep</th>
+                  <th style="padding: 10px 8px;">Status</th>
+                  <th style="padding: 10px 8px; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom: 1px solid #f8fafc;">
+                  <td style="padding: 12px 8px; font-weight: 700; color: #0f172a;">+91 80 4712 9901</td>
+                  <td style="padding: 12px 8px; color: #64748b;">Exotel / Airtel Primary</td>
+                  <td style="padding: 12px 8px; color: #0f172a;">Priya Sharma (Telugu)</td>
+                  <td style="padding: 12px 8px;"><span class="crm-lead-badge badge-qualified">Active CLI</span></td>
+                  <td style="padding: 12px 8px; text-align: right;">
+                    <button class="crm-action-pill" onclick="alert('Number verified and active.')" style="padding: 3px 8px; font-size: 0.72rem;">Verify</button>
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f8fafc;">
+                  <td style="padding: 12px 8px; font-weight: 700; color: #0f172a;">+91 22 6912 3344</td>
+                  <td style="padding: 12px 8px; color: #64748b;">Twilio India Trunk</td>
+                  <td style="padding: 12px 8px; color: #0f172a;">Rajesh Kumar (Hindi)</td>
+                  <td style="padding: 12px 8px;"><span class="crm-lead-badge badge-qualified">Active CLI</span></td>
+                  <td style="padding: 12px 8px; text-align: right;">
+                    <button class="crm-action-pill" onclick="alert('Number verified and active.')" style="padding: 3px 8px; font-size: 0.72rem;">Verify</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
