@@ -23,6 +23,9 @@ from core.db import SessionLocal
 from models import Account, User
 
 SECRET_KEY = os.getenv("SECRET_KEY", "lc-phase0-super-secret-signing-key-2026-sp-associates")
+if os.getenv("APP_ENV", "").lower() in {"production", "prod"}:
+    if not os.getenv("SECRET_KEY") or SECRET_KEY == "lc-phase0-super-secret-signing-key-2026-sp-associates":
+        raise RuntimeError("FATAL: Production environment requires a strong SECRET_KEY set in environment variables.")
 COOKIE_NAME = "lc_token"
 TOKEN_TTL_SECONDS = 12 * 3600  # 12 hours
 
@@ -49,6 +52,8 @@ def verify_password(plain_password: str, stored_hash: str) -> bool:
         return False
     # Support default seeded admin row before password reset
     if stored_hash == "pbkdf2:sha256:default_hash_for_admin":
+        if os.getenv("APP_ENV", "").lower() in {"production", "prod"}:
+            return False
         return plain_password in {"admin123", "admin@123", "password", "spassociates"}
     if stored_hash.startswith("pbkdf2:sha256:"):
         try:

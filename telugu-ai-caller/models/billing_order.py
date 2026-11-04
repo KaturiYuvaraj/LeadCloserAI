@@ -8,6 +8,7 @@ class BillingOrder(Base):
     __tablename__ = "api_billing_orders"
 
     id: Any = Column(Integer, primary_key=True, autoincrement=True)
+    account_id: Any = Column(Integer, ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, default=1, index=True)
     api_key_id: Any = Column(Integer, ForeignKey("api_keys.id", ondelete="SET NULL"), nullable=True, index=True)
     order_id: Any = Column(String(128), unique=True, nullable=False, index=True)
     plan_name: Any = Column(String(128), nullable=False)

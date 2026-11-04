@@ -73,13 +73,14 @@ async def api_get_call_recording(call_id: int, request: Request):
 
 
 @router.get("/api/analytics/overview")
-async def api_get_analytics_overview():
+async def api_get_analytics_overview(request: Request):
     """
     Return executive-level sales metrics, conversion funnel, objections breakdown,
     sentiment distributions, and AI employee leaderboard.
     """
     try:
-        data = get_analytics_summary()
+        account_id = get_request_account_id(request)
+        data = get_analytics_summary(account_id=account_id)
         return {"success": True, "data": data}
     except Exception as e:
         logger.error(f"Failed to generate analytics overview: {e}")

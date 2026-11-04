@@ -3353,8 +3353,8 @@ input[type="checkbox"] {
 
           <nav class="crm-sidebar-menu">
             <button class="crm-nav-item" id="navItemDashboard" onclick="window.switchCrmView('dashboard')">
-              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-              <span>Dashboard</span>
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+              <span>Overview</span>
             </button>
             <button class="crm-nav-item" id="navItemLeads" onclick="window.switchCrmView('leads')">
               <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -3365,18 +3365,37 @@ input[type="checkbox"] {
               <span>Calling Station</span>
             </button>
             <button class="crm-nav-item" id="navItemCampaigns" onclick="window.switchCrmView('campaigns')">
-              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
               <span>Campaigns</span>
             </button>
-            <button class="crm-nav-item" id="navItemAutomations" onclick="window.switchCrmView('automations')">
+            <button class="crm-nav-item" id="navItemEmployees" onclick="window.switchCrmView('employees')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+              <span>AI Employees</span>
+            </button>
+            <button class="crm-nav-item" id="navItemFollowups" onclick="window.switchCrmView('followups')">
               <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              <span>Automations</span>
+              <span>Follow-ups</span>
             </button>
             <button class="crm-nav-item" id="navItemAnalytics" onclick="window.switchCrmView('analytics')">
               <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
               <span>Analytics</span>
             </button>
-
+            <button class="crm-nav-item" id="navItemIntegrations" onclick="window.switchCrmView('integrations')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+              <span>Integrations</span>
+            </button>
+            <button class="crm-nav-item" id="navItemDeveloper" onclick="window.switchCrmView('developer')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              <span>Developer API</span>
+            </button>
+            <button class="crm-nav-item" id="navItemBilling" onclick="window.switchCrmView('billing')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+              <span>Billing</span>
+            </button>
+            <button class="crm-nav-item" id="navItemSettings" onclick="window.switchCrmView('settings')">
+              <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Settings</span>
+            </button>
           </nav>
         </div>
 
@@ -3991,7 +4010,7 @@ input[type="checkbox"] {
         <!-- ============================================================= -->
         <!-- VIEW 5: WORKFLOW AUTOMATIONS                                  -->
         <!-- ============================================================= -->
-        <div class="crm-view-section" id="crmViewAutomations" style="display: none;">
+        <div class="crm-view-section" id="crmViewFollowups" style="display: none;">
           <div class="crm-panel-card" style="padding: 24px;">
             <div style="margin-bottom: 20px;">
               <h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0;">Workflow Automations & Event Triggers</h2>
@@ -4186,6 +4205,313 @@ input[type="checkbox"] {
         </div>
 
         <!-- ============================================================= -->
+        <!-- VIEW 5: AI EMPLOYEES                                          -->
+        <!-- ============================================================= -->
+        <div class="crm-view-section" id="crmViewEmployees" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0;">AI Sales Employees & Personas</h2>
+              <span style="font-size: 0.78rem; color: #64748b;">Autonomous multilingual sales specialists with distinct qualification frameworks</span>
+            </div>
+            <button class="crm-btn-orange" onclick="window.openEmployeeBuilderModal ? window.openEmployeeBuilderModal() : alert('Persona Builder')" style="padding: 7px 14px; font-size: 0.78rem; cursor: pointer;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ Create AI Employee</span>
+            </button>
+          </div>
+          <div class="crm-employee-grid" id="crmEmployeesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
+            <!-- Populated dynamically via /api/employees -->
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- VIEW 8: INTEGRATIONS HUB                                      -->
+        <!-- ============================================================= -->
+        <div class="crm-view-section" id="crmViewIntegrations" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0;">Connected Integrations & Providers</h2>
+            <span style="font-size: 0.78rem; color: #64748b;">Enterprise voice synthesizers, carrier trunks, WhatsApp messaging, and calendar integrations</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;" id="crmIntegrationsList">
+            <!-- Sarvam AI Card -->
+            <div class="crm-panel-card" style="padding: 20px; border-top: 4px solid #ea580c;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div>
+                  <h3 style="font-size: 0.96rem; font-weight: 800; color: #0f172a; margin: 0;">Sarvam AI (Native Indic AI)</h3>
+                  <span style="font-size: 0.75rem; color: #64748b;">Bulbul TTS · Saaras STT · Prompt Engine</span>
+                </div>
+                <span class="crm-badge live" style="font-size: 0.72rem; padding: 3px 8px;">Connected</span>
+              </div>
+              <p style="font-size: 0.78rem; color: #475569; line-height: 1.4; margin-bottom: 16px;">
+                Powers high-fidelity Telugu, Hindi, Tamil, Kannada, and Indian-English speech synthesis and real-time transcription.
+              </p>
+              <div style="display: flex; gap: 8px;">
+                <button class="crm-action-pill" onclick="window.testSarvamTts ? window.testSarvamTts() : alert('Testing Sarvam Audio...')" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <span>Test Telugu Voice</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Vobiz Carrier Telephony -->
+            <div class="crm-panel-card" style="padding: 20px; border-top: 4px solid #059669;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div>
+                  <h3 style="font-size: 0.96rem; font-weight: 800; color: #0f172a; margin: 0;">Vobiz Telephony Gateway</h3>
+                  <span style="font-size: 0.75rem; color: #64748b;">E.164 Outbound Carrier Trunking</span>
+                </div>
+                <span class="crm-badge live" style="font-size: 0.72rem; padding: 3px 8px;">Configured</span>
+              </div>
+              <p style="font-size: 0.78rem; color: #475569; line-height: 1.4; margin-bottom: 16px;">
+                High-volume telecom provider for Indian mobile and landline connectivity with instant answering detection.
+              </p>
+              <div style="display: flex; gap: 8px;">
+                <button class="crm-action-pill" onclick="alert('Vobiz SIP Carrier Status: Active. Calling Window: 09:00 - 19:00 IST.')" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer;">
+                  <span>Diagnostics</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- WhatsApp Cloud API -->
+            <div class="crm-panel-card" style="padding: 20px; border-top: 4px solid #10b981;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div>
+                  <h3 style="font-size: 0.96rem; font-weight: 800; color: #0f172a; margin: 0;">Meta WhatsApp Cloud API</h3>
+                  <span style="font-size: 0.75rem; color: #64748b;">Post-Call Document & Catalog Delivery</span>
+                </div>
+                <span class="crm-badge live" style="font-size: 0.72rem; padding: 3px 8px;">Active</span>
+              </div>
+              <p style="font-size: 0.78rem; color: #475569; line-height: 1.4; margin-bottom: 16px;">
+                Dispatches PDF brochures, quotations, and meeting invites to prospects who opt in during conversation.
+              </p>
+              <div style="display: flex; gap: 8px;">
+                <button class="crm-action-pill" onclick="alert('WhatsApp Template Status: Approved. Ready for instant dispatch.')" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer;">
+                  <span>Template Status</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Google Calendar -->
+            <div class="crm-panel-card" style="padding: 20px; border-top: 4px solid #3b82f6;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div>
+                  <h3 style="font-size: 0.96rem; font-weight: 800; color: #0f172a; margin: 0;">Google Calendar & Meet</h3>
+                  <span style="font-size: 0.75rem; color: #64748b;">Autonomous Demo Scheduling</span>
+                </div>
+                <span class="crm-badge live" style="font-size: 0.72rem; padding: 3px 8px;">Synced</span>
+              </div>
+              <p style="font-size: 0.78rem; color: #475569; line-height: 1.4; margin-bottom: 16px;">
+                Automatically generates Google Meet invites when prospective clients agree to a software demonstration.
+              </p>
+              <div style="display: flex; gap: 8px;">
+                <button class="crm-action-pill" onclick="alert('Google Meet integration active on default sales account.')" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer;">
+                  <span>Check Availability</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- VIEW 9: DEVELOPER API                                         -->
+        <!-- ============================================================= -->
+        <div class="crm-view-section" id="crmViewDeveloper" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0;">Developer API & Webhook Platform</h2>
+              <span style="font-size: 0.78rem; color: #64748b;">Trigger outbound sales calls, query conversation intelligence, and receive real-time webhooks</span>
+            </div>
+            <button class="crm-btn-orange" onclick="window.openGenerateKeyModal ? window.openGenerateKeyModal() : alert('Generate Key')" style="padding: 7px 14px; font-size: 0.78rem; cursor: pointer;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ Generate REST API Key</span>
+            </button>
+          </div>
+
+          <div class="crm-panel-card" style="padding: 20px; margin-bottom: 20px;">
+            <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;">Active REST API Keys</h3>
+            <div class="crm-table-container">
+              <table class="crm-table" style="width: 100%;">
+                <thead>
+                  <tr>
+                    <th>Key Name</th>
+                    <th>API Token</th>
+                    <th>Plan Tier</th>
+                    <th>Credits (INR)</th>
+                    <th>Rate</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="crmApiKeysTableBody">
+                  <!-- Populated via /api/v1/keys -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Sandbox Dispatch Tester -->
+          <div class="crm-panel-card" style="padding: 20px;">
+            <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0 0 10px 0;">Live REST API Endpoint</h3>
+            <div style="background: #0f172a; color: #f8fafc; padding: 14px; border-radius: 8px; font-family: monospace; font-size: 0.8rem; overflow-x: auto;">
+              <span style="color: #38bdf8;">POST</span> /api/v1/calls/dispatch<br>
+              <span style="color: #94a3b8;">Authorization: Bearer &lt;YOUR_API_KEY&gt;</span><br>
+              <span style="color: #cbd5e1;">Content-Type: application/json</span><br><br>
+              <span style="color: #cbd5e1;">{ "phone_number": "+919848012345", "name": "Ramesh Naidu", "company": "Naidu Jewellers", "language": "te-IN" }</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- VIEW 10: BILLING & LEDGER                                     -->
+        <!-- ============================================================= -->
+        <div class="crm-view-section" id="crmViewBilling" style="display: none;">
+          <div class="crm-kpi-row" style="margin-bottom: 20px;">
+            <div class="crm-kpi-card" style="border-left: 4px solid #ea580c;">
+              <span class="crm-kpi-title">Current Talk-Time Balance</span>
+              <span class="crm-kpi-val" id="crmBillingBalance">₹{{ "%.2f"|format(primary_key.credits_inr if primary_key else 2500.0) }}</span>
+              <span class="crm-kpi-sub">~<span id="crmBillingMinutes">{{ "%.0f"|format((primary_key.credits_inr if primary_key else 2500.0) / 5.0) }}</span> conversation minutes</span>
+            </div>
+            <div class="crm-kpi-card" style="border-left: 4px solid #059669;">
+              <span class="crm-kpi-title">Standard Calling Rate</span>
+              <span class="crm-kpi-val">₹5.00</span>
+              <span class="crm-kpi-sub">Per minute · Billed in 60s blocks</span>
+            </div>
+            <div class="crm-kpi-card" style="border-left: 4px solid #3b82f6;">
+              <span class="crm-kpi-title">Active Plan Tier</span>
+              <span class="crm-kpi-val" style="font-size: 1.1rem;">{{ primary_key.plan_tier if primary_key else "Enterprise Growth" }}</span>
+              <span class="crm-kpi-sub">Dedicated carrier routes & concurrency</span>
+            </div>
+          </div>
+
+          <!-- Recharge Packages -->
+          <div class="crm-panel-card" style="padding: 24px; margin-bottom: 20px;">
+            <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 16px 0;">Instant Credit Recharge</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+              <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <div style="font-weight: 800; font-size: 1.1rem; color: #0f172a;">Starter Pack</div>
+                  <div style="font-size: 1.5rem; font-weight: 800; color: #ea580c; margin: 8px 0;">₹999</div>
+                  <div style="font-size: 0.78rem; color: #64748b;">Includes ~200 conversation minutes (~₹5.00/min). Ideal for initial pipeline validation.</div>
+                </div>
+                <button class="crm-btn-orange" onclick="window.openCheckoutModal ? window.openCheckoutModal('Starter API', 999) : alert('Top-up')" style="margin-top: 16px; width: 100%; justify-content: center; cursor: pointer;">Recharge ₹999</button>
+              </div>
+
+              <div style="border: 2px solid #ea580c; border-radius: 12px; padding: 20px; background: #fffaf5; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+                <span style="position: absolute; top: -10px; right: 16px; background: #ea580c; color: #fff; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 9999px;">MOST POPULAR</span>
+                <div>
+                  <div style="font-weight: 800; font-size: 1.1rem; color: #0f172a;">Growth Pack</div>
+                  <div style="font-size: 1.5rem; font-weight: 800; color: #ea580c; margin: 8px 0;">₹4,999</div>
+                  <div style="font-size: 0.78rem; color: #64748b;">Includes ~1,000 minutes + 5 AI Employee persona slots + WhatsApp Cloud dispatch.</div>
+                </div>
+                <button class="crm-btn-orange" onclick="window.openCheckoutModal ? window.openCheckoutModal('Growth API', 4999) : alert('Top-up')" style="margin-top: 16px; width: 100%; justify-content: center; cursor: pointer;">Recharge ₹4,999</button>
+              </div>
+
+              <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <div style="font-weight: 800; font-size: 1.1rem; color: #0f172a;">Scale Enterprise</div>
+                  <div style="font-size: 1.5rem; font-weight: 800; color: #ea580c; margin: 8px 0;">₹19,999</div>
+                  <div style="font-size: 0.78rem; color: #64748b;">Includes ~4,500 minutes + high-concurrency telephony trunk + dedicated account manager.</div>
+                </div>
+                <button class="crm-btn-orange" onclick="window.openCheckoutModal ? window.openCheckoutModal('Enterprise API', 19999) : alert('Top-up')" style="margin-top: 16px; width: 100%; justify-content: center; cursor: pointer;">Recharge ₹19,999</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Orders Ledger Table -->
+          <div class="crm-panel-card" style="padding: 20px;">
+            <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;">Recharge & Invoice History</h3>
+            <div class="crm-table-container">
+              <table class="crm-table" style="width: 100%;">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Invoice #</th>
+                    <th>Plan Description</th>
+                    <th>Amount (INR)</th>
+                    <th>Minutes Credited</th>
+                    <th>Payment Status</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="crmBillingOrdersTableBody">
+                  <!-- Loaded via /api/v1/billing/orders -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- VIEW 11: SETTINGS & COMPLIANCE                                -->
+        <!-- ============================================================= -->
+        <div class="crm-view-section" id="crmViewSettings" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0;">Organization Profile & Compliance</h2>
+            <span style="font-size: 0.78rem; color: #64748b;">Company details, operational hours, regulatory DND safeguards, and account configuration</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px;">
+            <!-- Company Profile Form -->
+            <div class="crm-panel-card" style="padding: 24px;">
+              <h3 style="font-size: 1.02rem; font-weight: 800; color: #0f172a; margin: 0 0 16px 0;">Company Profile</h3>
+              <form id="crmCompanyProfileForm" onsubmit="event.preventDefault(); window.saveCompanyProfile();">
+                <div class="form-group" style="margin-bottom: 14px;">
+                  <label style="font-size: 0.78rem; font-weight: 700; color: #334155; display: block; margin-bottom: 5px;">Company / Agency Name</label>
+                  <input type="text" id="settingAgencyName" class="crm-input" value="S P Associates Software Company" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 0.85rem;" />
+                </div>
+                <div class="form-group" style="margin-bottom: 14px;">
+                  <label style="font-size: 0.78rem; font-weight: 700; color: #334155; display: block; margin-bottom: 5px;">Primary Language</label>
+                  <select id="settingLanguage" class="crm-select" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 0.85rem;">
+                    <option value="te-IN" selected>Telugu (తెలుగు • te-IN)</option>
+                    <option value="hi-IN">Hindi (हिन्दी • hi-IN)</option>
+                    <option value="en-IN">Indian English (en-IN)</option>
+                    <option value="ta-IN">Tamil (தமிழ் • ta-IN)</option>
+                    <option value="kn-IN">Kannada (ಕನ್ನಡ • kn-IN)</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label style="font-size: 0.78rem; font-weight: 700; color: #334155; display: block; margin-bottom: 5px;">TTS Voice Model</label>
+                  <select id="settingVoice" class="crm-select" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 0.85rem;">
+                    <option value="kavitha_te_conversation" selected>Kavitha (Telugu Natural Conversational)</option>
+                    <option value="pooja">Pooja (Hindi Expressive)</option>
+                    <option value="tarun">Tarun (English Professional Closer)</option>
+                  </select>
+                </div>
+                <button type="submit" class="crm-btn-orange" style="padding: 9px 20px; font-size: 0.82rem; cursor: pointer;">
+                  Save Profile Settings
+                </button>
+              </form>
+            </div>
+
+            <!-- Calling Windows & Compliance -->
+            <div class="crm-panel-card" style="padding: 24px;">
+              <h3 style="font-size: 1.02rem; font-weight: 800; color: #0f172a; margin: 0 0 16px 0;">Telecom Compliance Safeguards</h3>
+              <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.8rem; color: #475569;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+                  <span style="font-weight: 600;">TRAI Calling Hours</span>
+                  <span style="font-weight: 700; color: #059669;">09:00 AM – 07:00 PM IST</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+                  <span style="font-weight: 600;">Operational Days</span>
+                  <span style="font-weight: 700; color: #0f172a;">Monday – Saturday</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+                  <span style="font-weight: 600;">Max Call Duration</span>
+                  <span style="font-weight: 700; color: #0f172a;">600 Seconds (10 mins)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+                  <span style="font-weight: 600;">DND Opt-Out Safeguard</span>
+                  <span style="font-weight: 700; color: #059669;">Strict (100% Enforced)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="font-weight: 600;">Auto-Redial Gap</span>
+                  <span style="font-weight: 700; color: #0f172a;">Minimum 4 hours</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         </main>
     </div>
 </div><!-- /#viewCrm -->

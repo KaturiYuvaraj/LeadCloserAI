@@ -2,7 +2,8 @@
 Integrations Router - Third-Party Providers, Company Profile & Voice Testing
 """
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response, Request
+from core.auth import get_request_account_id
 from loguru import logger
 
 from config import DEFAULT_TTS_SPEAKER, DEFAULT_TTS_MODEL
@@ -20,13 +21,15 @@ router = APIRouter(tags=["integrations"])
 
 
 @router.get("/api/profile")
-async def api_get_profile():
-    return {"profile": get_company_profile()}
+async def api_get_profile(request: Request):
+    acc_id = get_request_account_id(request) or 1
+    return {"profile": get_company_profile(account_id=acc_id)}
 
 
 @router.post("/api/profile")
-async def api_update_profile(data: Dict[str, Any]):
-    ok = update_company_profile(data)
+async def api_update_profile(data: Dict[str, Any], request: Request):
+    acc_id = get_request_account_id(request) or 1
+    ok = update_company_profile(data, account_id=acc_id)
     return {"success": ok}
 
 

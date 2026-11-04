@@ -49,6 +49,9 @@ else:
         engine = test_engine
         logger.info(f"Connected to PostgreSQL database: {DATABASE_URL.split('@')[-1]}")
     except Exception as exc:
+        if os.getenv("APP_ENV", "").lower() in {"production", "prod"}:
+            logger.critical(f"FATAL: Production database connection to PostgreSQL failed: {exc}")
+            raise RuntimeError(f"FATAL: Production database connection to PostgreSQL failed: {exc}") from exc
         logger.warning(
             f"Could not connect to configured PostgreSQL ({exc}). "
             f"Falling back to canonical SQLite database ({CANONICAL_SQLITE_PATH.name})."

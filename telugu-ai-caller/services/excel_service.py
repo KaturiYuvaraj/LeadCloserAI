@@ -361,13 +361,14 @@ def generate_rejected_rows_csv(rejected_rows: List[Dict[str, Any]]) -> bytes:
     writer = csv.writer(buf)
     writer.writerow(["Row Number", "Name / Business", "Raw Phone", "Rejection Code", "Rejection Reason"])
     for item in rejected_rows:
-        writer.writerow([
+        raw_cells = [
             item.get("row", ""),
             item.get("name", ""),
             item.get("phone", ""),
             item.get("code", ""),
             item.get("reason", ""),
-        ])
+        ]
+        writer.writerow([sanitize_for_spreadsheet(c) for c in raw_cells])
     return buf.getvalue().encode("utf-8-sig")
 
 
@@ -419,6 +420,18 @@ def generate_sample_excel_template() -> bytes:
     return output.getvalue()
 
 
+def sanitize_for_spreadsheet(val: Any) -> Any:
+    """Disarm formula injection (CSV/Excel injection) by prefixing dangerous formula triggers with a single quote."""
+    if val is None:
+        return ""
+    if isinstance(val, (int, float, bool)):
+        return val
+    s = str(val)
+    if s.startswith(("=", "+", "-", "@", "\t", "\r", "%")):
+        return f"'{s}"
+    return s
+
+
 def generate_leads_export_excel(leads: List[Dict[str, Any]]) -> bytes:
     """
     Generate an Excel (.xlsx) file containing all leads along with their call summaries,
@@ -454,7 +467,7 @@ def generate_leads_export_excel(leads: List[Dict[str, Any]]) -> bytes:
     ws.append(headers)
 
     for lead in leads:
-        ws.append([
+        raw_row = [
             lead.get("id", ""),
             lead.get("company", lead.get("name", "")),
             lead.get("owner_name", lead.get("name", "")),
@@ -476,7 +489,8 @@ def generate_leads_export_excel(leads: List[Dict[str, Any]]) -> bytes:
             lead.get("objections_noted", ""),
             lead.get("action_items", ""),
             str(lead.get("last_called_at") or "")
-        ])
+        ]
+        ws.append([sanitize_for_spreadsheet(v) for v in raw_row])
 
     # Header styling
     header_fill = openpyxl.styles.PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")

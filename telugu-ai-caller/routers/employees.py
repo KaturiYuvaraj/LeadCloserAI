@@ -2,7 +2,8 @@
 AI Employees Router - Persona Management, Draft Generation & Lifecycle
 """
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from core.auth import get_request_account_id
 
 from database import (
     get_all_ai_employees,
@@ -19,11 +20,12 @@ router = APIRouter(tags=["employees"])
 
 
 @router.get("/api/employees")
-async def api_get_employees():
+async def api_get_employees(request: Request):
     """List all configured and seeded AI sales employees."""
+    acc_id = get_request_account_id(request)
     return {
-        "employees": get_all_ai_employees(),
-        "active_employee": get_active_ai_employee()
+        "employees": get_all_ai_employees(account_id=acc_id),
+        "active_employee": get_active_ai_employee(account_id=acc_id)
     }
 
 
@@ -46,7 +48,10 @@ async def api_generate_employee_draft(payload: Dict[str, Any]):
 
 
 @router.post("/api/employees")
-async def api_create_employee(payload: Dict[str, Any]):
+async def api_create_employee(payload: Dict[str, Any], request: Request):
+    acc_id = get_request_account_id(request) or 1
+    if "account_id" not in payload:
+        payload["account_id"] = acc_id
     """Create a new AI employee (draft or approved)."""
     if not payload.get("name") or not payload.get("greeting"):
         raise HTTPException(status_code=400, detail="Name and greeting are required.")
@@ -64,7 +69,8 @@ async def api_get_employee(emp_id: int):
 
 
 @router.put("/api/employees/{emp_id}")
-async def api_update_employee(emp_id: int, payload: Dict[str, Any]):
+async def api_update_employee(emp_id: int, payload: Dict[str, Any], request: Request):
+    acc_id = get_request_account_id(request)
     emp = get_ai_employee_by_id(emp_id)
     if not emp:
         raise HTTPException(status_code=404, detail="Employee not found")
@@ -103,7 +109,8 @@ async def api_activate_employee(emp_id: int):
 
 
 @router.delete("/api/employees/{emp_id}")
-async def api_delete_employee(emp_id: int):
+async def api_delete_employee(emp_id: int, request: Request):
+    acc_id = get_request_account_id(request)
     emp = get_ai_employee_by_id(emp_id)
     if not emp:
         raise HTTPException(status_code=404, detail="Employee not found")

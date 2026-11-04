@@ -4,6 +4,7 @@ Developer Router - Public REST API Platform, API Keys & Billing Store
 import json
 from typing import Dict, Any
 from fastapi import APIRouter, Request, HTTPException
+from core.auth import get_request_account_id
 
 from database import (
     get_all_api_keys,
@@ -24,8 +25,9 @@ router = APIRouter(tags=["developer"])
 
 
 @router.get("/api/v1/keys")
-async def api_list_keys():
-    keys = get_all_api_keys()
+async def api_list_keys(request: Request):
+    acc_id = get_request_account_id(request)
+    keys = get_all_api_keys(account_id=acc_id)
     masked = []
     for k in keys:
         raw = k.get("api_key", "")
@@ -35,7 +37,10 @@ async def api_list_keys():
 
 
 @router.post("/api/v1/keys")
-async def api_create_key(data: Dict[str, Any]):
+async def api_create_key(data: Dict[str, Any], request: Request):
+    acc_id = get_request_account_id(request) or 1
+    if "account_id" not in data:
+        data["account_id"] = acc_id
     name = data.get("key_name", "Developer Key")
     email = data.get("user_email", "developer@client.com")
     company = data.get("company_name", "Client App")

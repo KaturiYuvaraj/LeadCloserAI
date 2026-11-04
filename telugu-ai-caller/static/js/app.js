@@ -1355,13 +1355,19 @@ Your registered phone / client phone will ring shortly.`);
       dashboard: document.getElementById("crmViewDashboard"),
       leads: document.getElementById("crmViewLeads"),
       campaigns: document.getElementById("crmViewCampaigns"),
-      automations: document.getElementById("crmViewAutomations"),
-      analytics: document.getElementById("crmViewAnalytics")
+      employees: document.getElementById("crmViewEmployees"),
+      followups: document.getElementById("crmViewFollowups") || document.getElementById("crmViewAutomations"),
+      automations: document.getElementById("crmViewFollowups") || document.getElementById("crmViewAutomations"),
+      analytics: document.getElementById("crmViewAnalytics"),
+      integrations: document.getElementById("crmViewIntegrations"),
+      developer: document.getElementById("crmViewDeveloper"),
+      billing: document.getElementById("crmViewBilling"),
+      settings: document.getElementById("crmViewSettings")
     };
 
     Object.keys(views).forEach(k => {
       if (views[k]) {
-        views[k].style.display = (k === viewName) ? (k === "calling" ? "grid" : "flex") : "none";
+        views[k].style.display = (k === viewName) ? (k === "calling" ? "grid" : "block") : "none";
       }
     });
 
@@ -1372,33 +1378,256 @@ Your registered phone / client phone will ring shortly.`);
 
     if (pageTitle && pageSub) {
       if (viewName === "calling") {
-        pageTitle.innerText = "Live Sales Pipeline & Calling Station";
-        pageSub.innerText = "AI-powered calling, follow-ups, and deal closure";
+        pageTitle.innerText = "Calling Station & Live AI Workspace";
+        pageSub.innerText = "Real-time conversation pipeline, intelligent scripts, and live deal closing";
         if (pageActions) pageActions.style.display = "flex";
       } else if (viewName === "dashboard") {
-        pageTitle.innerText = "Executive Sales Dashboard";
-        pageSub.innerText = "Real-time revenue metrics, active agents & pipeline velocity";
+        pageTitle.innerText = "Executive Performance Overview";
+        pageSub.innerText = "Real-time metrics, conversion funnel, upcoming follow-ups, and deal activity";
         if (pageActions) pageActions.style.display = "flex";
       } else if (viewName === "leads") {
-        pageTitle.innerText = "Leads Pipeline & Contact Management";
-        pageSub.innerText = "Manage prospect records, upload CSV/Excel & enrich contact intelligence";
+        pageTitle.innerText = "Lead Directory & Pipeline Management";
+        pageSub.innerText = "Manage prospect records, upload CSV/Excel, and track conversion stages";
         if (pageActions) pageActions.style.display = "none";
       } else if (viewName === "campaigns") {
-        pageTitle.innerText = "Autonomous Outbound Campaigns";
+        pageTitle.innerText = "Outbound Batch Campaigns";
         pageSub.innerText = "Batch dial prospects with multilingual AI sales employees";
         if (pageActions) pageActions.style.display = "none";
         if (window.refreshCampaignStatus) window.refreshCampaignStatus();
-      } else if (viewName === "automations") {
-        pageTitle.innerText = "Workflow Automations & Event Triggers";
-        pageSub.innerText = "WhatsApp brochures, calendar sync, and post-call notifications";
+      } else if (viewName === "employees") {
+        pageTitle.innerText = "AI Sales Employees & Personas";
+        pageSub.innerText = "Configure multi-lingual closing personas, pitch scripts, and voice models";
         if (pageActions) pageActions.style.display = "none";
+        if (window.loadEmployeesView) window.loadEmployeesView();
+      } else if (viewName === "followups" || viewName === "automations") {
+        pageTitle.innerText = "Follow-up Reminders & Cadence";
+        pageSub.innerText = "Scheduled prospect callbacks, automated WhatsApp outreach, and review queues";
+        if (pageActions) pageActions.style.display = "none";
+        if (window.loadFollowupsView) window.loadFollowupsView();
       } else if (viewName === "analytics") {
-        pageTitle.innerText = "Executive Sales Intelligence & Voice Analytics";
-        pageSub.innerText = "Conversion funnels, speech sentiment breakdown, and agent performance";
+        pageTitle.innerText = "Sales & Conversion Analytics";
+        pageSub.innerText = "Verified deal metrics, call duration distributions, and objection intelligence";
         if (pageActions) pageActions.style.display = "none";
         if (window.loadAnalyticsDashboard) window.loadAnalyticsDashboard();
-
+      } else if (viewName === "integrations") {
+        pageTitle.innerText = "Connected Integrations & Telephony";
+        pageSub.innerText = "Manage Sarvam AI, Vobiz, Exotel, Twilio, WhatsApp, and Google Calendar";
+        if (pageActions) pageActions.style.display = "none";
+        if (window.loadIntegrationsView) window.loadIntegrationsView();
+      } else if (viewName === "developer") {
+        pageTitle.innerText = "Developer API & Webhooks";
+        pageSub.innerText = "REST API keys, instant dispatch endpoints, and webhook triggers";
+        if (pageActions) pageActions.style.display = "none";
+        if (window.loadDeveloperApiView) window.loadDeveloperApiView();
+      } else if (viewName === "billing") {
+        pageTitle.innerText = "Billing, Credits & Talk-Time Ledger";
+        pageSub.innerText = "Live talk-time balance, recharge invoices, and transparent per-minute accounting";
+        if (pageActions) pageActions.style.display = "none";
+        if (window.loadBillingView) window.loadBillingView();
+      } else if (viewName === "settings") {
+        pageTitle.innerText = "Organization Settings & Compliance";
+        pageSub.innerText = "Company branding, operational calling hours, and opt-out registry";
+        if (pageActions) pageActions.style.display = "none";
+        if (window.loadSettingsView) window.loadSettingsView();
       }
+    }
+  };
+
+  // 4. Data Loaders for New Views
+  window.loadEmployeesView = async () => {
+    const grid = document.getElementById("crmEmployeesGrid");
+    if (!grid) return;
+    try {
+      const resp = await fetch("/api/employees");
+      const data = await resp.json();
+      const emps = data.employees || [];
+      const active = data.active_employee || null;
+
+      if (emps.length === 0) {
+        grid.innerHTML = '<div style="color: #64748b; font-size: 0.85rem;">No AI employees configured yet.</div>';
+        return;
+      }
+
+      grid.innerHTML = emps.map(e => {
+        const isActive = active && active.id === e.id;
+        return `
+          <div class="crm-panel-card" style="padding: 20px; border-top: 4px solid ${isActive ? '#ea580c' : '#cbd5e1'};">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <div>
+                <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;">${e.name}</h3>
+                <span style="font-size: 0.74rem; color: #64748b;">${e.role || 'Sales Closer'}</span>
+              </div>
+              <span class="crm-badge ${isActive ? 'live' : 'draft'}" style="font-size: 0.72rem; padding: 3px 8px;">
+                ${isActive ? 'ACTIVE CLOSER' : 'READY'}
+              </span>
+            </div>
+            <div style="font-size: 0.76rem; color: #475569; margin-bottom: 12px; line-height: 1.4;">
+              ${e.description || e.system_prompt || 'Trained on product qualification and deal closing.'}
+            </div>
+            <div style="display: flex; gap: 8px; font-size: 0.72rem; color: #64748b; margin-bottom: 14px;">
+              <span>🌐 ${e.language || 'te-IN'}</span>
+              <span>🎙️ ${e.voice_speaker || 'kavitha_te_conversation'}</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              ${!isActive ? `<button class="crm-btn-orange" onclick="window.activateEmployee(${e.id})" style="padding: 5px 12px; font-size: 0.74rem; cursor: pointer;">Set as Active Closer</button>` : `<button class="crm-action-pill" style="padding: 5px 12px; font-size: 0.74rem; color: #059669; border-color: #a7f3d0; background: #ecfdf5;">Currently Active</button>`}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      grid.innerHTML = `<div style="color: #ef4444; font-size: 0.85rem;">Failed to load employees: ${err.message}</div>`;
+    }
+  };
+
+  window.activateEmployee = async (empId) => {
+    try {
+      const resp = await fetch(`/api/employees/${empId}/activate`, { method: "POST" });
+      const data = await resp.json();
+      if (data.success) {
+        window.loadEmployeesView();
+      } else {
+        alert("Activation error: " + (data.detail || "Could not activate employee"));
+      }
+    } catch (err) {
+      alert("Error activating employee: " + err.message);
+    }
+  };
+
+  window.loadFollowupsView = async () => {
+    const tbody = document.getElementById("crmFollowupsTableBody");
+    if (!tbody) return;
+    try {
+      const resp = await fetch("/api/leads");
+      const data = await resp.json();
+      const leads = data.leads || [];
+      const followups = leads.filter(l => l.callback_at || l.is_hot || l.needs_human_review || l.last_call_stage === 'DEMO_BOOKED');
+
+      if (followups.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">No upcoming callbacks or overdue follow-ups. All prospects current!</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = followups.map(l => `
+        <tr>
+          <td><strong style="color: #0f172a;">${l.name || 'Unnamed Prospect'}</strong><br><span style="font-size: 0.72rem; color: #64748b;">${l.company || ''}</span></td>
+          <td><span style="font-family: monospace; font-size: 0.8rem;">${l.phone || l.phone_e164}</span></td>
+          <td><span class="crm-badge ${l.is_hot ? 'hot' : 'live'}" style="font-size: 0.72rem;">${l.last_call_stage || l.status || 'CALLBACK'}</span></td>
+          <td><span style="font-size: 0.78rem; color: #ea580c; font-weight: 600;">${l.callback_at || 'Today'}</span></td>
+          <td><span style="font-size: 0.76rem; color: #64748b;">Day 1 Contact</span></td>
+          <td>
+            <button class="crm-action-pill" onclick='window.selectLead(${JSON.stringify(l)}); window.switchCrmView("calling");' style="padding: 4px 10px; font-size: 0.74rem; cursor: pointer; color: #ea580c; border-color: #fed7aa; background: #fff7ed;">
+              📞 Call Now
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color: #ef4444; padding: 12px;">Failed to load follow-ups: ${err.message}</td></tr>`;
+    }
+  };
+
+  window.loadDeveloperApiView = async () => {
+    const tbody = document.getElementById("crmApiKeysTableBody");
+    if (!tbody) return;
+    try {
+      const resp = await fetch("/api/v1/keys");
+      const data = await resp.json();
+      const keys = data.keys || [];
+
+      if (keys.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 20px;">No custom REST API keys generated yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = keys.map(k => `
+        <tr>
+          <td><strong style="color: #0f172a;">${k.key_name}</strong><br><span style="font-size: 0.72rem; color: #64748b;">${k.company_name || ''}</span></td>
+          <td><span style="font-family: monospace; font-size: 0.8rem; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${k.masked_key || k.api_key}</span></td>
+          <td><span style="font-size: 0.78rem;">${k.plan_tier || 'Starter'}</span></td>
+          <td><strong style="color: #059669;">₹${Number(k.credits_inr || 0).toFixed(2)}</strong></td>
+          <td><span style="font-size: 0.78rem;">₹${Number(k.rate_per_min || 5.0).toFixed(2)}/min</span></td>
+          <td><span class="crm-badge live" style="font-size: 0.72rem;">${k.status || 'ACTIVE'}</span></td>
+          <td>
+            <button class="crm-action-pill" onclick="alert('API Token copied to clipboard!');" style="padding: 3px 8px; font-size: 0.72rem; cursor: pointer;">Copy</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="7" style="color: #ef4444; padding: 12px;">Failed to load keys: ${err.message}</td></tr>`;
+    }
+  };
+
+  window.loadBillingView = async () => {
+    const tbody = document.getElementById("crmBillingOrdersTableBody");
+    if (!tbody) return;
+    try {
+      const resp = await fetch("/api/v1/billing/orders");
+      const data = await resp.json();
+      const orders = data.orders || [];
+
+      if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 20px;">No historical recharge orders recorded yet. Initial promotional balance active.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = orders.map(o => `
+        <tr>
+          <td><span style="font-family: monospace; font-size: 0.78rem;">${o.order_id}</span></td>
+          <td><span style="font-size: 0.78rem; font-weight: 600;">${o.invoice_number || 'INV-' + o.id}</span></td>
+          <td><span style="font-size: 0.78rem;">${o.plan_name}</span></td>
+          <td><strong style="color: #ea580c;">₹${Number(o.amount_inr || 0).toFixed(2)}</strong></td>
+          <td><span style="color: #059669; font-weight: 600;">+${o.minutes_credited} mins</span></td>
+          <td><span class="crm-badge live" style="font-size: 0.72rem;">SUCCESS</span></td>
+          <td><span style="font-size: 0.75rem; color: #64748b;">${o.created_at ? o.created_at.slice(0, 10) : 'Recent'}</span></td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="7" style="color: #ef4444; padding: 12px;">Failed to load billing history: ${err.message}</td></tr>`;
+    }
+  };
+
+  window.loadSettingsView = async () => {
+    try {
+      const resp = await fetch("/api/profile");
+      const data = await resp.json();
+      const prof = data.profile || {};
+      const nameInput = document.getElementById("settingAgencyName");
+      const langInput = document.getElementById("settingLanguage");
+      const voiceInput = document.getElementById("settingVoice");
+
+      if (nameInput && prof.agency_name) nameInput.value = prof.agency_name;
+      if (langInput && prof.preferred_language) langInput.value = prof.preferred_language;
+      if (voiceInput && prof.tts_voice) voiceInput.value = prof.tts_voice;
+    } catch (err) {
+      console.error("Failed to load settings:", err);
+    }
+  };
+
+  window.saveCompanyProfile = async () => {
+    const nameInput = document.getElementById("settingAgencyName");
+    const langInput = document.getElementById("settingLanguage");
+    const voiceInput = document.getElementById("settingVoice");
+
+    const payload = {
+      agency_name: nameInput ? nameInput.value.trim() : "S P Associates Software Company",
+      preferred_language: langInput ? langInput.value : "te-IN",
+      tts_voice: voiceInput ? voiceInput.value : "kavitha_te_conversation"
+    };
+
+    try {
+      const resp = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      if (data.success) {
+        alert("Organization settings updated successfully!");
+      } else {
+        alert("Failed to save settings: " + (data.detail || "Server error"));
+      }
+    } catch (err) {
+      alert("Error saving settings: " + err.message);
     }
   };
 

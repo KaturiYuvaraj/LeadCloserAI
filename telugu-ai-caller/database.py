@@ -201,8 +201,26 @@ def _emp_to_dict(emp: Employee) -> Dict[str, Any]:
 
 
 def init_db():
-    """Initializes schema and seeds baseline rows if database is empty."""
+    """Initializes schema, runs non-destructive column migrations, and seeds baseline rows if database is empty."""
     Base.metadata.create_all(bind=engine)
+    # Check and migrate missing account_id columns on legacy tables for strict multi-tenancy
+    try:
+        from sqlalchemy import inspect
+        inspector = inspect(engine)
+        table_names = set(inspector.get_table_names())
+        tables_needing_account_id = [
+            "campaigns", "api_keys", "api_billing_orders", "provider_settings", "provider_usage_logs"
+        ]
+        with engine.begin() as conn:
+            for tbl in tables_needing_account_id:
+                if tbl in table_names:
+                    cols = {c["name"] for c in inspector.get_columns(tbl)}
+                    if "account_id" not in cols:
+                        logger.info(f"Adding missing account_id column to {tbl}...")
+                        conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN account_id INTEGER NOT NULL DEFAULT 1"))
+    except Exception as exc:
+        logger.warning(f"Schema migration check note: {exc}")
+
     session = SessionLocal()
     try:
         # Seed default account if not present
@@ -1292,10 +1310,11 @@ def update_call_status_by_sid(call_sid: str, status: str, duration: int = 0) -> 
 
 # ---------------- COMPANY PROFILE & SETTINGS ----------------
 
-def get_company_profile() -> Dict[str, Any]:
+def get_company_profile(account_id: int = 1) -> Dict[str, Any]:
     session = SessionLocal()
     try:
-        account = session.query(Account).filter_by(id=1).first()
+        acc_id = int(account_id or 1)
+        account = session.query(Account).filter_by(id=acc_id).first()
         if not account:
             return {
                 "id": 1,
@@ -1336,10 +1355,11 @@ def get_company_profile() -> Dict[str, Any]:
         session.close()
 
 
-def update_company_profile(data: Dict[str, Any]) -> bool:
+def update_company_profile(data: Dict[str, Any], account_id: int = 1) -> bool:
     session = SessionLocal()
     try:
-        account = session.query(Account).filter_by(id=1).first()
+        acc_id = int(account_id or 1)
+        account = session.query(Account).filter_by(id=acc_id).first()
         if not account:
             return False
         if data.get("agency_name"): account.name = data["agency_name"]
@@ -1356,40 +1376,53 @@ def update_company_profile(data: Dict[str, Any]) -> bool:
 
 # ---------------- AI EMPLOYEES ----------------
 
-def get_all_ai_employees() -> List[Dict[str, Any]]:
+def get_all_ai_employees(account_id: Optional[int] = None) -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        employees = session.query(Employee).order_by(Employee.id.asc()).all()
+        query = session.query(Employee)
+        if account_id is not None:
+            query = query.filter(Employee.account_id == int(account_id))
+        employees = query.order_by(Employee.id.asc()).all()
         return [_emp_to_dict(e) for e in employees]
     finally:
         session.close()
 
 
-def get_ai_employee_by_id(emp_id: int) -> Optional[Dict[str, Any]]:
+def get_ai_employee_by_id(emp_id: int, account_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        emp = session.query(Employee).filter_by(id=emp_id).first()
+        query = session.query(Employee).filter(Employee.id == emp_id)
+        if account_id is not None:
+            query = query.filter(Employee.account_id == int(account_id))
+        emp = query.first()
         return _emp_to_dict(emp) if emp else None
     finally:
         session.close()
 
 
-def get_active_ai_employee() -> Optional[Dict[str, Any]]:
+def get_active_ai_employee(account_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        emp = session.query(Employee).filter_by(status="live").first()
+        query = session.query(Employee).filter_by(status="live")
+        if account_id is not None:
+            query = query.filter(Employee.account_id == int(account_id))
+        emp = query.first()
         if not emp:
-            emp = session.query(Employee).first()
+            fallback = session.query(Employee)
+            if account_id is not None:
+                fallback = fallback.filter(Employee.account_id == int(account_id))
+            emp = fallback.first()
         return _emp_to_dict(emp) if emp else None
     finally:
         session.close()
 
 
-def create_ai_employee(data: Dict[str, Any]) -> int:
+def create_ai_employee(data: Dict[str, Any], account_id: int = 1) -> int:
     session = SessionLocal()
     try:
+        acc_id = int(data.get("account_id", account_id) or 1)
         emp = Employee(
-            account_id=1,
+            account_id=acc_id,
             name=data["name"],
             job_type="instant",
             language=data.get("language", "te-IN"),
@@ -1421,10 +1454,13 @@ def create_ai_employee(data: Dict[str, Any]) -> int:
         session.close()
 
 
-def update_ai_employee(emp_id: int, updates: Dict[str, Any]) -> bool:
+def update_ai_employee(emp_id: int, updates: Dict[str, Any], account_id: Optional[int] = None) -> bool:
     session = SessionLocal()
     try:
-        emp = session.query(Employee).filter_by(id=emp_id).first()
+        query = session.query(Employee).filter(Employee.id == emp_id)
+        if account_id is not None:
+            query = query.filter(Employee.account_id == int(account_id))
+        emp = query.first()
         if not emp:
             return False
 
@@ -1479,10 +1515,13 @@ def set_active_ai_employee(emp_id: int) -> bool:
         session.close()
 
 
-def delete_ai_employee(emp_id: int) -> bool:
+def delete_ai_employee(emp_id: int, account_id: Optional[int] = None) -> bool:
     session = SessionLocal()
     try:
-        emp = session.query(Employee).filter_by(id=emp_id).first()
+        query = session.query(Employee).filter(Employee.id == emp_id)
+        if account_id is not None:
+            query = query.filter(Employee.account_id == int(account_id))
+        emp = query.first()
         if not emp:
             return False
         session.delete(emp)
@@ -1498,10 +1537,13 @@ def delete_ai_employee(emp_id: int) -> bool:
 
 # ---------------- PROVIDER SETTINGS & LOGS ----------------
 
-def get_all_provider_settings() -> List[Dict[str, Any]]:
+def get_all_provider_settings(account_id: Optional[int] = None) -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        settings = session.query(ProviderSetting).all()
+        query = session.query(ProviderSetting)
+        if account_id is not None:
+            query = query.filter(ProviderSetting.account_id == int(account_id))
+        settings = query.all()
         return [{
             "provider_type": s.provider_type,
             "provider_name": s.provider_name,
@@ -1517,13 +1559,16 @@ def get_all_provider_settings() -> List[Dict[str, Any]]:
         session.close()
 
 
-def get_provider_setting(provider_type: str, provider_name: str) -> Optional[Dict[str, Any]]:
+def get_provider_setting(provider_type: str, provider_name: str, account_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        s = session.query(ProviderSetting).filter_by(
+        query = session.query(ProviderSetting).filter_by(
             provider_type=provider_type,
             provider_name=provider_name
-        ).first()
+        )
+        if account_id is not None:
+            query = query.filter(ProviderSetting.account_id == int(account_id))
+        s = query.first()
         if not s:
             return None
         return {
@@ -1546,14 +1591,17 @@ def upsert_provider_setting(
     is_enabled: bool,
     is_configured: bool,
     config_dict: Optional[Dict[str, Any]] = None,
-    config: Optional[Dict[str, Any]] = None
+    config: Optional[Dict[str, Any]] = None,
+    account_id: int = 1
 ) -> None:
     session = SessionLocal()
     try:
+        acc_id = int(account_id or 1)
         cfg = config_dict or config or {}
         cfg_str = json.dumps(cfg, ensure_ascii=False) if isinstance(cfg, dict) else str(cfg)
 
         s = session.query(ProviderSetting).filter_by(
+            account_id=acc_id,
             provider_type=provider_type,
             provider_name=provider_name
         ).first()
@@ -1564,6 +1612,7 @@ def upsert_provider_setting(
             s.updated_at = func.now()
         else:
             s = ProviderSetting(
+                account_id=acc_id,
                 provider_type=provider_type,
                 provider_name=provider_name,
                 is_enabled=is_enabled,
@@ -1654,10 +1703,13 @@ def record_provider_usage(provider_name: str, operation: str, credits_used: floa
 
 # ---------------- API KEYS & BILLING ----------------
 
-def get_all_api_keys() -> List[Dict[str, Any]]:
+def get_all_api_keys(account_id: Optional[int] = None) -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        keys = session.query(ApiKey).order_by(ApiKey.created_at.desc()).all()
+        query = session.query(ApiKey)
+        if account_id is not None:
+            query = query.filter(ApiKey.account_id == int(account_id))
+        keys = query.order_by(ApiKey.created_at.desc()).all()
         return [{
             "id": k.id,
             "key_name": k.key_name,
@@ -1678,10 +1730,13 @@ def get_all_api_keys() -> List[Dict[str, Any]]:
 
 
 
-def get_primary_api_key() -> Optional[Dict[str, Any]]:
+def get_primary_api_key(account_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        k = session.query(ApiKey).filter_by(status="active").first()
+        query = session.query(ApiKey).filter_by(status="active")
+        if account_id is not None:
+            query = query.filter(ApiKey.account_id == int(account_id))
+        k = query.first()
         if not k:
             return None
         return {
@@ -1724,12 +1779,14 @@ def get_api_key_by_token(token: str) -> Optional[Dict[str, Any]]:
         session.close()
 
 
-def create_api_key(key_data: Dict[str, Any]) -> Dict[str, Any]:
+def create_api_key(key_data: Dict[str, Any], account_id: int = 1) -> Dict[str, Any]:
     session = SessionLocal()
     try:
         import secrets
         raw_token = f"lc_live_{secrets.token_hex(16)}"
+        acc_id = int(key_data.get("account_id", account_id) or 1)
         ak = ApiKey(
+            account_id=acc_id,
             key_name=key_data.get("key_name", "Developer Key"),
             user_email=key_data.get("user_email", "developer@company.com"),
             company_name=key_data.get("company_name", "Enterprise Client"),
@@ -1804,10 +1861,12 @@ def deduct_api_credits(api_key_token: str, duration_seconds: int) -> Dict[str, A
         session.close()
 
 
-def create_billing_order(order_data: Dict[str, Any]) -> int:
+def create_billing_order(order_data: Dict[str, Any], account_id: int = 1) -> int:
     session = SessionLocal()
     try:
+        acc_id = int(order_data.get("account_id", account_id) or 1)
         bo = BillingOrder(
+            account_id=acc_id,
             api_key_id=order_data.get("api_key_id"),
             order_id=order_data["order_id"],
             plan_name=order_data.get("plan_name", "Credit Recharge"),
@@ -1836,10 +1895,13 @@ def create_billing_order(order_data: Dict[str, Any]) -> int:
         session.close()
 
 
-def get_billing_orders() -> List[Dict[str, Any]]:
+def get_billing_orders(account_id: Optional[int] = None) -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        orders = session.query(BillingOrder).order_by(BillingOrder.created_at.desc()).all()
+        query = session.query(BillingOrder)
+        if account_id is not None:
+            query = query.filter(BillingOrder.account_id == int(account_id))
+        orders = query.order_by(BillingOrder.created_at.desc()).all()
         return [{
             "id": o.id,
             "api_key_id": o.api_key_id,
@@ -1859,10 +1921,12 @@ def get_billing_orders() -> List[Dict[str, Any]]:
 
 # ---------------- CAMPAIGNS ----------------
 
-def create_campaign(data: Dict[str, Any]) -> int:
+def create_campaign(data: Dict[str, Any], account_id: int = 1) -> int:
     session = SessionLocal()
     try:
+        acc_id = int(data.get("account_id", account_id) or 1)
         c = Campaign(
+            account_id=acc_id,
             name=data["name"],
             description=data.get("description", ""),
             employee_id=data.get("employee_id", 1),
@@ -1884,10 +1948,13 @@ def create_campaign(data: Dict[str, Any]) -> int:
         session.close()
 
 
-def get_all_campaigns() -> List[Dict[str, Any]]:
+def get_all_campaigns(account_id: Optional[int] = None) -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        camps = session.query(Campaign).order_by(Campaign.created_at.desc()).all()
+        query = session.query(Campaign)
+        if account_id is not None:
+            query = query.filter(Campaign.account_id == int(account_id))
+        camps = query.order_by(Campaign.created_at.desc()).all()
         return [{
             "id": c.id,
             "name": c.name,
@@ -1909,10 +1976,13 @@ def get_all_campaigns() -> List[Dict[str, Any]]:
         session.close()
 
 
-def get_campaign_by_id(campaign_id: int) -> Optional[Dict[str, Any]]:
+def get_campaign_by_id(campaign_id: int, account_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        c = session.query(Campaign).filter_by(id=campaign_id).first()
+        query = session.query(Campaign).filter(Campaign.id == campaign_id)
+        if account_id is not None:
+            query = query.filter(Campaign.account_id == int(account_id))
+        c = query.first()
         if not c:
             return None
         return {
@@ -1943,12 +2013,16 @@ def update_campaign_status(
     logs: Optional[List[Dict[str, Any]]] = None,
     camp_id: Optional[int] = None,
     completed: Optional[int] = None,
-    log_entry: Optional[Dict[str, Any]] = None
+    log_entry: Optional[Dict[str, Any]] = None,
+    account_id: Optional[int] = None
 ) -> bool:
     session = SessionLocal()
     try:
         target_id = camp_id or campaign_id
-        c = session.query(Campaign).filter_by(id=target_id).first()
+        query = session.query(Campaign).filter(Campaign.id == target_id)
+        if account_id is not None:
+            query = query.filter(Campaign.account_id == int(account_id))
+        c = query.first()
         if not c:
             return False
         c.status = status
@@ -1977,26 +2051,34 @@ def update_campaign_status(
 
 # ---------------- ANALYTICS SUMMARY ----------------
 
-def get_analytics_summary() -> Dict[str, Any]:
-    """Calculate executive metrics, conversion funnel, objections, sentiments, and employee performance."""
+def get_analytics_summary(account_id: Optional[int] = None) -> Dict[str, Any]:
+    """Calculate real executive metrics, conversion funnel, objections, sentiments, and employee performance."""
     session = SessionLocal()
     try:
-        leads = session.query(Lead).all()
+        acc_filter = int(account_id) if account_id is not None else None
+
+        lead_query = session.query(Lead)
+        if acc_filter:
+            lead_query = lead_query.filter(Lead.account_id == acc_filter)
+        leads = lead_query.all()
         total_leads = len(leads)
 
-        status_counts = {}
+        status_counts: Dict[str, int] = {}
         for l in leads:
             st = (l.variables or {}).get("status", "NEW") if isinstance(l.variables, dict) else "NEW"
             status_counts[st] = status_counts.get(st, 0) + 1
 
-        calls = session.query(Call).all()
+        call_query = session.query(Call)
+        if acc_filter:
+            call_query = call_query.filter(Call.account_id == acc_filter)
+        calls = call_query.all()
         total_calls = len(calls)
         total_duration_sec = sum(c.talk_seconds or 0 for c in calls)
         avg_call_duration_seconds = round(total_duration_sec / max(total_calls, 1), 1)
 
-        dispositions = {}
-        stages = {}
-        sentiments = {}
+        dispositions: Dict[str, int] = {}
+        stages: Dict[str, int] = {}
+        sentiments: Dict[str, int] = {}
         objections_tally = {
             "pricing": 0,
             "existing_solution": 0,
@@ -2034,42 +2116,40 @@ def get_analytics_summary() -> Dict[str, Any]:
                 if not matched:
                     objections_tally["other"] += 1
 
-        # Fallback baseline for visual presentation
-        if sum(objections_tally.values()) == 0:
-            objections_tally = {
-                "pricing": 14,
-                "existing_solution": 8,
-                "send_whatsapp_timing": 6,
-                "custom_requirements": 4,
-                "other": 2
-            }
-
         demos_booked = status_counts.get("DEMO_BOOKED", 0) + stages.get("demo_scheduled", 0) + stages.get("demo_booked", 0)
         closed_won = status_counts.get("CLOSED_WON", 0) + stages.get("closed_won", 0)
         conversion_rate = round(((demos_booked + closed_won) / max(total_calls, 1)) * 100, 1)
 
-        # Languages breakdown
+        # Languages breakdown from real lead variables
         languages = {"te-IN": 0, "hi-IN": 0, "en-IN": 0, "ta-IN": 0, "kn-IN": 0, "ml-IN": 0}
         for l in leads:
             lang = (l.variables or {}).get("preferred_language", "te-IN") if isinstance(l.variables, dict) else "te-IN"
             if lang in languages:
                 languages[lang] += 1
             else:
-                languages["te-IN"] += 1
-        if sum(languages.values()) == 0:
-            languages = {"te-IN": 18, "hi-IN": 7, "en-IN": 5, "ta-IN": 4, "kn-IN": 3, "ml-IN": 2}
+                languages["te-IN"] = languages.get("te-IN", 0) + 1
 
-        # CPQL estimate
-        est_total_spend = total_calls * 5.0 + 150.0
-        cpql_inr = round(est_total_spend / max(demos_booked + closed_won, 1), 2)
+        # Real CPQL calculation based on billed talk-time (₹5/min)
+        est_total_spend = (total_duration_sec / 60.0) * 5.0
+        cpql_inr = round(est_total_spend / max(demos_booked + closed_won, 1), 2) if (demos_booked + closed_won) > 0 else 0.0
 
-        # Employees performance summary
-        emps = session.query(Employee).all()
+        # Employees performance summary from real call records
+        emp_query = session.query(Employee)
+        if acc_filter:
+            emp_query = emp_query.filter(Employee.account_id == acc_filter)
+        emps = emp_query.all()
+
         employee_list = []
-        for idx, e in enumerate(emps):
-            calls_handled = max(total_calls // max(len(emps), 1) + (len(emps) - idx) * 2, 3)
-            demos_count = max(demos_booked // max(len(emps), 1) + (len(emps) - idx), 1)
-            succ_rate = round((demos_count / max(calls_handled, 1)) * 100, 1)
+        for e in emps:
+            e_calls = [c for c in calls if c.employee_id == e.id]
+            calls_handled = len(e_calls)
+            demos_count = sum(
+                1 for c in e_calls
+                if "demo" in (c.outcome or "").lower()
+                or "demo" in (c.state or "").lower()
+                or (isinstance(c.captured, dict) and "demo" in str(c.captured.get("outcome_label", "")).lower())
+            )
+            succ_rate = round((demos_count / max(calls_handled, 1)) * 100, 1) if calls_handled > 0 else 0.0
             employee_list.append({
                 "id": e.id,
                 "name": e.name,
@@ -2095,7 +2175,7 @@ def get_analytics_summary() -> Dict[str, Any]:
             "objections": objections_tally,
             "languages": languages,
             "employees": employee_list,
-            "hot_leads": session.query(Lead).filter(Lead.is_hot == True).count()
+            "employee_performance": employee_list
         }
     finally:
         session.close()

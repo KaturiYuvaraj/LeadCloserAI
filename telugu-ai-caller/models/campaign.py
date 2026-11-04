@@ -8,6 +8,7 @@ class Campaign(Base):
     __tablename__ = "campaigns"
 
     id: Any = Column(Integer, primary_key=True, autoincrement=True)
+    account_id: Any = Column(Integer, ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, default=1, index=True)
     name: Any = Column(String(255), nullable=False)
     description: Any = Column(Text, nullable=True)
     employee_id: Any = Column(Integer, ForeignKey("employees.id", ondelete="SET NULL"), nullable=True, index=True)

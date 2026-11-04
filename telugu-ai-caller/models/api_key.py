@@ -1,5 +1,5 @@
 from typing import Any
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
 from sqlalchemy.sql import func
 from core.db import Base
 
@@ -8,6 +8,7 @@ class ApiKey(Base):
     __tablename__ = "api_keys"
 
     id: Any = Column(Integer, primary_key=True, autoincrement=True)
+    account_id: Any = Column(Integer, ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, default=1, index=True)
     key_name: Any = Column(String(128), nullable=False)
     user_email: Any = Column(String(255), nullable=False)
     company_name: Any = Column(String(255), nullable=True)

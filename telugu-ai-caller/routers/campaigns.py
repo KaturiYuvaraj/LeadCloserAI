@@ -8,7 +8,8 @@ weekly call limits, and automatic retries.
 The legacy fake in-memory simulation mode is removed from the campaign flow.
 """
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from core.auth import get_request_account_id
 
 from services.campaign_service import campaign_service
 
@@ -25,13 +26,16 @@ def _dialer():
 
 
 @router.post("/api/campaign/start")
-async def api_start_campaign(payload: Dict[str, Any]):
+async def api_start_campaign(payload: Dict[str, Any], request: Request):
+    account_id = get_request_account_id(request) or 1
     dialer = _dialer()
     if dialer is not None:
         # Ensure consent is passed through to the queue (default True when launched via API if not explicitly False)
         dial_payload = dict(payload)
         if "consent_confirmed" not in dial_payload:
             dial_payload["consent_confirmed"] = True
+        if "account_id" not in dial_payload:
+            dial_payload["account_id"] = account_id
         result = dialer.start_calling(dial_payload)
         return {
             **result,
