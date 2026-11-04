@@ -64,10 +64,12 @@ async def api_get_call_recording(call_id: int, request: Request):
     account_id = get_request_account_id(request)
     if not get_call_by_id(call_id, account_id=account_id):
         raise HTTPException(status_code=404, detail="Call record not found")
-    recording_path = RECORDINGS_DIR / f"call_{call_id}.webm"
-    if not recording_path.exists():
-        raise HTTPException(status_code=404, detail="No recording stored for this call.")
-    return FileResponse(recording_path, media_type="audio/webm", filename=f"call_{call_id}.webm")
+    # Browser calls are recorded in the browser (WebM); phone calls by the voice engine (stereo WAV)
+    for suffix, media_type in ((".webm", "audio/webm"), (".wav", "audio/wav")):
+        recording_path = RECORDINGS_DIR / f"call_{call_id}{suffix}"
+        if recording_path.exists():
+            return FileResponse(recording_path, media_type=media_type, filename=recording_path.name)
+    raise HTTPException(status_code=404, detail="No recording stored for this call.")
 
 
 @router.get("/api/analytics/overview")

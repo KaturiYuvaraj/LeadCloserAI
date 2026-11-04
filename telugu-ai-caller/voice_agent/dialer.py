@@ -43,6 +43,9 @@ DISPOSITIONS = {
     "completed": "completed", "answered": "completed",
 }
 
+# Answered by a machine or nobody spoke: the engine ends the call and it is retried like no-answer
+RETRY_ENGINE_OUTCOMES = {"voicemail", "ivr", "unreachable", "no_response"}
+
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -181,7 +184,9 @@ class CallQueue:
                 account = accounts.get(job.account_id) or session.get(Account, job.account_id)
                 accounts[job.account_id] = account
 
-                result = check_can_call(session, account, lead, now, is_retry=job.attempt > 0)
+                # a callback the customer asked for is not held back by "called recently"
+                is_retry = job.attempt > 0 or job.last_disposition == "callback_requested"
+                result = check_can_call(session, account, lead, now, is_retry=is_retry)
                 if result.status == "blocked":
                     job.state, job.block_reason = "blocked", result.reason
                     self.log(f"⛔ Not calling {lead.name}: {result.reason.replace('_', ' ')}", "warning", lead.id)
@@ -279,6 +284,11 @@ class CallQueue:
         try:
             job = session.get(CallJob, job_id)
             if not job:
+                return
+            if outcome in RETRY_ENGINE_OUTCOMES:
+                job.call_id = call_id
+                self._schedule_retry(session, job, outcome)
+                session.commit()
                 return
             job.state = "completed"
             job.call_id = call_id

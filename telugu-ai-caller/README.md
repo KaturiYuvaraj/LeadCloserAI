@@ -93,6 +93,37 @@ python tests/fake_exotel/client.py --provider vobiz --wav tests/fake_exotel/samp
 
 Use `--answer-url http://127.0.0.1:<port>/api/voice/vobiz/answer` if the app isn't on port 8000.
 
+### Real-call handling
+
+The engine handles real phone conditions (`voice_agent/call_guard.py`, `actions.py`, `knowledge.py`):
+
+| Situation | What happens |
+|---|---|
+| Background noise | RNNoise cleans phone audio before speech recognition (`VOICE_NOISE_FILTER=off` disables it) |
+| Long pauses mid-sentence | Smart end-of-turn model waits up to 3 s if the sentence sounds unfinished |
+| "One minute / ఒక్క నిమిషం / एक मिनट" | "Sure, take your time", then waits up to `VOICE_HOLD_SECS` (45 s) |
+| Caller silent | "Can you hear me?" after `VOICE_SILENCE_SECS` (8 s), then a polite goodbye; no reply at all → `no_response`, retried |
+| Voicemail, IVR menu, "switched off / not reachable" | Detected in the first 30 s (6 languages), call ended, outcome `voicemail` / `ivr` / `unreachable`, retried by the dialer |
+| Someone else answers / wrong number | No pitch; asks when the lead is free → callback, or Do-Not-Call for wrong numbers |
+| Noisy or broken transcript | Asks the caller to repeat instead of guessing |
+| Angry, abusive, off-topic, "ignore your instructions" | Stays calm, doesn't argue, returns to topic, never reveals its prompt |
+| Call too long | Wrap-up note 45 s before `VOICE_MAX_CALL_SECONDS` (or the AI employee's limit), then a closing line |
+
+**Actions during the call.** The LLM ends a reply with markers that the engine carries out immediately:
+`[CALLBACK: YYYY-MM-DD HH:MM]` (new dialer job), `[MEETING: …]` (lead → DEMO_BOOKED, Google Calendar if configured),
+`[SEND_WHATSAPP: …]` (WhatsApp if configured, otherwise queued on the lead), `[HUMAN_HANDOFF]`, `[WRONG_PERSON]`,
+`[DO_NOT_CALL]` (opt-out list, open jobs cancelled), `[CALL_COMPLETED]`. Safety rules: a reply that ends with a
+question never hangs up or books anything; a "we won't call you again" promise always records Do-Not-Call.
+
+**AI employee and knowledge base.** Calls use the live AI employee (or `employee_id`): role, instructions, script,
+qualification questions, greeting, voice, max call length and knowledge. Upload documents for it to answer from:
+`POST /api/employees/{id}/knowledge` (PDF, Word, Excel, CSV, TXT, MD), `GET` to list, `DELETE …/knowledge/{index}`.
+
+**Analytics and recordings.** Each call stores end reason, interruptions, silence prompts, languages, caller signals,
+actions, talk time and reply gaps (`calls.captured.analytics`); `GET /api/analytics/calls?days=30` totals them.
+Phone calls are recorded on the server as stereo WAV (caller left, AI right; `VOICE_RECORD_CALLS=off` disables it),
+served at `/api/calls/{id}/recording`.
+
 ## Outbound calling (dialer)
 
 Upload leads, then **Campaign → Real Phone** (tick the consent box) or `POST /api/dialer/campaigns`.

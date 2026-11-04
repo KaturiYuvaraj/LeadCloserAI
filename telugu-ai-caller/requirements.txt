@@ -18,3 +18,9 @@ phonenumbers>=8.13.0
 # Real-time voice engine (Pipecat). Needs Python 3.10–3.13; on 3.14 the app
 # still runs and the dashboard falls back to the classic /ws/web-call engine.
 pipecat-ai[sarvam,silero,webrtc,openai]==1.14.0; python_version < "3.14"
+# Noise reduction on phone audio (RNNoise, free, runs locally)
+pyrnnoise>=0.4.5; python_version < "3.14"
+
+# Knowledge base uploads (PDF and Word documents)
+pypdf>=6.0.0
+python-docx>=1.1.0

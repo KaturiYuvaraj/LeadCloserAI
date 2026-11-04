@@ -31,6 +31,7 @@ from routers import (
     messaging,
     developer,
     telephony,
+    knowledge,
 )
 
 
@@ -90,6 +91,7 @@ app.include_router(integrations.router)
 app.include_router(messaging.router)
 app.include_router(developer.router)
 app.include_router(telephony.router)
+app.include_router(knowledge.router)
 
 # Real-time Pipecat voice stream router (optional)
 try:
