@@ -206,7 +206,7 @@ def test_phase_c_price_book_quotation_guardrails_pdf_and_whatsapp_stop():
     quote2 = q_high.json()["quotation"]
     assert quote2["requires_manager_approval"] is True
     assert quote2["status"] == "pending_approval"
-    assert quote2["version"] == 2
+    assert quote2["version"] == quote1["version"] + 1
 
     # 3. Manager one-tap approval
     app_res = client.post(f"/api/quotations/{quote2['id']}/approve")

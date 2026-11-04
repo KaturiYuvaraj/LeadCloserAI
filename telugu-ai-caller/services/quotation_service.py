@@ -318,7 +318,7 @@ def create_quotation(
             pkg = {
                 "code": package_code or "pkg_custom_scope",
                 "name": "Custom Software Solution",
-                "base_price_inr": float(custom_price_inr or 50000.0),
+                "base_price_inr": custom_price_inr or 50000.0,
                 "max_discount_pct": 10.0,
                 "deliverables": custom_scope_notes or "Custom software scope as discussed",
             }
@@ -328,7 +328,7 @@ def create_quotation(
             pkg = dict(DEFAULT_PRICE_BOOK[0])
 
     max_disc = float(pkg.get("max_discount_pct", 10.0))
-    req_disc = max(0.0, min(90.0, float(discount_pct or 0.0)))
+    req_disc = max(0.0, min(90.0, discount_pct or 0.0))
 
     # Determine version for this lead and supersede previous open versions
     existing_for_lead = [
@@ -343,24 +343,24 @@ def create_quotation(
             prev_q["updated_at"] = now_ist.isoformat()
             _persist_quotation(prev_q)
 
-    raw_base = float(custom_price_inr) if (is_custom_scope and custom_price_inr is not None) else float(pkg["base_price_inr"])
+    raw_base = custom_price_inr if (is_custom_scope and custom_price_inr is not None) else float(pkg["base_price_inr"])
     base_price = max(0.0, raw_base)
     discount_amount = round(base_price * (req_disc / 100.0), 2)
     taxable_amount = round(max(0.0, base_price - discount_amount), 2)
     gst_amount = round(taxable_amount * 0.18, 2)  # 18% GST
     total_inr = round(taxable_amount + gst_amount, 2)
 
-    requires_approval = bool(is_custom_scope or (req_disc > max_disc))
+    requires_approval = is_custom_scope or (req_disc > max_disc)
     approval_reason: List[str] = []
     if is_custom_scope:
         approval_reason.append("Custom scope outside standard price book")
     if req_disc > max_disc:
         approval_reason.append(f"Requested discount {req_disc}% exceeds limit of {max_disc}%")
 
-    valid_until = (now_ist + timedelta(days=max(1, int(validity_days or 7)))).strftime("%Y-%m-%d")
+    valid_until = (now_ist + timedelta(days=max(1, validity_days or 7))).strftime("%Y-%m-%d")
 
-    _STATE["quote_seq"] = int(_STATE["quote_seq"]) + 1
-    quote_id = int(_STATE["quote_seq"])
+    quote_id = int(_STATE["quote_seq"]) + 1
+    _STATE["quote_seq"] = quote_id
     quote_number = f"Q-{quote_id}"
 
     if requires_approval:
@@ -374,13 +374,13 @@ def create_quotation(
         "version": version,
         "account_id": account_id,
         "lead_id": lead_id,
-        "lead_name": str(lead_name or "Valued Client"),
-        "lead_phone": str(lead_phone or "+910000000000"),
+        "lead_name": lead_name or "Valued Client",
+        "lead_phone": lead_phone or "+910000000000",
         "package_code": str(pkg["code"]),
         "package_name": str(pkg["name"]),
         "deliverables": str(custom_scope_notes if (is_custom_scope and custom_scope_notes) else pkg["deliverables"]),
-        "is_custom_scope": bool(is_custom_scope),
-        "custom_scope_notes": str(custom_scope_notes or ""),
+        "is_custom_scope": is_custom_scope,
+        "custom_scope_notes": custom_scope_notes or "",
         "base_price_inr": base_price,
         "discount_pct": req_disc,
         "max_discount_pct": max_disc,
@@ -394,13 +394,13 @@ def create_quotation(
         "approved_by": "system_auto" if not requires_approval else None,
         "approved_at": now_ist.isoformat() if not requires_approval else None,
         "status": status,
-        "whatsapp_opt_in": bool(whatsapp_opt_in),
-        "whatsapp_sent": bool(status == "sent" and whatsapp_opt_in),
+        "whatsapp_opt_in": whatsapp_opt_in,
+        "whatsapp_sent": status == "sent" and whatsapp_opt_in,
         "opened_at": None,
         "replied_at": None,
         "valid_until": valid_until,
         "terms": "50% advance on kick-off, 30% on UAT preview, 20% on final deployment. GST 18% included.",
-        "created_by": str(created_by or "ai_agent"),
+        "created_by": created_by or "ai_agent",
         "created_at": now_ist.isoformat(),
         "updated_at": now_ist.isoformat(),
     }
@@ -463,7 +463,7 @@ def update_quotation_status(
     if new_status == "opened" and not q.get("opened_at"):
         q["opened_at"] = now_ist
     if new_status == "won" and won_amount_inr is not None:
-        q["won_amount_inr"] = float(won_amount_inr)
+        q["won_amount_inr"] = won_amount_inr
     if new_status == "lost" and lost_reason:
         q["lost_reason"] = lost_reason
     q["updated_at"] = now_ist
@@ -577,7 +577,7 @@ def generate_quotation_pdf_bytes(quote: Dict[str, Any]) -> bytes:
     content_ops: List[str] = ["BT", "/F1 11 Tf", "50 760 Td", "16 TL"]
     for line in lines:
         safe_line = (
-            str(line)
+            line
             .replace("₹", "INR ")
             .replace("\\", "\\\\")
             .replace("(", "\\(")
