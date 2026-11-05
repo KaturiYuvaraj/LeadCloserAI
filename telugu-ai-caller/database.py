@@ -1326,7 +1326,8 @@ def get_company_profile() -> Dict[str, Any]:
             "agency_name": account.name,
             "tagline": "ఆధునిక వెబ్, మొబైల్ & AI ఆటోమేషన్ సాఫ్ట్‌వేర్ సేవలు",
             "services_offered": default_services,
-            "pricing_details": f"₹{account.rate_per_min}/min billing",
+            # what the sales agent tells customers; account.rate_per_min is the platform's call billing, not our price
+            "pricing_details": "Flexible milestone payments; starting prices per service as listed above",
             "sales_pitch": default_pitch,
             "preferred_language": account.default_language or "te-IN",
             "tts_voice": "kavitha_te_conversation",

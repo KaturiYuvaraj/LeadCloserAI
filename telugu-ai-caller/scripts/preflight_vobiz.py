@@ -60,7 +60,7 @@ def check_vobiz() -> None:
     if not (auth_id and token):
         return
     try:
-        resp = httpx.get(f"https://api.vobiz.ai/api/v1/Account/{auth_id}/", timeout=20,
+        resp = httpx.get(f"https://api.vobiz.ai/api/v1/Account/{auth_id}/Call/", timeout=20,
                          headers={"X-Auth-ID": auth_id, "X-Auth-Token": token})
     except httpx.HTTPError as e:
         report(False, "Vobiz credentials accepted", type(e).__name__)
@@ -68,7 +68,7 @@ def check_vobiz() -> None:
     if resp.status_code in (401, 403):
         report(False, "Vobiz credentials accepted", f"HTTP {resp.status_code}: check Auth ID / Token")
     else:
-        report(resp.status_code < 400, "Vobiz credentials accepted", f"HTTP {resp.status_code}")
+        report(resp.status_code == 200, "Vobiz credentials accepted", f"HTTP {resp.status_code}")
 
 
 def check_tunnel() -> None:
