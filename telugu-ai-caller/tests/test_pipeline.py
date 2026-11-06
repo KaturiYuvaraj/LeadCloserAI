@@ -18,6 +18,7 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
 
 import asyncio
+import pytest
 from database import (
     init_db,
     get_all_leads,
@@ -77,6 +78,8 @@ def test_database_crud():
     print(f"Auto-promotion test PASSED! Lead status promoted to: {updated_lead['status']}")
 
 
+@pytest.mark.live
+@pytest.mark.skipif(not os.getenv("RUN_LIVE_TESTS"), reason="Calls real Sarvam API; set RUN_LIVE_TESTS=1 to run")
 async def test_sarvam_integration():
     print("\n--- Testing Sarvam STT, TTS and LLM Integration ---")
     # 1. Test LLM Sales Response
