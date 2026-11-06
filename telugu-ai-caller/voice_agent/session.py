@@ -36,7 +36,7 @@ import os
 import time
 import uuid
 import wave
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qs
@@ -113,7 +113,7 @@ SILENCE_SECS = float(os.getenv("VOICE_SILENCE_SECS", "8"))       # quiet caller 
 HOLD_SECS = float(os.getenv("VOICE_HOLD_SECS", "45"))            # after "one minute"
 MAX_CALL_SECS = int(os.getenv("VOICE_MAX_CALL_SECONDS", "600"))   # unless the AI employee sets its own
 WRAP_UP_BEFORE_SECS = 45
-RECORDINGS_DIR = Path(__file__).resolve().parent.parent / "recordings"
+RECORDINGS_DIR = Path(os.getenv("RECORDINGS_DIR") or Path(__file__).resolve().parent.parent / "recordings")
 
 DISCLOSURE = {
     "te-IN": "ఈ కాల్ రికార్డ్ అవుతోంది, నేను AI అసిస్టెంట్‌ని.",
@@ -159,12 +159,17 @@ LIVE PHONE CONVERSATION RULES (override anything above that conflicts):
   * Reply in one or two short spoken sentences. No lists, no emojis, no markdown.
   * Address their exact objection or inquiry directly first, then warmly guide the conversation forward.
   * Your greeting already said the call is recorded and that you are an AI assistant. Never repeat that.
+  * Repeat back only what the customer actually said, in their words (they said "website", not "custom website"). Never add details, numbers or decisions they did not say.
+  * Write English business words in the script of the language you are speaking so the voice pronounces them naturally. Never put Latin-script (English-letter) words inside a Telugu, Hindi, Tamil, Kannada or Malayalam sentence. Wrong: "మీ business కోసం demo పెట్టుకుందామా". Right: "మీ బిజినెస్ కోసం డెమో పెట్టుకుందామా". Likewise website = వెబ్‌సైట్, software = సాఫ్ట్‌వేర్, custom = కస్టమ్, customers = కస్టమర్స్, team = టీమ్, price = ప్రైస్, samples = శాంపిల్స్, live = లైవ్, timeline = టైమ్‌లైన్, WhatsApp = వాట్సాప్; in Hindi बिज़नेस, वेबसाइट, कस्टमर, डेमो, टीम, प्राइस. Only digits and the AM/PM-free time in words may stay as they are.
+  * Do not promise a particular person or an exact moment you cannot guarantee: say "our team will call you", not "our senior tech lead will call you".
+  * {whatsapp_note}
   * "Hello", "hmm", "haan / హా / हाँ", "ok" on their own are NOT answers. Never treat them as interest, agreement, or a confirmed answer. After "hello", greet them warmly, confirm you can hear them, introduce yourself again in one line and ask your question again.
 - LANGUAGE STABILITY & VERIFICATION:
   * Reply ONLY in the verified call language specified in the prompt instructions.
   * Indian business calls frequently use English loanwords ("website", "software", "demo", "price", "business", "meeting", "okay"). Never switch languages because of isolated loanwords.
   * Do not flip-flop languages on a single phrase; maintain conversation in the verified call language.
-- Now: {now} IST. Use it to turn "tomorrow evening" or "Monday 5 pm" into exact dates and times.
+- CALENDAR: {calendar}
+  Use only these dates (also inside markers); never guess a date or weekday. Never offer a time that has already passed today. If the customer asks for a time today that is still ahead of the time now (for example 4 PM when it is 3:12 PM), accept it. Only refuse a time that has already passed. Say times in words in your language.
 - Never invent prices, offers or facts beyond the company information. If you don't know, say the team will confirm.
 
 WHO YOU ARE TALKING TO
@@ -195,6 +200,8 @@ ACTIONS — markers go ONLY at the very end of the reply, after the last spoken 
 - [HUMAN_HANDOFF] they want to talk to a person from the team
 - [DO_NOT_CALL] they asked never to be called again
 - [CALL_COMPLETED] after your final goodbye
+When a meeting or demo time is agreed, add only [MEETING: ...] for it. Do not also add [CALLBACK] for the same agreement.
+Never book a time the customer said they cannot do. BEFORE any goodbye check: did the customer clearly choose ONE exact day and time? If you offered two or more options and they only said "ok", "yes" or "సరే", they have NOT chosen: do not say goodbye and do not add [CALL_COMPLETED]; ask which one in a short question ("ఉదయం పదకొండు గంటలకా, సాయంత్రం నాలుగు గంటలకా?"). Add [MEETING] only after one exact day and time is clearly agreed.
 """
 
 TIME_UP_NOTE = ("(System note: the call time limit is close. Wrap up now: confirm the next step in one sentence, "
@@ -339,6 +346,24 @@ def employee_prompt(employee: Optional[Dict[str, Any]]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def calendar_hint(now_ist: datetime) -> str:
+    """Real dates for the next week, so the AI never invents one ("Monday 5 November" on a Friday 6 November)."""
+    def day(d: datetime) -> str:
+        return f"{d:%A} {d.day} {d:%B}"
+    upcoming = ", ".join(day(now_ist + timedelta(days=i)) for i in range(2, 8))
+    return (f"Today is {day(now_ist)} {now_ist:%Y}; the time now is {now_ist:%I:%M %p} IST. "
+            f"Tomorrow is {day(now_ist + timedelta(days=1))}. After that: {upcoming}.")
+
+
+def whatsapp_note() -> str:
+    """What the AI may say about WhatsApp: it must not claim to be sending while WhatsApp is not connected."""
+    from voice_agent.actions import _provider
+    if _provider("MESSAGING", "meta_whatsapp"):
+        return "WhatsApp is connected: when the customer wants details or a quotation, say you are sending it now and add [SEND_WHATSAPP: ...]."
+    return ("WhatsApp sending is not connected yet: never say you are sending anything now. Say our team will share the "
+            "details on WhatsApp shortly, and still add [SEND_WHATSAPP: ...] so the team sees the request.")
+
+
 def live_rules(lead: Optional[Dict[str, Any]], direction: str, now_utc: Optional[datetime] = None) -> str:
     now_ist = (now_utc or datetime.now(timezone.utc)).astimezone(IST)
     lead_name = (lead or {}).get("name") or "the customer"
@@ -353,8 +378,8 @@ def live_rules(lead: Optional[Dict[str, Any]], direction: str, now_utc: Optional
         who = (f"You called {lead_name}. If you are not sure it is {lead_name}, confirm politely once "
                f"before discussing details.")
     company = get_company_profile().get("agency_name", "S P Associates Software Company")
-    return VOICE_RULES.format(now=now_ist.strftime("%A %d %B %Y, %H:%M"), who=who,
-                              lead_name=lead_name, company=company)
+    return VOICE_RULES.format(now=now_ist.strftime("%A %d %B %Y, %H:%M"), calendar=calendar_hint(now_ist),
+                              whatsapp_note=whatsapp_note(), who=who, lead_name=lead_name, company=company)
 
 
 class ReplyTap(FrameProcessor):
@@ -890,7 +915,7 @@ class BaseCallSession:
         demo if a meeting was actually agreed during it ([MEETING] action); otherwise the lead stays
         in follow-up, so the follow-up engine calls again instead of treating it as a hot lead.
         """
-        booked = any(a.get("action") == "MEETING" for a in self.actions)
+        booked = any(str(a.get("action", "")).upper() == "MEETING" for a in self.actions)
         claimed = intel.get("deal_stage") in self.BOOKED_STAGES or intel.get("outcome_label") == "meeting_booked"
         if claimed and not booked:
             logger.info(f"Call {self.session_id}: summary says {intel.get('deal_stage')} but no meeting was agreed · follow-up")
@@ -928,6 +953,7 @@ class BaseCallSession:
         audio, sample_rate, channels = self._audio
         RECORDINGS_DIR.mkdir(parents=True, exist_ok=True)
         path = RECORDINGS_DIR / f"call_{call_id}.wav"
+        (RECORDINGS_DIR / f"call_{call_id}.webm").unlink(missing_ok=True)  # a leftover from an earlier call with this id
         with wave.open(str(path), "wb") as wav:
             wav.setnchannels(channels)
             wav.setsampwidth(2)

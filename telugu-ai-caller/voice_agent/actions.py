@@ -97,6 +97,20 @@ def schedule_callback(lead_id: int, when_utc: datetime, note: str = "", language
         session.close()
 
 
+def cancel_waiting_callbacks(lead_id: int, reason: str = "replaced_by_meeting") -> int:
+    """A booked meeting replaces any callback still waiting (the customer agreed one time, not two)."""
+    session = SessionLocal()
+    try:
+        count = session.query(CallJob).filter(
+            CallJob.lead_id == lead_id, CallJob.state.in_(("queued", "scheduled", "retry_scheduled")),
+            CallJob.last_disposition == "callback_requested",
+        ).update({"state": "cancelled", "block_reason": reason}, synchronize_session=False)
+        session.commit()
+        return count
+    finally:
+        session.close()
+
+
 def mark_do_not_call(lead_id: int, reason: str = "asked on call") -> Dict[str, Any]:
     session = SessionLocal()
     try:
@@ -183,6 +197,7 @@ async def run_action(tag: str, arg: str, lead: Optional[Dict[str, Any]], languag
             when = parse_when(arg, now_utc)
             label = when.astimezone(IST).strftime("%Y-%m-%d %H:%M IST") if when else (arg or "time to confirm")
             result = await asyncio.to_thread(flag_lead, lead_id, "meeting_at", label, "DEMO_BOOKED")
+            result["callbacks_cancelled"] = await asyncio.to_thread(cancel_waiting_callbacks, lead_id)
             calendar = _provider("CALENDAR", "google_calendar")
             if calendar and when:
                 booked = await calendar.book_meeting(

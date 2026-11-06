@@ -22,7 +22,8 @@ if str(ROOT_DIR) not in sys.path:
 _TEST_DB = Path(tempfile.mkdtemp(prefix="leadcloser-tests-")) / "test.db"
 os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB.as_posix()}"
 os.environ["DIALER_PROVIDER"] = "fake"
-for _secret in ("VOBIZ_AUTH_ID", "VOBIZ_AUTH_TOKEN", "VOBIZ_CALLER_ID",
+os.environ["RECORDINGS_DIR"] = str(_TEST_DB.parent / "recordings")
+for _secret in ("VOBIZ_AUTH_ID", "VOBIZ_AUTH_TOKEN", "VOBIZ_CALLER_ID", "VOBIZ_WEBHOOK_SECRET",
                 "EXOTEL_ACCOUNT_SID", "EXOTEL_API_KEY", "EXOTEL_API_TOKEN",
                 "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN",
                 "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID"):

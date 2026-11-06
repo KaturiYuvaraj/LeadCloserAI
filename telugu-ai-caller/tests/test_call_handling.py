@@ -294,7 +294,7 @@ def make_session():
 
 def test_live_rules_include_date_and_lead():
     rules = live_rules({"name": "Ravi"}, "out", NOW)
-    assert "Tuesday 03 November 2026, 11:30" in rules and "You called Ravi" in rules
+    assert "Today is Tuesday 3 November 2026" in rules and "11:30 AM IST" in rules and "You called Ravi" in rules
     assert "[CALLBACK: YYYY-MM-DD HH:MM]" in rules
     assert "The customer called you" in live_rules(None, "in", NOW)
 
