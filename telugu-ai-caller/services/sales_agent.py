@@ -11,7 +11,11 @@ from typing import List, Dict, Any, Optional
 from loguru import logger
 
 from services.sarvam_service import sarvam_client
-from services.language_utils import detect_language, get_localized_initial_greeting
+from services.language_utils import (
+    detect_language,
+    get_localized_initial_greeting,
+    detect_explicit_language_request
+)
 from database import get_company_profile, get_lead_by_id, get_active_ai_employee
 
 
@@ -147,6 +151,54 @@ class SalesAgent:
 
         return prompt
 
+    def determine_active_call_language(
+        self,
+        conversation_history: List[Dict[str, str]],
+        lead_info: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """
+        Carefully resolves the current verified conversation language with 2-3 check stability.
+        Prevents abrupt or unwarranted language switching on loanwords or isolated turns.
+        """
+        # 1. Lead explicit preference or background note
+        pref_lang = None
+        if lead_info:
+            pref_lang = lead_info.get("preferred_language")
+            if not pref_lang and lead_info.get("notes"):
+                pref_lang = detect_language(lead_info.get("notes"))
+
+        # 2. Opening greeting language established at start of call
+        opening_lang = None
+        if conversation_history:
+            for msg in conversation_history:
+                if msg.get("role") == "assistant" and msg.get("content"):
+                    opening_lang = detect_language(msg["content"])
+                    break
+
+        established_lang = pref_lang or opening_lang or "te-IN"
+
+        # 3. Analyze customer turns
+        user_turns = [m.get("content", "") for m in conversation_history if m.get("role") == "user" and m.get("content")]
+        if not user_turns:
+            return established_lang
+
+        last_user_turn = user_turns[-1]
+
+        # Explicit switch request takes priority immediately
+        explicit_lang = detect_explicit_language_request(last_user_turn)
+        if explicit_lang:
+            return explicit_lang
+
+        # If all turns in conversation (both assistant and user) are consistently in one language
+        detected_user_langs = [detect_language(turn) for turn in user_turns]
+        if all(l == detected_user_langs[-1] for l in detected_user_langs):
+            # If the call started in that language or customer has consistently spoken it for 2+ substantive turns
+            if opening_lang == detected_user_langs[-1] or len(user_turns) >= 2:
+                return detected_user_langs[-1]
+
+        # Otherwise maintain verified established language
+        return established_lang
+
     async def generate_response(
         self,
         conversation_history: List[Dict[str, str]],
@@ -158,6 +210,25 @@ class SalesAgent:
         """
         lead_info = get_lead_by_id(lead_id) if lead_id else None
         system_prompt = self._build_system_prompt(lead_info)
+
+        # Enforce verified conversation language with 2-3 check stability
+        active_lang = self.determine_active_call_language(conversation_history, lead_info)
+        lang_names = {
+            "te-IN": "Telugu",
+            "hi-IN": "Hindi",
+            "en-IN": "English",
+            "ta-IN": "Tamil",
+            "kn-IN": "Kannada",
+            "ml-IN": "Malayalam",
+        }
+        target_name = lang_names.get(active_lang, "Telugu")
+        lang_directive = (
+            f"\n\nCURRENT VERIFIED CALL CONVERSATION LANGUAGE: {target_name} ({active_lang})\n"
+            f"- You MUST formulate your entire response in {target_name}.\n"
+            f"- Do NOT change or switch to another language on isolated English loan words.\n"
+            f"- Speak naturally, respectfully, and attentively in {target_name} as an expert human sales consultant.\n"
+        )
+        system_prompt += lang_directive
 
         messages = [
             {"role": "system", "content": system_prompt}

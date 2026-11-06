@@ -30,17 +30,20 @@ DEFAULT_TTS_SPEAKER = os.getenv("DEFAULT_TTS_SPEAKER", "kavitha_te_conversation"
 DEFAULT_STT_MODEL = os.getenv("DEFAULT_STT_MODEL", "saaras:v3")
 DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "sarvam-105b-conversations")
 
-# Telephony (Twilio / Exotel - Optional for direct phone calls)
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
-TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "")
-
-# Dialer & Telephony Provider (Vobiz / Exotel / Fake)
-DIALER_PROVIDER = os.getenv("DIALER_PROVIDER", "fake")
+# Active Telephony & Dialer Provider (Vobiz is the primary active carrier for Indian mobile/landline calling)
 VOBIZ_AUTH_ID = os.getenv("VOBIZ_AUTH_ID", "")
 VOBIZ_AUTH_TOKEN = os.getenv("VOBIZ_AUTH_TOKEN", "")
 VOBIZ_CALLER_ID = os.getenv("VOBIZ_CALLER_ID", "")
 VOICE_PUBLIC_BASE_URL = os.getenv("VOICE_PUBLIC_BASE_URL", "")
+DIALER_PROVIDER = os.getenv("DIALER_PROVIDER", "vobiz" if (VOBIZ_AUTH_ID and VOBIZ_AUTH_TOKEN) else "fake")
+
+# Optional / Legacy Fallback (Inactive unless explicitly configured)
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
+TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "")
+EXOTEL_ACCOUNT_SID = os.getenv("EXOTEL_ACCOUNT_SID", "")
+EXOTEL_API_KEY = os.getenv("EXOTEL_API_KEY", "")
+EXOTEL_CALLER_ID = os.getenv("EXOTEL_CALLER_ID", "")
 
 # Server
 HOST = os.getenv("HOST", "0.0.0.0")

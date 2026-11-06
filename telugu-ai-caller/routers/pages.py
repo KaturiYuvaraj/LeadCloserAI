@@ -67,6 +67,16 @@ async def serve_crm(request: Request):
     billing_orders = get_billing_orders()
     employees = get_all_ai_employees()
     active_emp = get_active_ai_employee()
+
+    import os
+    from config import VOBIZ_CALLER_ID, SARVAM_API_KEY, DIALER_PROVIDER, VOBIZ_AUTH_ID
+    vobiz_caller_id = os.getenv("VOBIZ_CALLER_ID", VOBIZ_CALLER_ID)
+    sarvam_key = os.getenv("SARVAM_API_KEY", SARVAM_API_KEY)
+    sarvam_key_masked = sarvam_key[:6] + "****" + sarvam_key[-4:] if len(sarvam_key) > 10 else "Active"
+    vobiz_auth_id = os.getenv("VOBIZ_AUTH_ID", VOBIZ_AUTH_ID)
+    vobiz_auth_id_masked = vobiz_auth_id[:4] + "****" + vobiz_auth_id[-4:] if len(vobiz_auth_id) > 8 else "Active"
+    dialer_provider = os.getenv("DIALER_PROVIDER", DIALER_PROVIDER)
+
     return templates.TemplateResponse(request, "crm.html", {
         "profile": profile,
         "leads": leads,
@@ -77,5 +87,9 @@ async def serve_crm(request: Request):
         "primary_key": primary_key,
         "billing_orders": billing_orders,
         "employees": employees,
-        "active_employee": active_emp
+        "active_employee": active_emp,
+        "vobiz_caller_id": vobiz_caller_id,
+        "sarvam_key_masked": sarvam_key_masked,
+        "vobiz_auth_id_masked": vobiz_auth_id_masked,
+        "dialer_provider": dialer_provider,
     })

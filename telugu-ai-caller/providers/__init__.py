@@ -2,10 +2,12 @@
 Provider Package Initializer and Registry Bootstrapper.
 """
 
+import os
 from providers.base import registry, ProviderType, ProviderStatus, BaseProvider
 from providers.voice.sarvam_stt import SarvamSTTProvider
 from providers.voice.sarvam_tts import SarvamTTSProvider
 from providers.llm.sarvam_llm import SarvamLLMProvider
+from providers.telephony.vobiz import VobizTelephonyProvider
 from providers.telephony.exotel import ExotelTelephonyProvider
 from providers.telephony.twilio_legacy import TwilioTelephonyProvider
 from providers.leads.apollo import ApolloLeadProvider
@@ -17,20 +19,23 @@ from providers.storage.sqlite_storage import SQLiteStorageProvider
 
 def initialize_providers():
     """Register all available third-party providers with their default activations."""
-    # Voice STT & TTS
+    # Voice STT & TTS (Sarvam AI is the active native Indic voice engine)
     sarvam_stt = SarvamSTTProvider()
     sarvam_tts = SarvamTTSProvider()
     registry.register(sarvam_stt, is_default=True)
     registry.register(sarvam_tts, is_default=True)
 
-    # LLM
+    # LLM (Sarvam 105B Conversational)
     sarvam_llm = SarvamLLMProvider()
     registry.register(sarvam_llm, is_default=True)
 
-    # Telephony
+    # Telephony (Vobiz is the active carrier; Exotel/Twilio are legacy/optional)
+    vobiz = VobizTelephonyProvider()
     exotel = ExotelTelephonyProvider()
     twilio = TwilioTelephonyProvider()
-    registry.register(exotel, is_default=True)
+    is_vobiz_active = vobiz.is_configured() or os.getenv("DIALER_PROVIDER", "").lower() == "vobiz"
+    registry.register(vobiz, is_default=is_vobiz_active)
+    registry.register(exotel, is_default=not is_vobiz_active)
     registry.register(twilio, is_default=False)
 
     # Lead Discovery

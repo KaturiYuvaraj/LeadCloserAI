@@ -26,7 +26,14 @@ class SarvamTTSProvider(BaseVoiceTTSProvider):
             "api_key": self.mask_secret(self.api_key),
             "model": self.default_model,
             "default_speaker": self.default_speaker,
-            "supported_voices": ["kavitha_te_conversation", "aditya_hi_sales", "simran_en_sales", "meera_ta_conversation", "shreya_kn_conversation", "arya_ml_conversation"]
+            "supported_voices": [
+                "kavitha_te_conversation",
+                "aditya_hi_sales",
+                "simran_en_sales",
+                "chaitra_kn_conversation",
+                "pooja_te_conversation",
+                "aayan_hi_conversational"
+            ]
         }
 
     async def synthesize(

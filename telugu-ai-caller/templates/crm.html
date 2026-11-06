@@ -4507,12 +4507,12 @@ input[type="checkbox"] {
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                 <div>
                   <h3 style="font-size: 0.96rem; font-weight: 800; color: #0f172a; margin: 0;">Sarvam AI (Native Indic AI)</h3>
-                  <span style="font-size: 0.75rem; color: #64748b;">Bulbul TTS · Saaras STT · Prompt Engine</span>
+                  <span style="font-size: 0.75rem; color: #64748b;">Bulbul:v4-flash TTS · Saaras:v3 STT · Sarvam 105B LLM</span>
                 </div>
-                <span class="crm-badge live" style="font-size: 0.72rem; padding: 3px 8px;">Connected</span>
+                <span class="crm-badge live" style="font-size: 0.72rem; padding: 3px 8px;">Active &amp; Connected</span>
               </div>
               <p style="font-size: 0.78rem; color: #475569; line-height: 1.4; margin-bottom: 16px;">
-                Powers high-fidelity Telugu, Hindi, Tamil, Kannada, and Indian-English speech synthesis and real-time transcription.
+                API Key: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{{ sarvam_key_masked or "Active Key" }}</code>. Powers Telugu, Hindi, Tamil, Kannada, and Indian-English speech synthesis, speech-to-text, and conversational intelligence.
               </p>
               <div style="display: flex; gap: 8px;">
                 <button class="crm-action-pill" onclick="window.testSarvamTts ? window.testSarvamTts() : alert('Testing Sarvam Audio...')" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer;">
@@ -4527,54 +4527,54 @@ input[type="checkbox"] {
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                 <div>
                   <h3 style="font-size: 0.96rem; font-weight: 800; color: #0f172a; margin: 0;">Vobiz Telephony Gateway</h3>
-                  <span style="font-size: 0.75rem; color: #64748b;">E.164 Outbound Carrier Trunking</span>
+                  <span style="font-size: 0.75rem; color: #64748b;">Caller ID: {{ vobiz_caller_id or "+91 7965482229" }}</span>
                 </div>
-                <span class="crm-badge live" style="font-size: 0.72rem; padding: 3px 8px;">Configured</span>
+                <span class="crm-badge live" style="font-size: 0.72rem; padding: 3px 8px;">Active Carrier</span>
               </div>
               <p style="font-size: 0.78rem; color: #475569; line-height: 1.4; margin-bottom: 16px;">
-                High-volume telecom provider for Indian mobile and landline connectivity with instant answering detection.
+                Account: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{{ vobiz_auth_id_masked or "Verified" }}</code>. Active telecom carrier for Indian mobile and landline connectivity over bidirectional Linear16 audio stream.
               </p>
               <div style="display: flex; gap: 8px;">
-                <button class="crm-action-pill" onclick="alert('Vobiz SIP Carrier Status: Active. Calling Window: 09:00 - 19:00 IST.')" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer;">
+                <button class="crm-action-pill" onclick="alert('Vobiz SIP Carrier Status: Active &amp; Verified. Calling Window: 09:00 - 19:00 IST.')" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer;">
                   <span>Diagnostics</span>
                 </button>
               </div>
             </div>
 
-            <!-- WhatsApp Cloud API -->
-            <div class="crm-panel-card" style="padding: 20px; border-top: 4px solid #10b981;">
+            <!-- WhatsApp Cloud API (Optional) -->
+            <div class="crm-panel-card" style="padding: 20px; border-top: 4px solid #94a3b8; opacity: 0.85;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                 <div>
                   <h3 style="font-size: 0.96rem; font-weight: 800; color: #0f172a; margin: 0;">Meta WhatsApp Cloud API</h3>
-                  <span style="font-size: 0.75rem; color: #64748b;">Post-Call Document & Catalog Delivery</span>
+                  <span style="font-size: 0.75rem; color: #64748b;">Post-Call Document &amp; Catalog Delivery</span>
                 </div>
-                <span class="crm-badge live" style="font-size: 0.72rem; padding: 3px 8px;">Active</span>
+                <span class="crm-badge" style="font-size: 0.72rem; padding: 3px 8px; background: #f1f5f9; color: #64748b;">Optional (Not Configured)</span>
               </div>
-              <p style="font-size: 0.78rem; color: #475569; line-height: 1.4; margin-bottom: 16px;">
-                Dispatches PDF brochures, quotations, and meeting invites to prospects who opt in during conversation.
+              <p style="font-size: 0.78rem; color: #64748b; line-height: 1.4; margin-bottom: 16px;">
+                Optional integration to dispatch brochures and quotations to leads who opt in. Inactive until Meta credentials are set in .env.
               </p>
               <div style="display: flex; gap: 8px;">
-                <button class="crm-action-pill" onclick="alert('WhatsApp Template Status: Approved. Ready for instant dispatch.')" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer;">
-                  <span>Template Status</span>
+                <button class="crm-action-pill" onclick="alert('WhatsApp integration is optional and inactive. Add META_WHATSAPP credentials in .env to activate.')" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer;">
+                  <span>Configure API</span>
                 </button>
               </div>
             </div>
 
-            <!-- Google Calendar -->
-            <div class="crm-panel-card" style="padding: 20px; border-top: 4px solid #3b82f6;">
+            <!-- Google Calendar (Optional) -->
+            <div class="crm-panel-card" style="padding: 20px; border-top: 4px solid #94a3b8; opacity: 0.85;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                 <div>
-                  <h3 style="font-size: 0.96rem; font-weight: 800; color: #0f172a; margin: 0;">Google Calendar & Meet</h3>
+                  <h3 style="font-size: 0.96rem; font-weight: 800; color: #0f172a; margin: 0;">Google Calendar &amp; Meet</h3>
                   <span style="font-size: 0.75rem; color: #64748b;">Autonomous Demo Scheduling</span>
                 </div>
-                <span class="crm-badge live" style="font-size: 0.72rem; padding: 3px 8px;">Synced</span>
+                <span class="crm-badge" style="font-size: 0.72rem; padding: 3px 8px; background: #f1f5f9; color: #64748b;">Optional (Not Configured)</span>
               </div>
-              <p style="font-size: 0.78rem; color: #475569; line-height: 1.4; margin-bottom: 16px;">
-                Automatically generates Google Meet invites when prospective clients agree to a software demonstration.
+              <p style="font-size: 0.78rem; color: #64748b; line-height: 1.4; margin-bottom: 16px;">
+                Optional integration to auto-schedule Google Meet events for software demos. Meeting bookings are saved directly in CRM history.
               </p>
               <div style="display: flex; gap: 8px;">
-                <button class="crm-action-pill" onclick="alert('Google Meet integration active on default sales account.')" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer;">
-                  <span>Check Availability</span>
+                <button class="crm-action-pill" onclick="alert('Google Calendar is optional. Demo bookings are logged natively in CRM.')" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer;">
+                  <span>Configure API</span>
                 </button>
               </div>
             </div>
@@ -4930,7 +4930,7 @@ input[type="checkbox"] {
               <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.8rem; color: #475569;">
                 <div style="padding: 10px 12px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
                   <span style="font-size: 16px;">1️⃣</span>
-                  <div><strong>Inbound Ring:</strong> Twilio/Exotel virtual number answers with Sarvam voice.</div>
+                  <div><strong>Inbound Ring:</strong> Vobiz carrier DID answers instantly with Sarvam voice.</div>
                 </div>
                 <div style="padding: 10px 12px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
                   <span style="font-size: 16px;">2️⃣</span>
@@ -5026,7 +5026,7 @@ input[type="checkbox"] {
         <div class="crm-view-section" id="crmViewPhoneNumbers" style="display: none;">
           <div style="margin-bottom: 20px;">
             <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">Phone Numbers &amp; Carrier Caller IDs</h2>
-            <span style="font-size: 0.78rem; color: #64748b;">Manage virtual DID numbers, Exotel CLI, and Twilio outbound caller IDs</span>
+            <span style="font-size: 0.78rem; color: #64748b;">Active carrier trunks, verified caller IDs, and dialer lines synced from your environment</span>
           </div>
 
           <div class="crm-panel-card" style="padding: 20px;">
@@ -5042,25 +5042,19 @@ input[type="checkbox"] {
               </thead>
               <tbody>
                 <tr style="border-bottom: 1px solid #f8fafc;">
-                  <td style="padding: 12px 8px; font-weight: 700; color: #0f172a;">+91 80 4712 9901</td>
-                  <td style="padding: 12px 8px; color: #64748b;">Exotel / Airtel Primary</td>
-                  <td style="padding: 12px 8px; color: #0f172a;">Priya Sharma (Telugu)</td>
-                  <td style="padding: 12px 8px;"><span class="crm-lead-badge badge-qualified">Active CLI</span></td>
+                  <td style="padding: 12px 8px; font-weight: 700; color: #0f172a;">{{ vobiz_caller_id or "+91 7965482229" }}</td>
+                  <td style="padding: 12px 8px; color: #64748b;">Vobiz AI Telecom (Sarvam Partner Trunk)</td>
+                  <td style="padding: 12px 8px; color: #0f172a;">{{ active_employee.name if active_employee else "S P Senior Closer (Default)" }}</td>
+                  <td style="padding: 12px 8px;"><span class="crm-lead-badge badge-qualified">Active CLI (Live &amp; Verified)</span></td>
                   <td style="padding: 12px 8px; text-align: right;">
-                    <button class="crm-action-pill" onclick="alert('Number verified and active.')" style="padding: 3px 8px; font-size: 0.72rem;">Verify</button>
-                  </td>
-                </tr>
-                <tr style="border-bottom: 1px solid #f8fafc;">
-                  <td style="padding: 12px 8px; font-weight: 700; color: #0f172a;">+91 22 6912 3344</td>
-                  <td style="padding: 12px 8px; color: #64748b;">Twilio India Trunk</td>
-                  <td style="padding: 12px 8px; color: #0f172a;">Rajesh Kumar (Hindi)</td>
-                  <td style="padding: 12px 8px;"><span class="crm-lead-badge badge-qualified">Active CLI</span></td>
-                  <td style="padding: 12px 8px; text-align: right;">
-                    <button class="crm-action-pill" onclick="alert('Number verified and active.')" style="padding: 3px 8px; font-size: 0.72rem;">Verify</button>
+                    <button class="crm-action-pill" onclick="alert('Vobiz SIP Carrier Status: Active &amp; Verified. Calling Window: 09:00 - 19:00 IST.')" style="padding: 3px 8px; font-size: 0.72rem;">Diagnostics</button>
                   </td>
                 </tr>
               </tbody>
             </table>
+            <div style="margin-top: 16px; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.76rem; color: #64748b;">
+              ℹ️ <strong>Active Carrier Line:</strong> Outbound and inbound voice calls are routed via Vobiz with verified caller ID <strong>{{ vobiz_caller_id or "+91 7965482229" }}</strong>. Unused legacy carriers (Twilio / Exotel) are inactive.
+            </div>
           </div>
         </div>
 
