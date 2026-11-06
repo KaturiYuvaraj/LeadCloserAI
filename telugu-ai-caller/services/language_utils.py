@@ -4,7 +4,76 @@ Provides real-time language detection, TTS speaker routing, and localized greeti
 for Telugu, Hindi, English, Tamil, Kannada, and Malayalam customer calling.
 """
 
-from typing import Tuple, Optional, Dict, Any
+from typing import Tuple, Optional, Dict, Any, Set
+import re
+
+# Common English technical, business, and conversational loanwords in Indian phone calls.
+COMMON_INDIAN_LOANWORDS: Set[str] = {
+    "hello", "hi", "hey", "sir", "madam", "madame", "ok", "okay", "yes", "yeah", "yep",
+    "no", "nope", "website", "web", "site", "app", "mobile", "application", "software",
+    "demo", "price", "cost", "charges", "quote", "quotation", "rate", "rates", "company",
+    "business", "meeting", "morning", "evening", "tomorrow", "today", "time", "date",
+    "details", "whatsapp", "number", "call", "send", "message", "package", "plan",
+    "features", "crm", "sales", "client", "problem", "solution", "billing", "gst",
+    "online", "link", "team", "lead", "thanks", "thank", "you", "service", "services",
+    "project", "work", "office", "system", "portal"
+}
+
+# Explicit language change request patterns
+EXPLICIT_LANGUAGE_PATTERNS = {
+    "en-IN": [
+        r"\b(speak|talk|converse)\s+in\s+english\b",
+        r"\benglish\s+(please|lo|me|la|dalli|il)\b",
+        r"\bcan\s+(we|you)\s+(speak|talk)\s+in\s+english\b",
+        r"\bin\s+english\b",
+        r"\bplease\s+(talk|speak)\s+in\s+english\b",
+    ],
+    "te-IN": [
+        r"\b(telugu\s*lo|తెలుగులో)\s*(matlad|chepp|pes|bol)",
+        r"\btelugu\s+(please|lo|andi|lo\s+cheppandi)\b",
+        r"\b(speak|talk)\s+in\s+telugu\b",
+        r"\bతెలుగులో\s*(మాట్లాడండి|చెప్పండి|మాట్లాడగలరా)\b",
+    ],
+    "hi-IN": [
+        r"\b(hindi\s*me|हिंदी\s*में)\s*(bol|baat|chepp)",
+        r"\bhindi\s+(please|me|bhai|me\s+bolo|me\s+baat)\b",
+        r"\b(speak|talk)\s+in\s+hindi\b",
+        r"\bहिंदी\s+में\s*(बोलिए|बात\s+करें|बताइए)\b",
+    ],
+    "ta-IN": [
+        r"\b(tamil\s*la|தமிழில்)\s*(pesu|sol)",
+        r"\btamil\s+please\b",
+        r"\b(speak|talk)\s+in\s+tamil\b",
+        r"\bதமிழில்\s*(பேசுங்கள்|சொல்லுங்கள்)\b",
+    ],
+    "kn-IN": [
+        r"\b(kannada\s*dalli|ಕನ್ನಡದಲ್ಲಿ)\s*(matad|heli)",
+        r"\bkannada\s+please\b",
+        r"\b(speak|talk)\s+in\s+kannada\b",
+        r"\bಕನ್ನಡದಲ್ಲಿ\s*(ಮಾತನಾಡಿ|ಹೇಳಿ)\b",
+    ],
+    "ml-IN": [
+        r"\b(malayalam\s*il|മലയാളത്തിൽ)\s*(samsarik|paray)",
+        r"\bmalayalam\s+please\b",
+        r"\b(speak|talk)\s+in\s+malayalam\b",
+        r"\bമലയാളത്തിൽ\s*(സംസാരിക്കൂ|പറയൂ)\b",
+    ],
+}
+
+_EXPLICIT_REGEXES = {
+    lang: [re.compile(p, re.IGNORECASE) for p in patterns]
+    for lang, patterns in EXPLICIT_LANGUAGE_PATTERNS.items()
+}
+
+
+def detect_explicit_language_request(text: str) -> Optional[str]:
+    """Detect if caller explicitly requested a language switch."""
+    if not text:
+        return None
+    for lang, regex_list in _EXPLICIT_REGEXES.items():
+        if any(r.search(text) for r in regex_list):
+            return lang
+    return None
 
 # Romanized keyword hints for code-switching
 HINDI_KEYWORDS = [

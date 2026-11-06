@@ -149,10 +149,19 @@ TIME_UP = {
 
 VOICE_RULES = """
 LIVE PHONE CONVERSATION RULES (override anything above that conflicts):
-- You are speaking out loud. Reply in one or two short spoken sentences. No lists, no emojis, no markdown.
-- Reply ONLY in the language of the customer's latest message. Never mix two languages in one reply.
-- Never invent prices, offers or facts beyond the company information. If you don't know, say the team will confirm.
+- You are speaking out loud like a real, attentive, warm, and highly professional human sales consultant.
+- ATTENTIVE LISTENING & UNDERSTANDING:
+  * Listen deeply to what the customer actually says or asks. Never brush off their questions.
+  * Always acknowledge their point before replying (e.g., in Telugu: "అవునండీ, ఖచ్చితంగా...", "సరేనండి, అర్థమైంది...", "తప్పకుండా అండి..."; in Hindi: "जी बिल्कुल सर...", "हाँ जी, समझ गया...", "ज़रूर सर..."; in English: "Understood, absolutely...", "That makes total sense...").
+  * Reply in one or two short spoken sentences. No lists, no emojis, no markdown.
+  * Address their exact objection or inquiry directly first, then warmly guide the conversation forward.
+  * "Hello", "hmm", "haan / హా / हाँ", "ok" on their own are NOT answers. Never treat them as interest, agreement, or a confirmed answer. After "hello", greet them warmly, confirm you can hear them, introduce yourself again in one line and ask your question again.
+- LANGUAGE STABILITY & VERIFICATION:
+  * Reply ONLY in the verified call language specified in the prompt instructions.
+  * Indian business calls frequently use English loanwords ("website", "software", "demo", "price", "business", "meeting", "okay"). Never switch languages because of isolated loanwords.
+  * Do not flip-flop languages on a single phrase; maintain conversation in the verified call language.
 - Now: {now} IST. Use it to turn "tomorrow evening" or "Monday 5 pm" into exact dates and times.
+- Never invent prices, offers or facts beyond the company information. If you don't know, say the team will confirm.
 
 WHO YOU ARE TALKING TO
 - {who}
@@ -160,7 +169,6 @@ WHO YOU ARE TALKING TO
 - If it is a wrong number: apologise, end the call and add [WRONG_PERSON] [DO_NOT_CALL] [CALL_COMPLETED].
 - If two people are talking or there is background talk not meant for you, reply only to what was said to you.
 - If the message is cut off or makes no sense (noise, bad network), say you couldn't hear clearly and ask them to repeat. Never guess.
-- "Hello", "hmm", "haan / హా / हाँ", "ok" on their own are NOT answers. Never treat them as interest, a yes or agreement. After "hello", introduce yourself again in one line and ask your question again.
 
 PATIENCE
 - "One minute / hold on / wait": reply only "sure, take your time" (in their language) and nothing else.
@@ -188,13 +196,14 @@ TIME_UP_NOTE = ("(System note: the call time limit is close. Wrap up now: confir
 def wait_ms_to_vad_stop_secs(wait_ms: Optional[int]) -> float:
     """
     Map the dashboard's "Reply wait" setting to Silero VAD stop time.
-    Fast 700 → 0.3s · Normal 900 → 0.5s · Patient 1300 → 0.9s.
+    Tuned for attentive human listening so the customer is not cut off mid-sentence.
+    Fast 700 → 0.55s · Normal 900 → 0.75s · Patient 1300 → 1.15s.
     """
     try:
         ms = int(wait_ms) if wait_ms is not None else 900
     except (TypeError, ValueError):
         ms = 900
-    return round(min(1.2, max(0.3, (ms - 400) / 1000)), 2)
+    return round(min(1.2, max(0.55, (ms - 150) / 1000)), 2)
 
 
 def as_text(value: Any) -> str:
@@ -307,6 +316,36 @@ class ReplyTap(FrameProcessor):
         await self.push_frame(frame, direction)
 
 
+class GreetingProtectionFilter(FrameProcessor):
+    """
+    Protects the opening greeting so ambient carrier noise or early pickup clicks
+    do not interrupt or abort the AI's greeting right as the call connects.
+    """
+
+    def __init__(self, session: "BaseCallSession", **kwargs):
+        if "loop" not in kwargs:
+            try:
+                kwargs["loop"] = asyncio.get_running_loop()
+            except RuntimeError:
+                try:
+                    kwargs["loop"] = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    kwargs["loop"] = loop
+        super().__init__(**kwargs)
+        self._session = session
+
+    async def process_frame(self, frame: Frame, direction: FrameDirection):
+        await super().process_frame(frame, direction)
+        if isinstance(frame, InterruptionFrame):
+            now = time.time()
+            if getattr(self._session, "_greeting_in_progress", False) and (now - getattr(self._session, "_greeting_started_at", 0.0) < 4.0):
+                logger.debug(f"Call {self._session.session_id}: Suppressed greeting interruption from line connection noise")
+                return
+        await self.push_frame(frame, direction)
+
+
 class SpeakingObserver(BaseObserver):
     """Turns speaking frames into a single state-change event for the UI and measures talk time."""
 
@@ -326,6 +365,7 @@ class SpeakingObserver(BaseObserver):
             self._session.send_event("speaking", who="bot", active=True)
         elif isinstance(frame, BotStoppedSpeakingFrame) and self._bot:
             self._bot = False
+            self._session._greeting_in_progress = False
             self._session.bot_talk_secs += now - self._bot_since
             self._session.send_event("speaking", who="bot", active=False)
             await self._session.on_bot_stopped_speaking()
@@ -364,6 +404,8 @@ class BaseCallSession:
         self.transcript: List[Dict[str, str]] = []
         self.latencies: List[float] = []
         self.started_at = time.time()
+        self._greeting_in_progress = True
+        self._greeting_started_at = 0.0
         self.ended_by = "system"
         self.end_reason: Optional[str] = None
         self.task: Optional[PipelineTask] = None
@@ -670,6 +712,7 @@ class BaseCallSession:
             self.guard,
             self.router,
             context_pair.user(),
+            GreetingProtectionFilter(self),
             llm,
             CallConclusionFilter(self._on_conversation_concluded, on_action=self.on_action),
             ReplyTap(self._on_reply),
@@ -709,6 +752,8 @@ class BaseCallSession:
                 + (f" · employee {self.employee['name']}" if self.employee else "")
             )
             self.started_at = time.time()
+            self._greeting_in_progress = True
+            self._greeting_started_at = time.time()
             self.guard.restart_window()
             if recorder:
                 await recorder.start_recording()
