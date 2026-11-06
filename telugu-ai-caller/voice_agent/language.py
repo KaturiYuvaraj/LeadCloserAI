@@ -34,15 +34,23 @@ except ImportError:
                 self.voice = voice
                 self.language = language
 
-# bulbul:v4-flash speakers for all supported languages
+# bulbul:v4-flash speakers for all supported languages (names must exist on Sarvam: an unknown
+# speaker makes TTS fail and the AI goes silent; tests/test_language_voices.py checks the list).
+# v4-flash has no Malayalam voice and only male narration/ads Tamil voices, so Tamil and Malayalam
+# use the Telugu conversation voice, which speaks both and keeps the agent's voice consistent.
 VOICES = {
     "te-IN": "kavitha_te_conversation",
     "hi-IN": "aditya_hi_sales",
     "en-IN": "simran_en_sales",
-    "ta-IN": "meera_ta_conversation",
-    "kn-IN": "shreya_kn_conversation",
-    "ml-IN": "arya_ml_conversation",
+    "ta-IN": "kavitha_te_conversation",
+    "kn-IN": "chaitra_kn_conversation",
+    "ml-IN": "kavitha_te_conversation",
 }
+
+# A one-word reply ("Hello", "హా", "Hmm") does not switch the language: on a phone line the
+# recogniser often labels short words with the wrong language. A switch needs a real sentence
+# or the same new language twice in a row.
+MIN_SWITCH_WORDS = 2
 
 LANGUAGE_NAMES = {
     "te-IN": "Telugu",
@@ -109,6 +117,7 @@ class LanguageRouter(FrameProcessor):
         self._current = initial_language if initial_language in VOICES else "te-IN"
         self._on_user_text = on_user_text
         self._hint_provider = hint_provider  # extra per-message guidance (caller behaviour, knowledge)
+        self._pending: Optional[str] = None  # a new language heard once in a short reply
 
     @property
     def current_language(self) -> str:
@@ -122,7 +131,10 @@ class LanguageRouter(FrameProcessor):
         """
         switch_frame = None
         language = detect_language(text) or self._current
-        if language != self._current and language in VOICES:
+        if language == self._current:
+            self._pending = None
+        elif language in VOICES and self._should_switch(text, language):
+            self._pending = None
             logger.info(f"🗣  Voice switch {self._current} → {language} ({VOICES[language]})")
             self._current = language
             switch_frame = TTSUpdateSettingsFrame(
@@ -132,6 +144,13 @@ class LanguageRouter(FrameProcessor):
         hint = self._hint_provider(text) if self._hint_provider else None
         hint = f" {hint}" if hint else ""
         return f"{text.strip()}\n(Reply only in {name}.{hint})", switch_frame
+
+    def _should_switch(self, text: str, language: str) -> bool:
+        words = [w for w in text.split() if any(ch.isalpha() for ch in w)]
+        if len(words) >= MIN_SWITCH_WORDS or self._pending == language:
+            return True
+        self._pending = language
+        return False
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
