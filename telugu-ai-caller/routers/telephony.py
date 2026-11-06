@@ -9,12 +9,14 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Request, Query, H
 from fastapi.responses import JSONResponse, Response
 from loguru import logger
 
+from core.auth import get_request_account_id
 from database import (
     get_lead_by_id,
     update_lead,
     save_call_record,
     update_call_recording_by_sid,
-    update_call_status_by_sid
+    update_call_status_by_sid,
+    get_phone_numbers,
 )
 from providers import registry, ProviderType
 from services.sarvam_service import sarvam_client
@@ -37,6 +39,17 @@ except ImportError:
     COMMON_INDIAN_LOANWORDS = set()
 
 router = APIRouter()
+
+
+@router.get("/api/phone-numbers")
+async def api_list_phone_numbers(request: Request):
+    """
+    List verified carrier trunks and caller IDs for the authenticated company.
+    Restricted to account_id for company tenant isolation.
+    """
+    account_id = get_request_account_id(request)
+    numbers = get_phone_numbers(account_id=account_id)
+    return {"numbers": numbers}
 
 
 @router.post("/api/call/outbound")
