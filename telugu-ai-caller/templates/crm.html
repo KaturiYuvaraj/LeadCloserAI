@@ -3374,7 +3374,7 @@ input[type="checkbox"] {
             <button class="crm-nav-item" id="navItemEmployees" onclick="window.switchCrmView('employees')">
               <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
               <span>My Employees</span>
-              <span class="crm-nav-badge" id="navBadgeEmployees">{{ employees|length or 5 }}</span>
+              <span class="crm-nav-badge" id="navBadgeEmployees">{{ employees|length }}</span>
             </button>
             <button class="crm-nav-item" id="navItemNewEmployee" onclick="window.switchCrmView('newEmployee')">
               <svg class="crm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -3801,15 +3801,15 @@ input[type="checkbox"] {
                 <div class="crm-recent-left">
                   <div class="crm-recent-top-line">
                     <span class="crm-recent-dot {% if 'QUALIFIED' in (c.deal_stage or '').upper() %}dot-green{% else %}dot-orange{% endif %}">●</span>
-                    <span class="crm-recent-name">{{ c.lead_name or 'Web Lead' }}</span>
+                    <span class="crm-recent-name">{{ c.lead_name or '—' }}</span>
                   </div>
                   <div class="crm-recent-badge-wrap">
-                    <span class="crm-recent-badge badge-{{ (c.deal_stage or 'QUALIFIED').lower() }}">{{ (c.deal_stage or 'QUALIFIED').upper() }}</span>
+                    <span class="crm-recent-badge badge-{{ (c.deal_stage or 'new').lower() }}">{{ (c.deal_stage or '—').upper() }}</span>
                   </div>
                 </div>
                 <div class="crm-recent-right">
-                  <span class="crm-recent-dur">{{ c.duration_seconds }}s ↗</span>
-                  <span class="crm-recent-time">12:46 PM</span>
+                  <span class="crm-recent-dur">{{ c.duration_seconds or 0 }}s ↗</span>
+                  <span class="crm-recent-time">{{ c.created_at[:16] if c.created_at else '—' }}</span>
                 </div>
               </div>
               {% else %}
@@ -3856,7 +3856,7 @@ input[type="checkbox"] {
                 <label for="setupReminderPhone">Your Mobile Number</label>
                 <div style="display: flex; gap: 6px;">
                   <span style="display: flex; align-items: center; padding: 0 10px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.82rem; font-weight: 600; color: #475569;">+91</span>
-                  <input type="tel" id="setupReminderPhone" placeholder="98765 43210" value="{{ profile.phone if profile and profile.phone else '' }}" />
+                  <input type="tel" id="setupReminderPhone" placeholder="10-digit mobile number" value="{{ profile.phone if profile and profile.phone else '' }}" />
                 </div>
               </div>
             </div>
@@ -3893,7 +3893,7 @@ input[type="checkbox"] {
                 <div class="kpi-icon-wrap" style="background: #fdf2f8; color: #db2777;">🔥</div>
               </div>
               <div class="kpi-value">
-                {{ leads|selectattr('lead_score', 'defined')|selectattr('lead_score', 'ge', 70)|list|length or 12 }}
+                {{ leads|selectattr('lead_score', 'defined')|selectattr('lead_score', 'ge', 70)|list|length }}
               </div>
               <div class="kpi-sub"><span style="color: #059669; font-weight: 700;">Score ≥ 70</span> · Priority</div>
             </div>
@@ -3902,15 +3902,29 @@ input[type="checkbox"] {
                 <span class="kpi-label">Avg Call Duration</span>
                 <div class="kpi-icon-wrap" style="background: #f0fdfa; color: #0d9488;">⏱️</div>
               </div>
-              <div class="kpi-value">1m 42s</div>
-              <div class="kpi-sub"><span style="color: #64748b;">Optimal conversation pacing</span></div>
+              <div class="kpi-value">
+                {% if calls %}
+                  {% set dur_list = calls|map(attribute='duration_seconds')|select('defined')|select('ne', None)|list %}
+                  {% set total_dur = dur_list|sum %}
+                  {% set count = dur_list|length %}
+                  {% if count > 0 %}
+                    {% set avg_sec = total_dur // count %}
+                    {{ avg_sec // 60 }}m {{ avg_sec % 60 }}s
+                  {% else %}
+                    —
+                  {% endif %}
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+              <div class="kpi-sub"><span style="color: #64748b;">Live calculated telemetry</span></div>
             </div>
             <div class="crm-kpi-card-luxury">
               <div class="kpi-meta">
                 <span class="kpi-label">Active Campaigns</span>
                 <div class="kpi-icon-wrap" style="background: #fff7ed; color: #ea580c;">🚀</div>
               </div>
-              <div class="kpi-value">{{ campaigns|length or 3 }}</div>
+              <div class="kpi-value">{{ campaigns|length if campaigns else 0 }}</div>
               <div class="kpi-sub"><span style="color: #ea580c; font-weight: 700;">Live</span> batch outreach</div>
             </div>
             <div class="crm-kpi-card-luxury">
@@ -4003,10 +4017,15 @@ input[type="checkbox"] {
                       <td style="padding: 10px 6px; font-weight: 700; color: #0f172a;">{{ lead.name }}</td>
                       <td style="padding: 10px 6px; color: #64748b;">{{ lead.phone }}</td>
                       <td style="padding: 10px 6px;">
-                        {% set score = lead.lead_score or 75 %}
+                        {% set raw_score = lead.lead_score if (lead.lead_score is defined and lead.lead_score is not none) else (lead.score if (lead.score is defined and lead.score is not none) else None) %}
+                        {% set score = (raw_score|int) if (raw_score is not none and (raw_score|string).isdigit()) else None %}
+                        {% if score is not none and score > 0 %}
                         <span class="crm-lead-badge {{ 'badge-qualified' if score >= 70 else ('badge-warm' if score >= 40 else 'badge-cold') }}">
                           {{ 'HOT ' ~ score if score >= 70 else ('WARM ' ~ score if score >= 40 else 'COLD ' ~ score) }}
                         </span>
+                        {% else %}
+                        <span class="crm-lead-badge badge-cold">NEW</span>
+                        {% endif %}
                       </td>
                       <td style="padding: 10px 6px; text-align: right;">
                         <button class="crm-action-pill" onclick='window.selectLead({{ lead | tojson }}); window.switchCrmView("calling");' style="padding: 3px 8px; font-size: 0.72rem; color: #ea580c; border-color: #fed7aa; background: #fff7ed;">
@@ -4030,11 +4049,11 @@ input[type="checkbox"] {
                 {% for call in calls[:4] %}
                 <div style="padding: 10px 12px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px;">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <span style="font-weight: 700; font-size: 0.8rem; color: #0f172a;">{{ call.lead_name or 'Prospective Customer' }}</span>
-                    <span class="crm-lead-badge badge-qualified" style="font-size: 0.65rem;">{{ call.disposition or 'Completed' }}</span>
+                    <span style="font-weight: 700; font-size: 0.8rem; color: #0f172a;">{{ call.lead_name or '—' }}</span>
+                    <span class="crm-lead-badge badge-qualified" style="font-size: 0.65rem;">{{ call.disposition or '—' }}</span>
                   </div>
                   <div style="font-size: 0.72rem; color: #64748b; line-height: 1.4;">
-                    {{ call.summary or 'Discussed service packages and sent WhatsApp brochure.' }}
+                    {{ call.summary or 'No summary yet' }}
                   </div>
                 </div>
                 {% else %}
@@ -4169,19 +4188,19 @@ input[type="checkbox"] {
                     <td style="min-width: 120px;">
                       <div style="display: flex; flex-direction: column; gap: 2px;">
                         <span style="font-weight: 800; font-size: 0.78rem; color: #0f172a;">
-                          Score: <span style="color: #ea580c;">{{ lead.score or '100' }}</span>
+                          Score: <span style="color: #ea580c;">{{ lead.score or lead.lead_score or '—' }}</span>
                         </span>
                         <span style="font-size: 0.72rem; color: #f59e0b; font-weight: 600;">
-                          ★ {{ lead.reviews or '0' }} Reviews
+                          ★ {{ lead.reviews or 0 }} Reviews
                         </span>
                       </div>
                     </td>
                     <td style="min-width: 220px; max-width: 280px;">
                       <div style="font-weight: 700; color: #0f172a; font-size: 0.78rem;">
-                        {{ lead.service_needed or 'Software Services' }}
+                        {{ lead.service_needed or '—' }}
                       </div>
-                      <div style="font-size: 0.72rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ lead.pitch or lead.notes }}">
-                        {{ lead.pitch or lead.notes or 'Outbound software sales opportunity' }}
+                      <div style="font-size: 0.72rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ lead.pitch or lead.notes or '' }}">
+                        {{ lead.pitch or lead.notes or '—' }}
                       </div>
                     </td>
                     <td>
@@ -5008,7 +5027,7 @@ input[type="checkbox"] {
               </div>
               <div class="form-group" style="margin-bottom: 14px;">
                 <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Human Fallback Transfer Number</label>
-                <input type="tel" value="+91 98765 43210" style="width: 100%; height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
+                <input type="tel" placeholder="+91..." value="{{ profile.phone if profile and profile.phone else '' }}" style="width: 100%; height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
               </div>
               <button class="crm-btn-purple" onclick="alert('Inbound routing rules saved successfully!')" style="font-size: 0.8rem; padding: 8px 16px;">
                 Save Inbound Config
@@ -5051,20 +5070,20 @@ input[type="checkbox"] {
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                   <div style="display: flex; align-items: center; gap: 10px;">
                     <div style="width: 32px; height: 32px; border-radius: 50%; background: #ffedd5; color: #ea580c; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem;">
-                      {{ (call.lead_name or 'L')[0] }}
+                      {{ (call.lead_name or '—')[0] }}
                     </div>
                     <div>
-                      <div style="font-weight: 700; font-size: 0.86rem; color: #0f172a;">{{ call.lead_name or 'Prospect' }} · {{ call.phone or '+91 98765 43210' }}</div>
-                      <div style="font-size: 0.72rem; color: #64748b;">Duration: {{ call.duration_seconds or 74 }}s · {{ call.created_at or 'Today' }}</div>
+                      <div style="font-weight: 700; font-size: 0.86rem; color: #0f172a;">{{ call.lead_name or '—' }}{% if call.phone %} · {{ call.phone }}{% endif %}</div>
+                      <div style="font-size: 0.72rem; color: #64748b;">Duration: {{ call.duration_seconds or 0 }}s · {{ call.created_at or '—' }}</div>
                     </div>
                   </div>
                   <span style="display: flex; align-items: center; gap: 8px;">
                     {% if call.recording_url %}<span style="font-size: 0.72rem; color: #ea580c; font-weight: 700;">🎧 Listen · Transcript ↗</span>{% endif %}
-                    <span class="crm-lead-badge badge-qualified">{{ call.disposition or 'Completed' }}</span>
+                    <span class="crm-lead-badge badge-qualified">{{ call.disposition or '—' }}</span>
                   </span>
                 </div>
                 <div style="font-size: 0.78rem; color: #334155; line-height: 1.45; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 8px;">
-                  <strong>Summary:</strong> {{ call.summary or 'Lead inquired about AI automated sales dialer. Expressed strong interest in Telugu language support. Agreed to a demo scheduled for tomorrow.' }}
+                  <strong>Summary:</strong> {{ call.summary or 'No summary yet' }}
                 </div>
               </div>
               {% else %}
