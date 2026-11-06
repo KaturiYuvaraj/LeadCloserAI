@@ -7,6 +7,7 @@ TTS voice generation, and Excel ingestion.
 import sys
 import os
 import asyncio
+import pytest
 from pathlib import Path
 
 # Add project root to sys.path
@@ -97,6 +98,8 @@ def test_tts_speaker_routing():
     print(" TTS Speaker Routing: PASSED")
 
 
+@pytest.mark.live
+@pytest.mark.skipif(not os.getenv("RUN_LIVE_TESTS"), reason="Calls real Sarvam API; set RUN_LIVE_TESTS=1 to run")
 async def test_trilingual_llm_conversations():
     print("Testing Trilingual LLM Dialogue & Voice Synthesis...")
 
