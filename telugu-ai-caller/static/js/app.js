@@ -1534,6 +1534,7 @@ Your registered phone / client phone will ring shortly.`);
         if (pageActions) pageActions.style.display = "none";
         if (window.loadSettingsView) window.loadSettingsView();
         if (window.loadTeamMembers) window.loadTeamMembers();
+        if (window.loadCallingSettings) window.loadCallingSettings();
       }
     }
   };
@@ -2147,6 +2148,121 @@ Your registered phone / client phone will ring shortly.`);
       }
     } finally {
       if (btn) btn.disabled = false;
+    }
+  };
+
+  // ===================================================================
+  // CALLING HOURS & SAFETY LIMITS SETTINGS (Y5)
+  // ===================================================================
+  window.loadCallingSettings = async () => {
+    const card = document.getElementById("callingSettingsCard");
+    if (!card) return;
+
+    try {
+      const token = localStorage.getItem("lc_access_token");
+      const headers = {};
+      if (token) headers["Authorization"] = "Bearer " + token;
+
+      const resp = await fetch("/api/account/settings", { headers });
+      if (!resp.ok) return;
+      const data = await resp.json();
+
+      const startEl = document.getElementById("settingCallingStart");
+      if (startEl && data.calling_start) {
+        startEl.value = data.calling_start;
+      }
+
+      const endEl = document.getElementById("settingCallingEnd");
+      if (endEl && data.calling_end) {
+        endEl.value = data.calling_end;
+      }
+
+      const recentEl = document.getElementById("settingRecentHours");
+      if (recentEl && data.recent_call_hours !== undefined) {
+        recentEl.value = data.recent_call_hours;
+      }
+
+      const maxSecEl = document.getElementById("settingMaxCallSeconds");
+      if (maxSecEl && data.max_call_seconds !== undefined) {
+        maxSecEl.value = data.max_call_seconds;
+      }
+
+      if (Array.isArray(data.calling_days)) {
+        const checkboxes = document.querySelectorAll('input[name="calling_day"]');
+        checkboxes.forEach(cb => {
+          cb.checked = data.calling_days.includes(Number(cb.value));
+        });
+      }
+    } catch (err) {
+      console.error("Error loading account calling settings:", err);
+    }
+  };
+
+  window.saveCallingSettings = async () => {
+    const alertBox = document.getElementById("callingSettingsAlert");
+    if (alertBox) alertBox.style.display = "none";
+
+    const startVal = document.getElementById("settingCallingStart").value;
+    const endVal = document.getElementById("settingCallingEnd").value;
+    const recentVal = parseInt(document.getElementById("settingRecentHours").value, 10);
+    const maxSecVal = parseInt(document.getElementById("settingMaxCallSeconds").value, 10);
+
+    const checkedDays = [];
+    document.querySelectorAll('input[name="calling_day"]:checked').forEach(cb => {
+      checkedDays.push(parseInt(cb.value, 10));
+    });
+
+    if (checkedDays.length === 0) {
+      if (alertBox) {
+        alertBox.style.background = "#fef2f2";
+        alertBox.style.border = "1px solid #fecaca";
+        alertBox.style.color = "#b91c1c";
+        alertBox.textContent = "Please select at least one operational calling day.";
+        alertBox.style.display = "block";
+      }
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("lc_access_token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = "Bearer " + token;
+
+      const resp = await fetch("/api/account/settings", {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({
+          calling_start: startVal,
+          calling_end: endVal,
+          calling_days: checkedDays,
+          recent_call_hours: recentVal,
+          max_call_seconds: maxSecVal
+        })
+      });
+
+      const data = await resp.json();
+      if (!resp.ok) {
+        throw new Error(data.detail || "Failed to update calling settings.");
+      }
+
+      if (alertBox) {
+        alertBox.style.background = "#ecfdf5";
+        alertBox.style.border = "1px solid #a7f3d0";
+        alertBox.style.color = "#065f46";
+        alertBox.textContent = `✓ Calling hours (${data.calling_start}–${data.calling_end} IST) and safety limits saved successfully! Dialer will respect these boundaries.`;
+        alertBox.style.display = "block";
+        setTimeout(() => {
+          if (alertBox) alertBox.style.display = "none";
+        }, 5000);
+      }
+    } catch (err) {
+      if (alertBox) {
+        alertBox.style.background = "#fef2f2";
+        alertBox.style.border = "1px solid #fecaca";
+        alertBox.style.color = "#b91c1c";
+        alertBox.textContent = err.message;
+        alertBox.style.display = "block";
+      }
     }
   };
 

@@ -4937,31 +4937,104 @@ input[type="checkbox"] {
               </form>
             </div>
 
-            <!-- Calling Windows & Compliance -->
-            <div class="crm-panel-card" style="padding: 24px;">
-              <h3 style="font-size: 1.02rem; font-weight: 800; color: #0f172a; margin: 0 0 16px 0;">Telecom Compliance Safeguards</h3>
-              <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.8rem; color: #475569;">
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
-                  <span style="font-weight: 600;">TRAI Calling Hours</span>
-                  <span style="font-weight: 700; color: #059669;">09:00 AM – 07:00 PM IST</span>
+            <!-- Calling Windows & Compliance Form (Y5) -->
+            <div class="crm-panel-card" style="padding: 24px;" id="callingSettingsCard">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
+                <div>
+                  <h3 style="font-size: 1.02rem; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">Calling Hours &amp; Safety Limits</h3>
+                  <span style="font-size: 0.74rem; color: #64748b;">TRAI regulatory boundaries, operational hours, and redial gap limits</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
-                  <span style="font-weight: 600;">Operational Days</span>
-                  <span style="font-weight: 700; color: #0f172a;">Monday – Saturday</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
-                  <span style="font-weight: 600;">Max Call Duration</span>
-                  <span style="font-weight: 700; color: #0f172a;">600 Seconds (10 mins)</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
-                  <span style="font-weight: 600;">DND Opt-Out Safeguard</span>
-                  <span style="font-weight: 700; color: #059669;">Strict (100% Enforced)</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                  <span style="font-weight: 600;">Auto-Redial Gap</span>
-                  <span style="font-weight: 700; color: #0f172a;">Minimum 4 hours</span>
-                </div>
+                <span class="crm-badge live" style="font-size: 0.70rem; padding: 2px 8px;">Enforced in Dialer</span>
               </div>
+
+              <div id="callingSettingsAlert" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 0.78rem; margin-bottom: 14px;"></div>
+
+              <form id="crmCallingSettingsForm" onsubmit="event.preventDefault(); window.saveCallingSettings();">
+                <!-- Hours: Start / End -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                  <div>
+                    <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Start Time (IST)</label>
+                    <select id="settingCallingStart" class="crm-select" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem; background: #fff;">
+                      <option value="09:00">09:00 AM (Legal Start)</option>
+                      <option value="09:30">09:30 AM</option>
+                      <option value="10:00">10:00 AM</option>
+                      <option value="10:30">10:30 AM</option>
+                      <option value="11:00">11:00 AM</option>
+                      <option value="12:00">12:00 PM</option>
+                      <option value="13:00">01:00 PM</option>
+                      <option value="14:00">02:00 PM</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">End Time (IST)</label>
+                    <select id="settingCallingEnd" class="crm-select" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem; background: #fff;">
+                      <option value="17:00">05:00 PM</option>
+                      <option value="18:00">06:00 PM</option>
+                      <option value="19:00" selected>07:00 PM (Recommended)</option>
+                      <option value="19:30">07:30 PM</option>
+                      <option value="20:00">08:00 PM</option>
+                      <option value="20:30">08:30 PM</option>
+                      <option value="21:00">09:00 PM (Legal Cap)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Calling Days -->
+                <div style="margin-bottom: 14px;">
+                  <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">Operational Calling Days</label>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="callingDaysCheckboxes">
+                    <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.76rem; font-weight: 600; color: #334155; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; cursor: pointer;">
+                      <input type="checkbox" value="0" name="calling_day" checked /> Mon
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.76rem; font-weight: 600; color: #334155; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; cursor: pointer;">
+                      <input type="checkbox" value="1" name="calling_day" checked /> Tue
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.76rem; font-weight: 600; color: #334155; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; cursor: pointer;">
+                      <input type="checkbox" value="2" name="calling_day" checked /> Wed
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.76rem; font-weight: 600; color: #334155; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; cursor: pointer;">
+                      <input type="checkbox" value="3" name="calling_day" checked /> Thu
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.76rem; font-weight: 600; color: #334155; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; cursor: pointer;">
+                      <input type="checkbox" value="4" name="calling_day" checked /> Fri
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.76rem; font-weight: 600; color: #334155; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; cursor: pointer;">
+                      <input type="checkbox" value="5" name="calling_day" checked /> Sat
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.76rem; font-weight: 600; color: #334155; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; cursor: pointer;">
+                      <input type="checkbox" value="6" name="calling_day" /> Sun
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Limits: Redial Gap & Max Duration -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                  <div>
+                    <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Min Re-dial Gap (Hours)</label>
+                    <input type="number" id="settingRecentHours" min="0" max="168" value="24" class="crm-input" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
+                    <span style="font-size: 0.70rem; color: #64748b; margin-top: 2px; display: block;">Gap before redialing same prospect (0–168h)</span>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Max Call Duration (Seconds)</label>
+                    <input type="number" id="settingMaxCallSeconds" min="60" max="1800" step="30" value="600" class="crm-input" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
+                    <span style="font-size: 0.70rem; color: #64748b; margin-top: 2px; display: block;">Hard cutoff ceiling (60–1800s / 10m default)</span>
+                  </div>
+                </div>
+
+                <div style="font-size: 0.72rem; color: #64748b; margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px;">
+                  🛡️ <strong>Compliance Notice:</strong> Calls are capped at 4 calls/week per lead. Opt-outs and DND requests are strictly honoured forever.
+                </div>
+
+                {% if current_user and current_user.role == 'owner' %}
+                <button type="submit" class="crm-btn-orange" style="padding: 9px 20px; font-size: 0.82rem; cursor: pointer;">
+                  Save Calling Hours &amp; Limits
+                </button>
+                {% else %}
+                <div style="font-size: 0.74rem; color: #64748b; font-style: italic;">
+                  Only organization owners can modify operational calling hours and legal dialer limits.
+                </div>
+                {% endif %}
+              </form>
             </div>
 
             <!-- Team Members & Access Management -->
