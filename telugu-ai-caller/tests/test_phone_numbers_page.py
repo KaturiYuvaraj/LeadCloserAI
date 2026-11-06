@@ -78,3 +78,4 @@ def test_crm_html_phone_numbers_table(client, auth_headers):
 
     assert "Exotel" not in table_snippet
     assert "Twilio" not in table_snippet
+

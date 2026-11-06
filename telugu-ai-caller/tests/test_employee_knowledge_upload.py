@@ -181,3 +181,4 @@ def test_crm_html_contains_knowledge_section(client, auth_headers):
     assert "kbEmployeeFileInput" in resp.text
     assert "crmEmployeeKnowledgeTableBody" in resp.text
     assert "kbDropZone" in resp.text
+

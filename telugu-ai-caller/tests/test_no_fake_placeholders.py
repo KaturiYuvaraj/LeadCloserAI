@@ -49,3 +49,4 @@ def test_empty_call_fields_render_neutral_placeholders(client, monkeypatch):
     # Must contain neutral indicators
     assert "No summary yet" in html
     assert "Duration: 0s" in html
+
