@@ -2,6 +2,7 @@ from typing import Optional
 """
 Calls Router - Call History, Call Records & Analytics
 """
+import os
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File
@@ -29,7 +30,7 @@ async def api_get_call_details(call_id: int, request: Request):
     return {"call": call_record}
 
 
-RECORDINGS_DIR = Path(__file__).resolve().parent.parent / "recordings"
+RECORDINGS_DIR = Path(os.getenv("RECORDINGS_DIR") or Path(__file__).resolve().parent.parent / "recordings")
 MAX_RECORDING_BYTES = 50 * 1024 * 1024  # 50 MB, roughly 2 hours of Opus audio
 
 
@@ -52,6 +53,7 @@ async def api_upload_call_recording(call_id: int, request: Request, file: Upload
         raise HTTPException(status_code=413, detail="Recording is larger than 50 MB.")
 
     RECORDINGS_DIR.mkdir(parents=True, exist_ok=True)
+    (RECORDINGS_DIR / f"call_{call_id}.wav").unlink(missing_ok=True)  # a leftover from an earlier call with this id
     (RECORDINGS_DIR / f"call_{call_id}.webm").write_bytes(audio_bytes)
 
     recording_url = f"/api/calls/{call_id}/recording"
@@ -65,11 +67,14 @@ async def api_get_call_recording(call_id: int, request: Request):
     account_id = get_request_account_id(request)
     if not get_call_by_id(call_id, account_id=account_id):
         raise HTTPException(status_code=404, detail="Call record not found")
-    # Browser calls are recorded in the browser (WebM); phone calls by the voice engine (stereo WAV)
-    for suffix, media_type in ((".webm", "audio/webm"), (".wav", "audio/wav")):
-        recording_path = RECORDINGS_DIR / f"call_{call_id}{suffix}"
-        if recording_path.exists():
-            return FileResponse(recording_path, media_type=media_type, filename=recording_path.name)
+    # Browser calls are recorded in the browser (WebM); phone calls by the voice engine (stereo WAV).
+    # If both exist (call ids are reused after a clean-up), the newest file is the real one.
+    found = [(path.stat().st_mtime, path, media_type)
+             for suffix, media_type in ((".webm", "audio/webm"), (".wav", "audio/wav"))
+             for path in [RECORDINGS_DIR / f"call_{call_id}{suffix}"] if path.exists()]
+    if found:
+        _, recording_path, media_type = max(found, key=lambda item: item[0])
+        return FileResponse(recording_path, media_type=media_type, filename=recording_path.name)
     raise HTTPException(status_code=404, detail="No recording stored for this call.")
 
 
