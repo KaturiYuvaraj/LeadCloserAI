@@ -11,6 +11,8 @@ Endpoints:
   DELETE /api/team/{user_id}   Remove a team member (owner/admin only)
 """
 
+import os
+from datetime import time
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -390,6 +392,138 @@ async def api_remove_team_member(
         ))
         session.commit()
         return {"success": True, "removed_id": member_id}
+    finally:
+        session.close()
+
+
+@router.get("/api/account/settings")
+async def api_get_account_settings(
+    current_user: Dict[str, Any] = Depends(require_role("owner")),
+):
+    """Retrieve operational calling hours, day schedules, and limits (owner only)."""
+    session = SessionLocal()
+    try:
+        account = session.query(Account).filter(Account.id == current_user["account_id"]).first()
+        if not account:
+            raise HTTPException(status_code=404, detail="Account not found.")
+
+        start_str = account.calling_start.strftime("%H:%M") if account.calling_start else "09:00"
+        end_str = account.calling_end.strftime("%H:%M") if account.calling_end else "19:00"
+        days = account.calling_days if isinstance(account.calling_days, list) and account.calling_days else list(range(7))
+        weekly_limit = int(os.getenv("DIALER_WEEKLY_CALL_LIMIT", 4))
+
+        return {
+            "account_id": account.id,
+            "name": account.name,
+            "calling_start": start_str,
+            "calling_end": end_str,
+            "calling_days": [int(d) for d in days],
+            "recent_call_hours": int(account.recent_call_hours if account.recent_call_hours is not None else 24),
+            "max_call_seconds": int(account.max_call_seconds if account.max_call_seconds is not None else 600),
+            "weekly_call_limit": weekly_limit,
+            "calling_approved": bool(account.calling_approved),
+            "rate_per_min": float(account.rate_per_min or 5.0),
+        }
+    finally:
+        session.close()
+
+
+@router.put("/api/account/settings")
+async def api_update_account_settings(
+    payload: Dict[str, Any],
+    current_user: Dict[str, Any] = Depends(require_role("owner")),
+):
+    """Update operational calling hours, days, and safety limits (owner only)."""
+    LEGAL_START = time(9, 0)
+    LEGAL_END = time(21, 0)
+
+    # 1. Validate calling_start and calling_end
+    start_raw = payload.get("calling_start")
+    end_raw = payload.get("calling_end")
+
+    if not start_raw or not end_raw:
+        raise HTTPException(status_code=400, detail="Both calling_start and calling_end are required (format HH:MM).")
+
+    try:
+        sp = [int(p) for p in str(start_raw).strip().split(":")]
+        ep = [int(p) for p in str(end_raw).strip().split(":")]
+        start_t = time(sp[0], sp[1])
+        end_t = time(ep[0], ep[1])
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid time format. Use HH:MM (e.g. 09:00).")
+
+    if start_t < LEGAL_START or end_t > LEGAL_END:
+        raise HTTPException(
+            status_code=400,
+            detail="Calling hours must be strictly between 09:00 and 21:00 IST according to regulatory compliance.",
+        )
+    if start_t >= end_t:
+        raise HTTPException(status_code=400, detail="Calling start time must precede end time.")
+
+    # 2. Validate calling_days
+    days_raw = payload.get("calling_days")
+    if days_raw is None or not isinstance(days_raw, list) or len(days_raw) == 0:
+        raise HTTPException(status_code=400, detail="At least one operational calling day must be selected (Mon–Sun).")
+    try:
+        days = sorted(list({int(d) for d in days_raw}))
+        if any(d < 0 or d > 6 for d in days):
+            raise ValueError()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Calling days must be integers from 0 (Monday) to 6 (Sunday).")
+
+    # 3. Validate recent_call_hours (0 to 168)
+    try:
+        recent_hours = int(payload.get("recent_call_hours", 24))
+        if not (0 <= recent_hours <= 168):
+            raise ValueError()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Minimum redial gap must be between 0 and 168 hours.")
+
+    # 4. Validate max_call_seconds (60 to 1800)
+    try:
+        max_sec = int(payload.get("max_call_seconds", 600))
+        if not (60 <= max_sec <= 1800):
+            raise ValueError()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Maximum call duration must be between 60 and 1800 seconds.")
+
+    session = SessionLocal()
+    try:
+        account = session.query(Account).filter(Account.id == current_user["account_id"]).first()
+        if not account:
+            raise HTTPException(status_code=404, detail="Account not found.")
+
+        account.calling_start = start_t
+        account.calling_end = end_t
+        account.calling_days = days
+        account.recent_call_hours = recent_hours
+        account.max_call_seconds = max_sec
+
+        session.add(AuditLog(
+            account_id=account.id,
+            user_id=current_user["id"],
+            action="account_settings_update",
+            target=f"account:{account.id}",
+            details={
+                "calling_start": start_t.strftime("%H:%M"),
+                "calling_end": end_t.strftime("%H:%M"),
+                "calling_days": days,
+                "recent_call_hours": recent_hours,
+                "max_call_seconds": max_sec,
+            },
+        ))
+        session.commit()
+        session.refresh(account)
+
+        return {
+            "success": True,
+            "calling_start": account.calling_start.strftime("%H:%M"),
+            "calling_end": account.calling_end.strftime("%H:%M"),
+            "calling_days": account.calling_days,
+            "recent_call_hours": account.recent_call_hours,
+            "max_call_seconds": account.max_call_seconds,
+            "weekly_call_limit": int(os.getenv("DIALER_WEEKLY_CALL_LIMIT", 4)),
+        }
     finally:
         session.close()
 
