@@ -35,14 +35,14 @@ def test_a_real_sentence_switches_language():
     assert "(Reply only in English." in text
 
 
-def test_same_new_language_twice_switches():
+def test_fillers_never_switch_even_when_repeated():
+    # 6 Nov second call: "Hello" then "Sorry" switched the voice to English
     router = LanguageRouter("te-IN")
-    assert router.prepare("हाँ")[1] is None
-    assert router.prepare("बोलिए")[1] is not None and router.current_language == "hi-IN"
+    for word in ("Hello", "Sorry", "Okay", "हाँ", "हाँ"):
+        assert router.prepare(word)[1] is None
+    assert router.current_language == "te-IN"
 
 
-def test_short_reply_in_current_language_resets_the_pending_switch():
+def test_two_word_sentence_in_another_language_switches():
     router = LanguageRouter("te-IN")
-    router.prepare("Hello")
-    router.prepare("అవును")
-    assert router.prepare("Okay")[1] is None and router.current_language == "te-IN"
+    assert router.prepare("नहीं चाहिए")[1] is not None and router.current_language == "hi-IN"

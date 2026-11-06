@@ -47,9 +47,9 @@ VOICES = {
     "ml-IN": "kavitha_te_conversation",
 }
 
-# A one-word reply ("Hello", "హా", "Hmm") does not switch the language: on a phone line the
-# recogniser often labels short words with the wrong language. A switch needs a real sentence
-# or the same new language twice in a row.
+# A one-word reply ("Hello", "Sorry", "హా", "Hmm") never switches the language: on a phone line the
+# recogniser often labels short words with the wrong language, and fillers are said in any language.
+# A switch needs a sentence of at least two words.
 MIN_SWITCH_WORDS = 2
 
 LANGUAGE_NAMES = {
@@ -117,7 +117,6 @@ class LanguageRouter(FrameProcessor):
         self._current = initial_language if initial_language in VOICES else "te-IN"
         self._on_user_text = on_user_text
         self._hint_provider = hint_provider  # extra per-message guidance (caller behaviour, knowledge)
-        self._pending: Optional[str] = None  # a new language heard once in a short reply
 
     @property
     def current_language(self) -> str:
@@ -131,10 +130,7 @@ class LanguageRouter(FrameProcessor):
         """
         switch_frame = None
         language = detect_language(text) or self._current
-        if language == self._current:
-            self._pending = None
-        elif language in VOICES and self._should_switch(text, language):
-            self._pending = None
+        if language != self._current and language in VOICES and self._should_switch(text):
             logger.info(f"🗣  Voice switch {self._current} → {language} ({VOICES[language]})")
             self._current = language
             switch_frame = TTSUpdateSettingsFrame(
@@ -145,12 +141,9 @@ class LanguageRouter(FrameProcessor):
         hint = f" {hint}" if hint else ""
         return f"{text.strip()}\n(Reply only in {name}.{hint})", switch_frame
 
-    def _should_switch(self, text: str, language: str) -> bool:
-        words = [w for w in text.split() if any(ch.isalpha() for ch in w)]
-        if len(words) >= MIN_SWITCH_WORDS or self._pending == language:
-            return True
-        self._pending = language
-        return False
+    @staticmethod
+    def _should_switch(text: str) -> bool:
+        return len([w for w in text.split() if any(ch.isalpha() for ch in w)]) >= MIN_SWITCH_WORDS
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
