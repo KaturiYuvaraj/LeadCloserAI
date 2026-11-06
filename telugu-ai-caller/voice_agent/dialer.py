@@ -28,7 +28,7 @@ from loguru import logger
 from core.db import SessionLocal
 from database import save_call_record
 from models import Account, CallJob, Lead
-from voice_agent import followups
+from voice_agent import credits, followups
 from voice_agent.outbound import DialError, DialRequest, get_dialer
 from voice_agent.rules import IST, as_utc, check_can_call, db_time, next_window_start
 
@@ -45,6 +45,9 @@ DISPOSITIONS = {
 
 # Answered by a machine or nobody spoke: the engine ends the call and it is retried like no-answer
 RETRY_ENGINE_OUTCOMES = {"voicemail", "ivr", "unreachable", "no_response"}
+# Our side failed (Sarvam credits finished / key rejected): the lead goes back in the queue,
+# and the attempt does not count against it
+SERVICE_FAILED = "service_unavailable"
 
 
 def utcnow() -> datetime:
@@ -141,6 +144,11 @@ class CallQueue:
         await asyncio.to_thread(self._expire_stale_dials)
         if self.paused:
             return
+        if credits.blocked():
+            if credits.probe_due() and not await credits.probe():
+                return
+            if credits.blocked():
+                return
         to_dial = await asyncio.to_thread(self._claim_due_jobs)
         for job in to_dial:
             await self._dial(job)
@@ -186,7 +194,7 @@ class CallQueue:
 
                 # a callback the customer asked for, or a follow-up already spaced out by the cadence,
                 # is not held back by "called recently"
-                is_retry = job.attempt > 0 or job.last_disposition in ("callback_requested",
+                is_retry = job.attempt > 0 or job.last_disposition in ("callback_requested", SERVICE_FAILED,
                                                                        followups.FOLLOWUP_DISPOSITION)
                 result = check_can_call(session, account, lead, now, is_retry=is_retry)
                 if result.status == "blocked":
@@ -291,6 +299,13 @@ class CallQueue:
             job = session.get(CallJob, job_id)
             if not job:
                 return
+            if outcome == SERVICE_FAILED:
+                job.call_id = call_id
+                job.state, job.attempt = "queued", max(0, job.attempt - 1)
+                job.last_disposition, job.block_reason = SERVICE_FAILED, (credits.blocked() or {}).get("reason")
+                session.commit()
+                self.log("⛔ Call ended: Sarvam unavailable · lead back in the queue", "error", job.lead_id)
+                return
             if outcome in RETRY_ENGINE_OUTCOMES:
                 job.call_id = call_id
                 self._schedule_retry(session, job, outcome)
@@ -348,6 +363,7 @@ class CallQueue:
 
     def resume(self):
         self.paused = False
+        credits.clear("resumed from the dashboard")
         self.log("▶ Calling resumed")
 
     def cancel_waiting(self, campaign_id: Optional[int] = None) -> int:
@@ -397,6 +413,7 @@ class CallQueue:
             "provider": self.dialer.name,
             "max_lines": self.max_lines,
             "paused": self.paused,
+            "service_block": credits.blocked(),
             "running": bool(self._task and not self._task.done()),
             "total": total,
             "finished": done,

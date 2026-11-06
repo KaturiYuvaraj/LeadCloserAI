@@ -3410,12 +3410,28 @@ Lead updated to DEMO_BOOKED.`);
     }
   };
 
+  // Red banner while calling is blocked (Sarvam credits finished / key rejected: voice_agent/credits.py)
+  window.showServiceBlock = (block) => {
+    let bar = document.getElementById("serviceBlockBanner");
+    if (!block) { if (bar) bar.remove(); return; }
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.id = "serviceBlockBanner";
+      bar.setAttribute("role", "alert");
+      bar.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:#fff;" +
+        "padding:10px 16px;font:600 14px system-ui,sans-serif;text-align:center;";
+      document.body.prepend(bar);
+    }
+    bar.textContent = "⛔ Calling is paused: " + block.message;
+  };
+
   // 5. Live Telemetry Poller (Dialer & Audio Pipeline Status)
   window.pollLiveTelemetry = async () => {
     try {
       const resp = await fetch("/api/dialer/status");
       if (!resp.ok) return;
       const data = await resp.json();
+      window.showServiceBlock(data.service_block);
       const counts = data.counts || {};
       const inProgress = counts["in_progress"] || 0;
       const ringing = counts["ringing"] || 0;
