@@ -4509,6 +4509,59 @@ input[type="checkbox"] {
           <div class="crm-employee-grid" id="crmEmployeesGrid">
             <!-- Populated dynamically via /api/employees -->
           </div>
+
+          <!-- KNOWLEDGE DOCUMENTS SECTION (Y2) -->
+          <div class="crm-panel-card" id="crmEmployeeKnowledgeSection" style="margin-top: 28px; padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.15rem;">📚</span>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0;">Knowledge Documents</h3>
+                </div>
+                <span style="font-size: 0.78rem; color: #64748b;">Uploaded documents are parsed into live context so this AI employee accurately answers product, pricing &amp; FAQ questions during calls.</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <label for="kbEmployeeSelect" style="font-size: 0.78rem; font-weight: 700; color: #475569;">Employee:</label>
+                <select id="kbEmployeeSelect" onchange="window.loadEmployeeKnowledge(this.value)" style="height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.8rem; background: #fff; font-weight: 600; color: #0f172a; min-width: 180px;">
+                  <option value="">Select AI Employee...</option>
+                </select>
+                <input type="file" id="kbEmployeeFileInput" style="display: none;" accept=".pdf,.docx,.xlsx,.csv,.txt,.md" onchange="window.handleKnowledgeFileUpload(this)" />
+                <button class="crm-btn-orange" onclick="document.getElementById('kbEmployeeFileInput').click()" style="padding: 8px 16px; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  <span>Upload Document</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Upload drag/drop zone -->
+            <div id="kbDropZone" style="border: 2px dashed #cbd5e1; border-radius: 10px; padding: 22px; text-align: center; background: #f8fafc; margin-bottom: 20px; cursor: pointer; transition: all 0.2s ease;" onclick="document.getElementById('kbEmployeeFileInput').click()">
+              <div style="font-size: 1.6rem; margin-bottom: 6px;">📄</div>
+              <div style="font-size: 0.84rem; font-weight: 700; color: #0f172a;">Click to upload or drag &amp; drop document</div>
+              <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px;">Supported formats: PDF, DOCX, XLSX, CSV, TXT, MD (Max 15 MB) · Re-uploading with identical file name replaces the old version.</div>
+            </div>
+
+            <!-- Upload status notification -->
+            <div id="kbUploadStatus" style="display: none; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 0.8rem;"></div>
+
+            <!-- Knowledge documents list table -->
+            <div class="crm-table-container">
+              <table class="crm-table" style="width: 100%;">
+                <thead>
+                  <tr>
+                    <th>Document Name</th>
+                    <th>Size / Characters</th>
+                    <th>Date Added</th>
+                    <th style="text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="crmEmployeeKnowledgeTableBody">
+                  <tr>
+                    <td colspan="4" style="text-align: center; color: #64748b; padding: 20px;">Select an employee to view uploaded knowledge documents</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <!-- ============================================================= -->
