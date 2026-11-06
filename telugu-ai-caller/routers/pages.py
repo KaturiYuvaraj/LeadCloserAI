@@ -16,6 +16,7 @@ from database import (
     get_all_ai_employees,
     get_active_ai_employee,
     get_outcome_bucket_summary,
+    get_phone_numbers,
 )
 
 router = APIRouter(tags=["pages"])
@@ -80,6 +81,7 @@ async def serve_crm(request: Request):
     billing_orders = get_billing_orders()
     employees = get_all_ai_employees()
     active_emp = get_active_ai_employee()
+    phone_numbers = get_phone_numbers(account_id=account_id)
 
     import os
     from config import VOBIZ_CALLER_ID, SARVAM_API_KEY, DIALER_PROVIDER, VOBIZ_AUTH_ID
@@ -101,6 +103,7 @@ async def serve_crm(request: Request):
         "billing_orders": billing_orders,
         "employees": employees,
         "active_employee": active_emp,
+        "phone_numbers": phone_numbers,
         "vobiz_caller_id": vobiz_caller_id,
         "sarvam_key_masked": sarvam_key_masked,
         "vobiz_auth_id_masked": vobiz_auth_id_masked,

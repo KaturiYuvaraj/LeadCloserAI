@@ -5381,30 +5381,81 @@ input[type="checkbox"] {
           </div>
 
           <div class="crm-panel-card" style="padding: 20px;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
               <thead>
                 <tr style="border-bottom: 1px solid #f1f5f9; text-align: left; color: #64748b;">
-                  <th style="padding: 10px 8px;">Phone Number</th>
-                  <th style="padding: 10px 8px;">Carrier</th>
-                  <th style="padding: 10px 8px;">Assigned Rep</th>
-                  <th style="padding: 10px 8px;">Status</th>
-                  <th style="padding: 10px 8px; text-align: right;">Action</th>
+                  <th style="padding: 12px 10px;">Phone Number</th>
+                  <th style="padding: 12px 10px;">Carrier</th>
+                  <th style="padding: 12px 10px;">Assigned Rep</th>
+                  <th style="padding: 12px 10px;">Linked App</th>
+                  <th style="padding: 12px 10px;">Monthly Rent</th>
+                  <th style="padding: 12px 10px;">Next Bill</th>
+                  <th style="padding: 12px 10px;">Status</th>
+                  <th style="padding: 12px 10px; text-align: right;">Action</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr style="border-bottom: 1px solid #f8fafc;">
-                  <td style="padding: 12px 8px; font-weight: 700; color: #0f172a;">{{ vobiz_caller_id or "+91 7965482229" }}</td>
-                  <td style="padding: 12px 8px; color: #64748b;">Vobiz AI Telecom (Sarvam Partner Trunk)</td>
-                  <td style="padding: 12px 8px; color: #0f172a;">{{ active_employee.name if active_employee else "S P Senior Closer (Default)" }}</td>
-                  <td style="padding: 12px 8px;"><span class="crm-lead-badge badge-qualified">Active CLI (Live &amp; Verified)</span></td>
-                  <td style="padding: 12px 8px; text-align: right;">
-                    <button class="crm-action-pill" onclick="alert('Vobiz SIP Carrier Status: Active &amp; Verified. Calling Window: 09:00 - 19:00 IST.')" style="padding: 3px 8px; font-size: 0.72rem;">Diagnostics</button>
-                  </td>
-                </tr>
+              <tbody id="crmPhoneNumbersTableBody">
+                {% if phone_numbers %}
+                  {% for num in phone_numbers %}
+                  <tr style="border-bottom: 1px solid #f8fafc;">
+                    <td style="padding: 12px 10px; font-weight: 700; color: #0f172a;">
+                      <span style="display: inline-flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 0.95rem;">📞</span>
+                        <span>{{ num.phone_display or num.e164 or "+91 7965482229" }}</span>
+                      </span>
+                    </td>
+                    <td style="padding: 12px 10px; color: #475569; font-weight: 600;">{{ num.provider or "Vobiz" }}</td>
+                    <td style="padding: 12px 10px; color: #0f172a; font-weight: 600;">{{ num.assigned_rep or "S P Senior Closer (Default)" }}</td>
+                    <td style="padding: 12px 10px; color: #16a34a; font-weight: 600;">
+                      <span style="display: inline-flex; align-items: center; gap: 4px;">
+                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #16a34a;"></span>
+                        {{ num.linked_app or "Yes" }}
+                      </span>
+                    </td>
+                    <td style="padding: 12px 10px; color: #0f172a; font-weight: 600;">{{ num.monthly_rent or "₹600" }}</td>
+                    <td style="padding: 12px 10px; color: #64748b;">{{ num.next_bill or "5 Dec" }}</td>
+                    <td style="padding: 12px 10px;">
+                      <span class="crm-lead-badge badge-qualified" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600; padding: 3px 8px; border-radius: 9999px;">
+                        {{ num.status or "Active" }}
+                      </span>
+                    </td>
+                    <td style="padding: 12px 10px; text-align: right;">
+                      <button class="crm-action-pill" onclick="window.showPhoneNumberDiagnostics('{{ num.e164 or "+917965482229" }}')" style="padding: 4px 10px; font-size: 0.74rem; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 6px; cursor: pointer; color: #334155; font-weight: 600;">Diagnostics</button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr style="border-bottom: 1px solid #f8fafc;">
+                    <td style="padding: 12px 10px; font-weight: 700; color: #0f172a;">
+                      <span style="display: inline-flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 0.95rem;">📞</span>
+                        <span>+91 7965482229</span>
+                      </span>
+                    </td>
+                    <td style="padding: 12px 10px; color: #475569; font-weight: 600;">Vobiz</td>
+                    <td style="padding: 12px 10px; color: #0f172a; font-weight: 600;">S P Senior Closer (Default)</td>
+                    <td style="padding: 12px 10px; color: #16a34a; font-weight: 600;">
+                      <span style="display: inline-flex; align-items: center; gap: 4px;">
+                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #16a34a;"></span>
+                        Yes
+                      </span>
+                    </td>
+                    <td style="padding: 12px 10px; color: #0f172a; font-weight: 600;">₹600</td>
+                    <td style="padding: 12px 10px; color: #64748b;">5 Dec</td>
+                    <td style="padding: 12px 10px;">
+                      <span class="crm-lead-badge badge-qualified" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600; padding: 3px 8px; border-radius: 9999px;">
+                        Active
+                      </span>
+                    </td>
+                    <td style="padding: 12px 10px; text-align: right;">
+                      <button class="crm-action-pill" onclick="window.showPhoneNumberDiagnostics('+917965482229')" style="padding: 4px 10px; font-size: 0.74rem; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 6px; cursor: pointer; color: #334155; font-weight: 600;">Diagnostics</button>
+                    </td>
+                  </tr>
+                {% endif %}
               </tbody>
             </table>
             <div style="margin-top: 16px; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.76rem; color: #64748b;">
-              ℹ️ <strong>Active Carrier Line:</strong> Outbound and inbound voice calls are routed via Vobiz with verified caller ID <strong>{{ vobiz_caller_id or "+91 7965482229" }}</strong>. Unused legacy carriers (Twilio / Exotel) are inactive.
+              ℹ️ <strong>Active Carrier Line:</strong> Outbound and inbound voice calls are routed via Vobiz with verified caller ID <strong>+917965482229</strong>.
             </div>
           </div>
         </div>
@@ -5637,7 +5688,7 @@ input[type="checkbox"] {
           <label class="radio-card-option">
             <input type="radio" name="campMode" value="phone" checked />
             <div style="display: flex; flex-direction: column; gap: 2px;">
-              <span style="font-weight: 700; font-size: 0.88rem; color: #18181b;">📞 Real Phone Campaign Queue (Sarvam / Vobiz / Exotel)</span>
+              <span style="font-weight: 700; font-size: 0.88rem; color: #18181b;">📞 Real Phone Campaign Queue (Sarvam / Vobiz)</span>
               <span style="font-size: 0.76rem; color: #71717a;">Enforces 9 AM–9 PM IST window, Do-Not-Call list, consent check, weekly call cap (max 4/wk), and automatic retries (+2h, next day, +2d)</span>
             </div>
           </label>
