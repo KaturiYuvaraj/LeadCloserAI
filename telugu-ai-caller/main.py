@@ -46,6 +46,10 @@ async def lifespan(app: FastAPI):
     init_db()
     sync_providers_with_db()
     logger.info("Database & Multi-Provider Architecture initialized. Telugu AI Caller ready.")
+    from voice_agent import webhook_auth
+    if not webhook_auth.enabled():
+        logger.warning("VOBIZ_WEBHOOK_SECRET is not set: the Vobiz answer/hangup/stream routes accept any request. "
+                       "Set it before exposing this app to the internet.")
     try:
         from voice_agent.dialer import call_queue
         call_queue.start()

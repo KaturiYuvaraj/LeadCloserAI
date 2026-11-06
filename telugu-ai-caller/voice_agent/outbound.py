@@ -31,6 +31,8 @@ from urllib.parse import urlencode
 import httpx
 from loguru import logger
 
+from voice_agent import webhook_auth
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -93,6 +95,8 @@ class VobizDialer(BaseDialer):
         if not self.is_configured():
             raise DialError("Vobiz is not configured (VOBIZ_AUTH_ID, VOBIZ_AUTH_TOKEN, VOBIZ_CALLER_ID)")
         query = _callback_query(req)
+        if webhook_auth.enabled():  # Vobiz sends this back on every callback and on the audio stream
+            query += "&" + urlencode({"key": webhook_auth.secret()})
         body = {
             "from": self.caller_id,
             "to": req.to_number,

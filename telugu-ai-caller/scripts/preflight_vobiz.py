@@ -32,6 +32,8 @@ def report(ok: bool, label: str, detail: str = "") -> None:
 def check_env() -> None:
     for name in REQUIRED:
         report(bool(os.getenv(name, "").strip()), f"{name} is set")
+    report(bool(os.getenv("VOBIZ_WEBHOOK_SECRET", "").strip()),
+           "VOBIZ_WEBHOOK_SECRET is set (stops strangers using the public address)")
     provider = os.getenv("DIALER_PROVIDER", "")
     report(provider in ("", "vobiz"), "DIALER_PROVIDER is vobiz (or empty)", f"now: {provider or 'empty'}")
     base = os.getenv("VOICE_PUBLIC_BASE_URL", "")
@@ -75,8 +77,15 @@ def check_tunnel() -> None:
     base = os.getenv("VOICE_PUBLIC_BASE_URL", "").rstrip("/")
     if not base:
         return
+    secret = os.getenv("VOBIZ_WEBHOOK_SECRET", "").strip()
+    url = f"{base}/api/voice/vobiz/answer" + (f"?key={secret}" if secret else "")
     try:
-        resp = httpx.post(f"{base}/api/voice/vobiz/answer", timeout=20, data={"CallUUID": "preflight"},
+        if secret:
+            stranger = httpx.post(f"{base}/api/voice/vobiz/answer", timeout=20, data={"CallUUID": "preflight"},
+                                  headers={"ngrok-skip-browser-warning": "1"})
+            report(stranger.status_code == 403, "A request without the key is rejected (403)",
+                   f"HTTP {stranger.status_code}: restart the app after setting the secret" if stranger.status_code != 403 else "")
+        resp = httpx.post(url, timeout=20, data={"CallUUID": "preflight"},
                           headers={"ngrok-skip-browser-warning": "1"})
     except httpx.HTTPError as e:
         report(False, "Tunnel reaches the app", f"{type(e).__name__}: is the app and ngrok running?")
