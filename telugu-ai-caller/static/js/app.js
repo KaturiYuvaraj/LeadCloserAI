@@ -1153,6 +1153,66 @@ Your registered phone / client phone will ring shortly.`);
     }
   };
 
+  const formatFollowupPlanSnippet = (lead) => {
+    const vars = (lead && lead.variables) || {};
+    const plan = vars.followup_plan;
+    const pendingWa = vars.pending_whatsapp || [];
+    const waCount = Array.isArray(pendingWa) ? pendingWa.length : 0;
+    const waBadge = waCount > 0 
+      ? `<div style="margin-top: 4px;"><span class="crm-lead-badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.68rem; padding: 2px 6px; display: inline-flex; align-items: center; gap: 4px;">💬 WhatsApp queued (${waCount})</span></div>`
+      : '';
+
+    if (!plan) return waBadge;
+
+    const stage = plan.stage || '';
+    const shouldFollowup = plan.should_followup;
+    const nextAt = plan.next_action_at;
+
+    let planHtml = '';
+
+    if (stage === 'with_sales_team') {
+      planHtml = `<div style="color: #047857; font-weight: 700;">📅 With sales team</div>`;
+    } else if (stage === 'stopped_opt_out' || (!shouldFollowup && lead.opt_out)) {
+      planHtml = `<div style="color: #b91c1c; font-weight: 700;">📅 Stopped: Do-Not-Call</div>`;
+    } else if (stage === 'closed' || !shouldFollowup) {
+      planHtml = `<div style="color: #64748b; font-weight: 700;">📅 Stopped: Closed</div>`;
+    } else if (nextAt) {
+      let dateFormatted = nextAt;
+      try {
+        const d = new Date(nextAt);
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const day = d.getDate();
+        const mon = months[d.getMonth()];
+        let hr = d.getHours();
+        const min = d.getMinutes().toString().padStart(2, '0');
+        const ampm = hr >= 12 ? 'PM' : 'AM';
+        hr = hr % 12;
+        hr = hr ? hr : 12;
+        dateFormatted = `${day} ${mon}, ${hr}:${min} ${ampm}`;
+      } catch (e) {
+        dateFormatted = nextAt;
+      }
+
+      const stageLabels = {
+        'days_1_to_3': 'Smart cadence day 1–3',
+        'days_4_to_10': 'Smart cadence day 4–10',
+        'days_11_to_30': 'Smart cadence day 11–30',
+        'days_31_to_60': 'Smart cadence day 31–60',
+        'fixed_callback': 'Customer callback',
+        'not_reachable_retry_1': 'Retry #1 (+2h)',
+        'not_reachable_retry_2': 'Retry #2 (Next day)',
+        'not_reachable_retry_3_whatsapp': 'Retry #3 (Missed call)',
+        'details_sent_followup': 'Details sent follow-up',
+        'weekly_cap_deferred': 'Weekly limit deferred',
+      };
+      const stageName = stageLabels[stage] || stage.replace(/_/g, ' ');
+      planHtml = `<div style="color: #c2410c; font-weight: 700;" title="${plan.reason || ''}">📅 Next AI call: ${dateFormatted} · ${stageName}</div>`;
+    }
+
+    if (!planHtml && !waBadge) return '';
+    return `<div style="margin-top: 5px; font-size: 0.72rem; line-height: 1.3;">${planHtml}${waBadge}</div>`;
+  };
+
   window.renderLeadsTable = (leads) => {
     const tbody = document.getElementById("crmLeadsTableBody");
     if (!tbody) return;
@@ -1176,6 +1236,7 @@ Your registered phone / client phone will ring shortly.`);
       }
 
       const leadJson = JSON.stringify(lead).replace(/'/g, "&#39;");
+      const followupHtml = formatFollowupPlanSnippet(lead);
 
       return `
         <tr>
@@ -1211,7 +1272,7 @@ Your registered phone / client phone will ring shortly.`);
           <td style="min-width: 120px;">
             <div style="display: flex; flex-direction: column; gap: 2px;">
               <span style="font-weight: 800; font-size: 0.78rem; color: #0f172a;">
-                Score: <span style="color: #ea580c;">${lead.score || '100'}</span>
+                Score: <span style="color: #ea580c;">${lead.score || lead.lead_score || '—'}</span>
               </span>
               <span style="font-size: 0.72rem; color: #f59e0b; font-weight: 600;">
                 ★ ${lead.reviews || '0'} Reviews
@@ -1220,14 +1281,15 @@ Your registered phone / client phone will ring shortly.`);
           </td>
           <td style="min-width: 220px; max-width: 280px;">
             <div style="font-weight: 700; color: #0f172a; font-size: 0.78rem;">
-              ${lead.service_needed || 'Software Services'}
+              ${lead.service_needed || '—'}
             </div>
             <div style="font-size: 0.72rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${lead.pitch || lead.notes || ''}">
-              ${lead.pitch || lead.notes || 'Outbound software sales opportunity'}
+              ${lead.pitch || lead.notes || '—'}
             </div>
           </td>
-          <td>
+          <td style="min-width: 170px;">
             <span class="crm-lead-badge badge-${statusClass}">${lead.status || 'NEW'}</span>
+            ${followupHtml}
           </td>
           <td style="min-width: 140px;">
             <div style="display: flex; gap: 6px;">
@@ -3574,17 +3636,89 @@ Lead updated to DEMO_BOOKED.`);
 
     const scoreRev = document.getElementById("intelScoreReviews");
     if (scoreRev) {
-      scoreRev.innerText = `Lead Score: ${lead.score || '100'} • ★ ${lead.reviews || '0'} Google Reviews`;
+      scoreRev.innerText = `Lead Score: ${lead.score || lead.lead_score || '—'} • ★ ${lead.reviews || '0'} Reviews`;
     }
 
     const srv = document.getElementById("intelServiceNeeded");
     if (srv) {
-      srv.innerText = lead.service_needed || "Custom NGO Website & Donation Portal";
+      srv.innerText = lead.service_needed || "—";
     }
 
     const ptch = document.getElementById("intelPitchText");
     if (ptch) {
-      ptch.innerText = lead.pitch || lead.notes || "Contact the leadership to introduce high-converting web design, donation management, and AI customer support automations.";
+      ptch.innerText = lead.pitch || lead.notes || "—";
+    }
+
+    // Follow-up Plan & Pending WhatsApp (Y4)
+    const vars = (lead && lead.variables) || {};
+    const plan = vars.followup_plan;
+    const pendingWa = vars.pending_whatsapp || [];
+    const waCount = Array.isArray(pendingWa) ? pendingWa.length : 0;
+
+    const waBadgeEl = document.getElementById("intelWhatsAppBadge");
+    if (waBadgeEl) {
+      if (waCount > 0) {
+        waBadgeEl.innerText = `WhatsApp queued (${waCount})`;
+        waBadgeEl.style.display = "inline-block";
+      } else {
+        waBadgeEl.style.display = "none";
+      }
+    }
+
+    const planTextEl = document.getElementById("intelFollowupPlanText");
+    const planReasonEl = document.getElementById("intelFollowupReason");
+    if (planTextEl) {
+      if (plan) {
+        if (plan.stage === 'with_sales_team') {
+          planTextEl.innerText = "With sales team";
+          planTextEl.style.color = "#047857";
+        } else if (plan.stage === 'stopped_opt_out' || (!plan.should_followup && lead.opt_out)) {
+          planTextEl.innerText = "Stopped: Do-Not-Call";
+          planTextEl.style.color = "#b91c1c";
+        } else if (plan.stage === 'closed' || !plan.should_followup) {
+          planTextEl.innerText = "Stopped: Closed";
+          planTextEl.style.color = "#64748b";
+        } else if (plan.next_action_at) {
+          let dateFormatted = plan.next_action_at;
+          try {
+            const d = new Date(plan.next_action_at);
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const day = d.getDate();
+            const mon = months[d.getMonth()];
+            let hr = d.getHours();
+            const min = d.getMinutes().toString().padStart(2, '0');
+            const ampm = hr >= 12 ? 'PM' : 'AM';
+            hr = hr % 12;
+            hr = hr ? hr : 12;
+            dateFormatted = `${day} ${mon}, ${hr}:${min} ${ampm}`;
+          } catch (e) {
+            dateFormatted = plan.next_action_at;
+          }
+          const stageLabels = {
+            'days_1_to_3': 'Smart cadence day 1–3',
+            'days_4_to_10': 'Smart cadence day 4–10',
+            'days_11_to_30': 'Smart cadence day 11–30',
+            'days_31_to_60': 'Smart cadence day 31–60',
+            'fixed_callback': 'Customer callback',
+            'not_reachable_retry_1': 'Retry #1 (+2h)',
+            'not_reachable_retry_2': 'Retry #2 (Next day)',
+            'not_reachable_retry_3_whatsapp': 'Retry #3 (Missed call)',
+            'details_sent_followup': 'Details sent follow-up',
+            'weekly_cap_deferred': 'Weekly limit deferred',
+          };
+          const stageName = stageLabels[plan.stage] || (plan.stage || '').replace(/_/g, ' ');
+          planTextEl.innerText = `Next AI call: ${dateFormatted} · ${stageName}`;
+          planTextEl.style.color = "#c2410c";
+        } else {
+          planTextEl.innerText = "Next AI call: Scheduled";
+          planTextEl.style.color = "#c2410c";
+        }
+        if (planReasonEl) planReasonEl.innerText = plan.reason || "Automatic cadence follow-up";
+      } else {
+        planTextEl.innerText = "No follow-up plan scheduled yet";
+        planTextEl.style.color = "#64748b";
+        if (planReasonEl) planReasonEl.innerText = "Follow-up plan is automatically generated after the first call.";
+      }
     }
 
     const dialBtn = document.getElementById("intelDialBtn");
