@@ -119,6 +119,9 @@ def _lead_to_dict(lead: Lead) -> Dict[str, Any]:
         "objections_noted": obj_noted,
         "action_items": act_items,
         "last_called_at": vars_dict.get("last_called_at", None),
+        "variables": vars_dict,
+        "followup_plan": vars_dict.get("followup_plan"),
+        "pending_whatsapp": vars_dict.get("pending_whatsapp") or [],
     }
     return data
 

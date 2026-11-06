@@ -4291,8 +4291,33 @@ input[type="checkbox"] {
                         {{ lead.pitch or lead.notes or '—' }}
                       </div>
                     </td>
-                    <td>
+                    <td style="min-width: 170px;">
                       <span class="crm-lead-badge badge-{{ (lead.status or 'NEW').lower() }}">{{ lead.status or 'NEW' }}</span>
+                      {% set lvars = lead.variables if (lead.variables is defined and lead.variables is mapping) else {} %}
+                      {% set fplan = lvars.get('followup_plan') if lvars else None %}
+                      {% set pwa = lvars.get('pending_whatsapp') if lvars else [] %}
+                      {% if fplan %}
+                        <div style="margin-top: 5px; font-size: 0.72rem; line-height: 1.3;">
+                          {% if fplan.stage == 'with_sales_team' %}
+                            <div style="color: #047857; font-weight: 700;">📅 With sales team</div>
+                          {% elif fplan.stage == 'stopped_opt_out' or (fplan.should_followup is defined and not fplan.should_followup and lead.opt_out) %}
+                            <div style="color: #b91c1c; font-weight: 700;">📅 Stopped: Do-Not-Call</div>
+                          {% elif fplan.stage == 'closed' or (fplan.should_followup is defined and not fplan.should_followup) %}
+                            <div style="color: #64748b; font-weight: 700;">📅 Stopped: Closed</div>
+                          {% elif fplan.next_action_at %}
+                            <div style="color: #c2410c; font-weight: 700;" title="{{ fplan.reason or '' }}">
+                              📅 Next AI call: {{ fplan.next_action_at[8:10] }}/{{ fplan.next_action_at[5:7] }}, {{ fplan.next_action_at[11:16] }} · {{ fplan.stage|replace('_', ' ')|title }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                      {% if pwa and pwa|length > 0 %}
+                        <div style="margin-top: 4px;">
+                          <span class="crm-lead-badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.68rem; padding: 2px 6px; display: inline-flex; align-items: center; gap: 4px;">
+                            💬 WhatsApp queued ({{ pwa|length }})
+                          </span>
+                        </div>
+                      {% endif %}
                     </td>
                     <td style="min-width: 140px;">
                       <div style="display: flex; gap: 6px;">
@@ -5433,6 +5458,22 @@ input[type="checkbox"] {
           </div>
           <div id="intelPitchText" style="font-size: 0.85rem; color: #78350f; line-height: 1.5; margin-top: 6px;">
             -
+          </div>
+        </div>
+
+        <!-- Follow-Up & Smart Cadence Plan (Y4) -->
+        <div style="padding: 14px 16px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; margin-bottom: 16px;" id="intelFollowupCard">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="font-size: 0.72rem; font-weight: 800; color: #c2410c; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+              <span>📅</span> Next Follow-Up Plan &amp; Cadence
+            </div>
+            <span id="intelWhatsAppBadge" style="display: none; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.68rem; padding: 2px 8px; border-radius: 4px; font-weight: 700;">WhatsApp queued (0)</span>
+          </div>
+          <div id="intelFollowupPlanText" style="font-size: 0.92rem; font-weight: 800; color: #9a3412; margin-top: 4px;">
+            No follow-up scheduled yet
+          </div>
+          <div id="intelFollowupReason" style="font-size: 0.76rem; color: #78350f; margin-top: 4px; line-height: 1.4;">
+            —
           </div>
         </div>
       </div>
