@@ -41,6 +41,19 @@ async def serve_landing(request: Request):
     })
 
 
+@router.get("/set-password", response_class=HTMLResponse)
+async def serve_set_password_page(request: Request):
+    """
+    Dedicated screen for users to replace their initial placeholder password.
+    Redirects unauthenticated users to /login.
+    """
+    current_user = get_optional_user(request)
+    if not current_user:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login?next=/set-password", status_code=302)
+    return templates.TemplateResponse(request, "set_password.html", {"current_user": current_user})
+
+
 @router.get("/crm", response_class=HTMLResponse)
 @router.get("/dashboard", response_class=HTMLResponse)
 @router.get("/calling", response_class=HTMLResponse)

@@ -229,6 +229,10 @@
           localStorage.setItem("lc_access_token", data.access_token);
           localStorage.setItem("lc_user", JSON.stringify(data.user || {}));
         }
+        if (data.must_change_password) {
+          window.location.href = "/set-password";
+          return;
+        }
         const nextUrl = new URLSearchParams(window.location.search).get("next") || "/crm";
         window.location.href = nextUrl;
       } catch (err) {

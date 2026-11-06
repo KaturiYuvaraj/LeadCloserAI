@@ -4778,6 +4778,96 @@ input[type="checkbox"] {
                 </div>
               </div>
             </div>
+
+            <!-- Team Members & Access Management -->
+            <div class="crm-panel-card" style="padding: 24px; grid-column: span 2; margin-top: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div>
+                  <h3 style="font-size: 1.02rem; font-weight: 800; color: #0f172a; margin: 0;">Team Members &amp; Role-Based Access</h3>
+                  <span style="font-size: 0.78rem; color: #64748b;">Manage user accounts, roles, and workspace permissions for your organization</span>
+                </div>
+                {% if current_user and current_user.role in ['owner', 'admin'] %}
+                <button class="crm-btn-orange" onclick="window.toggleInviteMemberForm()" style="padding: 7px 16px; font-size: 0.8rem; cursor: pointer;">
+                  + Add Member
+                </button>
+                {% endif %}
+              </div>
+
+              <!-- Invite Member Form (Toggleable) -->
+              <div id="inviteMemberFormContainer" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+                <h4 style="font-size: 0.88rem; font-weight: 700; color: #0f172a; margin: 0 0 12px 0;">Add New Team Member</h4>
+                <form id="inviteMemberForm" onsubmit="event.preventDefault(); window.submitInviteMember();">
+                  <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; gap: 12px; align-items: end;">
+                    <div>
+                      <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Email Address</label>
+                      <input type="email" id="inviteMemberEmail" required placeholder="colleague@leadcloser.ai" class="crm-input" style="width: 100%; height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
+                    </div>
+                    <div>
+                      <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Temporary Password (Min 8 chars)</label>
+                      <input type="password" id="inviteMemberPassword" required minlength="8" placeholder="••••••••" class="crm-input" style="width: 100%; height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
+                    </div>
+                    <div>
+                      <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Role</label>
+                      <select id="inviteMemberRole" class="crm-select" style="width: 100%; height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;">
+                        <option value="salesperson" selected>Salesperson</option>
+                        <option value="member">Team Member</option>
+                        <option value="manager">Sales Manager</option>
+                        <option value="admin">Administrator</option>
+                        <option value="owner">Organization Owner</option>
+                      </select>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                      <button type="submit" class="crm-btn-orange" style="height: 36px; padding: 0 14px; font-size: 0.8rem; cursor: pointer;">Save</button>
+                      <button type="button" onclick="window.toggleInviteMemberForm(false)" class="crm-action-pill" style="height: 36px; padding: 0 12px; font-size: 0.8rem; cursor: pointer;">Cancel</button>
+                    </div>
+                  </div>
+                  <div id="inviteMemberError" style="display: none; color: #dc2626; font-size: 0.78rem; margin-top: 8px;"></div>
+                </form>
+              </div>
+
+              <!-- Members Table -->
+              <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+                  <thead>
+                    <tr style="border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 0.75rem; text-transform: uppercase;">
+                      <th style="padding: 10px 8px;">Member / Email</th>
+                      <th style="padding: 10px 8px;">Role</th>
+                      <th style="padding: 10px 8px;">Joined</th>
+                      <th style="padding: 10px 8px; text-align: right;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="crmTeamTableBody">
+                    <tr>
+                      <td colspan="4" style="padding: 16px 8px; text-align: center; color: #94a3b8;">Loading team members...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Password Change Section -->
+            <div class="crm-panel-card" style="padding: 24px; grid-column: span 2; margin-top: 10px;">
+              <h3 style="font-size: 1.02rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">Security &amp; Account Password</h3>
+              <p style="font-size: 0.78rem; color: #64748b; margin: 0 0 16px 0;">Update your personal account password. Minimum 8 characters required.</p>
+              
+              <div id="settingsPasswordAlert" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 0.8rem; margin-bottom: 14px;"></div>
+
+              <form id="settingsChangePasswordForm" onsubmit="event.preventDefault(); window.changePasswordFromSettings();" style="max-width: 600px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                  <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Current Password</label>
+                    <input type="password" id="settingsCurrentPassword" required placeholder="Enter current password" class="crm-input" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 0.85rem;" />
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px;">New Password (Min 8 chars)</label>
+                    <input type="password" id="settingsNewPassword" required minlength="8" placeholder="Enter new password" class="crm-input" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 0.85rem;" />
+                  </div>
+                </div>
+                <button type="submit" id="settingsPasswordBtn" class="crm-btn-orange" style="padding: 9px 20px; font-size: 0.82rem; cursor: pointer;">
+                  Update Password
+                </button>
+              </form>
+            </div>
           </div>
         </div>
 

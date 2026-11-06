@@ -1470,6 +1470,7 @@ Your registered phone / client phone will ring shortly.`);
         pageSub.innerText = "Company branding, operational calling hours, and opt-out registry";
         if (pageActions) pageActions.style.display = "none";
         if (window.loadSettingsView) window.loadSettingsView();
+        if (window.loadTeamMembers) window.loadTeamMembers();
       }
     }
   };
@@ -1673,6 +1674,201 @@ Your registered phone / client phone will ring shortly.`);
       }
     } catch (err) {
       alert("Error saving settings: " + err.message);
+    }
+  };
+
+  window.toggleInviteMemberForm = (forceState) => {
+    const container = document.getElementById("inviteMemberFormContainer");
+    if (!container) return;
+    if (typeof forceState === "boolean") {
+      container.style.display = forceState ? "block" : "none";
+    } else {
+      container.style.display = container.style.display === "none" ? "block" : "none";
+    }
+    const err = document.getElementById("inviteMemberError");
+    if (err) err.style.display = "none";
+  };
+
+  window.loadTeamMembers = async () => {
+    const tbody = document.getElementById("crmTeamTableBody");
+    if (!tbody) return;
+
+    try {
+      const token = localStorage.getItem("lc_access_token");
+      const headers = {};
+      if (token) headers["Authorization"] = "Bearer " + token;
+
+      const resp = await fetch("/api/team", { headers });
+      const data = await resp.json();
+
+      if (!resp.ok || !data.team) {
+        tbody.innerHTML = `<tr><td colspan="4" style="padding: 16px 8px; text-align: center; color: #ef4444;">Failed to load team: ${data.detail || "Unauthorized"}</td></tr>`;
+        return;
+      }
+
+      if (data.team.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="padding: 16px 8px; text-align: center; color: #94a3b8;">No team members found.</td></tr>`;
+        return;
+      }
+
+      let storedUser = {};
+      try { storedUser = JSON.parse(localStorage.getItem("lc_user") || "{}"); } catch(_) {}
+
+      tbody.innerHTML = data.team.map(m => {
+        const isSelf = (m.id === storedUser.id || m.email === storedUser.email);
+        const joinedDate = m.created_at ? new Date(m.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
+        const roleColors = {
+          owner: "background: #fef3c7; color: #92400e;",
+          admin: "background: #e0e7ff; color: #3730a3;",
+          manager: "background: #dbeafe; color: #1e40af;",
+          salesperson: "background: #ecfdf5; color: #065f46;",
+          member: "background: #f1f5f9; color: #475569;"
+        };
+        const badgeStyle = roleColors[m.role] || roleColors.member;
+
+        let actionHtml = `<span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">(You)</span>`;
+        if (!isSelf) {
+          actionHtml = `<button class="crm-action-pill" onclick="window.deleteTeamMember(${m.id}, '${m.email}')" style="padding: 4px 10px; font-size: 0.74rem; color: #dc2626; border-color: #fecaca; background: #fff; cursor: pointer;">Remove</button>`;
+        }
+
+        return `
+          <tr style="border-bottom: 1px solid #f8fafc;">
+            <td style="padding: 12px 8px; font-weight: 700; color: #0f172a;">${m.email}</td>
+            <td style="padding: 12px 8px;">
+              <span style="font-size: 0.74rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: capitalize; ${badgeStyle}">
+                ${m.role}
+              </span>
+            </td>
+            <td style="padding: 12px 8px; color: #64748b; font-size: 0.78rem;">${joinedDate}</td>
+            <td style="padding: 12px 8px; text-align: right;">${actionHtml}</td>
+          </tr>
+        `;
+      }).join("");
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="4" style="padding: 16px 8px; text-align: center; color: #ef4444;">Network error: ${err.message}</td></tr>`;
+    }
+  };
+
+  window.submitInviteMember = async () => {
+    const email = document.getElementById("inviteMemberEmail").value.trim();
+    const password = document.getElementById("inviteMemberPassword").value;
+    const role = document.getElementById("inviteMemberRole").value;
+    const errBox = document.getElementById("inviteMemberError");
+    if (errBox) errBox.style.display = "none";
+
+    try {
+      const token = localStorage.getItem("lc_access_token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = "Bearer " + token;
+
+      const resp = await fetch("/api/team", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ email, password, role })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) {
+        throw new Error(data.detail || "Failed to invite member.");
+      }
+
+      document.getElementById("inviteMemberEmail").value = "";
+      document.getElementById("inviteMemberPassword").value = "";
+      window.toggleInviteMemberForm(false);
+      window.loadTeamMembers();
+      alert("Team member added successfully!");
+    } catch (err) {
+      if (errBox) {
+        errBox.textContent = err.message;
+        errBox.style.display = "block";
+      } else {
+        alert(err.message);
+      }
+    }
+  };
+
+  window.deleteTeamMember = async (memberId, memberEmail) => {
+    if (!confirm(`Are you sure you want to remove ${memberEmail} from your organization team?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("lc_access_token");
+      const headers = {};
+      if (token) headers["Authorization"] = "Bearer " + token;
+
+      const resp = await fetch(`/api/team/${memberId}`, {
+        method: "DELETE",
+        headers
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) {
+        throw new Error(data.detail || "Failed to remove member.");
+      }
+
+      window.loadTeamMembers();
+    } catch (err) {
+      alert("Error removing team member: " + err.message);
+    }
+  };
+
+  window.changePasswordFromSettings = async () => {
+    const currPw = document.getElementById("settingsCurrentPassword").value;
+    const newPw = document.getElementById("settingsNewPassword").value;
+    const alertBox = document.getElementById("settingsPasswordAlert");
+    const btn = document.getElementById("settingsPasswordBtn");
+
+    if (alertBox) alertBox.style.display = "none";
+
+    if (!newPw || newPw.length < 8) {
+      if (alertBox) {
+        alertBox.style.background = "#fef2f2";
+        alertBox.style.border = "1px solid #fecaca";
+        alertBox.style.color = "#b91c1c";
+        alertBox.textContent = "New password must be at least 8 characters long.";
+        alertBox.style.display = "block";
+      }
+      return;
+    }
+
+    if (btn) btn.disabled = true;
+
+    try {
+      const token = localStorage.getItem("lc_access_token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = "Bearer " + token;
+
+      const resp = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          current_password: currPw,
+          new_password: newPw
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) {
+        throw new Error(data.detail || "Failed to change password.");
+      }
+
+      if (alertBox) {
+        alertBox.style.background = "#ecfdf5";
+        alertBox.style.border = "1px solid #a7f3d0";
+        alertBox.style.color = "#065f46";
+        alertBox.textContent = "Password updated successfully! Default setup passwords are now revoked.";
+        alertBox.style.display = "block";
+      }
+      document.getElementById("settingsCurrentPassword").value = "";
+      document.getElementById("settingsNewPassword").value = "";
+    } catch (err) {
+      if (alertBox) {
+        alertBox.style.background = "#fef2f2";
+        alertBox.style.border = "1px solid #fecaca";
+        alertBox.style.color = "#b91c1c";
+        alertBox.textContent = err.message;
+        alertBox.style.display = "block";
+      }
+    } finally {
+      if (btn) btn.disabled = false;
     }
   };
 

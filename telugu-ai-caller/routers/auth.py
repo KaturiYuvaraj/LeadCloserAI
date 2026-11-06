@@ -120,17 +120,21 @@ async def api_login(payload: Dict[str, Any], request: Request, response: Respons
             path="/",
         )
 
+        must_change_password = bool(user.password_hash == "pbkdf2:sha256:default_hash_for_admin")
+
         return {
             "success": True,
             "access_token": token,
             "token_type": "bearer",
             "expires_in": TOKEN_TTL_SECONDS,
+            "must_change_password": must_change_password,
             "user": {
                 "id": user.id,
                 "account_id": user.account_id,
                 "account_name": account.name if account else "S P Associates",
                 "email": user.email,
                 "role": user.role,
+                "must_change_password": must_change_password,
             },
         }
     finally:
@@ -236,6 +240,45 @@ async def api_logout(response: Response):
 @router.get("/api/auth/me")
 async def api_me(user: Dict[str, Any] = Depends(get_current_user)):
     return {"authenticated": True, "user": user}
+
+
+@router.post("/api/auth/change-password")
+async def api_change_password(
+    payload: Dict[str, Any],
+    request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    current_password = (payload.get("current_password") or "").strip()
+    new_password = (payload.get("new_password") or "").strip()
+
+    if not current_password or not new_password:
+        raise HTTPException(status_code=400, detail="Current password and new password are required.")
+
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="New password must be at least 8 characters long.")
+
+    session = SessionLocal()
+    try:
+        user = session.query(User).filter(User.id == current_user["id"]).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User account not found.")
+
+        if not verify_password(current_password, user.password_hash):
+            raise HTTPException(status_code=400, detail="Current password is incorrect.")
+
+        user.password_hash = hash_password(new_password)
+        client_ip = request.client.host if request.client else "unknown"
+        session.add(AuditLog(
+            account_id=user.account_id,
+            user_id=user.id,
+            action="password_changed",
+            target=f"user:{user.id}",
+            details={"email": user.email, "ip": client_ip},
+        ))
+        session.commit()
+        return {"success": True, "message": "Password updated successfully."}
+    finally:
+        session.close()
 
 
 @router.get("/api/team")

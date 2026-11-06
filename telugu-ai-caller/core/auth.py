@@ -144,6 +144,7 @@ def _load_user_from_payload(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]
             "email": user.email,
             "role": user.role,
             "calling_approved": bool(account.calling_approved) if account else True,
+            "must_change_password": bool(user.password_hash == "pbkdf2:sha256:default_hash_for_admin"),
         }
     finally:
         session.close()
