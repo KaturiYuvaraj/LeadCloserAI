@@ -1398,6 +1398,7 @@ Your registered phone / client phone will ring shortly.`);
         pageTitle.innerText = "Executive Sales Overview & Telemetry";
         pageSub.innerText = "Real-time AI metrics, conversion funnel, priority leads, and team activity";
         if (pageActions) pageActions.style.display = "flex";
+        if (window.loadCallAnalytics) window.loadCallAnalytics(30);
       } else if (viewName === "calling") {
         pageTitle.innerText = "Calling Station & Live AI Workspace";
         pageSub.innerText = "Real-time conversation pipeline, intelligent scripts, and live deal closing";
@@ -3429,6 +3430,112 @@ Lead updated to DEMO_BOOKED.`);
 
     } catch (err) {
       console.error("Failed to load analytics dashboard:", err);
+    }
+  };
+
+  // ===================================================================
+  // CALL ENGINE TELEMETRY & ANALYTICS CARD (Y3)
+  // ===================================================================
+  const renderAnalyticsBarList = (containerId, dataMap, barColor) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const entries = Object.entries(dataMap || {});
+    if (entries.length === 0) {
+      container.innerHTML = '<div style="color: #94a3b8; font-size: 0.76rem; padding: 12px 0;">No entries recorded in this period.</div>';
+      return;
+    }
+    const maxVal = Math.max(...entries.map(e => e[1]), 1);
+    const totalVal = entries.reduce((acc, e) => acc + e[1], 0);
+
+    const formatLabel = (key) => {
+      const lower = String(key).toLowerCase();
+      if (lower === "te-in") return "Telugu (te-IN)";
+      if (lower === "en-in") return "English (en-IN)";
+      if (lower === "hi-in") return "Hindi (hi-IN)";
+      if (lower === "ta-in") return "Tamil (ta-IN)";
+      if (lower === "kn-in") return "Kannada (kn-IN)";
+      return String(key).replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    };
+
+    container.innerHTML = entries.map(([key, count]) => {
+      const pct = Math.max(Math.round((count / maxVal) * 100), 4);
+      const totalPct = totalVal > 0 ? Math.round((count / totalVal) * 100) : 0;
+      return `
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.76rem; margin-bottom: 3px;">
+            <span style="font-weight: 600; color: #334155;">${formatLabel(key)}</span>
+            <span style="color: #64748b; font-weight: 700;">${count} <span style="font-size: 0.7rem; font-weight: 500; color: #94a3b8;">(${totalPct}%)</span></span>
+          </div>
+          <div style="background: #f1f5f9; height: 6px; border-radius: 3px; overflow: hidden;">
+            <div style="background: ${barColor}; width: ${pct}%; height: 100%; border-radius: 3px; transition: width 0.3s ease;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  };
+
+  window.loadCallAnalytics = async (days = 30) => {
+    // 1. Highlight active button in 7/30/90 selector
+    [7, 30, 90].forEach(d => {
+      const btn = document.getElementById(`analyticsBtn${d}`);
+      if (btn) {
+        if (d === Number(days)) {
+          btn.classList.add("active-badge-btn");
+          btn.style.background = "#ea580c";
+          btn.style.color = "#ffffff";
+          btn.style.borderColor = "#ea580c";
+        } else {
+          btn.classList.remove("active-badge-btn");
+          btn.style.background = "#ffffff";
+          btn.style.color = "#475569";
+          btn.style.borderColor = "#cbd5e1";
+        }
+      }
+    });
+
+    try {
+      const resp = await fetch(`/api/analytics/calls?days=${days}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+
+      // 2. Update Tiles
+      const elTotal = document.getElementById("tileTotalCalls");
+      if (elTotal) elTotal.innerText = data.total_calls ?? 0;
+
+      const elConv = document.getElementById("tileConversations");
+      if (elConv) elConv.innerText = data.conversations ?? 0;
+
+      const elMach = document.getElementById("tileMachineAnswered");
+      if (elMach) elMach.innerText = data.machine_answered ?? 0;
+
+      const elNoResp = document.getElementById("tileNoResponse");
+      if (elNoResp) elNoResp.innerText = data.no_response ?? 0;
+
+      const elAvgTalk = document.getElementById("tileAvgTalk");
+      if (elAvgTalk) {
+        const sec = data.avg_talk_seconds || 0;
+        if (sec >= 60) {
+          elAvgTalk.innerText = `${Math.floor(sec / 60)}m ${Math.round(sec % 60)}s`;
+        } else {
+          elAvgTalk.innerText = `${Math.round(sec)}s`;
+        }
+      }
+
+      const elReplyGap = document.getElementById("tileAvgReplyGap");
+      if (elReplyGap) {
+        if (data.avg_reply_gap_ms != null && data.avg_reply_gap_ms > 0) {
+          elReplyGap.innerText = `${(data.avg_reply_gap_ms / 1000).toFixed(2)}s`;
+        } else {
+          elReplyGap.innerText = "—";
+        }
+      }
+
+      // 3. Update Small Bar Lists
+      renderAnalyticsBarList("analyticsOutcomesList", data.outcomes, "#ea580c");
+      renderAnalyticsBarList("analyticsLanguagesList", data.languages, "#0d9488");
+      renderAnalyticsBarList("analyticsActionsList", data.actions, "#7c3aed");
+    } catch (err) {
+      console.error("Error loading call analytics:", err);
     }
   };
 
