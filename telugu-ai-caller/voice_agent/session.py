@@ -160,6 +160,7 @@ WHO YOU ARE TALKING TO
 - If it is a wrong number: apologise, end the call and add [WRONG_PERSON] [DO_NOT_CALL] [CALL_COMPLETED].
 - If two people are talking or there is background talk not meant for you, reply only to what was said to you.
 - If the message is cut off or makes no sense (noise, bad network), say you couldn't hear clearly and ask them to repeat. Never guess.
+- "Hello", "hmm", "haan / హా / हाँ", "ok" on their own are NOT answers. Never treat them as interest, a yes or agreement. After "hello", introduce yourself again in one line and ask your question again.
 
 PATIENCE
 - "One minute / hold on / wait": reply only "sure, take your time" (in their language) and nothing else.
@@ -733,6 +734,24 @@ class BaseCallSession:
     def extra_result_fields(self) -> Dict[str, Any]:
         return {}
 
+    BOOKED_STAGES = ("demo_scheduled", "closed_won", "meeting_booked")
+
+    def _check_booking(self, intel: Dict[str, str]) -> Dict[str, str]:
+        """
+        The post-call summary may read a vague "hmm" as agreement. A call only counts as a booked
+        demo if a meeting was actually agreed during it ([MEETING] action); otherwise the lead stays
+        in follow-up, so the follow-up engine calls again instead of treating it as a hot lead.
+        """
+        booked = any(a.get("action") == "MEETING" for a in self.actions)
+        claimed = intel.get("deal_stage") in self.BOOKED_STAGES or intel.get("outcome_label") == "meeting_booked"
+        if claimed and not booked:
+            logger.info(f"Call {self.session_id}: summary says {intel.get('deal_stage')} but no meeting was agreed · follow-up")
+            intel = {**intel, "deal_stage": "follow_up",
+                     "summary": (intel.get("summary", "") + " (No demo time was confirmed on the call.)").strip()}
+            if intel.get("outcome_label"):
+                intel["outcome_label"] = "interested_later"
+        return intel
+
     def analytics(self, duration: int) -> Dict[str, Any]:
         return {
             "end_reason": self.end_reason or ("caller_hangup" if self.ended_by == "caller" else "completed"),
@@ -793,6 +812,7 @@ class BaseCallSession:
                 logger.error(f"Intelligence extraction failed: {e}")
                 intel = {"summary": "Completed call.", "sentiment": "neutral", "deal_stage": "qualifying"}
         intel = {key: as_text(value) for key, value in (intel or {}).items()}
+        intel = self._check_booking(intel)
 
         call_record = {
             "lead_id": self.lead_id,
