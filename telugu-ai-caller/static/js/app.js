@@ -1515,13 +1515,228 @@ Your registered phone / client phone will ring shortly.`);
                 ? `<button class="crm-btn-orange" onclick="window.activateEmployee(${e.id})">Set as Active Closer</button>` 
                 : `<button class="crm-action-pill active-badge-btn" disabled>Currently Active</button>`
               }
+              <button class="crm-action-pill" onclick="window.selectEmployeeKnowledge(${e.id})" title="Manage Knowledge Documents">📚 Knowledge</button>
               <button class="crm-action-pill" onclick="window.testCallEmployee(${e.id})" title="Test this employee in voice sandbox">Test Call</button>
             </div>
           </div>
         `;
       }).join('');
+
+      // Populate Knowledge Base employee dropdown
+      const kbSelect = document.getElementById("kbEmployeeSelect");
+      if (kbSelect) {
+        const prevSelected = kbSelect.value;
+        kbSelect.innerHTML = emps.map(e => `
+          <option value="${e.id}">${e.name} (${e.role || 'Sales Closer'})</option>
+        `).join('');
+        if (prevSelected && emps.some(e => String(e.id) === String(prevSelected))) {
+          kbSelect.value = prevSelected;
+        } else if (active) {
+          kbSelect.value = active.id;
+        } else if (emps.length > 0) {
+          kbSelect.value = emps[0].id;
+        }
+        if (kbSelect.value) {
+          window.loadEmployeeKnowledge(kbSelect.value);
+        }
+      }
+      if (window.setupKbDropZone) {
+        window.setupKbDropZone();
+      }
     } catch (err) {
       grid.innerHTML = `<div style="color: #ef4444; font-size: 0.85rem;">Failed to load employees: ${err.message}</div>`;
+    }
+  };
+
+  window.setupKbDropZone = () => {
+    const dropZone = document.getElementById("kbDropZone");
+    if (!dropZone || dropZone.dataset.bound) return;
+    dropZone.dataset.bound = "true";
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.style.borderColor = "#ea580c";
+        dropZone.style.background = "#fff7ed";
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.style.borderColor = "#cbd5e1";
+        dropZone.style.background = "#f8fafc";
+      }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files && files.length > 0) {
+        const kbSelect = document.getElementById("kbEmployeeSelect");
+        const empId = kbSelect ? kbSelect.value : null;
+        if (!empId) {
+          alert("Please select an AI employee before uploading a knowledge document.");
+          return;
+        }
+        window.uploadEmployeeKnowledgeFile(empId, files[0]);
+      }
+    }, false);
+  };
+
+  window.selectEmployeeKnowledge = (empId) => {
+    const kbSelect = document.getElementById("kbEmployeeSelect");
+    if (kbSelect) {
+      kbSelect.value = empId;
+      window.loadEmployeeKnowledge(empId);
+    }
+    const section = document.getElementById("crmEmployeeKnowledgeSection");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  window.loadEmployeeKnowledge = async (empId) => {
+    const tbody = document.getElementById("crmEmployeeKnowledgeTableBody");
+    if (!tbody) return;
+    if (!empId) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 20px;">Please select an AI employee.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 20px;">Loading knowledge documents...</td></tr>';
+    try {
+      const resp = await fetch(`/api/employees/${empId}/knowledge`);
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ef4444; padding: 20px;">${err.detail || "Could not load knowledge documents"}</td></tr>`;
+        return;
+      }
+      const data = await resp.json();
+      const docs = data.documents || [];
+      if (docs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 24px;">No knowledge documents uploaded yet for this AI employee. Upload a PDF price list, FAQ sheet, or product catalog above.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = docs.map(d => {
+        const chars = d.chars || 0;
+        const sizeFormatted = chars >= 1000 ? `${(chars / 1000).toFixed(1)}k chars` : `${chars} chars`;
+        const addedFormatted = d.added_at ? new Date(d.added_at).toLocaleString() : '—';
+        return `
+          <tr style="border-bottom: 1px solid #f1f5f9;">
+            <td style="padding: 12px 10px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.1rem;">📄</span>
+              <span>${d.name || 'Untitled Document'}</span>
+            </td>
+            <td style="padding: 12px 10px; color: #475569; font-size: 0.8rem;">${sizeFormatted}</td>
+            <td style="padding: 12px 10px; color: #64748b; font-size: 0.78rem;">${addedFormatted}</td>
+            <td style="padding: 12px 10px; text-align: right;">
+              <button class="crm-action-pill" onclick="window.deleteEmployeeKnowledge(${empId}, ${d.index})" style="padding: 4px 10px; font-size: 0.74rem; cursor: pointer; color: #ef4444; border-color: #fecaca; background: #fef2f2;">
+                🗑️ Delete
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ef4444; padding: 20px;">Error: ${err.message}</td></tr>`;
+    }
+  };
+
+  window.handleKnowledgeFileUpload = async (inputElement) => {
+    const kbSelect = document.getElementById("kbEmployeeSelect");
+    const empId = kbSelect ? kbSelect.value : null;
+    if (!empId) {
+      alert("Please select an AI employee before uploading a knowledge document.");
+      inputElement.value = "";
+      return;
+    }
+    const file = inputElement.files && inputElement.files[0];
+    if (!file) return;
+    await window.uploadEmployeeKnowledgeFile(empId, file);
+    inputElement.value = "";
+  };
+
+  window.uploadEmployeeKnowledgeFile = async (empId, file) => {
+    const statusBox = document.getElementById("kbUploadStatus");
+    if (statusBox) {
+      statusBox.style.display = "block";
+      statusBox.style.background = "#eff6ff";
+      statusBox.style.color = "#1d4ed8";
+      statusBox.style.border = "1px solid #bfdbfe";
+      statusBox.innerText = `Uploading and parsing "${file.name}"...`;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const resp = await fetch(`/api/employees/${empId}/knowledge`, {
+        method: "POST",
+        body: formData
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        if (statusBox) {
+          statusBox.style.display = "block";
+          statusBox.style.background = "#fef2f2";
+          statusBox.style.color = "#b91c1c";
+          statusBox.style.border = "1px solid #fecaca";
+          statusBox.innerText = `Upload failed: ${data.detail || "Could not upload document"}`;
+        }
+        return;
+      }
+
+      if (statusBox) {
+        statusBox.style.display = "block";
+        statusBox.style.background = "#ecfdf5";
+        statusBox.style.color = "#047857";
+        statusBox.style.border = "1px solid #a7f3d0";
+        statusBox.innerText = `✓ Successfully uploaded and indexed "${data.name || file.name}" (${(data.chars || 0).toLocaleString()} characters extracted). Live calls will automatically reference this knowledge!`;
+        setTimeout(() => {
+          if (statusBox) statusBox.style.display = "none";
+        }, 6000);
+      }
+      window.loadEmployeeKnowledge(empId);
+    } catch (err) {
+      if (statusBox) {
+        statusBox.style.display = "block";
+        statusBox.style.background = "#fef2f2";
+        statusBox.style.color = "#b91c1c";
+        statusBox.style.border = "1px solid #fecaca";
+        statusBox.innerText = `Upload network error: ${err.message}`;
+      }
+    }
+  };
+
+  window.deleteEmployeeKnowledge = async (empId, docIndex) => {
+    if (!confirm("Are you sure you want to remove this knowledge document from the AI employee?")) {
+      return;
+    }
+    const statusBox = document.getElementById("kbUploadStatus");
+    try {
+      const resp = await fetch(`/api/employees/${empId}/knowledge/${docIndex}`, {
+        method: "DELETE"
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        alert("Failed to delete document: " + (data.detail || "Unknown error"));
+        return;
+      }
+      if (statusBox) {
+        statusBox.style.display = "block";
+        statusBox.style.background = "#f0fdf4";
+        statusBox.style.color = "#166534";
+        statusBox.style.border = "1px solid #bbf7d0";
+        statusBox.innerText = "✓ Document removed successfully.";
+        setTimeout(() => {
+          if (statusBox) statusBox.style.display = "none";
+        }, 4000);
+      }
+      window.loadEmployeeKnowledge(empId);
+    } catch (err) {
+      alert("Error deleting document: " + err.message);
     }
   };
 
