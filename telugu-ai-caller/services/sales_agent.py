@@ -16,7 +16,7 @@ from services.language_utils import (
     get_localized_initial_greeting,
     detect_explicit_language_request
 )
-from database import get_company_profile, get_lead_by_id, get_active_ai_employee
+from database import get_company_profile, get_last_call_facts, get_lead_by_id, get_active_ai_employee
 
 
 SALES_SYSTEM_PROMPT_TEMPLATE = """
@@ -132,6 +132,11 @@ class SalesAgent:
             prompt += lead_context
 
             from services.followup_engine import build_caller_memory_context
+            if lead_info.get("id") and "last_call_facts" not in lead_info:
+                try:
+                    lead_info = {**lead_info, "last_call_facts": get_last_call_facts(lead_info["id"])}
+                except Exception as e:
+                    logger.warning(f"Could not read the last call for caller memory: {e}")
             memory_block = build_caller_memory_context(lead_info)
             if memory_block:
                 prompt += memory_block

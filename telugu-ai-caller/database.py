@@ -1221,6 +1221,34 @@ def get_outcome_bucket_summary(account_id: Optional[int] = None) -> Dict[str, An
     }
 
 
+def get_last_call_facts(lead_id: int) -> Optional[Dict[str, Any]]:
+    """
+    What actually happened on the lead's most recent call, for the AI's caller memory:
+    seconds of talk and how many customer turns were a real sentence (3+ words), not "Hello" / "Hmm".
+    None if the lead was never called.
+    """
+    session = SessionLocal()
+    try:
+        call = session.query(Call).filter(Call.lead_id == lead_id).order_by(Call.created_at.desc()).first()
+        if not call:
+            return None
+        transcript = call.transcript
+        if isinstance(transcript, str):
+            try:
+                transcript = json.loads(transcript)
+            except ValueError:
+                transcript = []
+        turns = [str(t.get("content") or t.get("text") or "") for t in (transcript or [])
+                 if isinstance(t, dict) and t.get("role") == "user"]
+        return {
+            "talk_seconds": int(call.talk_seconds or 0),
+            "substantive_turns": sum(1 for t in turns if len(t.split()) >= 3),
+            "outcome": call.outcome,
+        }
+    finally:
+        session.close()
+
+
 def get_call_history(limit: int = 50, account_id: Optional[int] = None) -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:

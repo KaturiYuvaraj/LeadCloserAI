@@ -150,15 +150,24 @@ def test_phone_session_inbound_matches_caller_number():
     assert session.phone_number() == "09000033344"
 
 
-def test_phone_session_unknown_caller_has_no_lead():
+def test_phone_session_unknown_caller_becomes_a_lead():
     session = PhoneCallSession(
         websocket=None,
         call_data={"stream_id": "s3", "call_id": "c3", "from": "+919111111111", "to": "+918040000000"},
         query_params={"lang": "hi-IN"},
     )
     assert session.direction == "in"
-    assert session.lead_id is None
+    assert session.new_inbound_lead and session.lead["source"] == "inbound_call"
+    assert session.lead_id == session.lead["id"]
     assert session.language == "hi-IN"
+
+
+def test_phone_session_hidden_caller_has_no_lead():
+    session = PhoneCallSession(
+        websocket=None,
+        call_data={"stream_id": "s4", "call_id": "c4", "from": "", "to": "+918040000000"},
+    )
+    assert session.direction == "in" and session.lead_id is None and not session.new_inbound_lead
 
 
 def test_exotel_stream_rejects_non_exotel_handshake():

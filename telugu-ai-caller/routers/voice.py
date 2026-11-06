@@ -48,6 +48,7 @@ from pipecat.runner.utils import parse_telephony_websocket
 
 from voice_agent.session import BaseCallSession, PhoneCallSession, VobizCallSession, WebCallSession
 from voice_agent.dialer import call_queue
+from voice_agent import webhook_auth
 from voice_agent.vobiz import build_answer_xml, parse_start_message
 
 router = APIRouter(tags=["voice"])
@@ -266,6 +267,9 @@ async def _request_params(request: Request) -> Dict[str, str]:
 async def vobiz_answer(request: Request):
     """Vobiz Answer URL: tell Vobiz to stream this call to the real-time engine."""
     params = await _request_params(request)
+    if not webhook_auth.allowed(params):
+        logger.warning(f"Vobiz answer rejected: wrong or missing key (from {request.client.host if request.client else '?'})")
+        return Response(status_code=403, content="forbidden")
     stream_query = {
         key: value for key, value in {
             "lead_id": params.get("lead_id", ""),
@@ -274,6 +278,7 @@ async def vobiz_answer(request: Request):
             "to": params.get("To", params.get("to", "")),
             "call_id": params.get("CallUUID", params.get("call_id", "")),
             "job_id": params.get("job_id", ""),
+            "key": params.get("key", ""),
         }.items() if value
     }
     if stream_query.get("job_id", "").isdigit():
@@ -289,6 +294,9 @@ async def vobiz_answer(request: Request):
 @router.api_route("/api/voice/vobiz/hangup", methods=["GET", "POST"])
 async def vobiz_hangup(request: Request):
     params = await _request_params(request)
+    if not webhook_auth.allowed(params):
+        logger.warning(f"Vobiz hangup rejected: wrong or missing key (from {request.client.host if request.client else '?'})")
+        return Response(status_code=403, content="forbidden")
     logger.info(f"Vobiz hangup · call {params.get('CallUUID')} · status {params.get('CallStatus')} · "
                 f"duration {params.get('Duration')}s · cause {params.get('HangupCause')}")
     job_id = params.get("job_id", "")
@@ -305,6 +313,10 @@ async def vobiz_voice_stream(websocket: WebSocket):
     """Vobiz bidirectional stream: one phone call on the real-time engine."""
     await websocket.accept()
     query = dict(websocket.query_params)
+    if not webhook_auth.allowed(query):
+        logger.warning("Vobiz stream rejected: wrong or missing key")
+        await websocket.close(code=1008)
+        return
 
     async def wait_for_start():
         while True:

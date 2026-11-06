@@ -257,14 +257,28 @@ def compute_next_followup_step(
 
 def build_caller_memory_context(lead_info: Optional[Dict[str, Any]], recent_calls: Optional[List[Dict[str, Any]]] = None) -> str:
     """
-    Builds the Caller Memory block (§4) injected into the AI sales prompt so
-    follow-up calls remember the last conversation, budget, timeline, and objections.
+    Builds the Caller Memory block (§4) injected into the AI sales prompt so follow-up calls
+    can pick up where the last call ended, without inventing anything.
+
+    The summary of an earlier call is machine-written from a phone transcript, and phone-line speech
+    recognition is unreliable, so nothing in it is stated to the customer as fact: the AI may only
+    ask the customer to confirm it. If the last call had no real conversation ("last_call_facts":
+    under 20 s of talk or fewer than 2 full sentences from the customer) the memory says only that
+    we tried or briefly spoke before.
     """
     if not lead_info and not recent_calls:
         return ""
 
     lead_info = lead_info or {}
     last_call = recent_calls[0] if recent_calls else {}
+    facts = lead_info.get("last_call_facts")
+
+    if facts is not None and (facts.get("talk_seconds", 0) < 20 or facts.get("substantive_turns", 0) < 2):
+        return (
+            "\nCALLER MEMORY: We called this customer before but there was no real conversation "
+            "(they barely spoke or the line was unclear). Treat this as a first conversation. "
+            "Never say they showed interest, agreed to anything or mentioned anything earlier.\n"
+        )
 
     summary = last_call.get("summary") or lead_info.get("last_call_summary") or ""
     budget = last_call.get("extracted_budget") or lead_info.get("budget") or ""
@@ -277,23 +291,23 @@ def build_caller_memory_context(lead_info: Optional[Dict[str, Any]], recent_call
     if not any([summary, outcome_label, objections]):
         return ""
 
-    lines = [
-        "\nCALLER MEMORY (PREVIOUS CONVERSATION CONTEXT — USE NATURALLY IN FOLLOW-UP):"
-    ]
+    lines = ["\nCALLER MEMORY (from an earlier call; machine-written notes, NOT confirmed by the customer):"]
     if summary:
-        lines.append(f"- Last Conversation Summary: {summary}")
+        lines.append(f"- Earlier call notes: {summary}")
     if outcome_label:
-        lines.append(f"- Previous Call Outcome: {outcome_label}" + (f" ({outcome_reason})" if outcome_reason else ""))
+        lines.append(f"- Earlier call outcome: {outcome_label}" + (f" ({outcome_reason})" if outcome_reason else ""))
     if requirements:
-        lines.append(f"- Discussed Requirement: {requirements}")
+        lines.append(f"- Possible requirement: {requirements}")
     if budget and budget not in {"Flexible", "Not specified"}:
-        lines.append(f"- Discussed Budget: {budget}")
+        lines.append(f"- Possible budget: {budget}")
     if timeline and timeline not in {"Immediate", "Not specified"}:
-        lines.append(f"- Discussed Timeline: {timeline}")
+        lines.append(f"- Possible timeline: {timeline}")
     if objections and objections != "None":
-        lines.append(f"- Previous Objection / Hesitation: {objections}")
+        lines.append(f"- Possible hesitation: {objections}")
     lines.append(
-        "INSTRUCTION: Reference our previous conversation naturally (e.g., 'Last time we spoke you mentioned...') "
-        "instead of starting from scratch as a cold call.\n"
+        "INSTRUCTION: Mention the earlier call only as a question for the customer to confirm "
+        "(e.g. 'We spoke earlier about a website, is that still what you need?'). Never say 'you told me', "
+        "'you agreed' or 'you showed interest', and never state a budget, date or decision as something "
+        "they said. If they say it is wrong, drop it and ask fresh.\n"
     )
     return "\n".join(lines)

@@ -82,10 +82,12 @@ from pipecat.transports.smallwebrtc.transport import SmallWebRTCTransport
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams, FastAPIWebsocketTransport
 
 from config import SARVAM_API_KEY
+from core.db import SessionLocal
 from database import (
-    clean_phone, get_active_ai_employee, get_ai_employee_by_id, get_all_leads, get_company_profile,
+    clean_phone, create_lead, get_active_ai_employee, get_ai_employee_by_id, get_all_leads, get_company_profile,
     get_lead_by_id, save_call_record, update_call_recording,
 )
+from models import Number
 from services.language_utils import detect_language as detect_text_language
 from services.sales_agent import sales_agent
 from voice_agent import credits
@@ -229,13 +231,71 @@ def as_text(value: Any) -> str:
 def find_lead_by_phone(phone: str) -> Optional[Dict[str, Any]]:
     """Match a caller's number to an existing lead (last 10 digits, so +91/0 prefixes don't matter)."""
     digits = "".join(ch for ch in clean_phone(phone or "") if ch.isdigit())[-10:]
-    if len(digits) < 10:
+    if len(digits) < 10 or not digits.strip("0"):  # clean_phone() turns a hidden number into +910000000000
         return None
     for lead in get_all_leads():
         lead_digits = "".join(ch for ch in str(lead.get("phone") or "") if ch.isdigit())[-10:]
         if lead_digits == digits:
             return lead
     return None
+
+
+# Spoken when a customer calls us (instead of the outbound pitch). {company} / {name} are filled in.
+INBOUND_GREETING = {
+    "te-IN": "నమస్కారం అండి! {company} కి కాల్ చేసినందుకు ధన్యవాదాలు. నేను మీకు ఎలా సహాయం చేయగలను?",
+    "hi-IN": "नमस्ते! {company} में कॉल करने के लिए धन्यवाद। मैं आपकी क्या सहायता कर सकता हूँ?",
+    "en-IN": "Hello! Thank you for calling {company}. How can I help you today?",
+    "ta-IN": "வணக்கம்! {company}-ஐ அழைத்ததற்கு நன்றி. நான் உங்களுக்கு எப்படி உதவ முடியும்?",
+    "kn-IN": "ನಮಸ್ಕಾರ! {company} ಗೆ ಕರೆ ಮಾಡಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?",
+    "ml-IN": "നമസ്കാരം! {company}-ലേക്ക് വിളിച്ചതിന് നന്ദി. ഞാൻ നിങ്ങളെ എങ്ങനെ സഹായിക്കണം?",
+}
+INBOUND_GREETING_KNOWN = {
+    "te-IN": "నమస్కారం {name} గారు! మళ్ళీ కాల్ చేసినందుకు ధన్యవాదాలు. నేను మీకు ఎలా సహాయం చేయగలను?",
+    "hi-IN": "नमस्ते {name} जी! दोबारा कॉल करने के लिए धन्यवाद। मैं आपकी क्या सहायता कर सकता हूँ?",
+    "en-IN": "Hello {name}! Thanks for calling back. How can I help you today?",
+    "ta-IN": "வணக்கம் {name}! மீண்டும் அழைத்ததற்கு நன்றி. நான் உங்களுக்கு எப்படி உதவ முடியும்?",
+    "kn-IN": "ನಮಸ್ಕಾರ {name}! ಮತ್ತೆ ಕರೆ ಮಾಡಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?",
+    "ml-IN": "നമസ്കാരം {name}! വീണ്ടും വിളിച്ചതിന് നന്ദി. ഞാൻ നിങ്ങളെ എങ്ങനെ സഹായിക്കണം?",
+}
+INBOUND_NAME_PREFIX = "Inbound caller "  # placeholder name of a lead created from an unknown caller
+
+
+def is_placeholder_name(name: str) -> bool:
+    return str(name or "").startswith(INBOUND_NAME_PREFIX)
+
+
+def account_for_number(callee: str) -> int:
+    """The company that owns the number the customer called (numbers table); account 1 if unknown."""
+    digits = "".join(ch for ch in str(callee or "") if ch.isdigit())[-10:]
+    if len(digits) == 10:
+        session = SessionLocal()
+        try:
+            for number in session.query(Number).filter(Number.account_id.isnot(None)).all():
+                if "".join(ch for ch in str(number.e164 or "") if ch.isdigit())[-10:] == digits:
+                    return int(number.account_id)
+        finally:
+            session.close()
+    return 1
+
+
+def lead_for_inbound_call(caller: str, callee: str = "") -> tuple[Optional[Dict[str, Any]], bool]:
+    """
+    The lead for a customer who calls us: the existing lead with that number, else a new one
+    (source inbound_call; they called us, so calling them back is allowed).
+    Returns (lead, created). (None, False) when the number is hidden or invalid.
+    """
+    lead = find_lead_by_phone(caller)
+    if lead:
+        return lead, False
+    digits = "".join(ch for ch in str(caller or "") if ch.isdigit())[-10:]
+    if len(digits) < 10 or not digits.strip("0"):
+        return None, False
+    lead_id = create_lead({
+        "name": f"{INBOUND_NAME_PREFIX}{digits}", "phone": f"+91{digits}", "source": "inbound_call",
+        "consent_source": f"inbound_call {datetime.now(IST):%Y-%m-%d %H:%M} IST",
+        "notes": "Called our number; created automatically.",
+    }, account_id=account_for_number(callee))
+    return get_lead_by_id(lead_id), True
 
 
 def parse_custom_parameters(raw: Any) -> Dict[str, str]:
@@ -282,8 +342,13 @@ def employee_prompt(employee: Optional[Dict[str, Any]]) -> str:
 def live_rules(lead: Optional[Dict[str, Any]], direction: str, now_utc: Optional[datetime] = None) -> str:
     now_ist = (now_utc or datetime.now(timezone.utc)).astimezone(IST)
     lead_name = (lead or {}).get("name") or "the customer"
-    if direction == "in":
-        who = "The customer called you. Greet them, find out what they need and help."
+    if direction == "in" and (not lead or is_placeholder_name(lead.get("name"))):
+        who = ("The customer called you and you do not know their name. Do not assume they want a website or app. "
+               "Early in the call ask their name politely, then find out what they need and help.")
+        lead_name = "the caller"
+    elif direction == "in":
+        who = (f"{lead_name} called you back. Greet them, find out what they need and help. Do not "
+               f"pitch from the start; listen first.")
     else:
         who = (f"You called {lead_name}. If you are not sure it is {lead_name}, confirm politely once "
                f"before discussing details.")
@@ -599,14 +664,22 @@ class BaseCallSession:
 
     # ------------------------------------------------------------------ prompt
     async def _build_prompt_and_greeting(self) -> tuple[str, str]:
+        unknown_caller = self.direction == "in" and (not self.lead or is_placeholder_name(self.lead.get("name")))
         system_prompt = (
-            sales_agent._build_system_prompt(self.lead)
+            sales_agent._build_system_prompt(None if unknown_caller else self.lead)
             + employee_prompt(self.employee)
             + self.knowledge.prompt_section()
             + live_rules(self.lead, self.direction)
         )
         employee_greeting = (self.employee or {}).get("greeting") or ""
-        if employee_greeting and (self.employee or {}).get("language") == self.language:
+        if self.direction == "in":
+            company = get_company_profile().get("agency_name", "S P Associates Software Company")
+            if unknown_caller:
+                template = INBOUND_GREETING.get(self.language, INBOUND_GREETING["en-IN"])
+            else:
+                template = INBOUND_GREETING_KNOWN.get(self.language, INBOUND_GREETING_KNOWN["en-IN"])
+            greeting = template.format(company=company, name=(self.lead or {}).get("name") or "")
+        elif employee_greeting and (self.employee or {}).get("language") == self.language:
             name = (self.lead or {}).get("name") or ""
             greeting = employee_greeting.replace("{name}", name).replace("{lead_name}", name)
         else:
@@ -1007,8 +1080,9 @@ class PhoneCallSession(BaseCallSession):
         callee = str(call_data.get("to") or "")
         self.direction = "out" if lead else "in"
         self.detect_machines = self.direction == "out"
+        self.new_inbound_lead = False
         if not lead:
-            lead = find_lead_by_phone(caller)
+            lead, self.new_inbound_lead = lead_for_inbound_call(caller, callee)
 
         super().__init__(lead, params.get("lang"), params.get("wait_ms"), params.get("employee_id"))
         self.websocket = websocket
