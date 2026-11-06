@@ -35,6 +35,9 @@ def test_router_switches_voice_only_when_language_changes():
     assert switch is None
     assert annotated.endswith("(Reply only in Telugu.)")
 
+    # one sentence in a new language is only a candidate; the third in a row switches (2-3 check rule)
+    assert router.prepare("हमें ऐप चाहिए")[1] is None
+    assert router.prepare("हमें ऐप चाहिए")[1] is None
     annotated, switch = router.prepare("हमें ऐप चाहिए")
     assert isinstance(switch, TTSUpdateSettingsFrame)
     assert switch.delta.voice == VOICES["hi-IN"]
@@ -60,7 +63,7 @@ def test_router_defaults_unknown_initial_language_to_telugu():
 
 
 @pytest.mark.parametrize("wait_ms,expected", [
-    (700, 0.3), (900, 0.5), (1300, 0.9), (None, 0.5), ("bad", 0.5), (100, 0.3), (5000, 1.2),
+    (700, 0.55), (900, 0.75), (1300, 1.15), (None, 0.75), ("bad", 0.75), (100, 0.55), (5000, 1.2),
 ])
 def test_reply_wait_maps_to_vad_stop_secs(wait_ms, expected):
     assert wait_ms_to_vad_stop_secs(wait_ms) == expected

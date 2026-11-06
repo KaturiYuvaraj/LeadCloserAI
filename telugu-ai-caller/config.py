@@ -35,6 +35,13 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "")
 
+# Dialer & Telephony Provider (Vobiz / Exotel / Fake)
+DIALER_PROVIDER = os.getenv("DIALER_PROVIDER", "fake")
+VOBIZ_AUTH_ID = os.getenv("VOBIZ_AUTH_ID", "")
+VOBIZ_AUTH_TOKEN = os.getenv("VOBIZ_AUTH_TOKEN", "")
+VOBIZ_CALLER_ID = os.getenv("VOBIZ_CALLER_ID", "")
+VOICE_PUBLIC_BASE_URL = os.getenv("VOICE_PUBLIC_BASE_URL", "")
+
 # Server
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))

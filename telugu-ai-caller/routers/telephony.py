@@ -29,6 +29,12 @@ from services.audio_processor import (
 )
 from services.telephony_service import telephony_service
 from services.language_utils import detect_language
+try:
+    from voice_agent.language import detect_explicit_language_request, COMMON_INDIAN_LOANWORDS
+except ImportError:
+    def detect_explicit_language_request(text: str) -> Optional[str]:
+        return None
+    COMMON_INDIAN_LOANWORDS = set()
 
 router = APIRouter()
 
@@ -173,6 +179,8 @@ async def websocket_web_call(
     start_time = time.time()
     call_lead = get_lead_by_id(lead_id) if lead_id else None
     active_lang = lang or (call_lead.get("preferred_language") if call_lead else None) or "te-IN"
+    pending_lang: Optional[str] = None
+    pending_lang_count: int = 0
 
     # Step 1: Speak initial greeting
     greeting_text = await sales_agent.get_initial_greeting(lead_id, language_code=active_lang)
@@ -232,7 +240,34 @@ async def websocket_web_call(
                     })
                     continue
 
-                user_lang = detect_language(user_text)
+                # Language verification: 2-3 check rule or explicit switch request
+                explicit_lang = detect_explicit_language_request(user_text)
+                if explicit_lang and explicit_lang != active_lang:
+                    logger.info(f"Explicit language switch in web call: {active_lang} -> {explicit_lang}")
+                    active_lang = explicit_lang
+                    pending_lang = None
+                    pending_lang_count = 0
+                else:
+                    detected_user_lang = detect_language(user_text)
+                    if detected_user_lang == active_lang:
+                        pending_lang = None
+                        pending_lang_count = 0
+                    else:
+                        words = [w.strip(",.?!").lower() for w in user_text.split() if any(ch.isalpha() for ch in w)]
+                        non_loanwords = [w for w in words if w not in COMMON_INDIAN_LOANWORDS]
+                        if len(words) >= 2 and (non_loanwords or detected_user_lang != "en-IN"):
+                            if pending_lang == detected_user_lang:
+                                pending_lang_count += 1
+                            else:
+                                pending_lang = detected_user_lang
+                                pending_lang_count = 1
+                            if pending_lang_count >= 3 or (pending_lang_count >= 2 and len(words) >= 6):
+                                logger.info(f"Verified language switch in web call ({pending_lang_count} checks): {active_lang} -> {detected_user_lang}")
+                                active_lang = detected_user_lang
+                                pending_lang = None
+                                pending_lang_count = 0
+
+                user_lang = active_lang
                 conversation_history.append({"role": "user", "content": user_text})
                 await websocket.send_json({
                     "event": "user_speech",
@@ -249,7 +284,7 @@ async def websocket_web_call(
                 should_hangup = sales_agent.is_call_completed(conversation_history, ai_reply)
                 llm_ms = int((time.time() - llm_start) * 1000)
                 conversation_history.append({"role": "assistant", "content": ai_reply})
-                ai_lang = detect_language(ai_reply)
+                ai_lang = active_lang
 
                 # Synthesize and stream speech sentence by sentence in the matched language
                 await websocket.send_json({"event": "status", "message": "సమాధానం చెబుతున్నాను... (Speaking...)"})
@@ -260,7 +295,31 @@ async def websocket_web_call(
                 if not user_text:
                     continue
 
-                user_lang = detect_language(user_text)
+                explicit_lang = detect_explicit_language_request(user_text)
+                if explicit_lang and explicit_lang != active_lang:
+                    active_lang = explicit_lang
+                    pending_lang = None
+                    pending_lang_count = 0
+                else:
+                    detected_user_lang = detect_language(user_text)
+                    if detected_user_lang == active_lang:
+                        pending_lang = None
+                        pending_lang_count = 0
+                    else:
+                        words = [w.strip(",.?!").lower() for w in user_text.split() if any(ch.isalpha() for ch in w)]
+                        non_loanwords = [w for w in words if w not in COMMON_INDIAN_LOANWORDS]
+                        if len(words) >= 2 and (non_loanwords or detected_user_lang != "en-IN"):
+                            if pending_lang == detected_user_lang:
+                                pending_lang_count += 1
+                            else:
+                                pending_lang = detected_user_lang
+                                pending_lang_count = 1
+                            if pending_lang_count >= 3 or (pending_lang_count >= 2 and len(words) >= 6):
+                                active_lang = detected_user_lang
+                                pending_lang = None
+                                pending_lang_count = 0
+
+                user_lang = active_lang
                 conversation_history.append({"role": "user", "content": user_text})
                 await websocket.send_json({
                     "event": "user_speech",
@@ -276,7 +335,7 @@ async def websocket_web_call(
                 should_hangup = sales_agent.is_call_completed(conversation_history, ai_reply)
                 llm_ms = int((time.time() - llm_start) * 1000)
                 conversation_history.append({"role": "assistant", "content": ai_reply})
-                ai_lang = detect_language(ai_reply)
+                ai_lang = active_lang
 
                 if data.get("generate_audio", True):
                     await speak_reply(websocket, ai_reply, ai_lang, {"stt_ms": 0, "llm_ms": llm_ms}, should_hangup=should_hangup)
