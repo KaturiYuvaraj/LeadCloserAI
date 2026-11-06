@@ -5,6 +5,7 @@ Ensures tests run in isolated transactions with automatic rollback.
 
 import os
 import sys
+import tempfile
 from pathlib import Path
 import pytest
 import pytest_asyncio
@@ -15,6 +16,17 @@ from sqlalchemy.orm import sessionmaker
 ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
+
+# Tests must never touch the real database or place real calls / send real messages.
+# Set before anything imports config.py: load_dotenv() does not override variables that already exist.
+_TEST_DB = Path(tempfile.mkdtemp(prefix="leadcloser-tests-")) / "test.db"
+os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB.as_posix()}"
+os.environ["DIALER_PROVIDER"] = "fake"
+for _secret in ("VOBIZ_AUTH_ID", "VOBIZ_AUTH_TOKEN", "VOBIZ_CALLER_ID",
+                "EXOTEL_ACCOUNT_SID", "EXOTEL_API_KEY", "EXOTEL_API_TOKEN",
+                "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN",
+                "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID"):
+    os.environ[_secret] = ""
 
 from core.db import DATABASE_URL, Base
 from main import app

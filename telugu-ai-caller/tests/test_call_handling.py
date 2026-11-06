@@ -407,3 +407,29 @@ def test_guard_actions(spoken, actions, expected):
 ])
 def test_unclear_audio_signal(text, unclear):
     assert ("unclear" in caller_signals(text)) is unclear
+
+
+# ----------------------------------------------------------------------------- booking check
+
+def _booking(intel, actions):
+    from types import SimpleNamespace
+    from voice_agent.session import BaseCallSession
+    fake = SimpleNamespace(actions=actions, session_id="t", BOOKED_STAGES=BaseCallSession.BOOKED_STAGES)
+    return BaseCallSession._check_booking(fake, intel)
+
+
+def test_demo_without_agreed_meeting_stays_follow_up():
+    # 6 Nov real call: the customer only said "Hmm", the summary claimed a tentative demo
+    out = _booking({"deal_stage": "demo_scheduled", "outcome_label": "meeting_booked", "summary": "Tentative demo."}, [])
+    assert out["deal_stage"] == "follow_up" and out["outcome_label"] == "interested_later"
+    assert "No demo time was confirmed" in out["summary"]
+
+
+def test_demo_with_agreed_meeting_is_kept():
+    out = _booking({"deal_stage": "demo_scheduled"}, [{"action": "MEETING", "arg": "2026-11-07 11:00"}])
+    assert out["deal_stage"] == "demo_scheduled"
+
+
+def test_greetings_are_not_answers_rule_is_in_the_prompt():
+    from voice_agent.session import VOICE_RULES
+    assert "are NOT answers" in VOICE_RULES
