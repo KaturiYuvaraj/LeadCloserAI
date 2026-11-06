@@ -88,6 +88,7 @@ from database import (
 )
 from services.language_utils import detect_language as detect_text_language
 from services.sales_agent import sales_agent
+from voice_agent import credits
 from voice_agent.actions import run_action
 from voice_agent.call_guard import CallGuard, caller_hints, caller_signals
 from voice_agent.conclusion import CallConclusionFilter
@@ -436,6 +437,7 @@ class BaseCallSession:
         self.bot_talk_secs = 0.0
         self.user_talk_secs = 0.0
         self.machine: Optional[str] = None
+        self.service_failed: Optional[str] = None  # 'no_credits' / 'invalid_key': Sarvam can't serve the call
         self._audio: Optional[tuple] = None  # (pcm bytes, sample_rate, channels)
 
     # ------------------------------------------------------------------ hooks for subclasses
@@ -544,6 +546,22 @@ class BaseCallSession:
         self.send_event("call_ending", reason=kind)
         if self.task:
             asyncio.get_running_loop().create_task(self.task.cancel())
+
+    async def on_service_error(self, error: str, where: str = "live call") -> bool:
+        """
+        A Sarvam service reported an error. If it means credits finished or the key was rejected,
+        end the call at once (the customer would hear silence) and block further dialling.
+        """
+        reason = credits.report_error(error, where)
+        if not reason or self.service_failed:
+            return bool(reason)
+        self.service_failed = reason
+        self.end_reason = "service_unavailable"
+        self.ended_by = "system"
+        self.send_event("call_ending", reason="service_unavailable")
+        if self.task:
+            asyncio.get_running_loop().create_task(self.task.cancel())
+        return True
 
     async def on_action(self, tag: str, arg: str):
         record = await run_action(tag, arg, self.lead, self.current_language)
@@ -750,6 +768,10 @@ class BaseCallSession:
             observers=[latency_observer, SpeakingObserver(self)],
         )
 
+        @self.task.event_handler("on_pipeline_error")
+        async def on_pipeline_error(task, frame):
+            await self.on_service_error(getattr(frame, "error", ""), "pipeline")
+
         @transport.event_handler("on_client_connected")
         async def on_connected(transport, client):
             logger.info(
@@ -757,6 +779,9 @@ class BaseCallSession:
                 + (f" · employee {self.employee['name']}" if self.employee else "")
             )
             self.started_at = time.time()
+            if credits.blocked():  # a call that was already ringing when Sarvam stopped working
+                await self.on_service_error(credits.blocked()["message"], "call start")
+                return
             self._greeting_in_progress = True
             self._greeting_started_at = time.time()
             self.guard.restart_window()
@@ -849,7 +874,10 @@ class BaseCallSession:
             f"({analytics['end_reason']}) · {duration}s · {len(self.latencies)} turns · avg reply gap {avg_latency}s"
         )
 
-        if self.machine:
+        if self.service_failed:
+            intel = {"summary": f"Call cut short: {credits.MESSAGES[self.service_failed]}",
+                     "sentiment": "neutral", "deal_stage": "follow_up"}
+        elif self.machine:
             intel = {"summary": f"No conversation: {self.machine.replace('_', ' ')} answered the call.",
                      "sentiment": "neutral", "deal_stage": self.machine}
         elif not self.user_turns:
@@ -887,11 +915,12 @@ class BaseCallSession:
             **self.extra_result_fields(),
         }
 
-        try:
-            call_id = await asyncio.to_thread(save_call_record, call_record)
-        except Exception as e:
-            logger.error(f"Failed to save call record: {e}")
-            call_id = None
+        call_id = None
+        if not (self.service_failed and not self.user_turns):  # nothing happened: no record, no outcome on the lead
+            try:
+                call_id = await asyncio.to_thread(save_call_record, call_record)
+            except Exception as e:
+                logger.error(f"Failed to save call record: {e}")
 
         recording_url = None
         if call_id:
@@ -913,8 +942,9 @@ class BaseCallSession:
         }
         if self.job_id:
             from voice_agent.dialer import call_queue
+            from voice_agent.dialer import SERVICE_FAILED
             await asyncio.to_thread(call_queue.on_call_saved, self.job_id, call_id,
-                                    intel.get("deal_stage") or "completed")
+                                    SERVICE_FAILED if self.service_failed else intel.get("deal_stage") or "completed")
         self.send_event("call_summary", **self.result)
         self.done.set()
 
