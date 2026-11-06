@@ -4064,6 +4064,94 @@ input[type="checkbox"] {
               </div>
             </div>
           </div>
+
+          <!-- CALL ANALYTICS CARD ON DASHBOARD (Y3) -->
+          <div class="crm-panel-card" id="crmCallAnalyticsCard" style="margin-top: 24px; padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.2rem;">📊</span>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0;">Call Engine Telemetry &amp; Analytics</h3>
+                </div>
+                <span style="font-size: 0.78rem; color: #64748b;">Live conversation diagnostics, connection rates, latency, and speech outcomes across your signed-in company calls.</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;" id="analyticsDaysSelector">
+                <button type="button" class="crm-action-pill" onclick="window.loadCallAnalytics(7)" id="analyticsBtn7" style="padding: 6px 14px; font-weight: 700; cursor: pointer;">7 Days</button>
+                <button type="button" class="crm-action-pill active-badge-btn" onclick="window.loadCallAnalytics(30)" id="analyticsBtn30" style="padding: 6px 14px; font-weight: 700; cursor: pointer;">30 Days</button>
+                <button type="button" class="crm-action-pill" onclick="window.loadCallAnalytics(90)" id="analyticsBtn90" style="padding: 6px 14px; font-weight: 700; cursor: pointer;">90 Days</button>
+              </div>
+            </div>
+
+            <!-- 6 Telemetry Tiles -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px;" id="analyticsTilesRow">
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px;">
+                <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Calls</span>
+                <div style="font-size: 1.45rem; font-weight: 800; color: #0f172a; margin-top: 4px;" id="tileTotalCalls">—</div>
+                <span style="font-size: 0.70rem; color: #94a3b8;">Outbound &amp; inbound</span>
+              </div>
+              <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px;">
+                <span style="font-size: 0.74rem; font-weight: 700; color: #065f46; text-transform: uppercase;">Conversations</span>
+                <div style="font-size: 1.45rem; font-weight: 800; color: #047857; margin-top: 4px;" id="tileConversations">—</div>
+                <span style="font-size: 0.70rem; color: #059669;">User answered &amp; engaged</span>
+              </div>
+              <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 14px;">
+                <span style="font-size: 0.74rem; font-weight: 700; color: #92400e; text-transform: uppercase;">Voicemail / IVR</span>
+                <div style="font-size: 1.45rem; font-weight: 800; color: #b45309; margin-top: 4px;" id="tileMachineAnswered">—</div>
+                <span style="font-size: 0.70rem; color: #d97706;">Machine / switched-off</span>
+              </div>
+              <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px;">
+                <span style="font-size: 0.74rem; font-weight: 700; color: #991b1b; text-transform: uppercase;">No Response</span>
+                <div style="font-size: 1.45rem; font-weight: 800; color: #dc2626; margin-top: 4px;" id="tileNoResponse">—</div>
+                <span style="font-size: 0.70rem; color: #ef4444;">Unanswered rings</span>
+              </div>
+              <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 12px; padding: 14px;">
+                <span style="font-size: 0.74rem; font-weight: 700; color: #115e59; text-transform: uppercase;">Avg Talk Time</span>
+                <div style="font-size: 1.45rem; font-weight: 800; color: #0d9488; margin-top: 4px;" id="tileAvgTalk">—</div>
+                <span style="font-size: 0.70rem; color: #14b8a6;">Per engaged conversation</span>
+              </div>
+              <div style="background: #fdf4ff; border: 1px solid #f5d0fe; border-radius: 12px; padding: 14px;">
+                <span style="font-size: 0.74rem; font-weight: 700; color: #86198f; text-transform: uppercase;">Avg Reply Speed</span>
+                <div style="font-size: 1.45rem; font-weight: 800; color: #a21caf; margin-top: 4px;" id="tileAvgReplyGap">—</div>
+                <span style="font-size: 0.70rem; color: #c026d3;">Pipecat + Sarvam latency</span>
+              </div>
+            </div>
+
+            <!-- 3 Bar Lists: Outcomes, Languages, Actions -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+              <!-- Outcomes Bar List -->
+              <div style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px;">
+                <div style="font-size: 0.85rem; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                  <span>Call Outcomes</span>
+                  <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">Distribution</span>
+                </div>
+                <div id="analyticsOutcomesList" style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="color: #94a3b8; font-size: 0.76rem; padding: 12px 0;">Loading outcomes...</div>
+                </div>
+              </div>
+
+              <!-- Languages Bar List -->
+              <div style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px;">
+                <div style="font-size: 0.85rem; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                  <span>Spoken Languages</span>
+                  <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">Detected</span>
+                </div>
+                <div id="analyticsLanguagesList" style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="color: #94a3b8; font-size: 0.76rem; padding: 12px 0;">Loading languages...</div>
+                </div>
+              </div>
+
+              <!-- Actions Bar List -->
+              <div style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px;">
+                <div style="font-size: 0.85rem; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                  <span>Conversation Actions</span>
+                  <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">Completed</span>
+                </div>
+                <div id="analyticsActionsList" style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="color: #94a3b8; font-size: 0.76rem; padding: 12px 0;">Loading actions...</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- ============================================================= -->
