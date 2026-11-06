@@ -433,3 +433,9 @@ def test_demo_with_agreed_meeting_is_kept():
 def test_greetings_are_not_answers_rule_is_in_the_prompt():
     from voice_agent.session import VOICE_RULES
     assert "are NOT answers" in VOICE_RULES
+
+
+def test_prompt_says_disclosure_once_and_one_retry_on_not_interested():
+    from voice_agent.session import VOICE_RULES
+    assert "Never repeat that." in VOICE_RULES
+    assert "make one short attempt" in VOICE_RULES and "[DO_NOT_CALL] [CALL_COMPLETED]" in VOICE_RULES

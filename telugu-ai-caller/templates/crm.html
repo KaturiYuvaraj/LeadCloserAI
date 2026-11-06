@@ -4957,7 +4957,7 @@ input[type="checkbox"] {
           <div class="crm-panel-card" style="padding: 20px;">
             <div style="display: flex; flex-direction: column; gap: 14px;">
               {% for call in calls %}
-              <div style="padding: 14px 16px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px;">
+              <div onclick="window.openCallDetails({{ call.id }})" title="Click to listen and read the full conversation" style="padding: 14px 16px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; cursor: pointer;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                   <div style="display: flex; align-items: center; gap: 10px;">
                     <div style="width: 32px; height: 32px; border-radius: 50%; background: #ffedd5; color: #ea580c; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem;">
@@ -4968,7 +4968,10 @@ input[type="checkbox"] {
                       <div style="font-size: 0.72rem; color: #64748b;">Duration: {{ call.duration_seconds or 74 }}s · {{ call.created_at or 'Today' }}</div>
                     </div>
                   </div>
-                  <span class="crm-lead-badge badge-qualified">{{ call.disposition or 'Completed' }}</span>
+                  <span style="display: flex; align-items: center; gap: 8px;">
+                    {% if call.recording_url %}<span style="font-size: 0.72rem; color: #ea580c; font-weight: 700;">🎧 Listen · Transcript ↗</span>{% endif %}
+                    <span class="crm-lead-badge badge-qualified">{{ call.disposition or 'Completed' }}</span>
+                  </span>
                 </div>
                 <div style="font-size: 0.78rem; color: #334155; line-height: 1.45; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 8px;">
                   <strong>Summary:</strong> {{ call.summary or 'Lead inquired about AI automated sales dialer. Expressed strong interest in Telugu language support. Agreed to a demo scheduled for tomorrow.' }}
