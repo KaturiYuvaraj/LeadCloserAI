@@ -51,3 +51,4 @@ desktop.ini
 
 # Test fixtures: sample caller audio for the fake Exotel client (not call recordings)
 !telugu-ai-caller/tests/fake_exotel/samples/*.wav
+telugu-ai-caller/tests/fake_exotel/.audio-cache/

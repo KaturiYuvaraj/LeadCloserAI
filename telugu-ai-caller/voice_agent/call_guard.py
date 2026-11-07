@@ -94,7 +94,29 @@ _OPT_OUT = [re.compile(p, re.IGNORECASE) for p in OPT_OUT_PATTERNS]
 _HUMAN = [re.compile(p, re.IGNORECASE) for p in HUMAN_PATTERNS]
 _UPSET = [re.compile(p, re.IGNORECASE) for p in UPSET_PATTERNS]
 
+NOT_INTERESTED_PATTERNS = [
+    r"\bnot\s+interested\b", r"\bno\s+need\b", r"\bdon'?t\s+(need|want)\b",
+    r"नहीं\s+चाहिए", r"ज़?रूरत\s+नहीं", r"दिलचस्पी\s+नहीं",
+    r"వద్దు", r"అవసరం\s+లేదు", r"ఆసక్తి\s+లేదు", r"ఇంట్రెస్ట్\s+లేదు", r"కావాల్సిన\s+అవసరం\s+లేదు",
+]
+ASKS_SOMETHING = r"ఎంత|ఎప్పుడు|ఏంటి|ఎలా|ఎందుకు|చెప్పండి|ప్రైస్|how|what|when|why|price|tell|कितन|क्या|कब|बताइए"
+NOT_INTERESTED_FIRST = ("This is their first no. Do NOT say goodbye yet. Respect it in a few words, then ask one short "
+                        "question: why, or what they use today, or if details on WhatsApp or a later call would help.")
+NOT_INTERESTED_AGAIN = "They have said no again. Thank them, say goodbye and add [CALL_COMPLETED]. Do not try again."
+_NOT_INTERESTED = [re.compile(p, re.IGNORECASE) for p in NOT_INTERESTED_PATTERNS]
+_ASKS_SOMETHING = re.compile(ASKS_SOMETHING, re.IGNORECASE)
+# "call me tomorrow at 4": a time word and a call-me-back request together
+CALLBACK_PATTERNS = [
+    r"call\s*(me|back).*(tomorrow|evening|morning|today|\d)",
+    r"(రేపు|సాయంత్రం|ఉదయం|మధ్యాహ్నం|రాత్రి|గంటలకు|గంటలకి|ఈవినింగ్|సోమవారం|tomorrow|evening|morning|\d\s*(pm|am|o'?clock)).*"
+    r"(కాల్\s*చే|ఫోన్\s*చే|call\s*(me|back|cheyy?andi)|कॉल\s*कर|फोन\s*कर)",
+]
+_CALLBACK = [re.compile(p, re.IGNORECASE) for p in CALLBACK_PATTERNS]
+
 HINTS = {
+    "callback": ("The customer asked to be called back at a time. If they gave a time, confirm it in one short "
+                 "sentence with NO question after it, say goodbye, and add [CALLBACK: YYYY-MM-DD HH:MM] "
+                 "[CALL_COMPLETED]. If they gave no exact time, ask only for the time."),
     "hold": "The customer asked you to wait. Say only a very short 'sure, take your time' and wait silently.",
     "opt_out": ("The customer may be asking not to be called again. If so, apologise once, confirm their number "
                 "will not be called again, say goodbye and add [DO_NOT_CALL] [CALL_COMPLETED]."),
@@ -108,25 +130,36 @@ HINTS = {
 
 
 def is_hold_request(text: str) -> bool:
-    """A short 'one minute / hold on' (long sentences that merely contain 'wait' are real questions)."""
+    """
+    A short 'one minute / hold on'. Longer sentences that merely contain 'wait' are real requests:
+    "ఆగండి ఆగండి, ముందు ప్రైస్ ఎంతో చెప్పండి" asks for the price, and must not get "take your time".
+    """
     words = (text or "").split()
-    return 0 < len(words) <= 7 and any(p.search(text) for p in _HOLD)
+    if not 0 < len(words) <= 5 or _ASKS_SOMETHING.search(text):
+        return False
+    return any(p.search(text) for p in _HOLD)
 
 
 def caller_signals(text: str) -> List[str]:
-    """Which behaviours this caller message shows: hold, opt_out, human, upset, unclear."""
+    """Which behaviours this message shows: hold, opt_out, human, upset, unclear, not_interested, callback."""
     found = []
     if is_hold_request(text):
         found.append("hold")
-    for name, patterns in (("opt_out", _OPT_OUT), ("human", _HUMAN), ("upset", _UPSET), ("unclear", _UNCLEAR)):
+    for name, patterns in (("opt_out", _OPT_OUT), ("human", _HUMAN), ("upset", _UPSET), ("unclear", _UNCLEAR),
+                           ("not_interested", _NOT_INTERESTED), ("callback", _CALLBACK)):
         if any(p.search(text or "") for p in patterns):
             found.append(name)
     return found
 
 
-def caller_hints(text: str) -> Optional[str]:
+def caller_hints(text: str, not_interested_before: bool = False) -> Optional[str]:
     signals = caller_signals(text)
-    return " ".join(HINTS[s] for s in signals) or None
+    if "opt_out" in signals and "not_interested" in signals:
+        signals.remove("not_interested")  # "don't call me" is stronger: no second attempt
+    parts = [HINTS[s] for s in signals if s != "not_interested"]
+    if "not_interested" in signals:
+        parts.append(NOT_INTERESTED_AGAIN if not_interested_before else NOT_INTERESTED_FIRST)
+    return " ".join(parts) or None
 
 
 # ----------------------------------------------------------------------------- processor
