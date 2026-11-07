@@ -161,6 +161,8 @@ LIVE PHONE CONVERSATION RULES (override anything above that conflicts):
   * Always acknowledge their point before replying (e.g., in Telugu: "అవునండీ, ఖచ్చితంగా...", "సరేనండి, అర్థమైంది...", "తప్పకుండా అండి..."; in Hindi: "जी बिल्कुल सर...", "हाँ जी, समझ गया...", "ज़रूर सर..."; in English: "Understood, absolutely...", "That makes total sense...").
   * Reply in one or two short spoken sentences. No lists, no emojis, no markdown.
   * Address their exact objection or inquiry directly first, then warmly guide the conversation forward.
+  * Keep every reply under about 25 words and ask only ONE question per reply. Never ask two questions together.
+  * Answer what the customer just asked first. Never ask the same question twice: if they skip it, move on to the next thing.
   * Your greeting already said the call is recorded and that you are an AI assistant. Never repeat that.
   * Repeat back only what the customer actually said, in their words (they said "website", not "custom website"). Never add details, numbers or decisions they did not say.
   * Write English business words in the script of the language you are speaking so the voice pronounces them naturally. Never put Latin-script (English-letter) words inside a Telugu, Hindi, Tamil, Kannada or Malayalam sentence. Wrong: "మీ business కోసం demo పెట్టుకుందామా". Right: "మీ బిజినెస్ కోసం డెమో పెట్టుకుందామా". Likewise website = వెబ్‌సైట్, software = సాఫ్ట్‌వేర్, custom = కస్టమ్, customers = కస్టమర్స్, team = టీమ్, price = ప్రైస్, samples = శాంపిల్స్, live = లైవ్, timeline = టైమ్‌లైన్, WhatsApp = వాట్సాప్; in Hindi बिज़नेस, वेबसाइट, कस्टमर, डेमो, टीम, प्राइस. Only digits and the AM/PM-free time in words may stay as they are.
@@ -211,17 +213,21 @@ TIME_UP_NOTE = ("(System note: the call time limit is close. Wrap up now: confir
                 "add any action marker, say goodbye and add [CALL_COMPLETED].)")
 
 
+# 880 ms = 0.8 s of silence ends the customer's turn. At 0.27 s, scenario tests showed sentences
+# cut into pieces and words lost (hearing 55% -> 96% in English, 83% -> 99% when interrupting).
+DEFAULT_WAIT_MS = int(os.getenv("VOICE_REPLY_WAIT_MS", "880"))
+
+
 def wait_ms_to_vad_stop_secs(wait_ms: Optional[int]) -> float:
     """
     Map the dashboard's "Reply wait" setting to Silero VAD stop time.
-    Tuned for snappy, natural turn-taking without long awkward silences.
-    Fast 200 -> 0.18s | Normal 350 -> 0.27s | Conversational 500 -> 0.42s.
+    Fast 200 -> 0.18s | Conversational 500 -> 0.42s | default 880 -> 0.8s (see DEFAULT_WAIT_MS).
     """
     try:
-        ms = int(wait_ms) if wait_ms is not None else 350
+        ms = int(wait_ms) if wait_ms is not None else DEFAULT_WAIT_MS
     except (TypeError, ValueError):
-        ms = 350
-    return round(min(0.60, max(0.18, (ms - 80) / 1000)), 2)
+        ms = DEFAULT_WAIT_MS
+    return round(min(1.2, max(0.18, (ms - 80) / 1000)), 2)
 
 def as_text(value: Any) -> str:
     """
@@ -595,7 +601,8 @@ class BaseCallSession:
             self._set_hold(True)
         elif self.on_hold:
             self._set_hold(False)
-        parts = [caller_hints(text), self.knowledge.relevant(text)]
+        said_no_before = self.signals.get("not_interested", 0) > 1
+        parts = [caller_hints(text, said_no_before), self.knowledge.relevant(text)]
         return " ".join(p for p in parts if p) or None
 
     def _set_hold(self, hold: bool):

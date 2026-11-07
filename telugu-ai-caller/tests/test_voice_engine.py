@@ -63,7 +63,7 @@ def test_router_defaults_unknown_initial_language_to_telugu():
 
 
 @pytest.mark.parametrize("wait_ms,expected", [
-    (200, 0.18), (350, 0.27), (500, 0.42), (800, 0.6), (None, 0.27), ("bad", 0.27), (100, 0.18), (5000, 0.6),
+    (200, 0.18), (350, 0.27), (500, 0.42), (800, 0.72), (None, 0.8), ("bad", 0.8), (100, 0.18), (5000, 1.2),
 ])
 def test_reply_wait_maps_to_vad_stop_secs(wait_ms, expected):
     assert wait_ms_to_vad_stop_secs(wait_ms) == expected

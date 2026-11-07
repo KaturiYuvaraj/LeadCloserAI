@@ -109,8 +109,14 @@ EXPLICIT_LANGUAGE_PATTERNS = {
     ],
 }
 
+# In Indian scripts \\b doesn't work next to vowel signs, so the patterns above can miss. "<language> in"
+# written in that language's own script is a request on its own ("हिंदी में बात कीजिए", "తెలుగులో మాట్లాడండి").
+NATIVE_LANGUAGE_REQUESTS = {
+    "te-IN": r"తెలుగు\s*లో", "hi-IN": r"हिंदी\s*में|हिन्दी\s*में", "ta-IN": r"தமிழில்",
+    "kn-IN": r"ಕನ್ನಡದಲ್ಲಿ", "ml-IN": r"മലയാളത്തിൽ",
+}
 _EXPLICIT_REGEXES = {
-    lang: [re.compile(p, re.IGNORECASE) for p in patterns]
+    lang: [re.compile(p, re.IGNORECASE) for p in patterns + [NATIVE_LANGUAGE_REQUESTS.get(lang, r"(?!x)x")]]
     for lang, patterns in EXPLICIT_LANGUAGE_PATTERNS.items()
 }
 

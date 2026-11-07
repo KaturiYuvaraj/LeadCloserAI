@@ -439,3 +439,37 @@ def test_prompt_says_disclosure_once_and_one_retry_on_not_interested():
     from voice_agent.session import VOICE_RULES
     assert "Never repeat that." in VOICE_RULES
     assert "make one short attempt" in VOICE_RULES and "[DO_NOT_CALL] [CALL_COMPLETED]" in VOICE_RULES
+
+
+# ----------------------------------------------------------------------------- from the scenario caller
+
+def test_wait_inside_a_request_is_not_a_hold():
+    assert not is_hold_request("ఆగండి ఆగండి ముందు ప్రైస్ ఎంతో చెప్పండి")
+    assert not is_hold_request("wait how much is it")
+    assert is_hold_request("ఒక్క నిమిషం ఆగండి") and is_hold_request("hold on please")
+
+
+def test_first_no_gets_one_attempt_second_no_ends():
+    from voice_agent.call_guard import caller_hints
+    assert "Do NOT say goodbye yet" in caller_hints("మాకు ఏమీ అవసరం లేదు", False)
+    assert "[CALL_COMPLETED]" in caller_hints("వద్దు అన్నాను కదా", True)
+    assert "Do NOT say goodbye" not in caller_hints("don't call me again, not interested", False)
+
+
+def test_prompt_asks_for_short_single_questions():
+    from voice_agent.session import VOICE_RULES
+    assert "only ONE question per reply" in VOICE_RULES and "Never ask the same question twice" in VOICE_RULES
+
+
+def test_callback_request_is_recognised():
+    assert "callback" in caller_signals("రేపు సాయంత్రం నాలుగు గంటలకు కాల్ చేయండి.")
+    assert "callback" in caller_signals("call me tomorrow at 4")
+    assert "callback" not in caller_signals("మాకు ఒక వెబ్‌సైట్ కావాలి.")
+
+
+def test_language_requests_in_indian_scripts():
+    from voice_agent.language import detect_explicit_language_request as asked
+    assert asked("हिंदी में बात कीजिए, मुझे एक वेबसाइट चाहिए।") == "hi-IN"
+    assert asked("తెలుగులో మాట్లాడండి") == "te-IN"
+    assert asked("మాకు ఒక వెబ్‌సైట్ కావాలి") is None
+
