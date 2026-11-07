@@ -211,15 +211,14 @@ TIME_UP_NOTE = ("(System note: the call time limit is close. Wrap up now: confir
 def wait_ms_to_vad_stop_secs(wait_ms: Optional[int]) -> float:
     """
     Map the dashboard's "Reply wait" setting to Silero VAD stop time.
-    Tuned for attentive human listening so the customer is not cut off mid-sentence.
-    Fast 700 → 0.55s · Normal 900 → 0.75s · Patient 1300 → 1.15s.
+    Tuned for snappy, natural turn-taking without long awkward silences.
+    Fast 200 -> 0.18s | Normal 350 -> 0.27s | Conversational 500 -> 0.42s.
     """
     try:
-        ms = int(wait_ms) if wait_ms is not None else 900
+        ms = int(wait_ms) if wait_ms is not None else 350
     except (TypeError, ValueError):
-        ms = 900
-    return round(min(1.2, max(0.55, (ms - 150) / 1000)), 2)
-
+        ms = 350
+    return round(min(0.60, max(0.18, (ms - 80) / 1000)), 2)
 
 def as_text(value: Any) -> str:
     """
@@ -792,13 +791,19 @@ class BaseCallSession:
             api_key=SARVAM_API_KEY,
             settings=SarvamLLMService.Settings(model=LLM_MODEL, temperature=0.5, max_tokens=140),
         )
-        tts_pace = 0.95 if self.language == "te-IN" else 1.0
+        tts_pace = 1.0
         tts = SarvamTTSService(
             api_key=SARVAM_API_KEY,
             settings=SarvamTTSService.Settings(
-                model=TTS_MODEL, voice=self.voice_for(self.language), language=self.language, pace=tts_pace,
+                model=TTS_MODEL,
+                voice=self.voice_for(self.language),
+                language=self.language,
+                pace=tts_pace,
+                min_buffer_size=15,
+                max_chunk_length=120,
             ),
         )
+        tts._pause_frame_processing = False
 
         self.guard = CallGuard(self.on_machine, enabled=self.detect_machines and _env_on("VOICE_MACHINE_DETECTION"))
         self.router = LanguageRouter(self.language, on_user_text=self._on_user_text, hint_provider=self.message_hints)

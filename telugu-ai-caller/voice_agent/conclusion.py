@@ -147,7 +147,8 @@ class CallConclusionFilter(FrameProcessor):
             self._actions.extend(actions)
             self._spoken += emit
             if emit:
-                await self.push_frame(LLMTextFrame(emit), direction)
+                clean_emit = emit.replace("...", ", ").replace("..", ", ")
+                await self.push_frame(LLMTextFrame(clean_emit), direction)
             return
 
         if isinstance(frame, LLMFullResponseEndFrame):
