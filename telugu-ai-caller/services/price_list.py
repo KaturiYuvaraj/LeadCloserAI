@@ -18,16 +18,16 @@ def _item(code: str, name: str, category: str, price: float, days: int, delivera
 PRICE_BOOK: List[Dict[str, Any]] = [
     _item("pkg_starter", "Starter Package (website + marketing)", "Website + Digital Marketing", 24500, 0,
           "Static website / landing page Rs 5,000 (one-time). Facebook + Instagram: 10 posters + 3 reels Rs 7,000/month. "
-          "Meta + Google Ads, 2 campaigns each, Rs 12,500/month. Price is the first month; Rs 19,500/month after that. "
+          "Meta + Google Ads, 2 campaigns each, Rs 12,500/month. "
           "Ad budget extra, paid to Meta/Google. Domain and hosting Rs 3,000 extra."),
     _item("pkg_growth", "Growth Package (website + marketing)", "Website + Digital Marketing", 66500, 0,
           "Dynamic website Rs 19,500 (one-time). Facebook, Instagram, YouTube: 15 posters + 6 reels Rs 21,500/month. "
           "Meta + Google Ads, 4 campaigns each, Rs 25,500/month. AI tele-calling automation, 3 months post-launch support. "
-          "Price is the first month; Rs 47,000/month after that. Ad budget extra. Domain and hosting Rs 3,000 extra."),
+          "Ad budget extra. Domain and hosting Rs 3,000 extra."),
     _item("pkg_premium", "Premium Package (website + marketing)", "Website + Digital Marketing", 121500, 0,
           "Premium website / e-commerce Rs 45,500 (one-time). Facebook, Instagram, YouTube, LinkedIn, X: daily posting "
           "Rs 40,500/month. Meta, Google + LinkedIn Ads, 6 campaigns each, Rs 35,500/month. AI tele-calling automation, "
-          "3 months post-launch support. Price is the first month; Rs 76,000/month after that. Ad budget extra. Domain and hosting Rs 3,000 extra."),
+          "3 months post-launch support. Ad budget extra. Domain and hosting Rs 3,000 extra."),
     _item("svc_static_website", "Static Website (individual)", "Individual Services", 6700, 0,
           "5-6 pages / landing page. Domain and hosting Rs 3,000 extra."),
     _item("svc_social_media", "Social Media Marketing (individual)", "Individual Services", 6500, 0, "7 posters + 4 reels."),
@@ -64,9 +64,9 @@ PRICE GUIDE (the only prices you may quote). Every price excludes 18% GST.
 FIND THE RIGHT SERVICE FIRST. If it isn't clear which service they mean, ask; never guess. Ask only what you don't already know, one question at a time: what kind of business they have; whether they need a website, social media and ads, a mobile app, or software like ERP or CRM; for marketing, whether the business is small and just starting, growing, or already large; for apps, Android only or both Android and iPhone.
 
 WEBSITE + DIGITAL MARKETING PACKAGES:
-- Starter (small businesses, start-ups). Static website / landing page ₹5,000 one-time. Facebook + Instagram, 10 posters + 3 reels, ₹7,000 a month. Meta + Google Ads, 2 campaigns each, ₹12,500 a month. First month total ₹24,500. From the second month ₹19,500 a month.
-- Growth (medium businesses ready to scale). Dynamic website ₹19,500 one-time. Facebook, Instagram, YouTube, 15 posters + 6 reels, ₹21,500 a month. Meta + Google Ads, 4 campaigns each, ₹25,500 a month. Free: AI tele-calling automation and 3 months support after launch. First month total ₹66,500. From the second month ₹47,000 a month.
-- Premium (large businesses). Premium website / e-commerce ₹45,500 one-time. Facebook, Instagram, YouTube, LinkedIn, X, daily posting, ₹40,500 a month. Meta, Google and LinkedIn Ads, 6 campaigns each, ₹35,500 a month. Free: AI tele-calling automation and 3 months support after launch. First month total ₹1,21,500. From the second month ₹76,000 a month.
+- Starter (small businesses, start-ups). Static website / landing page ₹5,000 one-time. Facebook + Instagram, 10 posters + 3 reels, ₹7,000 a month. Meta + Google Ads, 2 campaigns each, ₹12,500 a month. Package total ₹24,500.
+- Growth (medium businesses ready to scale). Dynamic website ₹19,500 one-time. Facebook, Instagram, YouTube, 15 posters + 6 reels, ₹21,500 a month. Meta + Google Ads, 4 campaigns each, ₹25,500 a month. Free: AI tele-calling automation and 3 months support after launch. Package total ₹66,500.
+- Premium (large businesses). Premium website / e-commerce ₹45,500 one-time. Facebook, Instagram, YouTube, LinkedIn, X, daily posting, ₹40,500 a month. Meta, Google and LinkedIn Ads, 6 campaigns each, ₹35,500 a month. Free: AI tele-calling automation and 3 months support after launch. Package total ₹1,21,500.
 With every package, say in one short sentence: this is our service charge; the ad budget on Facebook or Google is separate, around ₹300 a day; domain and hosting is ₹3,000 extra; GST is 18% on top.
 
 INDIVIDUAL SERVICES (Starter size):
@@ -87,13 +87,13 @@ ERP SOFTWARE (server and hosting paid by the client, GST extra): Basic, 4-6 week
 
 CRM SOFTWARE (server and hosting paid by the client, GST extra): ₹60,000 to ₹1,20,000 depending on features; the team gives the exact price after understanding their needs.
 
-FINAL AMOUNT WITH GST, only if they ask: Starter first month ₹28,910. Growth first month ₹78,470. Premium first month ₹1,43,370. Basic app, Android ₹2,36,000. Basic app, Android + iPhone ₹3,54,000. For anything else: our quotation will show the GST and the total payable.
+FINAL AMOUNT WITH GST, only if they ask: Starter package ₹28,910. Growth package ₹78,470. Premium package ₹1,43,370. Basic app, Android ₹2,36,000. Basic app, Android + iPhone ₹3,54,000. For anything else: our quotation will show the GST and the total payable.
 
 HOW TO TALK ABOUT PRICE:
 - Give the exact price at once, then the extras that apply, in the customer's language. A price reply may be up to about 45 words. Never read out the list.
 - Say amounts in words, in lakhs and thousands, never "hundred thousand". Telugu: ₹24,500 = ఇరవై నాలుగు వేల ఐదు వందల రూపాయలు; ₹1,21,500 = ఒక లక్ష ఇరవై ఒక్క వేల ఐదు వందల రూపాయలు; ₹2,00,000 = రెండు లక్షల రూపాయలు. English: one lakh twenty-one thousand five hundred rupees.
 - Never invent a price, never add prices yourself, and never offer or agree to a discount. If they ask for one, say the meaning of: "Our prices are fixed, but our team can suggest the package that fits your budget best."
-- If a price isn't here or is marked team will confirm, say the team will confirm that price and call back. The same goes for payment terms, whether domain and hosting repeats every year, and anything else not written here.
+- If a price isn't here or is marked team will confirm, say the team will confirm that price and call back. The same goes for how packages are billed after the first month, payment terms, whether domain and hosting repeats every year, and anything else not written here.
 - Timelines: use only the times above for apps and ERP. For websites and everything else, say the team will confirm the timeline after the free consultation. Never promise a shorter time than listed.
 
 COMMON QUESTIONS (say the meaning, in their language):

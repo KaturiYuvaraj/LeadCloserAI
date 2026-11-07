@@ -47,13 +47,14 @@ def test_profile_and_quotations_use_the_same_list():
 
 
 def test_monthly_amounts_and_gst_figures_are_right():
-    assert 7000 + 12500 == 19500 and 21500 + 25500 == 47000 and 40500 + 35500 == 76000
     for price, with_gst in ((24500, "₹28,910"), (66500, "₹78,470"), (121500, "₹1,43,370"), (200000, "₹2,36,000"), (300000, "₹3,54,000")):
         lakhs = round(price * 1.18)
         digits = "".join(ch for ch in with_gst if ch.isdigit())
         assert int(digits) == lakhs and with_gst in PRICE_LIST_FOR_AI
-    for monthly in ("₹19,500 a month", "₹47,000 a month", "₹76,000 a month"):
-        assert monthly in PRICE_LIST_FOR_AI
+    # the owner said these from-second-month amounts are wrong: the AI must not quote them
+    for wrong in ("₹19,500 a month", "₹47,000 a month", "₹76,000 a month", "From the second month"):
+        assert wrong not in PRICE_LIST_FOR_AI
+    assert "billed after the first month" in PRICE_LIST_FOR_AI
 
 
 def test_guide_rules_are_in_the_prompt():
