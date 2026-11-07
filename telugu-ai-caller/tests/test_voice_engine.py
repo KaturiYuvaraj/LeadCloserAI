@@ -63,7 +63,7 @@ def test_router_defaults_unknown_initial_language_to_telugu():
 
 
 @pytest.mark.parametrize("wait_ms,expected", [
-    (700, 0.55), (900, 0.75), (1300, 1.15), (None, 0.75), ("bad", 0.75), (100, 0.55), (5000, 1.2),
+    (200, 0.18), (350, 0.27), (500, 0.42), (800, 0.6), (None, 0.27), ("bad", 0.27), (100, 0.18), (5000, 0.6),
 ])
 def test_reply_wait_maps_to_vad_stop_secs(wait_ms, expected):
     assert wait_ms_to_vad_stop_secs(wait_ms) == expected
@@ -344,3 +344,9 @@ async def test_filter_passes_normal_reply_and_brackets(monkeypatch):
     text, concluded = await _run_filter(["Our price is ", "[starting] ₹25,000", ". Shall we book a demo?"], monkeypatch)
     assert text == "Our price is [starting] ₹25,000. Shall we book a demo?"
     assert not concluded
+
+
+def test_tts_buffer_is_within_sarvams_limit():
+    # 7 Nov: 15 was rejected ("min_buffer_size ... greater than or equal to 30"), so every call was silent
+    from voice_agent.session import TTS_MIN_BUFFER_CHARS
+    assert TTS_MIN_BUFFER_CHARS >= 30
