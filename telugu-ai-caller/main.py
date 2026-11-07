@@ -4,6 +4,24 @@ FastAPI Web Server with modular routers for auth, pages, leads, calls, employees
 integrations, developer APIs, messaging, campaigns, dialer, and telephony.
 """
 
+import sys
+import subprocess
+from pathlib import Path
+
+# If executed via Python < 3.11 (e.g. default system Python 3.9), automatically forward to venv311
+_app_root = Path(__file__).resolve().parent
+_venv311_exe = _app_root / "venv311" / "Scripts" / "python.exe"
+if sys.version_info < (3, 11):
+    if _venv311_exe.exists():
+        args = [str(_venv311_exe), str(Path(__file__).resolve())] + sys.argv[1:]
+        sys.exit(subprocess.call(args))
+    else:
+        sys.stderr.write("ERROR: Telugu AI Caller requires Python 3.11+ (venv311).\n")
+        sys.exit(1)
+
+if str(_app_root) not in sys.path:
+    sys.path.insert(0, str(_app_root))
+
 from contextlib import asynccontextmanager
 import socket
 
@@ -111,8 +129,9 @@ app.include_router(knowledge.router)
 try:
     from routers import voice
     app.include_router(voice.router)
-except ImportError:
-    logger.info("Using classic /ws/web-call voice engine.")
+    logger.info("Pipecat real-time voice router loaded successfully.")
+except Exception as e:
+    logger.error(f"Failed to load Pipecat voice router: {e}")
 
 
 def _resolve_bind_target(preferred_host: str, preferred_port: int) -> tuple[str, int]:
