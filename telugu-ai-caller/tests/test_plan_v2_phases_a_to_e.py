@@ -178,7 +178,7 @@ def test_phase_c_price_book_quotation_guardrails_pdf_and_whatsapp_stop():
         "/api/quotations",
         json={
             "lead_id": lead_id,
-            "package_code": "pkg_ecommerce_pro",
+            "package_code": "pkg_premium",
             "discount_pct": 5.0,
             "is_custom_scope": False,
             "whatsapp_opt_in": True,
@@ -195,7 +195,7 @@ def test_phase_c_price_book_quotation_guardrails_pdf_and_whatsapp_stop():
         "/api/quotations",
         json={
             "lead_id": lead_id,
-            "package_code": "pkg_ecommerce_pro",
+            "package_code": "pkg_premium",
             "discount_pct": 25.0,
             "is_custom_scope": True,
             "custom_scope_notes": "Custom SAP ERP sync + multi-currency checkout",

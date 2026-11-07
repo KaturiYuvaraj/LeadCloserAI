@@ -14,6 +14,8 @@ from sqlalchemy import create_engine, select, update, delete, func, desc, or_, t
 from sqlalchemy.orm import Session
 from loguru import logger
 
+from services.price_list import SERVICES
+
 from core.db import engine, SessionLocal, Base, DATABASE_URL
 from config import DATABASE_PATH
 from models import (
@@ -1369,13 +1371,7 @@ def get_company_profile(account_id: int = 1) -> Dict[str, Any]:
                 "tts_voice": "kavitha_te_conversation"
             }
 
-        default_services = json.dumps([
-            {"name": "Custom Web & SaaS Development", "telugu": "కస్టమ్ వెబ్‌సైట్‌లు & SaaS సాఫ్ట్‌వేర్", "starting": "₹25,000"},
-            {"name": "Mobile Apps (Android & iOS)", "telugu": "ఆండ్రాయిడ్ & ఐఫోన్ మొబైల్ యాప్‌లు", "starting": "₹45,000"},
-            {"name": "AI Voice Calling & Chatbots", "telugu": "AI కాలింగ్ ఏజెంట్లు & వాట్సాప్ బాట్స్", "starting": "₹20,000"},
-            {"name": "E-Commerce & Digital Billing", "telugu": "ఈ-కామర్స్ పోర్టల్స్ & ఆన్‌లైన్ పేమెంట్స్", "starting": "₹30,000"},
-            {"name": "Cloud & Automation Systems", "telugu": "క్లౌడ్ మరియు బిజినెస్ ఆటోమేషన్", "starting": "₹20,000"}
-        ], ensure_ascii=False)
+        default_services = json.dumps(SERVICES, ensure_ascii=False)
 
         default_pitch = (
             "మేము సరికొత్త ఆర్టిఫిషియల్ ఇంటెలిజెన్స్ (AI), మొబైల్ యాప్స్ మరియు వెబ్‌సైట్లతో "
@@ -1388,7 +1384,7 @@ def get_company_profile(account_id: int = 1) -> Dict[str, Any]:
             "tagline": "ఆధునిక వెబ్, మొబైల్ & AI ఆటోమేషన్ సాఫ్ట్‌వేర్ సేవలు",
             "services_offered": default_services,
             # what the sales agent tells customers; account.rate_per_min is the platform's call billing, not our price
-            "pricing_details": "Flexible milestone payments; starting prices per service as listed above",
+            "pricing_details": "Exact prices are in the PRICE LIST below",
             "sales_pitch": default_pitch,
             "preferred_language": account.default_language or "te-IN",
             "tts_voice": "kavitha_te_conversation",

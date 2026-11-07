@@ -16,6 +16,7 @@ from services.language_utils import (
     get_localized_initial_greeting,
     detect_explicit_language_request
 )
+from services.price_list import PRICE_LIST_FOR_AI
 from database import get_company_profile, get_last_call_facts, get_lead_by_id, get_active_ai_employee
 
 
@@ -89,10 +90,10 @@ NATURAL HUMAN CONVERSATIONAL FLOW & ATTENTIVE LISTENING (CRITICAL):
         - Give a warm goodbye and append [CALL_COMPLETED].
 
 OBJECTION HANDLING PLAYBOOK:
-- "Budget is tight / too expensive": "We offer flexible milestone-based payments and customize solutions to your exact budget."
+- "Budget is tight / too expensive": Suggest the lower package or a single service from the PRICE LIST that fits. Never offer a discount.
 - "Already have a website/app": "That's great! Are you getting daily paying customers from it? We offer a free 5-minute technical audit to help double your conversions."
 - "Send details on WhatsApp / talk later": "I will certainly WhatsApp the brochure right away! Should we schedule a quick 10-minute demo for tomorrow morning at 11:00 AM?"
-- "Interested in pricing/timeline": State starting budgets reasonably and suggest reviewing custom scope on tomorrow's demo call.
+- "Interested in pricing/timeline": Quote the exact price and timeline from the PRICE LIST, then offer a demo.
 """
 
 
@@ -115,6 +116,7 @@ class SalesAgent:
             pricing=pricing,
             pitch=pitch
         )
+        prompt += PRICE_LIST_FOR_AI
 
         if lead_info:
             lead_context = f"\nCURRENT LEAD PROFILE:\n"

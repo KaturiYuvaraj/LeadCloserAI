@@ -23,63 +23,13 @@ from typing import Any, Dict, List, Optional, Set
 from sqlalchemy import text
 
 from core.db import engine
+from services.price_list import PRICE_BOOK
 
 logger = logging.getLogger(__name__)
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
-DEFAULT_PRICE_BOOK: List[Dict[str, Any]] = [
-    {
-        "code": "pkg_website_starter",
-        "name": "Business Website & SEO Starter",
-        "category": "Web Development",
-        "base_price_inr": 25000.0,
-        "max_discount_pct": 10.0,
-        "delivery_days": 7,
-        "deliverables": "5-page responsive website, SEO setup, WhatsApp chat integration, 1 year free hosting support",
-        "active": True,
-    },
-    {
-        "code": "pkg_ecommerce_pro",
-        "name": "E-Commerce Web & Payment Portal",
-        "category": "E-Commerce",
-        "base_price_inr": 45000.0,
-        "max_discount_pct": 10.0,
-        "delivery_days": 14,
-        "deliverables": "Product catalog, cart, Razorpay/UPI gateway, admin order dashboard, inventory alerts",
-        "active": True,
-    },
-    {
-        "code": "pkg_mobile_app",
-        "name": "Custom Android & iOS Mobile App",
-        "category": "Mobile App",
-        "base_price_inr": 75000.0,
-        "max_discount_pct": 10.0,
-        "delivery_days": 21,
-        "deliverables": "Flutter/React Native Android & iOS apps, push notifications, backend API, Play Store deployment",
-        "active": True,
-    },
-    {
-        "code": "pkg_ai_caller",
-        "name": "AI Voice Caller & WhatsApp Automation",
-        "category": "AI Automation",
-        "base_price_inr": 35000.0,
-        "max_discount_pct": 10.0,
-        "delivery_days": 10,
-        "deliverables": "Multilingual AI voice agent (Telugu/Hindi/English/Tamil/Kannada/Malayalam), CRM pipeline, WhatsApp workflows",
-        "active": True,
-    },
-    {
-        "code": "pkg_erp_billing",
-        "name": "GST Billing, POS & Inventory ERP",
-        "category": "ERP & Billing",
-        "base_price_inr": 40000.0,
-        "max_discount_pct": 10.0,
-        "delivery_days": 10,
-        "deliverables": "GST invoicing, barcode POS, multi-warehouse stock alerts, daily owner mobile reports",
-        "active": True,
-    },
-]
+DEFAULT_PRICE_BOOK: List[Dict[str, Any]] = PRICE_BOOK
 
 _CUSTOM_PRICE_BOOK_BY_ACCOUNT: Dict[int, List[Dict[str, Any]]] = {}
 _QUOTATIONS_STORE: Dict[int, Dict[str, Any]] = {}
