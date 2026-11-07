@@ -288,7 +288,7 @@ def init_db():
                     "job_type": "instant",
                     "language": "te-IN",
                     "voice": "kavitha_te_conversation",
-                    "greeting": "నమస్కారం అండి! నేను S P Associates Software Company నుండి మాట్లాడుతున్నాను. మీ వ్యాపారానికి కస్టమ్ వెబ్‌సైట్ లేదా మొబైల్ యాప్ అవసరం ఉందా అండి?",
+                    "greeting": "నమస్కారం అండి! నేను S P Associates నుండి శ్రేయ మాట్లాడుతున్నాను. మీ వ్యాపారానికి కస్టమ్ వెబ్‌సైట్ లేదా మొబైల్ యాప్ అవసరం ఉందా అండి?",
                     "system_prompt": "You are a Senior Sales Closer at S P Associates Software Company. Qualify software requirements, answer questions, handle objections, and close with a live Zoom demo.",
                     "script_steps": {
                         "sales_script": "Introduce -> Discover Need -> Match Services -> Address Budget/Timeline -> Book Demo",

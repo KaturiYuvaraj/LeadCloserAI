@@ -86,11 +86,11 @@ def _greeting(lead, language="te-IN", direction="in"):
 
 def test_inbound_greeting_replaces_the_outbound_pitch():
     prompt, greeting = _greeting({"id": 1, "name": f"{INBOUND_NAME_PREFIX}9812300501"}, "en-IN")
-    assert "Thank you for calling" in greeting and "OUTBOUND PITCH" not in greeting
-    assert "this call is recorded" in greeting.lower()  # the recording notice is still said once
+    assert "Shreya from S P Associates" in greeting and "Thank you for calling" in greeting
+    assert "OUTBOUND PITCH" not in greeting and "recorded" not in greeting.lower()
     assert "CURRENT LEAD PROFILE" not in prompt  # no fake profile for a stranger
     _, known = _greeting({"id": 2, "name": "Known Kamal"}, "en-IN")
-    assert known.startswith("Hello Known Kamal! Thanks for calling back")
+    assert known.startswith("Hello Known Kamal! This is Shreya from S P Associates. Thanks for calling back")
 
 
 def test_outbound_greeting_is_unchanged():

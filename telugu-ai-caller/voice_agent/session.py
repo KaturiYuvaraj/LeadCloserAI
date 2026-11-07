@@ -118,13 +118,14 @@ RECORDINGS_DIR = Path(os.getenv("RECORDINGS_DIR") or Path(__file__).resolve().pa
 # Sarvam rejects anything below 30: every voice request then fails and the customer hears silence
 TTS_MIN_BUFFER_CHARS = 30
 
-DISCLOSURE = {
-    "te-IN": "ఈ కాల్ రికార్డ్ చేయబడుతుంది.",
-    "hi-IN": "यह कॉल रिकॉर्ड हो रही है, मैं एक AI असिस्टेंट हूँ।",
-    "en-IN": "This call is recorded and I'm an AI assistant.",
-    "ta-IN": "இந்த அழைப்பு பதிவு செய்யப்படுகிறது, நான் ஒரு AI உதவியாளர்.",
-    "kn-IN": "ಈ ಕರೆಯನ್ನು ರೆಕಾರ್ಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ, ನಾನು AI ಸಹಾಯಕ.",
-    "ml-IN": "ഈ കോൾ റെക്കോർഡ് ചെയ്യപ്പെടുന്നു, ഞാൻ ഒരു AI അസിസ്റ്റന്റാണ്.",
+# The agent's opening line when the AI employee has no greeting in the call's language
+AGENT_GREETING = {
+    "te-IN": "నమస్కారం అండి! నేను S P Associates నుండి శ్రేయ మాట్లాడుతున్నాను. మీ వ్యాపారానికి కస్టమ్ వెబ్‌సైట్ లేదా మొబైల్ యాప్ అవసరం ఉందా అండి?",
+    "hi-IN": "नमस्ते! मैं S P Associates से श्रेया बात कर रही हूँ। क्या आपके बिज़नेस के लिए वेबसाइट या मोबाइल ऐप की ज़रूरत है?",
+    "en-IN": "Hello! This is Shreya from S P Associates. Does your business need a website or a mobile app?",
+    "ta-IN": "வணக்கம்! நான் S P Associates-லிருந்து ஸ்ரேயா பேசுகிறேன். உங்கள் பிசினஸுக்கு வெப்சைட் அல்லது மொபைல் ஆப் தேவையா?",
+    "kn-IN": "ನಮಸ್ಕಾರ! ನಾನು S P Associates ಇಂದ ಶ್ರೇಯಾ ಮಾತನಾಡುತ್ತಿದ್ದೇನೆ. ನಿಮ್ಮ ಬಿಸಿನೆಸ್‌ಗೆ ವೆಬ್‌ಸೈಟ್ ಅಥವಾ ಮೊಬೈಲ್ ಆ್ಯಪ್ ಬೇಕೇ?",
+    "ml-IN": "നമസ്കാരം! ഞാൻ S P Associates-ൽ നിന്ന് ശ്രേയയാണ് സംസാരിക്കുന്നത്. നിങ്ങളുടെ ബിസിനസിന് വെബ്സൈറ്റോ മൊബൈൽ ആപ്പോ ആവശ്യമുണ്ടോ?",
 }
 
 # Spoken by the engine itself (not the LLM), in the caller's current language
@@ -163,7 +164,8 @@ LIVE PHONE CONVERSATION RULES (override anything above that conflicts):
   * Address their exact objection or inquiry directly first, then warmly guide the conversation forward.
   * Keep every reply under about 25 words (a price reply up to about 45) and ask only ONE question per reply. Never ask two questions together.
   * Answer what the customer just asked first. Never ask the same question twice: if they skip it, move on to the next thing.
-  * Your greeting already said the call is recorded and that you are an AI assistant. Never repeat that.
+  * You are Shreya, a woman, from S P Associates: that is your name on this call. In Hindi use feminine forms ("कर रही हूँ").
+  * Don't bring up that the call is recorded. If a customer asks, answer honestly.
   * Repeat back only what the customer actually said, in their words (they said "website", not "custom website"). Never add details, numbers or decisions they did not say.
   * Write English business words in the script of the language you are speaking so the voice pronounces them naturally. Never put Latin-script (English-letter) words inside a Telugu, Hindi, Tamil, Kannada or Malayalam sentence. Wrong: "మీ business కోసం demo పెట్టుకుందామా". Right: "మీ బిజినెస్ కోసం డెమో పెట్టుకుందామా". Likewise website = వెబ్‌సైట్, software = సాఫ్ట్‌వేర్, custom = కస్టమ్, customers = కస్టమర్స్, team = టీమ్, price = ప్రైస్, samples = శాంపిల్స్, live = లైవ్, timeline = టైమ్‌లైన్, WhatsApp = వాట్సాప్; in Hindi बिज़नेस, वेबसाइट, कस्टमर, डेमो, टीम, प्राइस. Only digits and the AM/PM-free time in words may stay as they are.
   * Do not promise a particular person or an exact moment you cannot guarantee: say "our team will call you", not "our senior tech lead will call you".
@@ -258,17 +260,17 @@ def find_lead_by_phone(phone: str) -> Optional[Dict[str, Any]]:
 
 # Spoken when a customer calls us (instead of the outbound pitch). {company} / {name} are filled in.
 INBOUND_GREETING = {
-    "te-IN": "నమస్కారం అండి! {company} కి కాల్ చేసినందుకు ధన్యవాదాలు. నేను మీకు ఎలా సహాయం చేయగలను?",
-    "hi-IN": "नमस्ते! {company} में कॉल करने के लिए धन्यवाद। मैं आपकी क्या सहायता कर सकता हूँ?",
-    "en-IN": "Hello! Thank you for calling {company}. How can I help you today?",
-    "ta-IN": "வணக்கம்! {company}-ஐ அழைத்ததற்கு நன்றி. நான் உங்களுக்கு எப்படி உதவ முடியும்?",
-    "kn-IN": "ನಮಸ್ಕಾರ! {company} ಗೆ ಕರೆ ಮಾಡಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?",
-    "ml-IN": "നമസ്കാരം! {company}-ലേക്ക് വിളിച്ചതിന് നന്ദി. ഞാൻ നിങ്ങളെ എങ്ങനെ സഹായിക്കണം?",
+    "te-IN": "నమస్కారం అండి! {company} నుండి శ్రేయ మాట్లాడుతున్నాను. కాల్ చేసినందుకు ధన్యవాదాలు. మీకు ఎలా సహాయం చేయగలను?",
+    "hi-IN": "नमस्ते! {company} से श्रेया बात कर रही हूँ। कॉल करने के लिए धन्यवाद। मैं आपकी क्या सहायता कर सकती हूँ?",
+    "en-IN": "Hello! This is Shreya from {company}. Thank you for calling. How can I help you today?",
+    "ta-IN": "வணக்கம்! {company}-லிருந்து ஸ்ரேயா பேசுகிறேன். அழைத்ததற்கு நன்றி. நான் உங்களுக்கு எப்படி உதவ முடியும்?",
+    "kn-IN": "ನಮಸ್ಕಾರ! {company} ಇಂದ ಶ್ರೇಯಾ ಮಾತನಾಡುತ್ತಿದ್ದೇನೆ. ಕರೆ ಮಾಡಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?",
+    "ml-IN": "നമസ്കാരം! {company}-ൽ നിന്ന് ശ്രേയയാണ് സംസാരിക്കുന്നത്. വിളിച്ചതിന് നന്ദി. ഞാൻ നിങ്ങളെ എങ്ങനെ സഹായിക്കണം?",
 }
 INBOUND_GREETING_KNOWN = {
-    "te-IN": "నమస్కారం {name} గారు! మళ్ళీ కాల్ చేసినందుకు ధన్యవాదాలు. నేను మీకు ఎలా సహాయం చేయగలను?",
-    "hi-IN": "नमस्ते {name} जी! दोबारा कॉल करने के लिए धन्यवाद। मैं आपकी क्या सहायता कर सकता हूँ?",
-    "en-IN": "Hello {name}! Thanks for calling back. How can I help you today?",
+    "te-IN": "నమస్కారం {name} గారు! నేను {company} నుండి శ్రేయ. మళ్ళీ కాల్ చేసినందుకు ధన్యవాదాలు. మీకు ఎలా సహాయం చేయగలను?",
+    "hi-IN": "नमस्ते {name} जी! मैं {company} से श्रेया। दोबारा कॉल करने के लिए धन्यवाद। मैं आपकी क्या सहायता कर सकती हूँ?",
+    "en-IN": "Hello {name}! This is Shreya from {company}. Thanks for calling back. How can I help you today?",
     "ta-IN": "வணக்கம் {name}! மீண்டும் அழைத்ததற்கு நன்றி. நான் உங்களுக்கு எப்படி உதவ முடியும்?",
     "kn-IN": "ನಮಸ್ಕಾರ {name}! ಮತ್ತೆ ಕರೆ ಮಾಡಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?",
     "ml-IN": "നമസ്കാരം {name}! വീണ്ടും വിളിച്ചതിന് നന്ദി. ഞാൻ നിങ്ങളെ എങ്ങനെ സഹായിക്കണം?",
@@ -708,7 +710,7 @@ class BaseCallSession:
         )
         employee_greeting = (self.employee or {}).get("greeting") or ""
         if self.direction == "in":
-            company = get_company_profile().get("agency_name", "S P Associates Software Company")
+            company = "S P Associates"
             if unknown_caller:
                 template = INBOUND_GREETING.get(self.language, INBOUND_GREETING["en-IN"])
             else:
@@ -718,8 +720,7 @@ class BaseCallSession:
             name = (self.lead or {}).get("name") or ""
             greeting = employee_greeting.replace("{name}", name).replace("{lead_name}", name)
         else:
-            greeting = await sales_agent.get_initial_greeting(self.lead_id, language_code=self.language)
-        greeting = f"{greeting} {DISCLOSURE.get(self.language, DISCLOSURE['en-IN'])}"
+            greeting = AGENT_GREETING.get(self.language, AGENT_GREETING["en-IN"])
         return system_prompt, greeting
 
     # ------------------------------------------------------------------ controls

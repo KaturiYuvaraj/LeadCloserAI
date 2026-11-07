@@ -437,7 +437,7 @@ def test_greetings_are_not_answers_rule_is_in_the_prompt():
 
 def test_prompt_says_disclosure_once_and_one_retry_on_not_interested():
     from voice_agent.session import VOICE_RULES
-    assert "Never repeat that." in VOICE_RULES
+    assert "You are Shreya" in VOICE_RULES and "Don't bring up that the call is recorded" in VOICE_RULES
     assert "make one short attempt" in VOICE_RULES and "[DO_NOT_CALL] [CALL_COMPLETED]" in VOICE_RULES
 
 
@@ -472,4 +472,13 @@ def test_language_requests_in_indian_scripts():
     assert asked("हिंदी में बात कीजिए, मुझे एक वेबसाइट चाहिए।") == "hi-IN"
     assert asked("తెలుగులో మాట్లాడండి") == "te-IN"
     assert asked("మాకు ఒక వెబ్‌సైట్ కావాలి") is None
+
+
+def test_every_opening_line_names_shreya_and_says_nothing_about_recording():
+    from voice_agent.session import AGENT_GREETING, INBOUND_GREETING, VOICES
+    names = {"te-IN": "శ్రేయ", "hi-IN": "श्रेया", "en-IN": "Shreya", "ta-IN": "ஸ்ரேயா", "kn-IN": "ಶ್ರೇಯಾ", "ml-IN": "ശ്രേയ"}
+    for lang in VOICES:
+        for text in (AGENT_GREETING[lang], INBOUND_GREETING[lang]):
+            assert names[lang] in text
+            assert "రికార్డ్" not in text and "record" not in text.lower() and "AI" not in text
 
