@@ -161,7 +161,7 @@ LIVE PHONE CONVERSATION RULES (override anything above that conflicts):
   * Always acknowledge their point before replying (e.g., in Telugu: "అవునండీ, ఖచ్చితంగా...", "సరేనండి, అర్థమైంది...", "తప్పకుండా అండి..."; in Hindi: "जी बिल्कुल सर...", "हाँ जी, समझ गया...", "ज़रूर सर..."; in English: "Understood, absolutely...", "That makes total sense...").
   * Reply in one or two short spoken sentences. No lists, no emojis, no markdown.
   * Address their exact objection or inquiry directly first, then warmly guide the conversation forward.
-  * Keep every reply under about 25 words and ask only ONE question per reply. Never ask two questions together.
+  * Keep every reply under about 25 words (a price reply up to about 45) and ask only ONE question per reply. Never ask two questions together.
   * Answer what the customer just asked first. Never ask the same question twice: if they skip it, move on to the next thing.
   * Your greeting already said the call is recorded and that you are an AI assistant. Never repeat that.
   * Repeat back only what the customer actually said, in their words (they said "website", not "custom website"). Never add details, numbers or decisions they did not say.
@@ -204,6 +204,7 @@ ACTIONS — markers go ONLY at the very end of the reply, after the last spoken 
 - [SEND_WHATSAPP: what to send] they want details, a brochure or a quotation on WhatsApp
 - [HUMAN_HANDOFF] they want to talk to a person from the team
 - [DO_NOT_CALL] they asked never to be called again
+- [CONTACT: name | number] they gave their name and WhatsApp number ("same" if it is the number they are on)
 - [CALL_COMPLETED] after your final goodbye
 When a meeting or demo time is agreed, add only [MEETING: ...] for it. Do not also add [CALLBACK] for the same agreement.
 Never book a time the customer said they cannot do. BEFORE any goodbye check: did the customer clearly choose ONE exact day and time? If you offered two or more options and they only said "ok", "yes" or "సరే", they have NOT chosen: do not say goodbye and do not add [CALL_COMPLETED]; ask which one in a short question ("ఉదయం పదకొండు గంటలకా, సాయంత్రం నాలుగు గంటలకా?"). Add [MEETING] only after one exact day and time is clearly agreed.
@@ -799,7 +800,7 @@ class BaseCallSession:
         )
         llm = SarvamLLMService(
             api_key=SARVAM_API_KEY,
-            settings=SarvamLLMService.Settings(model=LLM_MODEL, temperature=0.5, max_tokens=140),
+            settings=SarvamLLMService.Settings(model=LLM_MODEL, temperature=0.5, max_tokens=240),
         )
         tts_pace = 1.0
         tts = SarvamTTSService(

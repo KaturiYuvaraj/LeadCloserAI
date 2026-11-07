@@ -111,6 +111,35 @@ def cancel_waiting_callbacks(lead_id: int, reason: str = "replaced_by_meeting") 
         session.close()
 
 
+def save_contact(lead_id: int, arg: str) -> Dict[str, Any]:
+    """
+    [CONTACT: name | number]: keep what the customer gave. "same" means the number they are on.
+    A number that isn't a valid Indian mobile is kept for a person to check, never used as WhatsApp.
+    """
+    name, _, number = (arg or "").partition("|")
+    name, number = name.strip(), number.strip()
+    session = SessionLocal()
+    try:
+        lead = session.get(Lead, lead_id)
+        if not lead:
+            return {"ok": False, "error": "lead not found"}
+        if name:
+            _note(lead, "contact_name", name)
+            if str(lead.name or "").startswith("Inbound caller "):
+                lead.name = name
+        digits = "".join(ch for ch in number if ch.isdigit())[-10:]
+        if number.lower() == "same":
+            _note(lead, "whatsapp_number", lead.phone_e164)
+        elif len(digits) == 10 and digits[0] in "6789":
+            _note(lead, "whatsapp_number", f"+91{digits}")
+        elif number:
+            _note(lead, "whatsapp_number_to_check", number)
+        session.commit()
+        return {"ok": True, "name": name, "whatsapp": (lead.variables or {}).get("whatsapp_number")}
+    finally:
+        session.close()
+
+
 def mark_do_not_call(lead_id: int, reason: str = "asked on call") -> Dict[str, Any]:
     session = SessionLocal()
     try:
@@ -207,6 +236,8 @@ async def run_action(tag: str, arg: str, lead: Optional[Dict[str, Any]], languag
                 )
                 result["calendar"] = {"ok": bool(booked.get("success")), "meet_link": booked.get("meet_link")}
             record["result"] = result
+        elif tag == "CONTACT":
+            record["result"] = await asyncio.to_thread(save_contact, lead_id, arg)
         elif tag == "SEND_WHATSAPP":
             whatsapp = _provider("MESSAGING", "meta_whatsapp")
             if whatsapp and lead.get("phone"):
