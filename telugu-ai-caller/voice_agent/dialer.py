@@ -107,12 +107,28 @@ class CallQueue:
                 if not lead:
                     counts["not_found"] += 1
                     continue
-                open_job = session.query(CallJob.id).filter(
+                open_jobs = session.query(CallJob).filter(
                     CallJob.lead_id == lead.id, CallJob.state.in_(OPEN_STATES)
-                ).first()
-                if open_job:
-                    counts["already_queued"] += 1
-                    continue
+                ).all()
+                if open_jobs:
+                    if priority == 0:
+                        # On-demand manual "Call Now": reset open job(s) to dial immediately
+                        for oj in open_jobs:
+                            if oj.state in ACTIVE_STATES:
+                                continue  # Already on the phone right now
+                            oj.state = "queued"
+                            oj.priority = 0
+                            oj.next_attempt_at = db_time(session, now)
+                            oj.block_reason = None
+                            if language:
+                                oj.language = language
+                            if consent_confirmed and not lead.consent_source:
+                                lead.consent_source = f"campaign_confirmed {now.astimezone(IST):%Y-%m-%d %H:%M} IST"
+                        counts["queued"] += 1
+                        continue
+                    else:
+                        counts["already_queued"] += 1
+                        continue
                 if consent_confirmed and not lead.consent_source:
                     lead.consent_source = f"campaign_confirmed {now.astimezone(IST):%Y-%m-%d %H:%M} IST"
                 session.add(CallJob(
@@ -194,7 +210,7 @@ class CallQueue:
 
                 # a callback the customer asked for, or a follow-up already spaced out by the cadence,
                 # is not held back by "called recently"
-                is_retry = job.attempt > 0 or job.last_disposition in ("callback_requested", SERVICE_FAILED,
+                is_retry = job.attempt > 0 or job.priority == 0 or job.last_disposition in ("callback_requested", SERVICE_FAILED,
                                                                        followups.FOLLOWUP_DISPOSITION)
                 result = check_can_call(session, account, lead, now, is_retry=is_retry)
                 if result.status == "blocked":
@@ -334,7 +350,9 @@ class CallQueue:
             if not job or job.state in ("completed", "cancelled", "blocked", "not_reachable"):
                 return
             if job.state == "in_progress":
-                return  # the engine saves the call and marks the job completed
+                job.state = "completed"
+                session.commit()
+                return  # provider confirmed hangup
             if disposition == "completed" and duration > 0:
                 return  # answered; the engine callback will follow
             lead = session.get(Lead, job.lead_id)

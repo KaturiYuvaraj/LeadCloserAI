@@ -123,10 +123,11 @@ def check_can_call(session: Session, account: Account, lead: Lead, now_utc: date
     if REQUIRE_CONSENT and not lead.consent_source and (lead.source or "").lower() not in SELF_INITIATED_SOURCES:
         return RuleResult("blocked", "no_consent")
 
-    # Not now
-    window_start = next_window_start(now_utc, account)
-    if window_start != now_utc:
-        return RuleResult("deferred", "outside_calling_hours", window_start)
+    # Not now (only enforce calling hours for automatic batch campaigns, not manual dials or retries)
+    if not is_retry:
+        window_start = next_window_start(now_utc, account)
+        if window_start != now_utc:
+            return RuleResult("deferred", "outside_calling_hours", window_start)
 
     if not is_retry and account.recent_call_hours:
         last_call = session.query(func.max(Call.created_at)).filter(Call.lead_id == lead.id).scalar()

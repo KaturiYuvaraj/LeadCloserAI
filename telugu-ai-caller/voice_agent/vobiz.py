@@ -47,7 +47,7 @@ def build_answer_xml(stream_url: str, status_callback_url: Optional[str] = None)
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         "<Response>\n"
-        f'  <Stream bidirectional="true" audioTrack="inbound" keepCallAlive="true" '
+        f'  <Stream bidirectional="true" keepCallAlive="true" '
         f'contentType="{VOBIZ_STREAM_CONTENT_TYPE}"{callback}>{escape(stream_url)}</Stream>\n'
         "  <Hangup/>\n"
         "</Response>\n"

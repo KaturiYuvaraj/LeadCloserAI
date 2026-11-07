@@ -60,6 +60,19 @@ async def api_outbound_call(payload: Dict[str, Any], request: Request):
     if not to_phone:
         raise HTTPException(status_code=400, detail="Phone number is required")
 
+    # If Vobiz is the configured provider, route through the new Pipecat call queue
+    dialer_choice = os.getenv("DIALER_PROVIDER", "").lower()
+    if dialer_choice == "vobiz" or (os.getenv("VOBIZ_AUTH_ID") and not provider_override):
+        from voice_agent.dialer import call_queue
+        call_queue.start()
+        lang = payload.get("language")
+        target_lead_id = int(lead_id) if lead_id else None
+        if not target_lead_id:
+            from database import create_lead
+            target_lead_id = create_lead({"name": "Outbound Lead", "phone": to_phone, "preferred_language": lang or "te-IN"})
+        counts = call_queue.enqueue([target_lead_id], priority=0, consent_confirmed=True, language=lang)
+        return {"success": True, "provider": "vobiz", "call_sid": f"vobiz-{target_lead_id}", **counts}
+
     host = request.headers.get("host")
 
     # Check requested or active telephony provider

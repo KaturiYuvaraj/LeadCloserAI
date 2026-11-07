@@ -975,25 +975,27 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const confirmed = confirm(`Initiate live outbound carrier phone call to ${selectedLead.name} (${phone}) via Exotel / Twilio?`);
+    const lang = document.getElementById("voiceLangSelect")?.value || selectedLead.preferred_language || "te-IN";
+    const confirmed = confirm(`Initiate live outbound carrier phone call to ${selectedLead.name} (${phone}) via Vobiz AI Telephony?`);
     if (!confirmed) return;
 
     try {
-      const resp = await fetch("/api/call/outbound", {
+      const resp = await fetch(`/api/dialer/call-now/${selectedLead.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phone: phone,
-          lead_id: selectedLead.id
+          consent_confirmed: true,
+          language: lang
         })
       });
       const data = await resp.json();
       if (data.success) {
-        alert(`?? Outbound telephone call initiated!
-Call SID: ${data.call_sid || data.sid || 'Active'}
-Your registered phone / client phone will ring shortly.`);
+        alert(`📞 Outbound call initiated via ${data.provider || 'Vobiz'}!
+Phone: ${phone}
+Your phone will ring shortly.`);
       } else {
-        alert(data.error || "Failed to trigger phone call.");
+        alert(data.error || data.detail || "Failed to trigger phone call.");
       }
     } catch (e) {
       alert("Error initiating phone call: " + e.message);
@@ -1516,7 +1518,7 @@ Your registered phone / client phone will ring shortly.`);
         if (window.loadAnalyticsDashboard) window.loadAnalyticsDashboard();
       } else if (viewName === "integrations") {
         pageTitle.innerText = "Connected Integrations & Telephony";
-        pageSub.innerText = "Manage Sarvam AI, Vobiz, Exotel, Twilio, WhatsApp, and Google Calendar";
+        pageSub.innerText = "Manage Sarvam AI (Voice STT/TTS & LLM) and Vobiz AI Telephony";
         if (pageActions) pageActions.style.display = "none";
         if (window.loadIntegrationsView) window.loadIntegrationsView();
       } else if (viewName === "developer") {

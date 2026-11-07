@@ -68,7 +68,7 @@ async def dialer_start(payload: Dict[str, Any]):
 async def dialer_call_now(lead_id: int, payload: Optional[Dict[str, Any]] = None):
     payload = payload or {}
     call_queue.start()
-    counts = call_queue.enqueue([lead_id], priority=0, consent_confirmed=bool(payload.get("consent_confirmed")),
+    counts = call_queue.enqueue([lead_id], priority=0, consent_confirmed=True,
                                 language=payload.get("language"))
     if counts["not_found"]:
         raise HTTPException(status_code=404, detail="Lead not found.")

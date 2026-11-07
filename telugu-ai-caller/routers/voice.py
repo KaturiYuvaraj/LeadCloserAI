@@ -320,7 +320,9 @@ async def vobiz_voice_stream(websocket: WebSocket):
 
     async def wait_for_start():
         while True:
-            message = json.loads(await websocket.receive_text())
+            raw = await websocket.receive_text()
+            logger.info(f"Vobiz stream event received: {raw[:120]}")
+            message = json.loads(raw)
             if message.get("event") == "start":
                 return message
 

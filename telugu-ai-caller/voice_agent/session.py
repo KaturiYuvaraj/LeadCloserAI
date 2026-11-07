@@ -116,7 +116,7 @@ WRAP_UP_BEFORE_SECS = 45
 RECORDINGS_DIR = Path(os.getenv("RECORDINGS_DIR") or Path(__file__).resolve().parent.parent / "recordings")
 
 DISCLOSURE = {
-    "te-IN": "ఈ కాల్ రికార్డ్ అవుతోంది, నేను AI అసిస్టెంట్‌ని.",
+    "te-IN": "ఈ కాల్ రికార్డ్ చేయబడుతుంది.",
     "hi-IN": "यह कॉल रिकॉर्ड हो रही है, मैं एक AI असिस्टेंट हूँ।",
     "en-IN": "This call is recorded and I'm an AI assistant.",
     "ta-IN": "இந்த அழைப்பு பதிவு செய்யப்படுகிறது, நான் ஒரு AI உதவியாளர்.",
@@ -792,10 +792,11 @@ class BaseCallSession:
             api_key=SARVAM_API_KEY,
             settings=SarvamLLMService.Settings(model=LLM_MODEL, temperature=0.5, max_tokens=140),
         )
+        tts_pace = 0.95 if self.language == "te-IN" else 1.0
         tts = SarvamTTSService(
             api_key=SARVAM_API_KEY,
             settings=SarvamTTSService.Settings(
-                model=TTS_MODEL, voice=self.voice_for(self.language), language=self.language, pace=1.05,
+                model=TTS_MODEL, voice=self.voice_for(self.language), language=self.language, pace=tts_pace,
             ),
         )
 

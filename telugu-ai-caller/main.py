@@ -7,7 +7,7 @@ integrations, developer APIs, messaging, campaigns, dialer, and telephony.
 from contextlib import asynccontextmanager
 import socket
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
@@ -75,6 +75,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/static/js") or request.url.path.endswith(".html") or request.url.path == "/" or request.url.path == "/crm":
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
 
 # Ensure directories exist
 (BASE_DIR / "static").mkdir(parents=True, exist_ok=True)

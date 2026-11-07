@@ -104,7 +104,7 @@ class VobizDialer(BaseDialer):
             "answer_method": "POST",
             "hangup_url": f"{public_base_url()}/api/voice/vobiz/hangup?{query}",
             "hangup_method": "POST",
-            "ring_timeout": 30,
+            "ring_timeout": 45,
             "time_limit": req.max_call_seconds,
         }
         async with httpx.AsyncClient(timeout=15) as client:

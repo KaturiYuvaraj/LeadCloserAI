@@ -34,8 +34,8 @@ def initialize_providers():
     exotel = ExotelTelephonyProvider()
     twilio = TwilioTelephonyProvider()
     is_vobiz_active = vobiz.is_configured() or os.getenv("DIALER_PROVIDER", "").lower() == "vobiz"
-    registry.register(vobiz, is_default=is_vobiz_active)
-    registry.register(exotel, is_default=not is_vobiz_active)
+    registry.register(vobiz, is_default=True)
+    registry.register(exotel, is_default=False)
     registry.register(twilio, is_default=False)
 
     # Lead Discovery

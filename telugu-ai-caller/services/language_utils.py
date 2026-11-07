@@ -263,9 +263,9 @@ def get_localized_initial_greeting(
         return greeting, "ml-IN"
 
     else:
-        # Telugu (Default)
+        # Telugu (Default) - Natural spoken conversation style
         if first_name:
-            greeting = f"నమస్కారం {first_name} గారు! నేను {agency_name} నుండి మాట్లాడుతున్నాను. మీ వ్యాపారం కోసం {service} సేవల గురించి 2 నిమిషాలు మాట్లాడొచ్చా అండి?"
+            greeting = f"నమస్కారం {first_name} గారు! నేను {agency_name} నుండి మాట్లాడుతున్నాను. మీ వ్యాపారం కోసం {service} సేవల గురించి ఒక్క నిమిషం మాట్లాడొచ్చా అండి?"
         else:
-            greeting = f"నమస్కారం అండి! నేను {agency_name} నుండి మాట్లాడుతున్నాను. మీ వ్యాపారం కోసం కస్టమ్ వెబ్‌సైట్, మొబైల్ యాప్ లేదా AI సొల్యూషన్స్ గురించి 2 నిమిషాలు మాట్లాడొచ్చా అండి?"
+            greeting = f"నమస్కారం అండి! నేను {agency_name} నుండి మాట్లాడుతున్నాను. మీ వ్యాపారానికి వెబ్‌సైట్, మొబైల్ యాప్ లేదా సాఫ్ట్‌వేర్ సేవల గురించి ఒక్క నిమిషం మాట్లాడొచ్చా అండి?"
         return greeting, "te-IN"

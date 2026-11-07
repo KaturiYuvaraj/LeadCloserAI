@@ -11,12 +11,14 @@ __pycache__/
 
 # Virtual Environments
 venv/
+venv*/
 .venv/
 env/
 ENV/
 env.bak/
 venv.bak/
 */venv/
+*/venv*/
 */.venv/
 
 # Environment Variables & Secrets (CRITICAL: Do NOT commit API keys)
