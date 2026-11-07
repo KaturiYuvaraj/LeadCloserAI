@@ -29,9 +29,9 @@ def test_every_listed_price():
 def test_ai_is_told_every_price_and_the_rules():
     prompt = sales_agent._build_system_prompt(None)
     for text in ("₹24,500", "₹66,500", "₹1,21,500", "₹6,700", "₹6,500", "₹8,500", "₹9,500", "₹6,000", "₹2,00,000", "₹3,00,000",
-                 "₹6,00,000", "₹10,00,000", "₹15,00,000", "₹30,00,000", "₹60,000 to ₹1,20,000", "₹3,000", "exclude GST"):
+                 "₹6,00,000", "₹10,00,000", "₹15,00,000", "₹30,00,000", "₹60,000 to ₹1,20,000", "₹3,000", "excludes 18% GST"):
         assert text in prompt, text
-    assert "Never give a discount" in prompt and "the team will confirm" in prompt
+    assert "never offer or agree to a discount" in prompt and "team will confirm" in prompt
 
 
 def test_old_prices_are_gone_from_what_the_ai_sees():
@@ -44,3 +44,62 @@ def test_profile_and_quotations_use_the_same_list():
     assert json.loads(get_company_profile()["services_offered"]) == SERVICES
     assert DEFAULT_PRICE_BOOK is PRICE_BOOK
     assert "₹6,700" in PRICE_LIST_FOR_AI
+
+
+def test_monthly_amounts_and_gst_figures_are_right():
+    assert 7000 + 12500 == 19500 and 21500 + 25500 == 47000 and 40500 + 35500 == 76000
+    for price, with_gst in ((24500, "₹28,910"), (66500, "₹78,470"), (121500, "₹1,43,370"), (200000, "₹2,36,000"), (300000, "₹3,54,000")):
+        lakhs = round(price * 1.18)
+        digits = "".join(ch for ch in with_gst if ch.isdigit())
+        assert int(digits) == lakhs and with_gst in PRICE_LIST_FOR_AI
+    for monthly in ("₹19,500 a month", "₹47,000 a month", "₹76,000 a month"):
+        assert monthly in PRICE_LIST_FOR_AI
+
+
+def test_guide_rules_are_in_the_prompt():
+    for text in ("Our prices are fixed", "free consultation", "server and hosting", "in lakhs and thousands",
+                 "Why is the ad budget separate", "Never promise a shorter time", "[CONTACT: name | number]"):
+        assert text.lower() in PRICE_LIST_FOR_AI.lower(), text
+
+
+def test_contact_details_are_saved():
+    from core.db import SessionLocal
+    from models import Lead
+    from tests.test_dialer import make_lead
+    from voice_agent.actions import save_contact
+
+    def variables(lead_id):
+        session = SessionLocal()
+        try:
+            return dict(session.get(Lead, lead_id).variables or {})
+        finally:
+            session.close()
+
+    lead = make_lead(name="Contact Chinna", phone="+919812300901")
+    assert save_contact(lead, "Ravi | 98765 43210")["ok"]
+    assert variables(lead)["contact_name"] == "Ravi" and variables(lead)["whatsapp_number"] == "+919876543210"
+    same = make_lead(name="Same Sudha", phone="+919812300902")
+    save_contact(same, "Sudha | same")
+    assert variables(same)["whatsapp_number"] == "+919812300902"
+    bad = make_lead(name="Bad Bala", phone="+919812300903")
+    save_contact(bad, "| 12345")
+    assert "whatsapp_number" not in variables(bad) and variables(bad)["whatsapp_number_to_check"] == "12345"
+
+
+def test_inbound_caller_gets_their_real_name():
+    from core.db import SessionLocal
+    from models import Lead
+    from tests.test_dialer import make_lead
+    from voice_agent.actions import save_contact
+    lead = make_lead(name="Inbound caller 9812300904", phone="+919812300904")
+    save_contact(lead, "Lakshmi | same")
+    session = SessionLocal()
+    assert session.get(Lead, lead).name == "Lakshmi"
+    session.close()
+
+
+def test_contact_marker_is_removed_from_speech():
+    from voice_agent.conclusion import split_actions
+    emit, _, actions = split_actions("ధన్యవాదాలు అండి. [CONTACT: Ravi | 9876543210]")
+    assert "CONTACT" not in emit and actions == [("CONTACT", "Ravi | 9876543210")]
+

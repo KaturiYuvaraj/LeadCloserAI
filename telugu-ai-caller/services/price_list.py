@@ -3,7 +3,7 @@ S P Associates price list: the one place prices live.
 
 The AI's call instructions (PRICE_LIST_FOR_AI), the company profile's service list (SERVICES)
 and the quotation price book (PRICE_BOOK) are all built from here, so they can't disagree.
-Change a price here only. Prices exclude GST unless the business says otherwise.
+Change a price here only. All prices exclude 18% GST.
 """
 
 from typing import Any, Dict, List
@@ -18,16 +18,16 @@ def _item(code: str, name: str, category: str, price: float, days: int, delivera
 PRICE_BOOK: List[Dict[str, Any]] = [
     _item("pkg_starter", "Starter Package (website + marketing)", "Website + Digital Marketing", 24500, 0,
           "Static website / landing page Rs 5,000 (one-time). Facebook + Instagram: 10 posters + 3 reels Rs 7,000/month. "
-          "Meta + Google Ads, 2 campaigns each, Rs 12,500/month. Includes the first month. "
+          "Meta + Google Ads, 2 campaigns each, Rs 12,500/month. Price is the first month; Rs 19,500/month after that. "
           "Ad budget extra, paid to Meta/Google. Domain and hosting Rs 3,000 extra."),
     _item("pkg_growth", "Growth Package (website + marketing)", "Website + Digital Marketing", 66500, 0,
           "Dynamic website Rs 19,500 (one-time). Facebook, Instagram, YouTube: 15 posters + 6 reels Rs 21,500/month. "
           "Meta + Google Ads, 4 campaigns each, Rs 25,500/month. AI tele-calling automation, 3 months post-launch support. "
-          "Includes the first month. Ad budget extra. Domain and hosting Rs 3,000 extra."),
+          "Price is the first month; Rs 47,000/month after that. Ad budget extra. Domain and hosting Rs 3,000 extra."),
     _item("pkg_premium", "Premium Package (website + marketing)", "Website + Digital Marketing", 121500, 0,
           "Premium website / e-commerce Rs 45,500 (one-time). Facebook, Instagram, YouTube, LinkedIn, X: daily posting "
           "Rs 40,500/month. Meta, Google + LinkedIn Ads, 6 campaigns each, Rs 35,500/month. AI tele-calling automation, "
-          "3 months post-launch support. Includes the first month. Ad budget extra. Domain and hosting Rs 3,000 extra."),
+          "3 months post-launch support. Price is the first month; Rs 76,000/month after that. Ad budget extra. Domain and hosting Rs 3,000 extra."),
     _item("svc_static_website", "Static Website (individual)", "Individual Services", 6700, 0,
           "5-6 pages / landing page. Domain and hosting Rs 3,000 extra."),
     _item("svc_social_media", "Social Media Marketing (individual)", "Individual Services", 6500, 0, "7 posters + 4 reels."),
@@ -36,17 +36,17 @@ PRICE_BOOK: List[Dict[str, Any]] = [
     _item("svc_google_ads", "Google Ads (individual)", "Individual Services", 9500, 0,
           "2 campaigns. Ad budget extra, e.g. Rs 350/day."),
     _item("svc_gmb", "Google My Business Profile Setup", "Individual Services", 6000, 0, "One-time."),
-    _item("app_basic_android", "Mobile App Basic (MVP), Android", "Mobile App", 200000, 42, "Single platform, first version. 4-6 weeks."),
-    _item("app_basic_both", "Mobile App Basic (MVP), Android + iOS", "Mobile App", 300000, 42, "First version. 4-6 weeks."),
-    _item("app_standard_android", "Mobile App Standard, Android", "Mobile App", 600000, 84, "Business growth app. 8-12 weeks."),
-    _item("app_standard_both", "Mobile App Standard, Android + iOS", "Mobile App", 1000000, 84, "Business growth app. 8-12 weeks."),
-    _item("app_premium_android", "Mobile App Premium, Android", "Mobile App", 1500000, 180, "Enterprise, scalable platform. 4-6 months."),
-    _item("app_premium_both", "Mobile App Premium, Android + iOS", "Mobile App", 3000000, 180, "Enterprise, scalable platform. 4-6 months."),
-    _item("erp_basic", "ERP Basic (MVP)", "ERP", 200000, 42, "Single platform. 4-6 weeks."),
-    _item("erp_standard", "ERP Standard", "ERP", 600000, 84, "Growing businesses. 8-12 weeks."),
-    _item("erp_premium", "ERP Premium", "ERP", 1500000, 180, "Large-scale operations. 4-6 months."),
+    _item("app_basic_android", "Mobile App Basic (MVP), Android", "Mobile App", 200000, 42, "Single platform, first version. 4-6 weeks. Server and hosting paid by the client."),
+    _item("app_basic_both", "Mobile App Basic (MVP), Android + iOS", "Mobile App", 300000, 42, "First version. 4-6 weeks. Server and hosting paid by the client."),
+    _item("app_standard_android", "Mobile App Standard, Android", "Mobile App", 600000, 84, "Business growth app. 8-12 weeks. Server and hosting paid by the client."),
+    _item("app_standard_both", "Mobile App Standard, Android + iOS", "Mobile App", 1000000, 84, "Business growth app. 8-12 weeks. Server and hosting paid by the client."),
+    _item("app_premium_android", "Mobile App Premium, Android", "Mobile App", 1500000, 180, "Enterprise, scalable platform. 4-6 months. Server and hosting paid by the client."),
+    _item("app_premium_both", "Mobile App Premium, Android + iOS", "Mobile App", 3000000, 180, "Enterprise, scalable platform. 4-6 months. Server and hosting paid by the client."),
+    _item("erp_basic", "ERP Basic (MVP)", "ERP", 200000, 42, "Single platform. 4-6 weeks. Server and hosting paid by the client."),
+    _item("erp_standard", "ERP Standard", "ERP", 600000, 84, "Growing businesses. 8-12 weeks. Server and hosting paid by the client."),
+    _item("erp_premium", "ERP Premium", "ERP", 1500000, 180, "Large-scale operations. 4-6 months. Server and hosting paid by the client."),
     _item("crm", "CRM Development", "CRM", 60000, 0,
-          "Customers and sales pipeline in one place. Rs 60,000 to Rs 1,20,000 depending on scope; this is the starting price."),
+          "Customers and sales pipeline in one place. Rs 60,000 to Rs 1,20,000 depending on features; this is the starting price. Server and hosting paid by the client."),
 ]
 
 SERVICES = [
@@ -59,33 +59,48 @@ SERVICES = [
 ]
 
 PRICE_LIST_FOR_AI = """
-PRICE LIST (the only prices you may quote; all exclude GST):
+PRICE GUIDE (the only prices you may quote). Every price excludes 18% GST.
 
-Website + digital marketing packages. The website is one-time; social media and ads are monthly; the total includes the first month. Ad budget is extra, paid to Meta/Google (for example ₹300 a day). Domain and hosting add ₹3,000.
-- Starter, for small businesses and start-ups: total ₹24,500. Static website / landing page ₹5,000; Facebook + Instagram ₹7,000 a month (10 posters + 3 reels); Meta + Google Ads ₹12,500 a month (2 campaigns each).
-- Growth, for medium businesses: total ₹66,500. Dynamic website ₹19,500; Facebook, Instagram, YouTube ₹21,500 a month (15 posters + 6 reels); Meta + Google Ads ₹25,500 a month (4 campaigns each); AI tele-calling automation; 3 months post-launch support.
-- Premium, for large businesses: total ₹1,21,500. Premium website / e-commerce ₹45,500; Facebook, Instagram, YouTube, LinkedIn, X ₹40,500 a month (daily posting); Meta, Google + LinkedIn Ads ₹35,500 a month (6 campaigns each); AI tele-calling automation; 3 months post-launch support.
+FIND THE RIGHT SERVICE FIRST. If it isn't clear which service they mean, ask; never guess. Ask only what you don't already know, one question at a time: what kind of business they have; whether they need a website, social media and ads, a mobile app, or software like ERP or CRM; for marketing, whether the business is small and just starting, growing, or already large; for apps, Android only or both Android and iPhone.
 
-Individual services (Starter level):
-- Static website, 5-6 pages / landing page: ₹6,700, plus ₹3,000 domain and hosting.
-- Social media marketing, 7 posters + 4 reels: ₹6,500.
-- Meta Ads, 2 campaigns: ₹8,500; ad budget extra, for example ₹200 a day.
-- Google Ads, 2 campaigns: ₹9,500; ad budget extra, for example ₹350 a day.
-- Google My Business profile setup: ₹6,000, one-time.
+WEBSITE + DIGITAL MARKETING PACKAGES:
+- Starter (small businesses, start-ups). Static website / landing page ₹5,000 one-time. Facebook + Instagram, 10 posters + 3 reels, ₹7,000 a month. Meta + Google Ads, 2 campaigns each, ₹12,500 a month. First month total ₹24,500. From the second month ₹19,500 a month.
+- Growth (medium businesses ready to scale). Dynamic website ₹19,500 one-time. Facebook, Instagram, YouTube, 15 posters + 6 reels, ₹21,500 a month. Meta + Google Ads, 4 campaigns each, ₹25,500 a month. Free: AI tele-calling automation and 3 months support after launch. First month total ₹66,500. From the second month ₹47,000 a month.
+- Premium (large businesses). Premium website / e-commerce ₹45,500 one-time. Facebook, Instagram, YouTube, LinkedIn, X, daily posting, ₹40,500 a month. Meta, Google and LinkedIn Ads, 6 campaigns each, ₹35,500 a month. Free: AI tele-calling automation and 3 months support after launch. First month total ₹1,21,500. From the second month ₹76,000 a month.
+With every package, say in one short sentence: this is our service charge; the ad budget on Facebook or Google is separate, around ₹300 a day; domain and hosting is ₹3,000 extra; GST is 18% on top.
 
-Mobile app development:
-- Basic (first version), 4-6 weeks: Android ₹2,00,000; Android + iOS ₹3,00,000.
-- Standard (growing businesses), 8-12 weeks: Android ₹6,00,000; Android + iOS ₹10,00,000.
-- Premium (enterprise), 4-6 months: Android ₹15,00,000; Android + iOS ₹30,00,000.
+INDIVIDUAL SERVICES (Starter size):
+- Static website, 5-6 pages or a landing page: ₹6,700, plus ₹3,000 domain and hosting.
+- Social media marketing, 7 posters + 4 reels: ₹6,500 (team will confirm if monthly).
+- Meta Ads, 2 campaigns: ₹8,500, ad budget extra, for example ₹200 a day (team will confirm if monthly).
+- Google Ads, 2 campaigns: ₹9,500, ad budget extra, for example ₹350 a day (team will confirm if monthly).
+- Google My Business setup: ₹6,000 one-time.
+Growth and Premium individual services: say the team will confirm those prices and call back.
+The ₹5,000 website is only inside the Starter package; a website on its own is ₹6,700.
 
-ERP development: Basic, 4-6 weeks, ₹2,00,000. Standard, 8-12 weeks, ₹6,00,000. Premium, 4-6 months, ₹15,00,000.
-CRM development (customers and sales pipeline in one place): ₹60,000 to ₹1,20,000.
+MOBILE APPS (server and hosting paid separately by the client, GST 18% extra):
+- Basic (first version), 4-6 weeks: Android only ₹2,00,000; Android + iPhone ₹3,00,000.
+- Standard (growing businesses), 8-12 weeks: Android only ₹6,00,000; Android + iPhone ₹10,00,000.
+- Premium (large products), 4-6 months: Android only ₹15,00,000; Android + iPhone ₹30,00,000.
+
+ERP SOFTWARE (server and hosting paid by the client, GST extra): Basic, 4-6 weeks, ₹2,00,000. Standard, 8-12 weeks, ₹6,00,000. Premium, 4-6 months, ₹15,00,000.
+
+CRM SOFTWARE (server and hosting paid by the client, GST extra): ₹60,000 to ₹1,20,000 depending on features; the team gives the exact price after understanding their needs.
+
+FINAL AMOUNT WITH GST, only if they ask: Starter first month ₹28,910. Growth first month ₹78,470. Premium first month ₹1,43,370. Basic app, Android ₹2,36,000. Basic app, Android + iPhone ₹3,54,000. For anything else: our quotation will show the GST and the total payable.
 
 HOW TO TALK ABOUT PRICE:
-- When asked the price, give the exact price at once. If you don't yet know which service they mean, ask that one question first.
-- Give one price or one short comparison per reply. Never read out the list.
-- Say amounts in words in the customer's language (for example "ఇరవై నాలుగు వేల ఐదు వందల రూపాయలు", "రెండు లక్షలు").
-- Mention extras when they matter: ad budget, ₹3,000 domain and hosting, monthly charges after the first month. If they ask about tax, say prices exclude GST.
-- A package's website price applies only inside that package; a website on its own is ₹6,700.
-- Never give a discount, never invent or estimate a price, and never add prices together yourself beyond the totals above. For anything not listed (Growth or Premium individual services, custom software, payment terms, whether an individual service is monthly), say the team will confirm.
+- Give the exact price at once, then the extras that apply, in the customer's language. A price reply may be up to about 45 words. Never read out the list.
+- Say amounts in words, in lakhs and thousands, never "hundred thousand". Telugu: ₹24,500 = ఇరవై నాలుగు వేల ఐదు వందల రూపాయలు; ₹1,21,500 = ఒక లక్ష ఇరవై ఒక్క వేల ఐదు వందల రూపాయలు; ₹2,00,000 = రెండు లక్షల రూపాయలు. English: one lakh twenty-one thousand five hundred rupees.
+- Never invent a price, never add prices yourself, and never offer or agree to a discount. If they ask for one, say the meaning of: "Our prices are fixed, but our team can suggest the package that fits your budget best."
+- If a price isn't here or is marked team will confirm, say the team will confirm that price and call back. The same goes for payment terms, whether domain and hosting repeats every year, and anything else not written here.
+- Timelines: use only the times above for apps and ERP. For websites and everything else, say the team will confirm the timeline after the free consultation. Never promise a shorter time than listed.
+
+COMMON QUESTIONS (say the meaning, in their language):
+- Why is the ad budget separate? It goes directly to Facebook or Google to show their ads. Our fee is for planning, creating and managing those ads. They stay in full control of how much they spend.
+- What is domain and hosting? The domain is the website name, like yourbusiness.com. Hosting keeps the website online. Together they are ₹3,000.
+- Can I start small? Yes. Starter or individual services are a good start, and they can move to Growth later.
+- Too expensive? Don't discount. Say you understand and will suggest an option that fits their budget, then offer Starter or individual services and a free consultation call.
+
+CLOSING. A demo and a free consultation are the same call: call it a free consultation. End every pricing conversation by asking for their name and WhatsApp number, one at a time, and offering the free consultation with a detailed quotation. If you already know their name, don't ask it again; ask if this same number is on WhatsApp. When they give these details, add [CONTACT: name | number] at the end of the reply, writing "same" for the number they are calling on.
 """

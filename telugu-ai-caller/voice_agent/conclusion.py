@@ -11,6 +11,7 @@ the LLM writes at the end of a reply when something must happen in the CRM:
   [HUMAN_HANDOFF]                the customer wants a person from the team
   [WRONG_PERSON]                 someone other than the lead answered
   [SEND_WHATSAPP: quotation]     send details / a quotation on WhatsApp
+  [CONTACT: Ravi | 9876543210]   the customer gave their name and WhatsApp number
 
 With streaming, a marker can arrive split across tokens ("[CALL", "_COMPLETED]"),
 so this processor holds back any text that could be the start of a marker,
@@ -32,7 +33,7 @@ from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 
 CALL_COMPLETED_MARKER = "[CALL_COMPLETED]"
 ACTION_TAGS = ("CALL_COMPLETED", "CALLBACK", "MEETING", "DO_NOT_CALL", "HUMAN_HANDOFF",
-               "WRONG_PERSON", "SEND_WHATSAPP")
+               "WRONG_PERSON", "SEND_WHATSAPP", "CONTACT")
 _TAG_RE = re.compile(r"^\s*(" + "|".join(ACTION_TAGS) + r")\s*(?::\s*(.*?))?\s*$", re.IGNORECASE)
 MAX_MARKER_CHARS = 80
 
