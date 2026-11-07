@@ -20,6 +20,9 @@ def test_every_listed_price():
     assert PRICES == {
         "pkg_starter": 24500, "pkg_growth": 66500, "pkg_premium": 121500,
         "svc_static_website": 6700, "svc_social_media": 6500, "svc_meta_ads": 8500, "svc_google_ads": 9500, "svc_gmb": 6000,
+        "svc_growth_website": 14500, "svc_growth_social": 16500, "svc_growth_meta_ads": 16500, "svc_growth_google_ads": 10500,
+        "svc_growth_gmb": 8500, "svc_premium_website": 35500, "svc_premium_social": 32500, "svc_premium_meta_ads": 32500,
+        "svc_premium_google_ads": 10500, "svc_premium_gmb": 15500,
         "app_basic_android": 200000, "app_basic_both": 300000, "app_standard_android": 600000, "app_standard_both": 1000000,
         "app_premium_android": 1500000, "app_premium_both": 3000000,
         "erp_basic": 200000, "erp_standard": 600000, "erp_premium": 1500000, "crm": 60000,
@@ -103,4 +106,25 @@ def test_contact_marker_is_removed_from_speech():
     from voice_agent.conclusion import split_actions
     emit, _, actions = split_actions("ధన్యవాదాలు అండి. [CONTACT: Ravi | 9876543210]")
     assert "CONTACT" not in emit and actions == [("CONTACT", "Ravi | 9876543210")]
+
+
+def test_individual_totals_and_every_gst_figure():
+    assert 6700 + 6500 + 8500 + 9500 + 6000 == 37200
+    assert 14500 + 16500 + 16500 + 10500 + 8500 == 66500
+    assert 35500 + 32500 + 32500 + 10500 + 15500 == 126500
+
+    def rupees(n):  # Indian grouping: 1,49,270
+        text = str(n)
+        if len(text) <= 3:
+            return "₹" + text
+        head, tail = text[:-3], text[-3:]
+        groups = []
+        while len(head) > 2:
+            groups.insert(0, head[-2:])
+            head = head[:-2]
+        return "₹" + ",".join(([head] if head else []) + groups + [tail])
+
+    for price in (24500, 66500, 121500, 6700, 6500, 8500, 9500, 6000, 37200, 14500, 16500, 10500, 35500, 32500, 15500,
+                  126500, 200000, 300000, 600000, 1000000, 1500000, 3000000, 60000, 120000):
+        assert rupees(round(price * 1.18)) in PRICE_LIST_FOR_AI, price
 
