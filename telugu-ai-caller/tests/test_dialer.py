@@ -256,11 +256,16 @@ async def test_pause_and_stop(queue):
 
 
 @pytest.mark.asyncio
-async def test_hangup_after_answer_is_left_to_the_engine(queue):
+async def test_hangup_after_answer_completes_the_job_and_the_engine_adds_the_outcome(queue):
     lead = make_lead(name="Talk Tara", phone="+919812300160")
     queue.enqueue([lead])
     await queue.tick()
     job = job_for(lead)
     queue.on_answered(job.id)
     queue.on_provider_hangup(job.id, "completed", 75, "NORMAL_CLEARING")
-    assert job_for(lead).state == "in_progress"  # engine marks it completed when the call is saved
+    # the carrier's hangup ends the job (it can't stay "in progress" if the engine crashes) ...
+    assert job_for(lead).state == "completed" and job_for(lead).last_disposition == "answered"
+    # ... and the engine, when it has saved the call, records the real outcome
+    queue.on_call_saved(job.id, 123, "demo_scheduled")
+    done = job_for(lead)
+    assert done.state == "completed" and done.last_disposition == "demo_scheduled" and done.call_id == 123

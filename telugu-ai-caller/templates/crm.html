@@ -3655,7 +3655,7 @@ input[type="checkbox"] {
                 </div>
               </div>
               <div class="crm-lead-quick-actions">
-                <button class="crm-round-btn" id="phoneCallBtn" title="Dial via Outbound Carrier Telephony">
+                <button class="crm-round-btn" id="phoneCallBtn" title="Call this lead now on the phone">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                 </button>
                 <button class="crm-round-btn" id="viewLeadHistoryBtn" title="View Lead History & Details">
@@ -4322,8 +4322,8 @@ input[type="checkbox"] {
                     </td>
                     <td style="min-width: 140px;">
                       <div style="display: flex; gap: 6px;">
-                        <button class="crm-action-pill" onclick="window.selectLead({{ lead | tojson }}); window.switchCrmView('calling');" style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #ea580c; border-color: #fed7aa; background: #fff7ed; cursor: pointer;">
-                          Dial 📞
+                        <button class="crm-action-pill" onclick='window.callLeadNow({{ {"id": lead.id, "name": lead.name, "phone": lead.phone} | tojson }});' title="Place a real phone call now" style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #ea580c; border-color: #fed7aa; background: #fff7ed; cursor: pointer;">
+                          Call now 📞
                         </button>
                         <button class="crm-action-pill" onclick='window.openBusinessIntelModal({{ lead | tojson }})' style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #0284c7; border-color: #bae6fd; background: #f0f9ff; cursor: pointer;" title="View Business & Decision Maker Intel">
                           Intel 🔍
@@ -6147,7 +6147,7 @@ input[type="checkbox"] {
   <script src="/api/voice/config.js"></script>
   <script src="/static/js/call_client.js"></script>
   <script src="/static/js/pipecat_call_client.js?v=1.0"></script>
-  <script src="/static/js/app.js?v=4.0.0"></script>
+  <script src="/static/js/app.js?v=4.1.1"></script>
   <script>
     // Initialize lead selection safely once DOMContentLoaded has finished
     document.addEventListener("DOMContentLoaded", function() {

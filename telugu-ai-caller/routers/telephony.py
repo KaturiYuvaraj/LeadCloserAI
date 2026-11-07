@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import base64
@@ -60,18 +61,16 @@ async def api_outbound_call(payload: Dict[str, Any], request: Request):
     if not to_phone:
         raise HTTPException(status_code=400, detail="Phone number is required")
 
-    # If Vobiz is the configured provider, route through the new Pipecat call queue
+    # With Vobiz as the phone line the call goes through the dialer, like the dashboard's Call now button:
+    # the person must be signed in, the lead must belong to their company, and the calling rules apply.
     dialer_choice = os.getenv("DIALER_PROVIDER", "").lower()
     if dialer_choice == "vobiz" or (os.getenv("VOBIZ_AUTH_ID") and not provider_override):
-        from voice_agent.dialer import call_queue
-        call_queue.start()
-        lang = payload.get("language")
-        target_lead_id = int(lead_id) if lead_id else None
-        if not target_lead_id:
-            from database import create_lead
-            target_lead_id = create_lead({"name": "Outbound Lead", "phone": to_phone, "preferred_language": lang or "te-IN"})
-        counts = call_queue.enqueue([target_lead_id], priority=0, consent_confirmed=True, language=lang)
-        return {"success": True, "provider": "vobiz", "call_sid": f"vobiz-{target_lead_id}", **counts}
+        from core.auth import get_current_user
+        from routers.dialer import start_manual_call
+        user = get_current_user(request)
+        if not str(lead_id or "").isdigit():
+            raise HTTPException(status_code=400, detail="lead_id is required: add the person as a lead first.")
+        return await start_manual_call(int(lead_id), user, payload)
 
     host = request.headers.get("host")
 
