@@ -1020,10 +1020,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (Date.now() - startedAt > 8 * 60 * 1000) { clearInterval(callTrackerTimer); return; }
       let job;
       try {
-        const resp = await fetch(`/api/dialer/jobs?lead_id=${encodeURIComponent(lead.id)}&limit=1`);
-        job = ((await resp.json()).jobs || [])[0];
+        const resp = await fetch(`/api/dialer/jobs?lead_id=${encodeURIComponent(lead.id)}&limit=20`);
+        // follow this call's own job: a finished call can create a newer follow-up job for the same lead
+        job = ((await resp.json()).jobs || []).find((j) => j.id === jobId);
       } catch (_) { return; }
-      if (!job || (jobId && job.id < jobId)) return;
+      if (!job) return;
       const live = CALL_STATES[job.state];
       if (job.state === "queued" && job.last_disposition === "service_unavailable") {
         clearInterval(callTrackerTimer);

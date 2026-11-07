@@ -17,13 +17,18 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from loguru import logger
 
-from core.auth import get_current_user, get_request_account_id
+from core.auth import get_current_user, get_optional_user, get_request_account_id
 from core.db import SessionLocal
 from models import Call, CallJob, Lead
 from voice_agent import credits
 from voice_agent.dialer import call_queue
 
-router = APIRouter(tags=["dialer"])
+def _login_when_required(request: Request) -> None:
+    """With AUTH_STRICT=true every dialer route needs a signed-in user (401 otherwise)."""
+    get_optional_user(request)
+
+
+router = APIRouter(tags=["dialer"], dependencies=[Depends(_login_when_required)])
 
 
 def resolve_targets(target: str = "new", lead_ids: Optional[List[int]] = None,

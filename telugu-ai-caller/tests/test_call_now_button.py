@@ -219,3 +219,21 @@ def test_legacy_outbound_route_needs_login_and_a_lead_when_vobiz_is_the_phone_li
     assert session.query(Lead).filter(Lead.phone_e164 == "+919812300816").count() == 0
     session.close()
     assert queue.dialer.dialed == []
+
+
+def test_required_login_covers_every_dialer_route_and_pages_redirect(monkeypatch):
+    monkeypatch.setenv("AUTH_STRICT", "true")
+    client = TestClient(main.app, follow_redirects=False)
+    assert client.get("/api/dialer/status").status_code == 401
+    assert client.get("/api/dialer/jobs").status_code == 401
+    for route in ("pause", "resume", "stop", "campaigns"):
+        assert client.post(f"/api/dialer/{route}", json={}).status_code == 401
+    page = client.get("/crm")
+    assert page.status_code == 302 and page.headers["location"].startswith("/login")
+
+
+def test_simulated_calls_carry_the_webhook_key(monkeypatch):
+    from voice_agent.outbound import DialRequest, _callback_query
+    monkeypatch.setenv("VOBIZ_WEBHOOK_SECRET", "abc123")
+    query = _callback_query(DialRequest(job_id=1, lead_id=2, to_number="+919812300817", language=None, max_call_seconds=60))
+    assert "key=abc123" in query

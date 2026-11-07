@@ -1,7 +1,7 @@
 """
 Pages Router - Separate Landing Page (Homepage) and Dedicated CRM Dashboard
 """
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from core.auth import get_optional_user, get_request_account_id
@@ -20,6 +20,14 @@ from database import (
 )
 
 router = APIRouter(tags=["pages"])
+
+
+def _user_or_none(request: Request):
+    """Pages send logged-out visitors to /login, also when AUTH_STRICT=true makes the lookup raise 401."""
+    try:
+        return get_optional_user(request)
+    except HTTPException:
+        return None
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -48,7 +56,7 @@ async def serve_set_password_page(request: Request):
     Dedicated screen for users to replace their initial placeholder password.
     Redirects unauthenticated users to /login.
     """
-    current_user = get_optional_user(request)
+    current_user = _user_or_none(request)
     if not current_user:
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url="/login?next=/set-password", status_code=302)
@@ -67,7 +75,7 @@ async def serve_crm(request: Request):
     Dedicated CRM Application Shell.
     Redirects unauthenticated users to /login immediately.
     """
-    current_user = get_optional_user(request)
+    current_user = _user_or_none(request)
     if not current_user:
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url="/login?next=" + request.url.path, status_code=302)

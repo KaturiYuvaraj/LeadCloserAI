@@ -58,6 +58,8 @@ def _callback_query(req: DialRequest) -> str:
     params = {"job_id": req.job_id, "lead_id": req.lead_id}
     if req.language:
         params["lang"] = req.language
+    if webhook_auth.enabled():  # sent back to us on every callback and on the audio stream
+        params["key"] = webhook_auth.secret()
     return urlencode(params)
 
 
@@ -95,8 +97,6 @@ class VobizDialer(BaseDialer):
         if not self.is_configured():
             raise DialError("Vobiz is not configured (VOBIZ_AUTH_ID, VOBIZ_AUTH_TOKEN, VOBIZ_CALLER_ID)")
         query = _callback_query(req)
-        if webhook_auth.enabled():  # Vobiz sends this back on every callback and on the audio stream
-            query += "&" + urlencode({"key": webhook_auth.secret()})
         body = {
             "from": self.caller_id,
             "to": req.to_number,
