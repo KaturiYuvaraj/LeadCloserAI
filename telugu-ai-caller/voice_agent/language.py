@@ -39,7 +39,7 @@ except ImportError:
 # bulbul:v4-flash speakers for all supported languages
 VOICES = {
     "te-IN": "kavitha_te_conversation",
-    "hi-IN": "aditya_hi_sales",
+    "hi-IN": "kavya_hi_conversational",  # female, to match the agent Shreya
     "en-IN": "simran_en_sales",
     "ta-IN": "kavitha_te_conversation",
     "kn-IN": "chaitra_kn_conversation",
