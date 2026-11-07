@@ -178,6 +178,8 @@ class CallQueue:
                 "status": result.status, "reason": result.reason,
                 "last_called_hours_ago": round((now - last_call).total_seconds() / 3600, 1) if last_call else None,
                 "outside_calling_hours": next_window_start(now, account) != now,
+                "calls_this_week": session.query(func.count(Call.id)).filter(
+                    Call.lead_id == lead_id, Call.created_at >= db_time(session, now - timedelta(days=7))).scalar() or 0,
             }
             if result.next_allowed_at:
                 out["next_allowed_at"] = as_utc(result.next_allowed_at).astimezone(IST).isoformat()

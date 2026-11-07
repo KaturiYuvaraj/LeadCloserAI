@@ -13,10 +13,11 @@ import main
 import routers.dialer as dialer_router
 from core.auth import create_access_token
 from core.db import SessionLocal
-from models import Account, Call, CallJob, Lead, User
+from models import Account, Call, CallJob, Lead, OptOut, User
 from tests.test_dialer import MONDAY_11_IST, job_for, make_lead, queue  # noqa: F401  (fixture)
 from voice_agent import credits
 from voice_agent import dialer as dialer_module
+from voice_agent.rules import check_can_call
 
 
 @pytest.fixture
@@ -138,18 +139,18 @@ def test_paused_dialer_stops_the_button(api, queue):
         queue.paused = False
 
 
-def test_weekly_limit_asks_to_schedule_instead_of_calling(api, queue):
+def test_weekly_limit_warns_a_person_but_still_binds_automatic_calls(api, queue):
     lead = make_lead(name="Weekly Wasim", phone="+919812300810")
     session = SessionLocal()
     for days_ago in (1, 2, 3, 4):
         session.add(Call(account_id=1, lead_id=lead, talk_seconds=30, created_at=MONDAY_11_IST - timedelta(days=days_ago)))
     session.commit()
+    account, row = session.get(Account, 1), session.get(Lead, lead)
+    assert check_can_call(session, account, row, MONDAY_11_IST, is_retry=True).reason == "weekly_limit"
     session.close()
-    first = api.post(f"/api/dialer/call-now/{lead}", json={}).json()
-    assert first["success"] is False and first["status"] == "deferred" and first["reason"] == "weekly_limit"
-    assert first["can_schedule"] and first["next_allowed_at"] and job_count(lead) == 0
-    scheduled = api.post(f"/api/dialer/call-now/{lead}", json={"schedule": True}).json()
-    assert scheduled["success"] and scheduled["status"] == "scheduled" and job_count(lead) == 1
+    check = api.get(f"/api/dialer/call-now/{lead}/check").json()
+    assert check["can_call"] and check["calls_this_week"] == 4
+    assert api.post(f"/api/dialer/call-now/{lead}", json={}).json()["status"] == "queued"
 
 
 def test_recent_call_is_a_warning_not_a_block(api, queue):
@@ -237,3 +238,37 @@ def test_simulated_calls_carry_the_webhook_key(monkeypatch):
     monkeypatch.setenv("VOBIZ_WEBHOOK_SECRET", "abc123")
     query = _callback_query(DialRequest(job_id=1, lead_id=2, to_number="+919812300817", language=None, max_call_seconds=60))
     assert "key=abc123" in query
+
+
+def test_call_a_number_adds_a_new_lead_once(api):
+    first = api.post("/api/dialer/lead-for-number", json={"phone": "98123 00821", "name": "Typed Teja", "language": "hi-IN"}).json()
+    assert first["created"] and first["phone"] == "+919812300821" and first["name"] == "Typed Teja"
+    again = api.post("/api/dialer/lead-for-number", json={"phone": "+91 9812300821"}).json()
+    assert not again["created"] and again["id"] == first["id"]
+    assert api.post(f"/api/dialer/call-now/{first['id']}", json={"language": "hi-IN"}).json()["success"]
+    assert job_for(first["id"]).language == "hi-IN"
+
+
+def test_call_a_number_without_a_name(api):
+    lead = api.post("/api/dialer/lead-for-number", json={"phone": "9812300822"}).json()
+    assert lead["name"] == "Manual call 9812300822"
+
+
+def test_bad_numbers_are_refused(api):
+    for phone in ("", "12345", "0000000000", "abc"):
+        assert api.post("/api/dialer/lead-for-number", json={"phone": phone}).status_code == 400
+
+
+def test_call_a_number_needs_login(queue):
+    assert TestClient(main.app).post("/api/dialer/lead-for-number", json={"phone": "9812300823"}).status_code == 401
+
+
+def test_a_do_not_call_number_stays_blocked(api):
+    session = SessionLocal()
+    session.add(OptOut(account_id=1, phone_e164="+919812300824", reason="test"))
+    session.commit()
+    session.close()
+    lead = api.post("/api/dialer/lead-for-number", json={"phone": "9812300824"}).json()
+    result = api.post(f"/api/dialer/call-now/{lead['id']}", json={}).json()
+    assert result["success"] is False and result["reason"] == "opted_out"
+

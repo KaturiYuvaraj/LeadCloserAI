@@ -1060,7 +1060,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const post = async () => {
       const resp = await fetch(`/api/dialer/call-now/${encodeURIComponent(lead.id)}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ consent_confirmed: !!opts.consent, schedule: !!opts.schedule }),
+        body: JSON.stringify({ consent_confirmed: !!opts.consent, schedule: !!opts.schedule, language: opts.language || undefined }),
       });
       if (resp.status === 401) { alert("Your session has ended. Please log in again."); location.href = "/login?next=" + location.pathname; return null; }
       const data = await resp.json();
@@ -1076,6 +1076,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (check.simulated) warn += "\n⚠ The phone line is in SIMULATION mode: no real phone will ring.";
       if (check.can_call && check.outside_calling_hours) warn += "\n⚠ It is outside your calling hours. Calls to customers at this time may break calling-time rules.";
       if (check.can_call && check.last_called_hours_ago !== null && check.last_called_hours_ago < 24) warn += `\n⚠ This lead was called ${check.last_called_hours_ago} hours ago.`;
+      if (check.can_call && check.calls_this_week >= 4) warn += `\n⚠ This number has had ${check.calls_this_week} calls in the last 7 days.`;
       if (check.status === "service_unavailable" || check.status === "paused" || (check.status === "blocked" && !check.needs_consent)) {
         alert(check.message); return;
       }
@@ -1099,6 +1100,57 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.dialSelectedLeadPhone = () => window.callLeadNow(selectedLead);
+
+  // "Call a number": type any number; it is added as a lead if new, then the normal Call now flow runs
+  window.openCallNumber = () => {
+    if (document.getElementById("callNumberBox")) return;
+    const overlay = document.createElement("div");
+    overlay.id = "callNumberBox";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:9997;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;";
+    overlay.innerHTML = `
+      <form style="background:#fff;color:#18181b;border-radius:14px;padding:20px;width:100%;max-width:360px;display:grid;gap:12px;font:500 14px system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.3);">
+        <div style="font-size:17px;font-weight:700;">📞 Call a number</div>
+        <label style="display:grid;gap:4px;">Phone number
+          <input id="callNumberPhone" type="tel" required autocomplete="off" placeholder="9876543210" style="padding:9px 10px;border:1px solid #d4d4d8;border-radius:8px;font-size:15px;">
+        </label>
+        <label style="display:grid;gap:4px;">Name (optional)
+          <input id="callNumberName" type="text" autocomplete="off" style="padding:9px 10px;border:1px solid #d4d4d8;border-radius:8px;font-size:15px;">
+        </label>
+        <label style="display:grid;gap:4px;">Start in
+          <select id="callNumberLang" style="padding:9px 10px;border:1px solid #d4d4d8;border-radius:8px;font-size:15px;">
+            <option value="te-IN">Telugu</option><option value="hi-IN">Hindi</option><option value="en-IN">English</option>
+          </select>
+        </label>
+        <div id="callNumberError" role="alert" style="color:#dc2626;font-size:13px;" hidden></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button type="button" id="callNumberCancel" style="background:#f4f4f5;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;">Cancel</button>
+          <button type="submit" style="background:#ea580c;color:#fff;border:0;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;">Call now</button>
+        </div>
+      </form>`;
+    document.body.appendChild(overlay);
+    const phone = document.getElementById("callNumberPhone");
+    const error = document.getElementById("callNumberError");
+    phone.focus();
+    document.getElementById("callNumberCancel").onclick = () => overlay.remove();
+    overlay.querySelector("form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      error.hidden = true;
+      const language = document.getElementById("callNumberLang").value;
+      try {
+        const resp = await fetch("/api/dialer/lead-for-number", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: phone.value, name: document.getElementById("callNumberName").value, language }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) { error.textContent = data.detail || "Could not use this number."; error.hidden = false; return; }
+        overlay.remove();
+        await window.callLeadNow(data, { language });
+      } catch (e) {
+        error.textContent = "Network error: " + e.message;
+        error.hidden = false;
+      }
+    });
+  };
 
   if (phoneCallBtn) phoneCallBtn.addEventListener("click", window.dialSelectedLeadPhone);
 

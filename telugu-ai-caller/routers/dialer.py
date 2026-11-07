@@ -3,6 +3,7 @@ Dialer Router - outbound calling (Phase 0).
 
   POST /api/dialer/campaigns         queue leads for calling (target: new | all | selected | lead_ids)
   POST /api/dialer/call-now/{id}     call one lead now (front of the queue)
+  POST /api/dialer/lead-for-number   find or add the lead for a typed number ("Call a number")
   GET  /api/dialer/status            provider, lines, counts by state, live calls, recent events
   GET  /api/dialer/jobs              queue entries (filter by state / lead)
   POST /api/dialer/pause | resume | stop
@@ -19,9 +20,11 @@ from loguru import logger
 
 from core.auth import get_current_user, get_optional_user, get_request_account_id
 from core.db import SessionLocal
+from database import clean_phone, create_lead
 from models import Call, CallJob, Lead
 from voice_agent import credits
 from voice_agent.dialer import call_queue
+from voice_agent.rules import is_dialable_number
 
 def _login_when_required(request: Request) -> None:
     """With AUTH_STRICT=true every dialer route needs a signed-in user (401 otherwise)."""
@@ -111,6 +114,7 @@ def evaluate_manual_call(lead_id: int, user: Dict[str, Any], consent_confirmed: 
     preview = call_queue.preview_call(lead_id, consent_confirmed)
     out["last_called_hours_ago"] = preview.get("last_called_hours_ago")
     out["outside_calling_hours"] = bool(preview.get("outside_calling_hours"))
+    out["calls_this_week"] = preview.get("calls_this_week", 0)
     reason = preview.get("reason")
     if preview["status"] == "blocked":
         return {**out, "can_call": False, "status": "blocked", "reason": reason,
@@ -141,6 +145,32 @@ async def start_manual_call(lead_id: int, user: Dict[str, Any], payload: Dict[st
                 + (f" · consent confirmed by them" if consent else ""))
     return {"success": True, "provider": call_queue.dialer.name, "status": status, "job_id": job_id, **counts,
             **{k: verdict[k] for k in ("lead", "simulated", "outside_calling_hours", "last_called_hours_ago") if k in verdict}}
+
+
+def lead_for_number(user: Dict[str, Any], phone: str, name: str, language: Optional[str]) -> Dict[str, Any]:
+    """The signed-in company's lead with this number, created if it's new."""
+    digits = "".join(ch for ch in str(phone or "") if ch.isdigit())
+    number = clean_phone(phone) if digits else ""
+    if not is_dialable_number(number) or not digits.strip("0"):
+        raise HTTPException(status_code=400, detail="Please enter a valid phone number, for example 9876543210.")
+    account_id = user.get("account_id")
+    session = SessionLocal()
+    try:
+        lead = session.query(Lead).filter(Lead.account_id == account_id, Lead.phone_e164 == number).first()
+        if lead:
+            return {"id": lead.id, "name": lead.name, "phone": lead.phone_e164, "created": False}
+    finally:
+        session.close()
+    label = (name or "").strip() or f"Manual call {number[-10:]}"
+    lead_id = create_lead({"name": label, "phone": number, "source": "manual", "preferred_language": language or "te-IN"},
+                          account_id=account_id)
+    return {"id": lead_id, "name": label, "phone": number, "created": True}
+
+
+@router.post("/api/dialer/lead-for-number")
+async def dialer_lead_for_number(payload: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):
+    """Dashboard "Call a number": find or add the lead; the page then runs the normal Call now flow."""
+    return await asyncio.to_thread(lead_for_number, user, payload.get("phone"), payload.get("name"), payload.get("language"))
 
 
 @router.get("/api/dialer/call-now/{lead_id}/check")
