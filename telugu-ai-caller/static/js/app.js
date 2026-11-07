@@ -1080,13 +1080,13 @@ document.addEventListener("DOMContentLoaded", () => {
         alert(check.message); return;
       }
       if (check.status === "blocked" && check.needs_consent) {
-        if (!confirm(`${check.message}\n\nDo you confirm that ${who} agreed to be called (or that this is your own test number)?\nYour confirmation is saved on the lead.`)) return;
+        if (!confirm(`${check.message}\n\nDo you confirm that ${who} agreed to be called (or that this is your own test number)?\nYour confirmation will initiate the live call via Vobiz carrier.`)) return;
         opts = { ...opts, consent: true };
       } else if (check.status === "deferred") {
         const when = check.next_allowed_at ? istTime(check.next_allowed_at) : "the next allowed time";
         if (!confirm(`${check.message}\n\nSchedule the call for ${when}?`)) return;
         opts = { ...opts, schedule: true };
-      } else if (!confirm(`Place a real phone call to ${who} now?\nThe AI employee will talk to them.${warn}`)) return;
+      } else if (!confirm(`Initiate live AI outbound call to ${who} via Vobiz Carrier Line (+917965482229)?\nThe AI voice employee will speak with the customer.${warn}`)) return;
 
       const data = await post();
       if (!data) return;

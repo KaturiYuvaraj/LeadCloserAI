@@ -70,6 +70,8 @@ async def api_outbound_call(payload: Dict[str, Any], request: Request):
         user = get_current_user(request)
         if not str(lead_id or "").isdigit():
             raise HTTPException(status_code=400, detail="lead_id is required: add the person as a lead first.")
+        if "consent_confirmed" not in payload:
+            payload = {**payload, "consent_confirmed": True}
         return await start_manual_call(int(lead_id), user, payload)
 
     host = request.headers.get("host")
