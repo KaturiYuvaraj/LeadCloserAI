@@ -963,44 +963,141 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 4. DIRECT PHONE DIALER
-  window.dialSelectedLeadPhone = async () => {
-    if (!selectedLead) {
-      alert("Please select a lead first from the pipeline.");
-      return;
-    }
-    const phone = selectedLead.phone;
-    if (!phone) {
-      alert("Selected lead has no phone number.");
-      return;
-    }
-
-    const lang = document.getElementById("voiceLangSelect")?.value || selectedLead.preferred_language || "te-IN";
-    const confirmed = confirm(`Initiate live outbound carrier phone call to ${selectedLead.name} (${phone}) via Vobiz AI Telephony?`);
-    if (!confirmed) return;
-
+  // 4. CALL NOW: a real phone call to a lead from the admin (dialer -> Vobiz -> the AI employee)
+  // Flow: preflight check (rules, last call, consent) -> plain-language confirm -> call -> live progress.
+  const CALL_STATES = {
+    queued: ["⏳ Waiting for a free line…", "info"],
+    scheduled: ["🕒 Scheduled for the next allowed time.", "info"],
+    dialing: ["📞 Dialing… the phone is ringing.", "info"],
+    in_progress: ["🟢 Answered. The AI is talking to the customer now.", "ok"],
+  };
+  const istTime = (iso) => {
+    if (!iso) return "";
     try {
-      const resp = await fetch(`/api/dialer/call-now/${selectedLead.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: phone,
-          consent_confirmed: true,
-          language: lang
-        })
-      });
-      const data = await resp.json();
-      if (data.success) {
-        alert(`📞 Outbound call initiated via ${data.provider || 'Vobiz'}!
-Phone: ${phone}
-Your phone will ring shortly.`);
-      } else {
-        alert(data.error || data.detail || "Failed to trigger phone call.");
+      const d = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : iso + "Z");
+      return d.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) + " IST";
+    } catch (_) { return iso; }
+  };
+  let callTrackerTimer = null;
+  window.showCallTracker = (text, tone, callId) => {
+    let box = document.getElementById("callTrackerBox");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "callTrackerBox";
+      box.setAttribute("role", "status");
+      box.style.cssText = "position:fixed;right:16px;bottom:16px;z-index:9998;max-width:340px;background:#18181b;color:#fff;" +
+        "border-radius:12px;padding:12px 14px;font:500 13.5px/1.45 system-ui,sans-serif;box-shadow:0 8px 28px rgba(0,0,0,.28);";
+      document.body.appendChild(box);
+    }
+    box.style.borderLeft = "5px solid " + ({ ok: "#22c55e", warn: "#f59e0b", bad: "#ef4444" }[tone] || "#60a5fa");
+    box.textContent = "";
+    const msg = document.createElement("div");
+    msg.textContent = text;  // text only: names and numbers come from user data
+    box.appendChild(msg);
+    const row = document.createElement("div");
+    row.style.cssText = "margin-top:8px;display:flex;gap:8px;";
+    if (callId) {
+      const open = document.createElement("button");
+      open.textContent = "Open call";
+      open.style.cssText = "background:#ea580c;color:#fff;border:0;border-radius:8px;padding:5px 10px;cursor:pointer;font-weight:600;";
+      open.onclick = () => window.openCallDetails(callId);
+      row.appendChild(open);
+    }
+    const close = document.createElement("button");
+    close.textContent = "Close";
+    close.style.cssText = "background:#3f3f46;color:#fff;border:0;border-radius:8px;padding:5px 10px;cursor:pointer;";
+    close.onclick = () => { box.remove(); if (callTrackerTimer) clearInterval(callTrackerTimer); };
+    row.appendChild(close);
+    box.appendChild(row);
+  };
+
+  window.trackCallJob = (jobId, lead) => {
+    if (callTrackerTimer) clearInterval(callTrackerTimer);
+    const who = `${lead.name || "the lead"} (${lead.phone || ""})`;
+    const startedAt = Date.now();
+    let completedSeenAt = 0;
+    const tick = async () => {
+      if (Date.now() - startedAt > 8 * 60 * 1000) { clearInterval(callTrackerTimer); return; }
+      let job;
+      try {
+        const resp = await fetch(`/api/dialer/jobs?lead_id=${encodeURIComponent(lead.id)}&limit=1`);
+        job = ((await resp.json()).jobs || [])[0];
+      } catch (_) { return; }
+      if (!job || (jobId && job.id < jobId)) return;
+      const live = CALL_STATES[job.state];
+      if (job.state === "queued" && job.last_disposition === "service_unavailable") {
+        clearInterval(callTrackerTimer);
+        return window.showCallTracker("⛔ Sarvam is unavailable, so the call was stopped and the lead stays in the queue.", "bad");
       }
+      if (live) return window.showCallTracker(`${live[0]} ${who}`, live[1]);
+      // the carrier's hangup completes the job about a second before the engine has saved the call record
+      if (job.state === "completed" && !job.call_id && Date.now() - startedAt < 6 * 60 * 1000) {
+        completedSeenAt = completedSeenAt || Date.now();
+        if (Date.now() - completedSeenAt < 25000) return window.showCallTracker(`⏳ The call has ended. Saving the conversation… ${who}`, "info");
+      }
+      clearInterval(callTrackerTimer);
+      if (job.state === "completed") {
+        window.showCallTracker(`✅ Call finished with ${who}: ${(job.last_disposition || "completed").replace(/_/g, " ")}.`, "ok", job.call_id);
+        try { await refreshLeads(); } catch (_) {}
+      } else if (job.state === "retry_scheduled") {
+        window.showCallTracker(`📵 ${who} did not answer. It will be retried ${job.next_attempt_at ? "at " + istTime(job.next_attempt_at) : "later"}.`, "warn");
+      } else if (job.state === "not_reachable") {
+        window.showCallTracker(`📵 ${who} could not be reached.`, "warn");
+      } else {
+        window.showCallTracker(`⛔ The call to ${who} did not happen (${(job.block_reason || job.state || "").replace(/_/g, " ")}).`, "bad");
+      }
+    };
+    window.showCallTracker(`📞 Starting the call to ${who}…`, "info");
+    callTrackerTimer = setInterval(tick, 2000);
+    tick();
+  };
+
+  window.callLeadNow = async (lead, opts = {}) => {
+    if (!lead || !lead.id) { alert("Please pick a lead first."); return; }
+    if (!lead.phone) { alert("This lead has no phone number."); return; }
+    const who = `${lead.name || "this lead"} (${lead.phone})`;
+    const post = async () => {
+      const resp = await fetch(`/api/dialer/call-now/${encodeURIComponent(lead.id)}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consent_confirmed: !!opts.consent, schedule: !!opts.schedule }),
+      });
+      if (resp.status === 401) { alert("Your session has ended. Please log in again."); location.href = "/login?next=" + location.pathname; return null; }
+      const data = await resp.json();
+      if (!resp.ok) { alert(data.detail || "Could not start the call."); return null; }
+      return data;
+    };
+    try {
+      const checkResp = await fetch(`/api/dialer/call-now/${encodeURIComponent(lead.id)}/check`);
+      if (checkResp.status === 401) { alert("Your session has ended. Please log in again."); location.href = "/login?next=" + location.pathname; return; }
+      const check = await checkResp.json();
+      if (!checkResp.ok) { alert(check.detail || "Could not check this lead."); return; }
+      let warn = "";
+      if (check.simulated) warn += "\n⚠ The phone line is in SIMULATION mode: no real phone will ring.";
+      if (check.can_call && check.outside_calling_hours) warn += "\n⚠ It is outside your calling hours. Calls to customers at this time may break calling-time rules.";
+      if (check.can_call && check.last_called_hours_ago !== null && check.last_called_hours_ago < 24) warn += `\n⚠ This lead was called ${check.last_called_hours_ago} hours ago.`;
+      if (check.status === "service_unavailable" || check.status === "paused" || (check.status === "blocked" && !check.needs_consent)) {
+        alert(check.message); return;
+      }
+      if (check.status === "blocked" && check.needs_consent) {
+        if (!confirm(`${check.message}\n\nDo you confirm that ${who} agreed to be called (or that this is your own test number)?\nYour confirmation is saved on the lead.`)) return;
+        opts = { ...opts, consent: true };
+      } else if (check.status === "deferred") {
+        const when = check.next_allowed_at ? istTime(check.next_allowed_at) : "the next allowed time";
+        if (!confirm(`${check.message}\n\nSchedule the call for ${when}?`)) return;
+        opts = { ...opts, schedule: true };
+      } else if (!confirm(`Place a real phone call to ${who} now?\nThe AI employee will talk to them.${warn}`)) return;
+
+      const data = await post();
+      if (!data) return;
+      if (!data.success) { alert(data.message || "The call could not be started."); return; }
+      if (data.status === "scheduled") { window.showCallTracker(`🕒 The call to ${who} is scheduled.`, "info"); return; }
+      window.trackCallJob(data.job_id, lead);
     } catch (e) {
-      alert("Error initiating phone call: " + e.message);
+      alert("Error starting the call: " + e.message);
     }
   };
+
+  window.dialSelectedLeadPhone = () => window.callLeadNow(selectedLead);
 
   if (phoneCallBtn) phoneCallBtn.addEventListener("click", window.dialSelectedLeadPhone);
 
@@ -1295,8 +1392,8 @@ Your phone will ring shortly.`);
           </td>
           <td style="min-width: 140px;">
             <div style="display: flex; gap: 6px;">
-              <button class="crm-action-pill" onclick='window.selectLead(${leadJson}); window.switchCrmView("calling");' style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #ea580c; border-color: #fed7aa; background: #fff7ed; cursor: pointer;">
-                Dial 📞
+              <button class="crm-action-pill" onclick='window.callLeadNow(${leadJson})' title="Place a real phone call now" style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #ea580c; border-color: #fed7aa; background: #fff7ed; cursor: pointer;">
+                Call now 📞
               </button>
               <button class="crm-action-pill" onclick='window.openBusinessIntelModal(${leadJson})' style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #0284c7; border-color: #bae6fd; background: #f0f9ff; cursor: pointer;" title="View Business & Decision Maker Intel">
                 Intel 🔍
@@ -3844,8 +3941,7 @@ Lead updated to DEMO_BOOKED.`);
     if (dialBtn) {
       dialBtn.onclick = () => {
         window.closeBusinessIntelModal();
-        window.selectLead(lead);
-        window.switchCrmView("calling");
+        window.callLeadNow(lead);
       };
     }
 

@@ -106,8 +106,13 @@ def credit_balance(session: Session, account_id: int) -> float:
 
 
 def check_can_call(session: Session, account: Account, lead: Lead, now_utc: datetime,
-                   is_retry: bool = False) -> RuleResult:
-    """Run every rule in order; the first one that fails decides."""
+                   is_retry: bool = False, manual: bool = False) -> RuleResult:
+    """
+    Run every rule in order; the first one that fails decides.
+    is_retry: a retry / requested callback / follow-up (skips the "called recently" gap).
+    manual: a person pressed "Call now" (skips calling hours as well; the person is responsible).
+    Automatic dials, including retries and follow-ups, always keep the calling hours.
+    """
     # Never call
     if not account.calling_approved:
         return RuleResult("blocked", "account_not_approved")
@@ -123,8 +128,8 @@ def check_can_call(session: Session, account: Account, lead: Lead, now_utc: date
     if REQUIRE_CONSENT and not lead.consent_source and (lead.source or "").lower() not in SELF_INITIATED_SOURCES:
         return RuleResult("blocked", "no_consent")
 
-    # Not now (only enforce calling hours for automatic batch campaigns, not manual dials or retries)
-    if not is_retry:
+    # Not now (calling hours bind every automatic dial; only a person's "Call now" may skip them)
+    if not manual:
         window_start = next_window_start(now_utc, account)
         if window_start != now_utc:
             return RuleResult("deferred", "outside_calling_hours", window_start)

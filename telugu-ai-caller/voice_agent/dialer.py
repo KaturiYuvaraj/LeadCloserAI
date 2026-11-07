@@ -25,9 +25,11 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from loguru import logger
 
+from sqlalchemy import func
+
 from core.db import SessionLocal
 from database import save_call_record
-from models import Account, CallJob, Lead
+from models import Account, Call, CallJob, Lead
 from voice_agent import credits, followups
 from voice_agent.outbound import DialError, DialRequest, get_dialer
 from voice_agent.rules import IST, as_utc, check_can_call, db_time, next_window_start
@@ -96,10 +98,14 @@ class CallQueue:
     # ------------------------------------------------------------------ enqueue
     def enqueue(self, lead_ids: Iterable[int], campaign_id: Optional[int] = None, priority: int = 5,
                 consent_confirmed: bool = False, language: Optional[str] = None,
-                max_attempts: int = 3) -> Dict[str, int]:
+                max_attempts: int = 3, consent_by: Optional[str] = None) -> Dict[str, int]:
         """Queue leads for calling. Leads that already have an open job are skipped."""
         counts = {"queued": 0, "already_queued": 0, "not_found": 0}
         now = utcnow()
+
+        def consent_label() -> str:
+            stamp = f"{now.astimezone(IST):%Y-%m-%d %H:%M} IST"
+            return f"confirmed_by {consent_by} {stamp}" if consent_by else f"campaign_confirmed {stamp}"
         session = SessionLocal()
         try:
             for lead_id in lead_ids:
@@ -113,9 +119,11 @@ class CallQueue:
                 if open_jobs:
                     if priority == 0:
                         # On-demand manual "Call Now": reset open job(s) to dial immediately
+                        reset = 0
                         for oj in open_jobs:
                             if oj.state in ACTIVE_STATES:
                                 continue  # Already on the phone right now
+                            reset += 1
                             oj.state = "queued"
                             oj.priority = 0
                             oj.next_attempt_at = db_time(session, now)
@@ -123,14 +131,14 @@ class CallQueue:
                             if language:
                                 oj.language = language
                             if consent_confirmed and not lead.consent_source:
-                                lead.consent_source = f"campaign_confirmed {now.astimezone(IST):%Y-%m-%d %H:%M} IST"
-                        counts["queued"] += 1
+                                lead.consent_source = consent_label()
+                        counts["queued" if reset else "already_queued"] += 1
                         continue
                     else:
                         counts["already_queued"] += 1
                         continue
                 if consent_confirmed and not lead.consent_source:
-                    lead.consent_source = f"campaign_confirmed {now.astimezone(IST):%Y-%m-%d %H:%M} IST"
+                    lead.consent_source = consent_label()
                 session.add(CallJob(
                     account_id=lead.account_id, lead_id=lead.id, campaign_id=campaign_id,
                     phone_e164=lead.phone_e164, language=language, provider=self.dialer.name,
@@ -147,6 +155,45 @@ class CallQueue:
             self.log(f"Queued {counts['queued']} lead(s) for calling"
                      + (f" · {counts['already_queued']} already in queue" if counts["already_queued"] else ""))
         return counts
+
+    def preview_call(self, lead_id: int, consent_confirmed: bool = False) -> Dict[str, Any]:
+        """
+        What the calling rules say about a person pressing "Call now" on this lead right now.
+        Nothing is saved. status: allowed | blocked | deferred | not_found (+ reason, next_allowed_at,
+        and how long ago the lead was last called).
+        """
+        session = SessionLocal()
+        try:
+            lead = session.get(Lead, lead_id)
+            if lead is None:
+                return {"status": "not_found"}
+            account = session.get(Account, lead.account_id)
+            now = utcnow()
+            last_call = as_utc(session.query(func.max(Call.created_at)).filter(Call.lead_id == lead.id).scalar())
+            session.expunge(lead)  # the consent assumption below must never be written
+            if consent_confirmed and not lead.consent_source:
+                lead.consent_source = "confirmed_in_dashboard"
+            result = check_can_call(session, account, lead, now, is_retry=True, manual=True)
+            out: Dict[str, Any] = {
+                "status": result.status, "reason": result.reason,
+                "last_called_hours_ago": round((now - last_call).total_seconds() / 3600, 1) if last_call else None,
+                "outside_calling_hours": next_window_start(now, account) != now,
+            }
+            if result.next_allowed_at:
+                out["next_allowed_at"] = as_utc(result.next_allowed_at).astimezone(IST).isoformat()
+            return out
+        finally:
+            session.close()
+
+    def open_job_id(self, lead_id: int) -> Optional[int]:
+        session = SessionLocal()
+        try:
+            job = session.query(CallJob).filter(
+                CallJob.lead_id == lead_id, CallJob.state.in_(OPEN_STATES)
+            ).order_by(CallJob.id.desc()).first()
+            return job.id if job else None
+        finally:
+            session.close()
 
     def _has_open_jobs(self) -> bool:
         session = SessionLocal()
@@ -212,7 +259,7 @@ class CallQueue:
                 # is not held back by "called recently"
                 is_retry = job.attempt > 0 or job.priority == 0 or job.last_disposition in ("callback_requested", SERVICE_FAILED,
                                                                        followups.FOLLOWUP_DISPOSITION)
-                result = check_can_call(session, account, lead, now, is_retry=is_retry)
+                result = check_can_call(session, account, lead, now, is_retry=is_retry, manual=job.priority == 0)
                 if result.status == "blocked":
                     job.state, job.block_reason = "blocked", result.reason
                     self.log(f"⛔ Not calling {lead.name}: {result.reason.replace('_', ' ')}", "warning", lead.id)
