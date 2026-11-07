@@ -115,6 +115,9 @@ MAX_CALL_SECS = int(os.getenv("VOICE_MAX_CALL_SECONDS", "600"))   # unless the A
 WRAP_UP_BEFORE_SECS = 45
 RECORDINGS_DIR = Path(os.getenv("RECORDINGS_DIR") or Path(__file__).resolve().parent.parent / "recordings")
 
+# Sarvam rejects anything below 30: every voice request then fails and the customer hears silence
+TTS_MIN_BUFFER_CHARS = 30
+
 DISCLOSURE = {
     "te-IN": "ఈ కాల్ రికార్డ్ చేయబడుతుంది.",
     "hi-IN": "यह कॉल रिकॉर्ड हो रही है, मैं एक AI असिस्टेंट हूँ।",
@@ -799,7 +802,7 @@ class BaseCallSession:
                 voice=self.voice_for(self.language),
                 language=self.language,
                 pace=tts_pace,
-                min_buffer_size=15,
+                min_buffer_size=TTS_MIN_BUFFER_CHARS,
                 max_chunk_length=120,
             ),
         )
