@@ -99,7 +99,7 @@ from voice_agent.language import VOICES, LanguageRouter
 from voice_agent.rules import IST
 from voice_agent.vobiz import VOBIZ_SAMPLE_RATE, VobizFrameSerializer
 
-STT_MODEL = os.getenv("VOICE_STT_MODEL", "saaras:v3")
+STT_MODEL = os.getenv("VOICE_STT_MODEL", "saaras:v4")
 LLM_MODEL = os.getenv("VOICE_LLM_MODEL", "sarvam-105b-conversations")
 TTS_MODEL = os.getenv("VOICE_TTS_MODEL", "bulbul:v4-flash")
 PHONE_SAMPLE_RATE = 8000  # Exotel Voicebot streams 8 kHz mono PCM
