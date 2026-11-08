@@ -4,6 +4,7 @@ Dialer Router - outbound calling (Phase 0).
   POST /api/dialer/campaigns         queue leads for calling (target: new | all | selected | lead_ids)
   POST /api/dialer/call-now/{id}     call one lead now (front of the queue)
   POST /api/dialer/lead-for-number   find or add the lead for a typed number ("Call a number")
+  GET|POST /api/dialer/engine        which engine places calls: ours (Shreya) or Sarvam's agent (Shriya)
   GET  /api/dialer/status            provider, lines, counts by state, live calls, recent events
   GET  /api/dialer/jobs              queue entries (filter by state / lead)
   POST /api/dialer/pause | resume | stop
@@ -22,7 +23,7 @@ from core.auth import get_current_user, get_optional_user, get_request_account_i
 from core.db import SessionLocal
 from database import clean_phone, create_lead
 from models import Call, CallJob, Lead
-from voice_agent import credits
+from voice_agent import credits, samvaad
 from voice_agent.dialer import call_queue
 from voice_agent.rules import is_dialable_number
 
@@ -104,8 +105,10 @@ def evaluate_manual_call(lead_id: int, user: Dict[str, Any], consent_confirmed: 
     the right warning) and by the call itself (the server never trusts what the page checked).
     """
     lead = _lead_of_user(lead_id, user)
-    out: Dict[str, Any] = {"lead": lead, "provider": call_queue.dialer.name,
-                           "simulated": call_queue.dialer.name == "fake"}
+    engine = samvaad.current_engine()
+    out: Dict[str, Any] = {"lead": lead, "provider": call_queue.dialer.name, "engine": engine,
+                           "engine_label": samvaad.ENGINES[engine],
+                           "simulated": engine == "pipecat" and call_queue.dialer.name == "fake"}
     block = credits.blocked()
     if block:
         return {**out, "can_call": False, "status": "service_unavailable", "message": block["message"]}
@@ -183,6 +186,22 @@ async def dialer_call_now_check(lead_id: int, user: Dict[str, Any] = Depends(get
 async def dialer_call_now(lead_id: int, payload: Optional[Dict[str, Any]] = None,
                           user: Dict[str, Any] = Depends(get_current_user)):
     return await start_manual_call(lead_id, user, payload or {})
+
+
+@router.get("/api/dialer/engine")
+async def dialer_engine(user: Dict[str, Any] = Depends(get_current_user)):
+    """Which engine places the next calls: our engine, or Sarvam's own agent."""
+    return samvaad.engine_options()
+
+
+@router.post("/api/dialer/engine")
+async def dialer_set_engine(payload: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):
+    try:
+        samvaad.set_engine(str(payload.get("engine") or ""))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    logger.info(f"Calling engine set to {samvaad.current_engine()} by {user.get('email') or user.get('id')}")
+    return samvaad.engine_options()
 
 
 @router.get("/api/dialer/status")

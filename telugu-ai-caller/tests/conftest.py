@@ -23,7 +23,10 @@ _TEST_DB = Path(tempfile.mkdtemp(prefix="leadcloser-tests-")) / "test.db"
 os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB.as_posix()}"
 os.environ["DIALER_PROVIDER"] = "fake"
 os.environ["RECORDINGS_DIR"] = str(_TEST_DB.parent / "recordings")
+os.environ["CALL_ENGINE_FILE"] = str(_TEST_DB.parent / "call_engine.json")
 for _secret in ("VOBIZ_AUTH_ID", "VOBIZ_AUTH_TOKEN", "VOBIZ_CALLER_ID", "VOBIZ_WEBHOOK_SECRET",
+                "SAMVAAD_API_KEY", "SAMVAAD_ORG_ID", "SAMVAAD_WORKSPACE_ID", "SAMVAAD_APP_ID",
+                "SAMVAAD_APP_VERSION", "SAMVAAD_CONNECTION_ID", "SAMVAAD_AGENT_NUMBER",
                 "EXOTEL_ACCOUNT_SID", "EXOTEL_API_KEY", "EXOTEL_API_TOKEN",
                 "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN",
                 "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID"):

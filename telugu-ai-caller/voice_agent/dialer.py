@@ -13,6 +13,8 @@ Leads are queued as CallJob rows (restart-safe). A background loop runs every se
        no answer / busy / failed → retry_scheduled (+2 h, next day at another time) → not_reachable
   5. follow-ups (voice_agent/followups.py): after a conversation, or once a lead stays
      unreachable, the next call is queued on the smart cadence until the lead decides
+  6. engine (voice_agent/samvaad.py): each job is dialled by the engine chosen on the dashboard,
+     our Pipecat engine through the phone provider, or Sarvam's own agent (test calls, no follow-ups)
 
 All database work runs in a worker thread so live calls' audio is never blocked.
 """
@@ -25,12 +27,12 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from loguru import logger
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from core.db import SessionLocal
 from database import save_call_record
 from models import Account, Call, CallJob, Lead
-from voice_agent import credits, followups
+from voice_agent import credits, followups, samvaad
 from voice_agent.outbound import DialError, DialRequest, get_dialer
 from voice_agent.rules import IST, as_utc, check_can_call, db_time, next_window_start
 
@@ -50,6 +52,8 @@ RETRY_ENGINE_OUTCOMES = {"voicemail", "ivr", "unreachable", "no_response"}
 # Our side failed (Sarvam credits finished / key rejected): the lead goes back in the queue,
 # and the attempt does not count against it
 SERVICE_FAILED = "service_unavailable"
+# Sarvam Agent statuses for calls that never connected
+NOT_CONNECTED_LABEL = {"no_answer": "no_answer", "busy": "busy", "failed": "failed"}
 
 
 def utcnow() -> datetime:
@@ -59,6 +63,9 @@ def utcnow() -> datetime:
 class CallQueue:
     def __init__(self):
         self.dialer = get_dialer()
+        self.samvaad = samvaad.SamvaadDialer()
+        # Sarvam reports only after the call ends, so its dials wait much longer than a ringing phone
+        self.samvaad_report_timeout = timedelta(minutes=int(os.getenv("SAMVAAD_REPORT_TIMEOUT_MINUTES", "30")))
         self.max_lines = int(os.getenv("DIALER_MAX_LINES", "3"))
         self.dial_timeout = timedelta(seconds=int(os.getenv("DIALER_DIAL_TIMEOUT_SECONDS", "120")))
         self.paused = False
@@ -224,10 +231,20 @@ class CallQueue:
         try:
             cutoff = db_time(session, utcnow() - self.dial_timeout)
             stale = session.query(CallJob).filter(
-                CallJob.state == "dialing", CallJob.dialed_at < cutoff
+                CallJob.state == "dialing", CallJob.dialed_at < cutoff,
+                or_(CallJob.provider.is_(None), CallJob.provider != samvaad.SamvaadDialer.name),
             ).all()
             for job in stale:
                 self._schedule_retry(session, job, "no_answer", "no callback from provider")
+            # never redialled: Sarvam may have talked (and billed) without reporting back
+            unreported = session.query(CallJob).filter(
+                CallJob.state == "dialing", CallJob.provider == samvaad.SamvaadDialer.name,
+                CallJob.dialed_at < db_time(session, utcnow() - self.samvaad_report_timeout),
+            ).all()
+            for job in unreported:
+                job.state, job.last_disposition = "completed", "no_report"
+                job.finished_at = db_time(session, utcnow())
+                self.log("⚠️ Sarvam Agent never reported this call · check Samvaad's call logs", "warning", job.lead_id)
             session.commit()
         finally:
             session.close()
@@ -247,6 +264,7 @@ class CallQueue:
             ).order_by(CallJob.priority, CallJob.next_attempt_at, CallJob.id).limit(free_lines * 5).all()
 
             accounts: Dict[int, Account] = {}
+            engine = samvaad.current_engine()
             for job in due:
                 if len(claimed) >= free_lines:
                     break
@@ -277,13 +295,13 @@ class CallQueue:
 
                 job.state, job.block_reason = "dialing", None
                 job.attempt += 1
-                job.provider = self.dialer.name
+                job.provider = self.samvaad.name if engine == "samvaad" else self.dialer.name
                 job.dialed_at = db_time(session, now)
                 claimed.append({
                     "id": job.id, "lead_id": lead.id, "lead_name": lead.name,
                     "phone": lead.phone_e164, "attempt": job.attempt,
                     "language": job.language or (lead.variables or {}).get("preferred_language"),
-                    "max_call_seconds": account.max_call_seconds or 600,
+                    "max_call_seconds": account.max_call_seconds or 600, "provider": job.provider,
                 })
             session.commit()
         finally:
@@ -292,15 +310,16 @@ class CallQueue:
 
     async def _dial(self, job: Dict[str, Any]):
         req = DialRequest(job_id=job["id"], lead_id=job["lead_id"], to_number=job["phone"],
-                          language=job["language"], max_call_seconds=job["max_call_seconds"])
+                          language=job["language"], max_call_seconds=job["max_call_seconds"], lead_name=job["lead_name"])
+        dialer = self.samvaad if job.get("provider") == self.samvaad.name else self.dialer
         try:
-            provider_call_id = await self.dialer.dial(req)
+            provider_call_id = await dialer.dial(req)
         except Exception as e:  # DialError or network failure
             self.log(f"⚠️ Could not dial {job['lead_name']}: {e}", "error", job["lead_id"])
             await asyncio.to_thread(self._update_job, job["id"], retry=("failed", str(e)))
             return
         await asyncio.to_thread(self._update_job, job["id"], provider_call_id=provider_call_id)
-        self.log(f"📞 Dialing {job['lead_name']} ({job['phone']}) · attempt {job['attempt']} · {self.dialer.name}",
+        self.log(f"📞 Dialing {job['lead_name']} ({job['phone']}) · attempt {job['attempt']} · {dialer.name}",
                  "info", job["lead_id"])
 
     # ------------------------------------------------------------------ job updates
@@ -423,6 +442,51 @@ class CallQueue:
         except Exception as e:
             logger.warning(f"Could not record unanswered attempt: {e}")
 
+    def on_samvaad_result(self, job_id: int, payload: Dict[str, Any]) -> Optional[int]:
+        """Sarvam's agent finished a call (or couldn't connect): save it and close the job, no follow-ups."""
+        status = str(payload.get("status") or "").strip().lower()
+        connected = status == "connected"
+        disposition = "completed" if connected else NOT_CONNECTED_LABEL.get(status, "failed")
+        session = SessionLocal()
+        try:
+            job = session.get(CallJob, job_id)
+            if not job or job.provider != self.samvaad.name or job.state in ("completed", "cancelled", "not_reachable"):
+                return None
+            lead = session.get(Lead, job.lead_id)
+            name = lead.name if lead else str(job.lead_id)
+            lead_id, phone = job.lead_id, (lead.phone_e164 if lead else job.phone_e164)
+            job.state = "completed" if connected else "not_reachable"
+            job.last_disposition = disposition
+            job.last_error = None if connected else (payload.get("failure_reason") or None)
+            job.finished_at = db_time(session, utcnow())
+            session.commit()
+        finally:
+            session.close()
+        if connected:
+            call_id = save_call_record(samvaad.result_to_call(payload, lead_id, phone))
+        else:
+            call_id = save_call_record({
+                "lead_id": lead_id, "call_type": "phone", "phone_number": phone, "duration_seconds": 0,
+                "status": disposition, "deal_stage": disposition, "transcript": "[]",
+                "summary": f"Sarvam Agent call not connected ({disposition.replace('_', ' ')}).",
+            })
+        self._set_call_id(job_id, call_id)
+        if connected:
+            self.log(f"✅ Sarvam Agent call with {name} done · {int(payload.get('duration') or 0)} s", "success", lead_id)
+        else:
+            self.log(f"📵 Sarvam Agent could not reach {name} ({disposition.replace('_', ' ')})", "warning", lead_id)
+        return call_id
+
+    def _set_call_id(self, job_id: int, call_id: Optional[int]):
+        session = SessionLocal()
+        try:
+            job = session.get(CallJob, job_id)
+            if job:
+                job.call_id = call_id
+                session.commit()
+        finally:
+            session.close()
+
     # ------------------------------------------------------------------ controls
     def pause(self):
         self.paused = True
@@ -478,6 +542,7 @@ class CallQueue:
         done = sum(counts.get(s, 0) for s in ("completed", "not_reachable", "blocked", "cancelled"))
         return {
             "provider": self.dialer.name,
+            "engine": samvaad.current_engine(),
             "max_lines": self.max_lines,
             "paused": self.paused,
             "service_block": credits.blocked(),

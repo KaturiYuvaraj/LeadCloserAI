@@ -3578,6 +3578,9 @@ input[type="checkbox"] {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
               <span>Export</span>
             </a>
+            <select id="callEngineSelect" class="crm-action-pill" onchange="window.changeCallEngine(this)" aria-label="Calling engine" title="Engine for the next calls" style="font-weight:600;cursor:pointer;">
+              <option value="pipecat">Our engine (Shreya)</option>
+            </select>
             <button class="crm-action-pill" id="openCallNumberBtn" onclick="window.openCallNumber()" title="Type any number and call it now" style="color:#ea580c;border-color:#fed7aa;background:#fff7ed;font-weight:700;">
               <span>📞 Call a number</span>
             </button>
@@ -6156,7 +6159,7 @@ input[type="checkbox"] {
   <script src="/api/voice/config.js"></script>
   <script src="/static/js/call_client.js"></script>
   <script src="/static/js/pipecat_call_client.js?v=2.0"></script>
-  <script src="/static/js/app.js?v=5.3.0"></script>
+  <script src="/static/js/app.js?v=5.4.0"></script>
   <script>
     // Initialize lead selection safely once DOMContentLoaded has finished
     document.addEventListener("DOMContentLoaded", function() {

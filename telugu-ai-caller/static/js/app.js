@@ -1025,6 +1025,9 @@ document.addEventListener("DOMContentLoaded", () => {
         job = ((await resp.json()).jobs || []).find((j) => j.id === jobId);
       } catch (_) { return; }
       if (!job) return;
+      if (job.provider === "samvaad" && job.state === "dialing") {
+        return window.showCallTracker(`📞 Sarvam Agent (Shriya) is calling ${who}. The result appears here when the call ends.`, "info");
+      }
       const live = CALL_STATES[job.state];
       if (job.state === "queued" && job.last_disposition === "service_unavailable") {
         clearInterval(callTrackerTimer);
@@ -1087,7 +1090,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const when = check.next_allowed_at ? istTime(check.next_allowed_at) : "the next allowed time";
         if (!confirm(`${check.message}\n\nSchedule the call for ${when}?`)) return;
         opts = { ...opts, schedule: true };
-      } else if (!confirm(`Initiate live AI outbound call to ${who} via Vobiz Carrier Line (+917965482229)?\nThe AI voice employee will speak with the customer.${warn}`)) return;
+      } else if (!confirm(`Initiate live AI outbound call to ${who} via Vobiz Carrier Line (+917965482229)?\nEngine: ${check.engine_label || "Our engine (Shreya)"}${check.engine === "samvaad" ? " · billed by Sarvam, about ₹3.50 a minute" : ""}.${warn}`)) return;
 
       const data = await post();
       if (!data) return;
@@ -1100,6 +1103,31 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.dialSelectedLeadPhone = () => window.callLeadNow(selectedLead);
+
+  // Engine picker: our engine (Shreya) or Sarvam's own agent (Shriya) places the next calls
+  window.loadCallEngine = async () => {
+    const select = document.getElementById("callEngineSelect");
+    if (!select) return;
+    try {
+      const resp = await fetch("/api/dialer/engine");
+      if (!resp.ok) return;
+      const data = await resp.json();
+      select.innerHTML = data.options.map((o) =>
+        `<option value="${o.id}" ${o.ready ? "" : "disabled"}>${o.label}${o.ready ? "" : " (not set up)"}</option>`).join("");
+      select.value = data.engine;
+      const notReady = data.options.find((o) => !o.ready);
+      select.title = notReady ? `${notReady.label} needs in .env: ${notReady.missing.join(", ")}` : "Engine for the next calls";
+    } catch (_) {}
+  };
+  window.changeCallEngine = async (select) => {
+    const resp = await fetch("/api/dialer/engine", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ engine: select.value }),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) alert(data.detail || "Could not change the engine.");
+    await window.loadCallEngine();
+  };
+  window.loadCallEngine();
 
   // "Call a number": type any number; it is added as a lead if new, then the normal Call now flow runs
   window.openCallNumber = () => {

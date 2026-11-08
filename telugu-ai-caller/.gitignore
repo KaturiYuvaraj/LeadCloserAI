@@ -19,3 +19,6 @@ leads_crm.db
 
 # Call recordings (stored locally, never committed)
 recordings/
+
+# Calling engine chosen on the dashboard (local setting)
+call_engine.json

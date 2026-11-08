@@ -308,6 +308,27 @@ async def vobiz_hangup(request: Request):
     return {"success": True}
 
 
+@router.post("/api/voice/samvaad/webhook")
+async def samvaad_webhook(request: Request):
+    """Sarvam's agent (Shriya) reports a call it placed for us: saved like any other call."""
+    params = dict(request.query_params)
+    if not webhook_auth.allowed(params):
+        logger.warning(f"Sarvam Agent webhook rejected: wrong or missing key (from {request.client.host if request.client else '?'})")
+        return Response(status_code=403, content="forbidden")
+    try:
+        payload = await request.json()
+    except ValueError:
+        return Response(status_code=400, content="expected JSON")
+    if not isinstance(payload, dict):
+        return Response(status_code=400, content="expected a JSON object")
+    metadata = (payload.get("webhook_config") or {}).get("metadata") or {}
+    job_id = str(params.get("job_id") or metadata.get("job_id") or "")
+    logger.info(f"Sarvam Agent result · job {job_id} · status {payload.get('status')} · {payload.get('duration')}s")
+    if job_id.isdigit():
+        await asyncio.to_thread(call_queue.on_samvaad_result, int(job_id), payload)
+    return {"success": True}
+
+
 @router.websocket("/api/voice/vobiz/stream")
 async def vobiz_voice_stream(websocket: WebSocket):
     """Vobiz bidirectional stream: one phone call on the real-time engine."""

@@ -781,8 +781,11 @@ class BaseCallSession:
             await self._finish_call()
 
     def transport_audio_filter(self):
-        """RNNoise noise reduction for phone lines (VOICE_NOISE_FILTER=off disables it)."""
-        if self.call_type == "web" or not _env_on("VOICE_NOISE_FILTER"):
+        """
+        RNNoise noise reduction for phone lines, off unless VOICE_NOISE_FILTER=on: on real calls it
+        removed over 99% of the customer's speech level (7 Nov), so the agent heard "ok" or nothing.
+        """
+        if self.call_type == "web" or not _env_on("VOICE_NOISE_FILTER", "off"):
             return None
         try:
             from pipecat.audio.filters.rnnoise_filter import RNNoiseFilter
