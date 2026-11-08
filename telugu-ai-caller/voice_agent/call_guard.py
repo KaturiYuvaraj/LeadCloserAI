@@ -66,9 +66,9 @@ def classify_automated(text: str) -> Optional[str]:
 
 HOLD_PATTERNS = [
     r"\b(one|1|a)\s+(minute|min|sec|second|moment)\b", r"\bjust\s+a\s+(sec|second|minute|moment)\b",
-    r"\bhold\s+on\b", r"^\s*wait\b", r"\bgive\s+me\s+a\s+(minute|second|moment)\b", r"\blet\s+me\s+check\b",
+    r"\bhold\s+on\b", r"^\s*wait\b", r"\bwait\s+wait\b", r"\bgive\s+me\s+a\s+(minute|second|moment)\b", r"\blet\s+me\s+check\b",
     r"एक\s+(मिनट|सेकंड|सेकेंड)", r"रुकि?ए|रुको|ज़?रा\s+रुक", r"\bek\s+(minute|min|second)\b", r"\bruk(o|iye|na)\b",
-    r"ఒక్?క?\s*(నిమిషం|సెకన్|సెకండ్)", r"ఆగండి|ఉండండి", r"\bok+a\s+nimisham\b", r"\baagandi\b|\bundandi\b",
+    r"ఒక్?క?\s*(నిమిషం|సెకన్|సెకండ్)", r"ఆగండి|ఉండండి|ఆగు|ఉండు", r"\bok+a\s+nimisham\b", r"\baa?gandi\b|\bundandi\b|\baa?gu\b|\bundu\b",
     r"ஒரு\s+(நிமிஷம்|நிமிடம்)", r"இருங்க", r"ಒಂದು\s+ನಿಮಿಷ", r"ഒരു\s+മിനിറ്റ്",
 ]
 OPT_OUT_PATTERNS = [

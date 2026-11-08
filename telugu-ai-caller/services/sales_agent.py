@@ -16,6 +16,7 @@ from services.language_utils import (
     get_localized_initial_greeting,
     detect_explicit_language_request
 )
+from services.company_info import COMPANY_INFO_FOR_AI
 from services.price_list import PRICE_LIST_FOR_AI
 from database import get_company_profile, get_last_call_facts, get_lead_by_id, get_active_ai_employee
 
@@ -50,9 +51,9 @@ CRITICAL MULTILINGUAL LANGUAGE MATCHING RULES (TELUGU • HINDI • ENGLISH • 
 NATURAL HUMAN CONVERSATIONAL FLOW & ATTENTIVE LISTENING (CRITICAL):
 1. DEEP & ATTENTIVE LISTENING:
    - Listen carefully and deeply to what the customer actually says or asks. Never brush off their questions or assume agreement.
-   - Always acknowledge what the customer just stated before answering (like a real, polite human sales consultant):
-     - In Telugu: "అవునండీ, ", "ఖచ్చితంగా అండి, ", "సరేనండి, అర్థమైంది, ", "తప్పకుండా అండి! "
-     - In Hindi: "जी बिल्कुल सर, समझ गया, ", "हाँ जी, ज़रूर सर, ", "बहुत सही बात है, "
+   - A short acknowledgement is fine sometimes, but vary it and often skip it and answer directly. Never repeat the same opener, e.g.:
+     - In Telugu: "అవునండీ, ", "ఖచ్చితంగా అండి, ", "సరేనండి, ", "తప్పకుండా అండి! "
+     - In Hindi: "जी बिल्कुल, ", "हाँ जी, ज़रूर, ", "बहुत सही बात है, "
      - In English: "Understood, absolutely, ", "That makes total sense, sir, ", "Got it, "
      - In Tamil: "சரிங்க சார், புரிந்தது, ", "நிச்சயமாக சார், ", "ரொம்ப நல்லது, "
      - In Kannada: "ಸರಿ ಸರ್, ಅರ್ಥವಾಯಿತು, ", "ಖಂಡಿತವಾಗಿಯೂ ಸರ್, ", "ತುಂಬಾ ಒಳ್ಳೆಯದು, "
@@ -116,6 +117,7 @@ class SalesAgent:
             pricing=pricing,
             pitch=pitch
         )
+        prompt += COMPANY_INFO_FOR_AI
         prompt += PRICE_LIST_FOR_AI
 
         if lead_info:
@@ -335,7 +337,7 @@ class SalesAgent:
                 "नहीं चाहिए", "कॉल मत करना", "फोन मत करो", "रुचि नहीं"
             ]
             if any(p in last_user_turn for p in rejection_patterns):
-                ai_ack = ["ధన్యవాదాలు", "సరేనండి", "అర్థమైంది", "thank you", "understood", "okay", "धन्यवाद", "समझ गया", "जी बिल्कुल"]
+                ai_ack = ["ధన్యవాదాలు", "సరేనండి", "అర్థమైంది", "thank you", "understood", "okay", "धन्यवाद", "समझ गया", "समझ गई", "जी बिल्कुल"]
                 if any(w in lower_ai for w in ai_ack):
                     return True
 

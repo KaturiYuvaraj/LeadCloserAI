@@ -449,6 +449,28 @@ def test_wait_inside_a_request_is_not_a_hold():
     assert is_hold_request("ఒక్క నిమిషం ఆగండి") and is_hold_request("hold on please")
 
 
+def test_casual_wait_words_are_a_hold():
+    for text in ("ఆగు ఆగు", "agu agu", "aagu", "wait wait", "ఉండు ఒక్క నిమిషం"):
+        assert is_hold_request(text), text
+    assert not is_hold_request("ఆగు ఆగు ముందు ప్రైస్ ఎంతో చెప్పండి")
+
+
+def test_no_repeated_intro_or_stock_acknowledgement():
+    from services.sales_agent import sales_agent
+    from voice_agent.session import VOICE_RULES
+    prompt = sales_agent._build_system_prompt(None) + VOICE_RULES
+    assert "introduce yourself again" not in prompt and "Introduce yourself only in the opening greeting" in VOICE_RULES
+    assert "Always acknowledge" not in prompt and "समझ गया" not in prompt
+
+
+def test_company_facts_reach_the_ai():
+    from services.sales_agent import sales_agent
+    prompt = sales_agent._build_system_prompt(None)
+    for fact in ("Gayatri Heights, Madhapur", "HITEC City", "+91 77802 36242", "info@spassociates.online",
+                 "Sunday closed", "Balaga Sankara Rao", "never invent anything else"):
+        assert fact in prompt, fact
+
+
 def test_first_no_gets_one_attempt_second_no_ends():
     from voice_agent.call_guard import caller_hints
     assert "Do NOT say goodbye yet" in caller_hints("మాకు ఏమీ అవసరం లేదు", False)
