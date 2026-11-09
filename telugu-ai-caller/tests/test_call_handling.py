@@ -504,3 +504,52 @@ def test_every_opening_line_names_shreya_and_says_nothing_about_recording():
             assert names[lang] in text
             assert "రికార్డ్" not in text and "record" not in text.lower() and "AI" not in text
 
+
+
+def test_carrier_hold_message_is_recognised():
+    from voice_agent.call_guard import is_carrier_hold
+    for text in ("The person you are speaking with has put your call on hold. Please stay on the line.",
+                 "Stay on the line.", "Aap jis vyakti se baat kar rahe hain, unhone aapke call ko hold par rakha hai.",
+                 "कृपया लाइन पर बने रहें"):
+        assert is_carrier_hold(text), text
+    for text in ("ఆగండి ఒక్క నిమిషం", "hold on please", "నేను లైన్ లోనే ఉన్నాను", "I need a website"):
+        assert not is_carrier_hold(text), text
+
+
+@pytest.mark.asyncio
+async def test_hold_recording_is_never_answered_and_ends_the_call(monkeypatch):
+    import asyncio as aio
+    from pipecat.processors.frame_processor import FrameProcessor
+
+    async def skip(self, frame, direction):
+        return None
+
+    monkeypatch.setattr(FrameProcessor, "process_frame", skip)
+    detected, passed = [], []
+
+    async def on_machine(kind, text):
+        detected.append(kind)
+
+    async def capture(frame, direction=None):
+        passed.append(frame.text)
+
+    guard = CallGuard(on_machine, hold_secs=0.05)
+    monkeypatch.setattr(guard, "push_frame", capture)
+    await guard.process_frame(TranscriptionFrame("మీది ఎక్కడండి కంపెనీ?", "u", "t"), None)
+    await guard.process_frame(TranscriptionFrame("Stay on the line.", "u", "t"), None)
+    await guard.process_frame(TranscriptionFrame("Hello", "u", "t"), None)  # back before the limit
+    await aio.sleep(0.1)
+    assert detected == [] and passed == ["మీది ఎక్కడండి కంపెనీ?", "Hello"]
+
+    await guard.process_frame(TranscriptionFrame("Your call has been put on hold. Please stay on the line.", "u", "t"), None)
+    await guard.process_frame(TranscriptionFrame("Stay on the line.", "u", "t"), None)
+    await aio.sleep(0.1)
+    assert detected == ["customer_hold"] and len(passed) == 2
+
+
+def test_experience_is_said_as_years_and_speech_is_faster():
+    from services.company_info import COMPANY_INFO_FOR_AI
+    from voice_agent.session import TTS_PACE, VOICE_RULES
+    assert "23 years" in COMPANY_INFO_FOR_AI and "Never say the year 2003" in COMPANY_INFO_FOR_AI
+    assert "started in 2003" not in COMPANY_INFO_FOR_AI and "Never read a year as a count" in VOICE_RULES
+    assert TTS_PACE > 1.0

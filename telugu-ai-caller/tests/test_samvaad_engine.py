@@ -179,3 +179,22 @@ def test_noise_filter_is_off_unless_asked_for(monkeypatch):
     session.call_type = "phone"
     monkeypatch.delenv("VOICE_NOISE_FILTER", raising=False)
     assert session.transport_audio_filter() is None
+
+
+def test_a_refused_sarvam_dial_is_not_retried(shriya):
+    class Refusing(StubSamvaad):
+        async def dial(self, req):
+            from voice_agent.outbound import DialError
+            raise DialError('Sarvam Agent 401: {"details":"Invalid API key format."}')
+
+    shriya.samvaad = Refusing()
+    lead = make_lead(name="Key Kiran", phone="+919812300957")
+    shriya.enqueue([lead], consent_confirmed=True, priority=0)
+    run(shriya)
+    job = job_for(lead)
+    assert job.state == "not_reachable" and "Invalid API key" in job.last_error and job.next_attempt_at is not None
+    session = SessionLocal()
+    try:
+        assert session.query(CallJob).filter(CallJob.lead_id == lead, CallJob.state.in_(("queued", "retry_scheduled", "scheduled"))).count() == 0
+    finally:
+        session.close()

@@ -19,6 +19,8 @@ caller is behaving.
    The LLM still decides; the hints only make the right reaction very likely.
 """
 
+import asyncio
+import os
 import re
 import time
 from typing import Awaitable, Callable, List, Optional
@@ -52,6 +54,21 @@ AUTOMATED_PATTERNS = {
     ],
 }
 _AUTOMATED = {kind: [re.compile(p, re.IGNORECASE) for p in pats] for kind, pats in AUTOMATED_PATTERNS.items()}
+
+# The network's recording while the customer has put us on hold (they took another call).
+# On 9 Nov this played for 5 minutes and the agent kept answering it as if the customer spoke.
+CARRIER_HOLD_PATTERNS = [
+    r"put\s+(your|the)\s+call\s+on\s+hold", r"call\s+(has\s+been\s+|is\s+)?(put\s+)?on\s+hold",
+    r"(please\s+)?stay\s+on\s+the\s+line", r"please\s+hold\s+the\s+line",
+    r"hold\s+par\s+rakha", r"line\s+par\s+bane", r"होल्ड\s+पर", r"लाइन\s+पर\s+बने",
+    r"హోల్డ్‌?\s*లో\s+(పెట్ట|ఉంచ)", r"లైన్‌?\s*లో\s+(ఉండండి|వేచి)",
+]
+_CARRIER_HOLD = [re.compile(p, re.IGNORECASE) for p in CARRIER_HOLD_PATTERNS]
+CARRIER_HOLD_SECS = float(os.getenv("VOICE_CARRIER_HOLD_SECS", "45"))
+
+
+def is_carrier_hold(text: str) -> bool:
+    return any(p.search(text or "") for p in _CARRIER_HOLD)
 
 
 def classify_automated(text: str) -> Optional[str]:
@@ -172,18 +189,34 @@ class CallGuard(FrameProcessor):
     Watches the first caller transcripts of an outbound call for voicemail, IVR menus
     and carrier messages. A match is swallowed (the LLM never answers a machine) and
     reported once through `on_automated(kind, text)`; the session then ends the call.
+
+    At any time in the call, the network's "your call is on hold" recording is swallowed too.
+    If the customer doesn't come back within hold_secs, it is reported as "customer_hold".
     """
 
     def __init__(self, on_automated: AutomatedCallback, window_secs: float = 30.0,
-                 max_transcripts: int = 3, enabled: bool = True, **kwargs):
+                 max_transcripts: int = 3, enabled: bool = True, hold_secs: Optional[float] = None, **kwargs):
         super().__init__(**kwargs)
         self._on_automated = on_automated
         self._window_secs = window_secs
         self._max_transcripts = max_transcripts
         self._enabled = enabled
+        self._hold_secs = CARRIER_HOLD_SECS if hold_secs is None else hold_secs
+        self._hold_timer: Optional[asyncio.Task] = None
         self._started = time.monotonic()
         self._seen = 0
         self.detected: Optional[str] = None
+
+    async def _end_after_hold(self, text: str):
+        await asyncio.sleep(self._hold_secs)
+        if not self.detected:
+            self.detected = "customer_hold"
+            await self._on_automated("customer_hold", text)
+
+    def _customer_back(self):
+        if self._hold_timer:
+            self._hold_timer.cancel()
+            self._hold_timer = None
 
     def restart_window(self):
         """Start the detection window when the call is answered (not when the pipeline is built)."""
@@ -200,6 +233,11 @@ class CallGuard(FrameProcessor):
         if isinstance(frame, TranscriptionFrame) and frame.text.strip():
             if self.detected:
                 return  # call is ending; nothing more goes to the LLM
+            if self._hold_secs > 0 and is_carrier_hold(frame.text):
+                if not self._hold_timer:
+                    self._hold_timer = asyncio.create_task(self._end_after_hold(frame.text.strip()))
+                return
+            self._customer_back()
             if self._watching():
                 self._seen += 1
                 kind = classify_automated(frame.text)

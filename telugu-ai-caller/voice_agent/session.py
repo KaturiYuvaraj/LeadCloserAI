@@ -111,6 +111,8 @@ def _env_on(name: str, default: str = "on") -> bool:
 
 SILENCE_SECS = float(os.getenv("VOICE_SILENCE_SECS", "8"))       # quiet caller → "can you hear me?"
 HOLD_SECS = float(os.getenv("VOICE_HOLD_SECS", "45"))            # after "one minute"
+# Speaking speed: 1.0 sounded slow and dragging on the 9 Nov call
+TTS_PACE = float(os.getenv("VOICE_TTS_PACE", "1.1"))
 MAX_CALL_SECS = int(os.getenv("VOICE_MAX_CALL_SECONDS", "600"))   # unless the AI employee sets its own
 WRAP_UP_BEFORE_SECS = 45
 RECORDINGS_DIR = Path(os.getenv("RECORDINGS_DIR") or Path(__file__).resolve().parent.parent / "recordings")
@@ -167,6 +169,8 @@ LIVE PHONE CONVERSATION RULES (override anything above that conflicts):
   * You are Shreya, a woman, from S P Associates: that is your name on this call. In Hindi use feminine forms ("कर रही हूँ").
   * Don't bring up that the call is recorded. If a customer asks, answer honestly.
   * Repeat back only what the customer actually said, in their words (they said "website", not "custom website"). Never add details, numbers or decisions they did not say.
+  * Talk the way people in Hyderabad really talk on the phone: use the everyday English words they use (website, app, experience, projects, clients, budget, price, demo, meeting, office) instead of bookish Telugu or Hindi words.
+  * Say numbers the way people speak them, in words: "ఇరవై మూడు సంవత్సరాలు", "నలభైకి పైగా ప్రాజెక్ట్స్". Never read a year as a count.
   * Write English business words in the script of the language you are speaking so the voice pronounces them naturally. Never put Latin-script (English-letter) words inside a Telugu, Hindi, Tamil, Kannada or Malayalam sentence. Wrong: "మీ business కోసం demo పెట్టుకుందామా". Right: "మీ బిజినెస్ కోసం డెమో పెట్టుకుందామా". Likewise website = వెబ్‌సైట్, software = సాఫ్ట్‌వేర్, custom = కస్టమ్, customers = కస్టమర్స్, team = టీమ్, price = ప్రైస్, samples = శాంపిల్స్, live = లైవ్, timeline = టైమ్‌లైన్, WhatsApp = వాట్సాప్; in Hindi बिज़नेस, वेबसाइट, कस्टमर, डेमो, टीम, प्राइस. Only digits and the AM/PM-free time in words may stay as they are.
   * Do not promise a particular person or an exact moment you cannot guarantee: say "our team will call you", not "our senior tech lead will call you".
   * {whatsapp_note}
@@ -640,7 +644,10 @@ class BaseCallSession:
             await self._on_conversation_concluded()
 
     async def on_machine(self, kind: str, text: str):
-        """CallGuard heard voicemail / an IVR menu / a carrier message: end at once, the dialer retries."""
+        """
+        CallGuard heard voicemail / an IVR menu / a carrier message: end at once, the dialer retries.
+        "customer_hold": the customer left us on hold (another call) for VOICE_CARRIER_HOLD_SECS: hang up.
+        """
         logger.info(f"Call {self.session_id}: {kind} detected ({text[:80]!r}), ending the call")
         self.machine = kind
         self.end_reason = kind
@@ -807,14 +814,13 @@ class BaseCallSession:
             api_key=SARVAM_API_KEY,
             settings=SarvamLLMService.Settings(model=LLM_MODEL, temperature=0.5, max_tokens=240),
         )
-        tts_pace = 1.0
         tts = SarvamTTSService(
             api_key=SARVAM_API_KEY,
             settings=SarvamTTSService.Settings(
                 model=TTS_MODEL,
                 voice=self.voice_for(self.language),
                 language=self.language,
-                pace=tts_pace,
+                pace=TTS_PACE,
                 min_buffer_size=TTS_MIN_BUFFER_CHARS,
                 max_chunk_length=120,
             ),
@@ -998,7 +1004,7 @@ class BaseCallSession:
         if self.service_failed:
             intel = {"summary": f"Call cut short: {credits.MESSAGES[self.service_failed]}",
                      "sentiment": "neutral", "deal_stage": "follow_up"}
-        elif self.machine:
+        elif self.machine and not self.user_turns:
             intel = {"summary": f"No conversation: {self.machine.replace('_', ' ')} answered the call.",
                      "sentiment": "neutral", "deal_stage": self.machine}
         elif not self.user_turns:

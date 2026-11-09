@@ -226,7 +226,7 @@ async def dialer_jobs(request: Request, state: Optional[str] = None, lead_id: Op
         return {"jobs": [{
             "id": j.id, "lead_id": j.lead_id, "phone": j.phone_e164, "state": j.state,
             "attempt": j.attempt, "max_attempts": j.max_attempts, "provider": j.provider,
-            "last_disposition": j.last_disposition, "block_reason": j.block_reason,
+            "last_disposition": j.last_disposition, "block_reason": j.block_reason, "last_error": j.last_error,
             "next_attempt_at": j.next_attempt_at.isoformat() if j.next_attempt_at else None,
             "call_id": j.call_id,
         } for j in jobs]}

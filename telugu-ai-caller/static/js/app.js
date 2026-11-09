@@ -1045,6 +1045,8 @@ document.addEventListener("DOMContentLoaded", () => {
         try { await refreshLeads(); } catch (_) {}
       } else if (job.state === "retry_scheduled") {
         window.showCallTracker(`📵 ${who} did not answer. It will be retried ${job.next_attempt_at ? "at " + istTime(job.next_attempt_at) : "later"}.`, "warn");
+      } else if (job.state === "not_reachable" && job.provider === "samvaad" && job.last_error) {
+        window.showCallTracker(`⛔ Sarvam Agent could not start the call: ${job.last_error}`, "bad");
       } else if (job.state === "not_reachable") {
         window.showCallTracker(`📵 ${who} could not be reached.`, "warn");
       } else {

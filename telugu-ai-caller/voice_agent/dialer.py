@@ -316,7 +316,10 @@ class CallQueue:
             provider_call_id = await dialer.dial(req)
         except Exception as e:  # DialError or network failure
             self.log(f"⚠️ Could not dial {job['lead_name']}: {e}", "error", job["lead_id"])
-            await asyncio.to_thread(self._update_job, job["id"], retry=("failed", str(e)))
+            if dialer is self.samvaad:  # a test call: never retried (later it would go out on whichever engine is chosen)
+                await asyncio.to_thread(self._close_failed, job["id"], str(e))
+            else:
+                await asyncio.to_thread(self._update_job, job["id"], retry=("failed", str(e)))
             return
         await asyncio.to_thread(self._update_job, job["id"], provider_call_id=provider_call_id)
         self.log(f"📞 Dialing {job['lead_name']} ({job['phone']}) · attempt {job['attempt']} · {dialer.name}",
@@ -476,6 +479,17 @@ class CallQueue:
         else:
             self.log(f"📵 Sarvam Agent could not reach {name} ({disposition.replace('_', ' ')})", "warning", lead_id)
         return call_id
+
+    def _close_failed(self, job_id: int, error: str):
+        session = SessionLocal()
+        try:
+            job = session.get(CallJob, job_id)
+            if job:
+                job.state, job.last_disposition, job.last_error = "not_reachable", "failed", error[:500]
+                job.finished_at = db_time(session, utcnow())
+                session.commit()
+        finally:
+            session.close()
 
     def _set_call_id(self, job_id: int, call_id: Optional[int]):
         session = SessionLocal()
