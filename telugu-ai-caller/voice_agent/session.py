@@ -523,6 +523,8 @@ class SpeakingObserver(BaseObserver):
         elif isinstance(frame, UserStartedSpeakingFrame) and not self._user:
             self._user, self._user_since = True, now
             self._session.send_event("speaking", who="user", active=True)
+            if self._bot:  # the customer talked over the agent: a barge-in
+                self._session.interruptions += 1
             self._session.on_user_started_speaking()
         elif isinstance(frame, UserStoppedSpeakingFrame) and self._user:
             self._user = False
@@ -621,8 +623,6 @@ class BaseCallSession:
         self.send_event("status", text="🧠 Thinking…")
 
     async def _on_reply(self, text: str, interrupted: bool):
-        if interrupted:
-            self.interruptions += 1
         self.transcript.append({"role": "assistant", "content": text})
         self.send_event(
             "transcript", role="assistant", text=text,
