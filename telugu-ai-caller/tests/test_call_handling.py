@@ -598,3 +598,9 @@ def test_customer_speaking_after_goodbye_keeps_the_call_open():
         assert session._end_task.cancelled() and session._hangup_fallback.cancelled()
 
     aio.run(scenario())
+
+
+def test_customer_is_addressed_respectfully_without_guessing_gender():
+    from voice_agent.session import VOICE_RULES
+    assert "RESPECT:" in VOICE_RULES and '"sir" to a man and "madam" to a woman only once it is clear' in VOICE_RULES
+    assert "Never guess" in VOICE_RULES and "అండి" in VOICE_RULES
