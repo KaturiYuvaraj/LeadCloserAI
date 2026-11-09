@@ -94,6 +94,7 @@ from services.language_utils import detect_language as detect_text_language
 from services.sales_agent import sales_agent
 from voice_agent import credits
 from voice_agent.actions import run_action
+from voice_agent.background import background_mixer
 from voice_agent.call_guard import CallGuard, caller_hints, caller_signals, is_closing_word, is_foreign_noise
 from voice_agent.conclusion import CallConclusionFilter
 from voice_agent.knowledge import KnowledgeBase, list_docs
@@ -1262,6 +1263,7 @@ class PhoneCallSession(BaseCallSession):
                 add_wav_header=False,
                 serializer=serializer,
                 audio_in_filter=self.transport_audio_filter(),
+                audio_out_mixer=background_mixer(),
             ),
         )
 
@@ -1307,5 +1309,6 @@ class VobizCallSession(PhoneCallSession):
                 add_wav_header=False,
                 serializer=serializer,
                 audio_in_filter=self.transport_audio_filter(),
+                audio_out_mixer=background_mixer(),
             ),
         )

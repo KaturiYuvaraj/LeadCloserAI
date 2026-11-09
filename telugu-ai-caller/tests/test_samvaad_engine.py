@@ -198,3 +198,18 @@ def test_a_refused_sarvam_dial_is_not_retried(shriya):
         assert session.query(CallJob).filter(CallJob.lead_id == lead, CallJob.state.in_(("queued", "retry_scheduled", "scheduled"))).count() == 0
     finally:
         session.close()
+
+
+def test_office_background_mixes_quietly_at_the_line_rate(monkeypatch):
+    import numpy as np
+    from voice_agent import background
+    monkeypatch.delenv("VOICE_BACKGROUND_SOUND", raising=False)
+    for rate in (8000, 16000):
+        mixer = background.background_mixer()
+        assert mixer is not None
+        asyncio.run(mixer.start(rate))
+        silence = bytes(rate // 50 * 2)  # 20 ms of silence
+        out = np.frombuffer(asyncio.run(mixer.mix(silence)), dtype=np.int16)
+        assert len(out) == rate // 50 and 0 < np.abs(out).max() < 6000  # audible but soft
+    monkeypatch.setenv("VOICE_BACKGROUND_SOUND", "off")
+    assert background.background_mixer() is None
