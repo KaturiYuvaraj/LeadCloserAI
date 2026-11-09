@@ -139,7 +139,7 @@ class SamvaadDialer(BaseDialer):
             resp = await client.post(url, json=build_request(req),
                                      headers={"X-API-Key": _env("SAMVAAD_API_KEY"), "Content-Type": "application/json"})
         if resp.status_code >= 300:
-            raise DialError(f"Sarvam Agent {resp.status_code}: {resp.text[:200]}")
+            raise DialError(f"Sarvam Agent {resp.status_code}: {resp.text[:600]}")
         data = resp.json() if resp.content else {}
         return str(data.get("attempt_id") or "")
 
