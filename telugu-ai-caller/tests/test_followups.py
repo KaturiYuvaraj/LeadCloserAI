@@ -154,7 +154,8 @@ async def test_cadence_call_is_not_held_back_by_called_recently(queue, monkeypat
     assert job_for(lead).state == "dialing"
 
 
-def test_retry_times_follow_the_plan():
-    assert followups.retry_time(1, MONDAY_11_IST) == MONDAY_11_IST + timedelta(hours=2)
-    second = followups.retry_time(2, MONDAY_11_IST).astimezone(dialer_module.IST)
-    assert second.date() == datetime(2026, 11, 3).date() and second.hour in (10, 14, 18)
+def test_unanswered_calls_are_retried_30_to_45_minutes_later_up_to_5_times():
+    for attempt in range(1, 6):
+        gap = followups.retry_time(attempt, MONDAY_11_IST) - MONDAY_11_IST
+        assert timedelta(minutes=30) <= gap <= timedelta(minutes=45)
+    assert followups.MAX_ATTEMPTS == 5

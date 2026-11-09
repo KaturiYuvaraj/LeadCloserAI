@@ -151,14 +151,14 @@ def test_connected_result_is_saved_without_follow_ups(api, shriya, monkeypatch):
     assert job_for(lead).call_id == done.call_id
 
 
-def test_unanswered_is_not_retried(shriya):
+def test_failed_sarvam_call_is_not_retried(shriya):
     lead = make_lead(name="Busy Bhanu", phone="+919812300956")
     shriya.enqueue([lead], consent_confirmed=True, priority=0)
     run(shriya)
     job = job_for(lead)
-    shriya.on_samvaad_result(job.id, {"attempt_id": "a", "status": "no_answer"})
+    shriya.on_samvaad_result(job.id, {"attempt_id": "a", "status": "failed", "failure_reason": "vobiz: invalid number"})
     after = job_for(lead)
-    assert after.state == "not_reachable" and after.last_disposition == "no_answer"
+    assert after.state == "not_reachable" and after.last_disposition == "failed" and "invalid" in after.last_error
     session = SessionLocal()
     try:
         assert session.query(CallJob).filter(CallJob.lead_id == lead).count() == 1
@@ -213,3 +213,33 @@ def test_office_background_mixes_quietly_at_the_line_rate(monkeypatch):
         assert len(out) == rate // 50 and 0 < np.abs(out).max() < 6000  # audible but soft
     monkeypatch.setenv("VOICE_BACKGROUND_SOUND", "off")
     assert background.background_mixer() is None
+
+
+def test_a_call_now_job_retries_five_times_and_missed_tries_skip_the_weekly_limit(queue, monkeypatch):
+    from voice_agent import dialer as dialer_module
+    from datetime import timedelta as td
+    lead = make_lead(name="Missed Mohan", phone="+919812300958")
+    queue.enqueue([lead], consent_confirmed=True, priority=0)
+    now = MONDAY_11_IST
+    for attempt in range(1, 6):
+        monkeypatch.setattr(dialer_module, "utcnow", lambda now=now: now)
+        run(queue)
+        job = job_for(lead)
+        assert job.state == "dialing" and job.attempt == attempt and job.max_attempts == 5
+        queue.on_provider_hangup(job.id, "no-answer", 0, "NO_ANSWER")
+        now = now + td(minutes=46)
+    session = SessionLocal()
+    try:
+        assert session.get(CallJob, job.id).state == "not_reachable"  # 5 tries, none blocked by the weekly limit
+    finally:
+        session.close()
+
+
+def test_shriya_not_answering_is_retried(shriya):
+    lead = make_lead(name="Ringing Ramu", phone="+919812300959")
+    shriya.enqueue([lead], consent_confirmed=True, priority=0)
+    run(shriya)
+    job = job_for(lead)
+    shriya.on_samvaad_result(job.id, {"attempt_id": "a", "status": "no_answer"})
+    after = job_for(lead)
+    assert after.state == "retry_scheduled" and after.last_disposition == "no_answer"

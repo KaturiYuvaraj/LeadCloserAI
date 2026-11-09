@@ -98,7 +98,7 @@ from voice_agent.background import background_mixer
 from voice_agent.call_guard import CallGuard, caller_hints, caller_signals, is_closing_word, is_foreign_noise
 from voice_agent.conclusion import CallConclusionFilter
 from voice_agent.knowledge import KnowledgeBase, list_docs
-from voice_agent.language import VOICES, LanguageRouter
+from voice_agent.language import VOICES, LanguageRouter, pace_for
 from voice_agent.rules import IST
 from voice_agent.vobiz import VOBIZ_SAMPLE_RATE, VobizFrameSerializer
 
@@ -118,8 +118,6 @@ HOLD_SECS = float(os.getenv("VOICE_HOLD_SECS", "45"))            # after "one mi
 GOODBYE_GRACE_SECS = float(os.getenv("VOICE_GOODBYE_GRACE_SECS", "2.0"))
 # If they start talking after the goodbye but no words come through in this time, hang up anyway
 POST_GOODBYE_WAIT_SECS = float(os.getenv("VOICE_POST_GOODBYE_WAIT_SECS", "4.0"))
-# Speaking speed: 1.0 sounded slow and dragging on the 9 Nov call
-TTS_PACE = float(os.getenv("VOICE_TTS_PACE", "1.1"))
 MAX_CALL_SECS = int(os.getenv("VOICE_MAX_CALL_SECONDS", "600"))   # unless the AI employee sets its own
 WRAP_UP_BEFORE_SECS = 45
 RECORDINGS_DIR = Path(os.getenv("RECORDINGS_DIR") or Path(__file__).resolve().parent.parent / "recordings")
@@ -925,7 +923,7 @@ class BaseCallSession:
                 model=TTS_MODEL,
                 voice=self.voice_for(self.language),
                 language=self.language,
-                pace=TTS_PACE,
+                pace=pace_for(self.language),
                 min_buffer_size=TTS_MIN_BUFFER_CHARS,
                 max_chunk_length=120,
             ),

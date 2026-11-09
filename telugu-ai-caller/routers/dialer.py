@@ -67,7 +67,7 @@ def start_calling(payload: Dict[str, Any]) -> Dict[str, Any]:
         consent_confirmed=bool(payload.get("consent_confirmed")),
         language=payload.get("language"),
         priority=int(payload.get("priority", 5)),
-        max_attempts=int(payload.get("max_attempts", 3)),
+        max_attempts=int(payload["max_attempts"]) if payload.get("max_attempts") else None,
     )
     return {"success": True, "provider": call_queue.dialer.name, **counts}
 

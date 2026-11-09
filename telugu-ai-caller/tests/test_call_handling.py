@@ -549,10 +549,11 @@ async def test_hold_recording_is_never_answered_and_ends_the_call(monkeypatch):
 
 def test_experience_is_said_as_years_and_speech_is_faster():
     from services.company_info import COMPANY_INFO_FOR_AI
-    from voice_agent.session import TTS_PACE, VOICE_RULES
+    from voice_agent.language import pace_for
+    from voice_agent.session import VOICE_RULES
     assert "23 years" in COMPANY_INFO_FOR_AI and "Never say the year 2003" in COMPANY_INFO_FOR_AI
     assert "started in 2003" not in COMPANY_INFO_FOR_AI and "Never read a year as a count" in VOICE_RULES
-    assert TTS_PACE > 1.0
+    assert pace_for("te-IN") == 1.2 and pace_for("hi-IN") == 1.1 and pace_for("en-IN") == 1.1
 
 
 def test_everyday_no_gets_one_gentle_try_then_a_warm_close():

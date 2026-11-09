@@ -142,8 +142,8 @@ def check_can_call(session: Session, account: Account, lead: Lead, now_utc: date
             return RuleResult("deferred", "called_recently", next_window_start(later, account))
 
     week_ago = now_utc - timedelta(days=7)
-    calls_this_week = session.query(func.count(Call.id)).filter(
-        Call.lead_id == lead.id, Call.created_at >= db_time(session, week_ago)
+    calls_this_week = session.query(func.count(Call.id)).filter(  # answered calls: missed tries don't count
+        Call.lead_id == lead.id, Call.created_at >= db_time(session, week_ago), Call.talk_seconds > 0
     ).scalar() or 0
     if calls_this_week >= WEEKLY_CALL_LIMIT and not manual:
         return RuleResult("deferred", "weekly_limit", next_window_start(now_utc + timedelta(days=2), account))

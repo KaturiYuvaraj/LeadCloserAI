@@ -10,7 +10,7 @@ Leads are queued as CallJob rows (restart-safe). A background loop runs every se
        allowed  → dial through the configured provider (voice_agent/outbound.py)
   4. provider callbacks and the voice engine move jobs on:
        answered → in_progress → completed (call saved by the engine)
-       no answer / busy / failed → retry_scheduled (+2 h, next day at another time) → not_reachable
+       no answer / busy / failed → retry_scheduled (30-45 min later, up to 5 calls) → not_reachable
   5. follow-ups (voice_agent/followups.py): after a conversation, or once a lead stays
      unreachable, the next call is queued on the smart cadence until the lead decides
   6. engine (voice_agent/samvaad.py): each job is dialled by the engine chosen on the dashboard,
@@ -105,7 +105,7 @@ class CallQueue:
     # ------------------------------------------------------------------ enqueue
     def enqueue(self, lead_ids: Iterable[int], campaign_id: Optional[int] = None, priority: int = 5,
                 consent_confirmed: bool = False, language: Optional[str] = None,
-                max_attempts: int = 3, consent_by: Optional[str] = None) -> Dict[str, int]:
+                max_attempts: Optional[int] = None, consent_by: Optional[str] = None) -> Dict[str, int]:
         """Queue leads for calling. Leads that already have an open job are skipped."""
         counts = {"queued": 0, "already_queued": 0, "not_found": 0}
         now = utcnow()
@@ -149,7 +149,7 @@ class CallQueue:
                 session.add(CallJob(
                     account_id=lead.account_id, lead_id=lead.id, campaign_id=campaign_id,
                     phone_e164=lead.phone_e164, language=language, provider=self.dialer.name,
-                    state="queued", priority=priority, max_attempts=max_attempts,
+                    state="queued", priority=priority, max_attempts=max_attempts or followups.MAX_ATTEMPTS,
                     next_attempt_at=db_time(session, now),
                 ))
                 counts["queued"] += 1
@@ -186,7 +186,8 @@ class CallQueue:
                 "last_called_hours_ago": round((now - last_call).total_seconds() / 3600, 1) if last_call else None,
                 "outside_calling_hours": next_window_start(now, account) != now,
                 "calls_this_week": session.query(func.count(Call.id)).filter(
-                    Call.lead_id == lead_id, Call.created_at >= db_time(session, now - timedelta(days=7))).scalar() or 0,
+                    Call.lead_id == lead_id, Call.created_at >= db_time(session, now - timedelta(days=7)),
+                    Call.talk_seconds > 0).scalar() or 0,
             }
             if result.next_allowed_at:
                 out["next_allowed_at"] = as_utc(result.next_allowed_at).astimezone(IST).isoformat()
@@ -446,7 +447,10 @@ class CallQueue:
             logger.warning(f"Could not record unanswered attempt: {e}")
 
     def on_samvaad_result(self, job_id: int, payload: Dict[str, Any]) -> Optional[int]:
-        """Sarvam's agent finished a call (or couldn't connect): save it and close the job, no follow-ups."""
+        """
+        Sarvam's agent finished a call (or couldn't connect): save it. Not picked up or busy: retried
+        like any call. Connected or failed: the job is closed, with no automatic follow-ups.
+        """
         status = str(payload.get("status") or "").strip().lower()
         connected = status == "connected"
         disposition = "completed" if connected else NOT_CONNECTED_LABEL.get(status, "failed")
@@ -458,10 +462,13 @@ class CallQueue:
             lead = session.get(Lead, job.lead_id)
             name = lead.name if lead else str(job.lead_id)
             lead_id, phone = job.lead_id, (lead.phone_e164 if lead else job.phone_e164)
-            job.state = "completed" if connected else "not_reachable"
-            job.last_disposition = disposition
-            job.last_error = None if connected else (payload.get("failure_reason") or None)
-            job.finished_at = db_time(session, utcnow())
+            if status in ("no_answer", "busy"):  # not picked up: retried 30-45 min later like any call
+                self._schedule_retry(session, job, disposition, payload.get("failure_reason") or None)
+            else:
+                job.state = "completed" if connected else "not_reachable"
+                job.last_disposition = disposition
+                job.last_error = None if connected else (payload.get("failure_reason") or None)
+                job.finished_at = db_time(session, utcnow())
             session.commit()
         finally:
             session.close()
