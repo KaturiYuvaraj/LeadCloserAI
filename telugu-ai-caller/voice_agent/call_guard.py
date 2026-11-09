@@ -71,6 +71,43 @@ def is_carrier_hold(text: str) -> bool:
     return any(p.search(text or "") for p in _CARRIER_HOLD)
 
 
+# Unicode blocks of Indian scripts, to spot noise that STT wrote in a language nobody on the call speaks
+# (9 Nov call 42: line noise came back as Tamil, Malayalam, Bengali and Punjabi words, and the agent answered)
+SCRIPTS = {"te-IN": (0x0C00, 0x0C7F), "hi-IN": (0x0900, 0x097F), "ta-IN": (0x0B80, 0x0BFF),
+           "kn-IN": (0x0C80, 0x0CFF), "ml-IN": (0x0D00, 0x0D7F), "bn-IN": (0x0980, 0x09FF),
+           "pa-IN": (0x0A00, 0x0A7F), "gu-IN": (0x0A80, 0x0AFF), "or-IN": (0x0B00, 0x0B7F)}
+
+
+def is_foreign_noise(text: str, call_languages: set) -> bool:
+    """A short transcript (up to 4 words) written mostly in a script none of the call languages use."""
+    words = (text or "").split()
+    if not words or len(words) > 4:
+        return False
+    counts = {lang: sum(lo <= ord(ch) <= hi for ch in text) for lang, (lo, hi) in SCRIPTS.items()}
+    lang, count = max(counts.items(), key=lambda kv: kv[1])
+    letters = sum(ch.isalpha() for ch in text)
+    return count > 0 and count >= letters / 2 and lang not in call_languages
+
+
+# Short things people say when a call is ending: they don't need another goodbye
+_CLOSING_WORDS = re.compile(
+    r"^\s*(ok(ay)?|ok\s*ok|hm+|hello|hi|yes|yeah|no|thanks?|thank\s+you|bye|good\s*(night|bye|day)|sure|"
+    r"సరే|ఓకే|హలో|అలాగే|థాంక్స్|థాంక్యూ|ధన్యవాదాలు|ఉంటాను|బై|హా|అవును|అండి|ఓకే\s+అండి|"
+    r"ठीक\s+है|ओके|हाँ|हां|जी|धन्यवाद|बाय|चलो|चला)[\s.,!?।]*(అండి|जी|sir|madam)?[\s.,!?।]*$",
+    re.IGNORECASE)
+
+
+def is_closing_word(text: str) -> bool:
+    """'ok', 'thank you', 'good night', 'సరే అండి', 'ओके ओके, चला चला'… or under 3 words that aren't a question."""
+    text = (text or "").strip()
+    if _CLOSING_WORDS.match(text):
+        return True
+    parts = [p for p in re.split(r"[\s,.!?।]+", text) if p]
+    if parts and all(_CLOSING_WORDS.match(p) for p in parts):
+        return True
+    return len(text.split()) < 3 and not text.endswith("?") and not _ASKS_SOMETHING.search(text)
+
+
 def classify_automated(text: str) -> Optional[str]:
     """'unreachable' | 'voicemail' | 'ivr' when the text is a recording or menu, else None."""
     for kind in ("unreachable", "voicemail", "ivr"):
@@ -198,9 +235,11 @@ class CallGuard(FrameProcessor):
     """
 
     def __init__(self, on_automated: AutomatedCallback, window_secs: float = 30.0,
-                 max_transcripts: int = 3, enabled: bool = True, hold_secs: Optional[float] = None, **kwargs):
+                 max_transcripts: int = 3, enabled: bool = True, hold_secs: Optional[float] = None,
+                 drop_transcript: Optional[Callable[[str], bool]] = None, **kwargs):
         super().__init__(**kwargs)
         self._on_automated = on_automated
+        self._drop_transcript = drop_transcript  # the session's say: noise, or words after the goodbye
         self._window_secs = window_secs
         self._max_transcripts = max_transcripts
         self._enabled = enabled
@@ -241,6 +280,8 @@ class CallGuard(FrameProcessor):
                     self._hold_timer = asyncio.create_task(self._end_after_hold(frame.text.strip()))
                 return
             self._customer_back()
+            if self._drop_transcript and self._drop_transcript(frame.text.strip()):
+                return
             if self._watching():
                 self._seen += 1
                 kind = classify_automated(frame.text)

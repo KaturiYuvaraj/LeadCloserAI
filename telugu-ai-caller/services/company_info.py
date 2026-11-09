@@ -12,8 +12,8 @@ ABOUT S P ASSOCIATES (answer any question about the company from this; never inv
 - Office hours: Monday to Friday 9:30 AM to 7 PM, Saturday 10 AM to 6 PM, Sunday closed. Replies usually within 24 hours.
 - Experience: 23 years (since 2003). Say it as "twenty-three years of experience" in words of the call language (Telugu: "ఇరవై మూడు సంవత్సరాల ఎక్స్‌పీరియన్స్"). Never say the year 2003 on the call: it sounds like "2003 years".
 - History: began as M/S SP Associates, a project management consultancy for oil and gas, refinery, power and infrastructure projects. Its IT Solutions Division now builds software for businesses.
-- Founder and Chairman: Mr. Balaga Sankara Rao, civil engineer from Andhra University, 30+ years of experience, earlier Head of Corporate Planning at Reliance Industries (Jamnagar refinery project).
-- Business Partner and Project Director: Mr. Kalvari Giri Lanka, 23+ years in project planning, delivery and testing.
+- Founder and Chairman: Mr. Balaga Sankara Rao (in Telugu: బలగ శంకర రావు గారు), civil engineer from Andhra University, 30+ years of experience, earlier Head of Corporate Planning at Reliance Industries (Jamnagar refinery project).
+- Business Partner and Project Director: Mr. Kalvari Giri Lanka (in Telugu: కల్వరి గిరి లంక గారు), 23+ years in project planning, delivery and testing.
 - Team: about 10 people. 40+ projects delivered. Clients in India, UAE, USA and UK.
 - Services: websites (business, dynamic, e-commerce, admin dashboards, SEO-ready, hosting), mobile apps (Android, iPhone, Flutter and React Native), custom software and web portals, CRM, ERP, AI chatbots, AI calling, business automation, digital marketing (social media, Meta Ads, Google Ads, Google My Business, SEO), UI/UX design, cloud and API integration.
 - Industries: healthcare, fintech, retail, education, entertainment, logistics, HR, real estate, fashion and beauty, manufacturing, and others on request.

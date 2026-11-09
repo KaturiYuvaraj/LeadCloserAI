@@ -31,8 +31,10 @@ languages, actions, talk time) and, for phone calls, a stereo WAV recording.
 """
 
 import asyncio
+import difflib
 import json
 import os
+import re
 import time
 import uuid
 import wave
@@ -92,7 +94,7 @@ from services.language_utils import detect_language as detect_text_language
 from services.sales_agent import sales_agent
 from voice_agent import credits
 from voice_agent.actions import run_action
-from voice_agent.call_guard import CallGuard, caller_hints, caller_signals
+from voice_agent.call_guard import CallGuard, caller_hints, caller_signals, is_closing_word, is_foreign_noise
 from voice_agent.conclusion import CallConclusionFilter
 from voice_agent.knowledge import KnowledgeBase, list_docs
 from voice_agent.language import VOICES, LanguageRouter
@@ -113,6 +115,8 @@ SILENCE_SECS = float(os.getenv("VOICE_SILENCE_SECS", "8"))       # quiet caller 
 HOLD_SECS = float(os.getenv("VOICE_HOLD_SECS", "45"))            # after "one minute"
 # After the goodbye is spoken, wait this long before hanging up: the customer may still say something
 GOODBYE_GRACE_SECS = float(os.getenv("VOICE_GOODBYE_GRACE_SECS", "2.0"))
+# If they start talking after the goodbye but no words come through in this time, hang up anyway
+POST_GOODBYE_WAIT_SECS = float(os.getenv("VOICE_POST_GOODBYE_WAIT_SECS", "4.0"))
 # Speaking speed: 1.0 sounded slow and dragging on the 9 Nov call
 TTS_PACE = float(os.getenv("VOICE_TTS_PACE", "1.1"))
 MAX_CALL_SECS = int(os.getenv("VOICE_MAX_CALL_SECONDS", "600"))   # unless the AI employee sets its own
@@ -568,6 +572,8 @@ class BaseCallSession:
         self.result: Optional[Dict[str, Any]] = None
         self.done = asyncio.Event()
         self.hangup_pending = False
+        self._hangup_paused = False          # the customer started talking after our goodbye
+        self.reopened_after_goodbye = False  # a real question after the goodbye reopens the call, once
         self._hangup_fallback: Optional[asyncio.Task] = None
         self._timers: List[asyncio.Task] = []
         self.job_id: Optional[int] = None  # outbound dialer job (voice_agent/dialer.py), if any
@@ -650,8 +656,23 @@ class BaseCallSession:
         elif self.on_hold:
             self._set_hold(False)
         said_no_before = self.signals.get("not_interested", 0) > 1
-        parts = [caller_hints(text, said_no_before), self.knowledge.relevant(text)]
+        parts = [caller_hints(text, said_no_before), self.repeat_hint(), self.knowledge.relevant(text)]
         return " ".join(p for p in parts if p) or None
+
+    def repeat_hint(self) -> Optional[str]:
+        """Our last two replies ended with the same question (9 Nov call 42 asked for a time again and again)."""
+        def last_question(reply: str) -> str:
+            questions = re.findall(r"[^.!?।]*\?", reply or "")
+            return questions[-1].strip() if questions else ""
+        replies = [m["content"] for m in self.transcript if m.get("role") == "assistant"][-2:]
+        if len(replies) < 2:
+            return None
+        first, second = last_question(replies[0]), last_question(replies[1])
+        if not first or not second or difflib.SequenceMatcher(None, first, second).ratio() < 0.6:
+            return None
+        return ("You have asked this same question twice already: \"" + second + "\". Do not ask it again. "
+                "Answer what they just said. If they still haven't decided, say our team will call them, "
+                "thank them and close.")
 
     def _set_hold(self, hold: bool):
         """'One minute': stop the are-you-there prompts for a while; back to normal when they speak again."""
@@ -803,21 +824,51 @@ class BaseCallSession:
         self._hangup_fallback = asyncio.create_task(self._end_after(15.0))
 
     async def on_bot_stopped_speaking(self):
-        if self.hangup_pending:
+        if self.hangup_pending and not self._hangup_paused:
             # a short pause after the goodbye; if the customer speaks in it, the call goes on
             self._end_task = asyncio.create_task(self._end_after(GOODBYE_GRACE_SECS))
 
-    def on_user_started_speaking(self):
-        """The customer spoke during or right after our goodbye (9 Nov: "no" then "what services do you have?")."""
-        if not self.hangup_pending or self.ended_by == "agent" or self.done.is_set():
-            return
-        logger.info(f"Call {self.session_id}: customer spoke after the goodbye, keeping the call open")
+    def _cancel_hangup_timers(self):
         for task in (getattr(self, "_end_task", None), getattr(self, "_hangup_fallback", None)):
             if task and not task.done():
                 task.cancel()
-        self.hangup_pending = False
+
+    def on_user_started_speaking(self):
+        """
+        The customer spoke during or right after our goodbye. Wait to hear what it is (drop_transcript
+        decides); if nothing comes within POST_GOODBYE_WAIT_SECS, the call ends after all.
+        """
+        if not self.hangup_pending or self.ended_by == "agent" or self.done.is_set() or self._hangup_paused:
+            return
+        self._cancel_hangup_timers()
+        self._hangup_paused = True
+        self._end_task = asyncio.create_task(self._end_after(POST_GOODBYE_WAIT_SECS))
+
+    def drop_transcript(self, text: str) -> bool:
+        """
+        True when the AI must not answer this transcript:
+          - short noise that STT wrote in a script nobody on this call speaks
+          - after our goodbye: "ok", "thank you", "good night"… (9 Nov call 42 said goodbye five times),
+            or anything once the call has already been reopened once: the call ends instead
+        A real question after the goodbye ("what services do you have?") reopens the call, once.
+        """
+        if is_foreign_noise(text, {"te-IN", "hi-IN", self.language, self.current_language}):
+            logger.info(f"Call {self.session_id}: ignoring noise transcript {text!r}")
+            return True
+        if not self.hangup_pending or self.done.is_set():
+            return False
+        if self.reopened_after_goodbye or is_closing_word(text):
+            logger.info(f"Call {self.session_id}: {text!r} after the goodbye, ending the call")
+            self._cancel_hangup_timers()
+            self._end_task = asyncio.get_running_loop().create_task(self._end_after(0.3))
+            return True
+        logger.info(f"Call {self.session_id}: customer asked something after the goodbye, keeping the call open")
+        self._cancel_hangup_timers()
+        self.reopened_after_goodbye = True
+        self.hangup_pending = self._hangup_paused = False
         self.end_reason = None
         self.send_event("status", text="👂 The customer is still talking…")
+        return False
 
     async def _end_after(self, delay: float):
         await asyncio.sleep(delay)
@@ -880,7 +931,8 @@ class BaseCallSession:
         )
         tts._pause_frame_processing = False
 
-        self.guard = CallGuard(self.on_machine, enabled=self.detect_machines and _env_on("VOICE_MACHINE_DETECTION"))
+        self.guard = CallGuard(self.on_machine, enabled=self.detect_machines and _env_on("VOICE_MACHINE_DETECTION"),
+                               drop_transcript=self.drop_transcript)
         self.router = LanguageRouter(self.language, on_user_text=self._on_user_text, hint_provider=self.message_hints)
         context = LLMContext([
             {"role": "system", "content": system_prompt},
