@@ -65,7 +65,7 @@ NATURAL HUMAN CONVERSATIONAL FLOW & ATTENTIVE LISTENING (CRITICAL):
    - Never overwhelm the customer with a barrage of features or rush the conversation.
    - "Hello", "hmm", "haan / హా / हाँ", "ok" on their own are NOT answers. Never treat them as interest or agreement. Greet them warmly and ask your question clearly.
 3. CLOSING ORIENTATION:
-   - End with ONE clear, warm question asking to schedule a quick 10-minute live demo or kick-off call for tomorrow morning at 11:00 AM or 4:00 PM.
+   - End with ONE clear, warm question offering a free 10-minute consultation call and asking which day and time suits them (within office hours; see CALENDAR).
 4. CALL CONCLUSION & AUTO-HANGUP PROTOCOL (CRITICAL):
    - You MUST smoothly conclude the call as soon as the closing outcome is reached:
      a) IF CUSTOMER ACCEPTS / CONFIRMS A DEMO TIME (e.g. "Tomorrow 11 AM works", "Okay schedule it", "రేపు 11 కి పెట్టండి", "कल 11 बजे चलेगा"):
@@ -93,7 +93,7 @@ NATURAL HUMAN CONVERSATIONAL FLOW & ATTENTIVE LISTENING (CRITICAL):
 OBJECTION HANDLING PLAYBOOK:
 - "Budget is tight / too expensive": Suggest the lower package or a single service from the PRICE LIST that fits. Never offer a discount.
 - "Already have a website/app": "That's great! Are you getting daily paying customers from it? We offer a free 5-minute technical audit to help double your conversions."
-- "Send details on WhatsApp / talk later": "I will certainly WhatsApp the brochure right away! Should we schedule a quick 10-minute demo for tomorrow morning at 11:00 AM?"
+- "Send details on WhatsApp / talk later": "I will certainly WhatsApp the brochure right away! When would be a good time for a quick 10-minute call with our team?"
 - "Interested in pricing/timeline": Quote the exact price and timeline from the PRICE LIST, then offer a demo.
 """
 
@@ -282,7 +282,7 @@ class SalesAgent:
             elif detected_lang == "ml-IN":
                 return "തീർച്ചയായും സാർ! നിങ്ങളുടെ ആവശ്യം ഞങ്ങൾ മനസ്സിലാക്കി. നാളെ രാവിലെ 11 മണിക്ക് 10 മിനിറ്റ് സൗജന്യ ഡെമോ കോൾ ഷെഡ്യൂൾ ചെയ്യട്ടെ?"
             elif detected_lang == "en-IN":
-                return "Got it, thank you! We completely understand your requirements. Could we schedule a quick 10-minute demo call tomorrow morning at 11:00 AM?"
+                return "Got it, thank you! We completely understand your requirements. When would be a good time for a quick 10-minute call with our team?"
             else:
                 return "నమస్కారం అండి! మీ ప్రాజెక్ట్ అవసరాలు మేము విన్నాము, ఖచ్చితంగా చేస్తాము. మా సీనియర్ టెక్నాలజీ ఎక్స్‌పర్ట్‌తో రేపు 10 నిమిషాల ఉచిత డెమో కాల్ షెడ్యూల్ చేయమంటారా?"
 

@@ -111,6 +111,8 @@ def _env_on(name: str, default: str = "on") -> bool:
 
 SILENCE_SECS = float(os.getenv("VOICE_SILENCE_SECS", "8"))       # quiet caller → "can you hear me?"
 HOLD_SECS = float(os.getenv("VOICE_HOLD_SECS", "45"))            # after "one minute"
+# After the goodbye is spoken, wait this long before hanging up: the customer may still say something
+GOODBYE_GRACE_SECS = float(os.getenv("VOICE_GOODBYE_GRACE_SECS", "2.0"))
 # Speaking speed: 1.0 sounded slow and dragging on the 9 Nov call
 TTS_PACE = float(os.getenv("VOICE_TTS_PACE", "1.1"))
 MAX_CALL_SECS = int(os.getenv("VOICE_MAX_CALL_SECONDS", "600"))   # unless the AI employee sets its own
@@ -196,6 +198,7 @@ PATIENCE
 - "I'm busy / driving / in a meeting": ask for a good time, add [CALLBACK: YYYY-MM-DD HH:MM], say goodbye and add [CALL_COMPLETED].
 
 NOT INTERESTED
+- EVERY goodbye thanks them for their valuable time, in the call language (Telugu: "మీ విలువైన సమయానికి ధన్యవాదాలు అండి"). When they don't need anything now, or say they'll call if needed, also ask them to think it over and call us if anything comes up ("ఒకసారి ఆలోచించండి, ఏదైనా అవసరం ఉంటే మాకు కాల్ చేయండి").
 - The first time they say they are not interested, don't hang up yet: acknowledge it politely and make one short attempt, either ask what they use today or why, or offer to send details on WhatsApp or call at a better time.
 - If they say no again, thank them, say goodbye and add [CALL_COMPLETED]. If they ask not to be called again, respect it immediately and add [DO_NOT_CALL] [CALL_COMPLETED].
 
@@ -362,13 +365,48 @@ def employee_prompt(employee: Optional[Dict[str, Any]]) -> str:
     return "\n".join(lines) + "\n"
 
 
+# When our team can take a consultation call or visit (the office hours on the website)
+OFFICE_HOURS = {0: ("09:30", "19:00"), 1: ("09:30", "19:00"), 2: ("09:30", "19:00"), 3: ("09:30", "19:00"),
+                4: ("09:30", "19:00"), 5: ("10:00", "18:00")}  # Sunday (6) closed
+
+
+def _clock(hhmm: str) -> str:
+    return datetime.strptime(hhmm, "%H:%M").strftime("%I:%M %p").lstrip("0").replace(":00", "")
+
+
+def open_times_today(now_ist: datetime) -> Optional[str]:
+    """'from 1 PM to 7 PM' for the rest of today (starting at least 30 minutes from now), or None."""
+    hours = OFFICE_HOURS.get(now_ist.weekday())
+    if not hours:
+        return None
+    soonest = now_ist + timedelta(minutes=30)
+    start = soonest.replace(minute=0 if soonest.minute == 0 else 30 if soonest.minute <= 30 else 0, second=0, microsecond=0)
+    if soonest.minute > 30:
+        start += timedelta(hours=1)
+    opens = now_ist.replace(hour=int(hours[0][:2]), minute=int(hours[0][3:]), second=0, microsecond=0)
+    closes = now_ist.replace(hour=int(hours[1][:2]), minute=int(hours[1][3:]), second=0, microsecond=0)
+    start = max(start, opens)
+    if start >= closes:
+        return None
+    return f"from {_clock(start.strftime('%H:%M'))} to {_clock(hours[1])}"
+
+
 def calendar_hint(now_ist: datetime) -> str:
-    """Real dates for the next week, so the AI never invents one ("Monday 5 November" on a Friday 6 November)."""
+    """Real dates and open times, so the AI never invents a date or calls a later time today 'past'."""
     def day(d: datetime) -> str:
         return f"{d:%A} {d.day} {d:%B}"
-    upcoming = ", ".join(day(now_ist + timedelta(days=i)) for i in range(2, 8))
-    return (f"Today is {day(now_ist)} {now_ist:%Y}; the time now is {now_ist:%I:%M %p} IST. "
-            f"Tomorrow is {day(now_ist + timedelta(days=1))}. After that: {upcoming}.")
+
+    def hours(d: datetime) -> str:
+        h = OFFICE_HOURS.get(d.weekday())
+        return f"{_clock(h[0])} to {_clock(h[1])}" if h else "closed"
+    upcoming = ", ".join(f"{day(now_ist + timedelta(days=i))} ({hours(now_ist + timedelta(days=i))})" for i in range(2, 8))
+    today = open_times_today(now_ist)
+    today_text = (f"Times still open TODAY: {today}. Any time in that range is in the future: accept it." if today
+                  else "No more times today: offer tomorrow or a later day.")
+    return (f"Today is {day(now_ist)} {now_ist:%Y}; the time now is {now_ist:%I:%M %p} IST. {today_text} "
+            f"Tomorrow is {day(now_ist + timedelta(days=1))} ({hours(now_ist + timedelta(days=1))}). After that: {upcoming}. "
+            "To book a call or visit, ask which day and time suits them, and accept any time inside these hours. "
+            "Don't suggest fixed times like 11 AM or 4 PM unless they ask you to suggest; then offer the next open slot.")
 
 
 def whatsapp_note() -> str:
@@ -484,6 +522,7 @@ class SpeakingObserver(BaseObserver):
         elif isinstance(frame, UserStartedSpeakingFrame) and not self._user:
             self._user, self._user_since = True, now
             self._session.send_event("speaking", who="user", active=True)
+            self._session.on_user_started_speaking()
         elif isinstance(frame, UserStoppedSpeakingFrame) and self._user:
             self._user = False
             self._session.user_talk_secs += now - self._user_since
@@ -764,7 +803,20 @@ class BaseCallSession:
 
     async def on_bot_stopped_speaking(self):
         if self.hangup_pending:
-            await self._end_after(0.8)  # short pause after the goodbye
+            # a short pause after the goodbye; if the customer speaks in it, the call goes on
+            self._end_task = asyncio.create_task(self._end_after(GOODBYE_GRACE_SECS))
+
+    def on_user_started_speaking(self):
+        """The customer spoke during or right after our goodbye (9 Nov: "no" then "what services do you have?")."""
+        if not self.hangup_pending or self.ended_by == "agent" or self.done.is_set():
+            return
+        logger.info(f"Call {self.session_id}: customer spoke after the goodbye, keeping the call open")
+        for task in (getattr(self, "_end_task", None), getattr(self, "_hangup_fallback", None)):
+            if task and not task.done():
+                task.cancel()
+        self.hangup_pending = False
+        self.end_reason = None
+        self.send_event("status", text="👂 The customer is still talking…")
 
     async def _end_after(self, delay: float):
         await asyncio.sleep(delay)

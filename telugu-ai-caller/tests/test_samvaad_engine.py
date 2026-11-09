@@ -127,7 +127,7 @@ def test_connected_result_is_saved_without_follow_ups(api, shriya, monkeypatch):
     payload = {
         "attempt_id": f"attempt-{job.id}", "status": "connected", "duration": 70, "interaction_id": "int-1",
         "channel_info": {"channel_type": "v2v", "channel_provider": "vobiz", "agent_phone_number": "+917965482229"},
-        "final_agent_variables": {"call_outcome": "qualified", "project_type": "website"},
+        "final_agent_variables": {"call_status": "qualified", "project_type": "website", "call_summary": "Wants a website."},
         "webhook_config": {"url": "x", "metadata": {"job_id": job.id, "lead_id": lead}},
         "interaction_transcript": [{"role": "agent", "en_text": "Hello, this is Shriya."},
                                    {"role": "user", "en_text": "I need a website."}],
@@ -142,7 +142,7 @@ def test_connected_result_is_saved_without_follow_ups(api, shriya, monkeypatch):
         assert "Sarvam Agent (Shriya)" in call.summary and "int-1" in call.summary
         transcript = call.transcript if isinstance(call.transcript, list) else json.loads(call.transcript)
         assert transcript[0] == {"role": "assistant", "content": "Hello, this is Shriya."}
-        assert "website" in call.extracted_requirements
+        assert "website" in call.extracted_requirements and call.outcome == "qualified" and call.summary.startswith("Wants a website.")
         assert session.query(CallJob).filter(CallJob.lead_id == lead).count() == 1  # no follow-up queued
     finally:
         session.close()

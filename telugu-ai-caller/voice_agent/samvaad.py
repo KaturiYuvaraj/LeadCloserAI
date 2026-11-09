@@ -34,6 +34,8 @@ API_BASE = "https://apps.sarvam.ai/api/outbounds/v1"
 ENGINES = {"pipecat": "Our engine (Shreya)", "samvaad": "Sarvam Agent (Shriya)"}
 DEFAULT_ENGINE = "pipecat"
 
+DEAL_STAGES = {"qualified", "follow_up", "lost", "demo_scheduled", "closed_won"}
+
 LANGUAGE_NAMES = {"te-IN": "Telugu", "hi-IN": "Hindi", "en-IN": "English",
                   "ta-IN": "Tamil", "kn-IN": "Kannada", "ml-IN": "Malayalam"}
 
@@ -160,11 +162,15 @@ def result_to_call(payload: Dict[str, Any], lead_id: int, phone: str) -> Dict[st
     variables = payload.get("final_agent_variables") or {}
     duration = int(payload.get("duration") or 0)
     summary = f"Sarvam Agent (Shriya) call, {duration} s. Transcript is Sarvam's English translation."
+    if isinstance(variables.get("call_summary"), str) and variables["call_summary"].strip():
+        summary = f"{variables['call_summary'].strip()} ({summary})"
     if payload.get("interaction_id"):
         summary += f" Sarvam interaction {payload['interaction_id']} has the recording."
     return {
         "lead_id": lead_id, "call_type": "phone", "phone_number": phone, "status": "completed",
         "duration_seconds": duration, "transcript": transcript, "summary": summary,
         "outcome_label": _outcome(variables), "call_sid": payload.get("attempt_id"),
+        # Shriya's "qualified" means requirements collected, not a won deal (it was shown as closed_won)
+        "deal_stage": _outcome(variables).lower() if _outcome(variables).lower() in DEAL_STAGES else None,
         "extracted_requirements": json.dumps(variables, ensure_ascii=False) if variables else "",
     }

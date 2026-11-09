@@ -114,12 +114,15 @@ _UPSET = [re.compile(p, re.IGNORECASE) for p in UPSET_PATTERNS]
 NOT_INTERESTED_PATTERNS = [
     r"\bnot\s+interested\b", r"\bno\s+need\b", r"\bdon'?t\s+(need|want)\b",
     r"नहीं\s+चाहिए", r"ज़?रूरत\s+नहीं", r"दिलचस्पी\s+नहीं",
-    r"వద్దు", r"అవసరం\s+లేదు", r"ఆసక్తి\s+లేదు", r"ఇంట్రెస్ట్\s+లేదు", r"కావాల్సిన\s+అవసరం\s+లేదు",
+    r"వద్దు", r"వద్దండి", r"అవసరం\s+లేద", r"అక్కర్లేద", r"ఆసక్తి\s+లేద", r"ఇంట్రెస్ట్\s+లేద",
+    r"రిక్వైర్‌?మెంట్\s+లేద", r"\bno\s+requirement\b", r"\bnot\s+required\b",
 ]
 ASKS_SOMETHING = r"ఎంత|ఎప్పుడు|ఏంటి|ఎలా|ఎందుకు|చెప్పండి|ప్రైస్|how|what|when|why|price|tell|कितन|क्या|कब|बताइए"
 NOT_INTERESTED_FIRST = ("This is their first no. Do NOT say goodbye yet. Respect it in a few words, then ask one short "
                         "question: why, or what they use today, or if details on WhatsApp or a later call would help.")
-NOT_INTERESTED_AGAIN = "They have said no again. Thank them, say goodbye and add [CALL_COMPLETED]. Do not try again."
+NOT_INTERESTED_AGAIN = ("They have said no again. Don't try again. Close warmly in one or two short sentences: ask them to "
+                        "think it over and contact us if anything comes up, thank them for their valuable time, say goodbye "
+                        "and add [CALL_COMPLETED].")
 _NOT_INTERESTED = [re.compile(p, re.IGNORECASE) for p in NOT_INTERESTED_PATTERNS]
 _ASKS_SOMETHING = re.compile(ASKS_SOMETHING, re.IGNORECASE)
 # "call me tomorrow at 4": a time word and a call-me-back request together

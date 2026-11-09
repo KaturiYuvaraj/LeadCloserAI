@@ -553,3 +553,48 @@ def test_experience_is_said_as_years_and_speech_is_faster():
     assert "23 years" in COMPANY_INFO_FOR_AI and "Never say the year 2003" in COMPANY_INFO_FOR_AI
     assert "started in 2003" not in COMPANY_INFO_FOR_AI and "Never read a year as a count" in VOICE_RULES
     assert TTS_PACE > 1.0
+
+
+def test_everyday_no_gets_one_gentle_try_then_a_warm_close():
+    from voice_agent.call_guard import caller_hints
+    for text in ("ఇస్తాం, నాకేం అవసరం లేదండి", "వద్దండి", "అక్కర్లేదు", "not required"):
+        assert "Do NOT say goodbye yet" in caller_hints(text, False), text
+    again = caller_hints("వద్దు అన్నాను కదా", True)
+    assert "think it over" in again and "valuable time" in again and "[CALL_COMPLETED]" in again
+
+
+def test_every_goodbye_thanks_for_their_time():
+    from voice_agent.session import VOICE_RULES
+    assert "EVERY goodbye thanks them for their valuable time" in VOICE_RULES and "ఒకసారి ఆలోచించండి" in VOICE_RULES
+
+
+def test_later_today_is_open_and_no_fixed_slots():
+    from datetime import datetime
+    from services.sales_agent import sales_agent
+    from voice_agent.session import IST, calendar_hint
+    at = lambda s: datetime.strptime(s, "%Y-%m-%d %H:%M").replace(tzinfo=IST)  # noqa: E731
+    noon = calendar_hint(at("2026-11-09 12:24"))  # Monday: 2 PM must be bookable
+    assert "Times still open TODAY: from 1 PM to 7 PM" in noon and "accept any time inside these hours" in noon
+    assert "No more times today" in calendar_hint(at("2026-11-09 18:45"))
+    assert "Sunday 15 November (closed)" in calendar_hint(at("2026-11-14 12:00"))
+    assert "No more times today" in calendar_hint(at("2026-11-15 11:00"))  # Sunday
+    assert "11:00 AM or 4:00 PM" not in sales_agent._build_system_prompt(None)
+
+
+def test_customer_speaking_after_goodbye_keeps_the_call_open():
+    import asyncio as aio
+    from voice_agent.session import BaseCallSession
+
+    async def scenario():
+        session = BaseCallSession.__new__(BaseCallSession)
+        session.session_id, session.hangup_pending, session.ended_by = "t", False, None
+        session.end_reason, session.task, session.done = None, object(), aio.Event()
+        session.send_event = lambda *a, **k: None
+        await session._on_conversation_concluded()
+        await session.on_bot_stopped_speaking()
+        session.on_user_started_speaking()
+        await aio.sleep(0)
+        assert session.hangup_pending is False and session.end_reason is None
+        assert session._end_task.cancelled() and session._hangup_fallback.cancelled()
+
+    aio.run(scenario())
