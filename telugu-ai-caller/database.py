@@ -287,7 +287,7 @@ def init_db():
                     "name": "S P Senior Closer (Default)",
                     "job_type": "instant",
                     "language": "te-IN",
-                    "voice": "kavitha_te_conversation",
+                    "voice": "pooja_te_conversation",
                     "greeting": "నమస్కారం అండి! నేను S P Associates నుండి శ్రేయ మాట్లాడుతున్నాను. మీ వ్యాపారానికి కస్టమ్ వెబ్‌సైట్ లేదా మొబైల్ యాప్ అవసరం ఉందా అండి?",
                     "system_prompt": "You are Shreya, a friendly sales executive at S P Associates. Understand what the customer needs, answer their questions, handle objections politely, and offer a free consultation call with our team.",
                     "script_steps": {

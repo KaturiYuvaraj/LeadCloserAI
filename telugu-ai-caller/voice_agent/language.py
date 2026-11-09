@@ -38,7 +38,7 @@ except ImportError:
 
 # bulbul:v4-flash speakers for all supported languages
 VOICES = {
-    "te-IN": "kavitha_te_conversation",
+    "te-IN": "pooja_te_conversation",  # the voice of Sarvam's agent Shriya; clearer than Kavitha (9 Nov)
     "hi-IN": "kavya_hi_conversational",  # female, to match the agent Shreya
     "en-IN": "simran_en_sales",
     "ta-IN": "kavitha_te_conversation",
