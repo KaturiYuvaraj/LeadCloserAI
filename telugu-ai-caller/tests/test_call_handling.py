@@ -689,3 +689,10 @@ def test_goodbyes_are_formal_and_hello_is_not_greeted_again():
     assert "don't greet again" in VOICE_RULES and "ఇంకా ఏమైనా తెలుసుకోవాలనుకుంటున్నారా" in VOICE_RULES
     assert "పదకొండు గంటలకా" not in prompt and "11 గంటలకు మా సీనియర్" not in prompt
 
+
+
+def test_personal_questions_get_a_warm_short_answer_without_volunteering_ai():
+    from voice_agent.session import VOICE_RULES
+    assert "PERSONAL QUESTIONS" in VOICE_RULES and "Never invent a personal life" in VOICE_RULES
+    assert "never bring up being a virtual assistant or AI yourself" in VOICE_RULES
+    assert "Only if the customer sincerely and directly asks whether you are a robot" in VOICE_RULES
