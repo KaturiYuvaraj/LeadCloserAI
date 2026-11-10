@@ -49,7 +49,8 @@ from pipecat.runner.utils import parse_telephony_websocket
 from voice_agent.session import BaseCallSession, PhoneCallSession, VobizCallSession, WebCallSession
 from voice_agent.dialer import call_queue
 from voice_agent import webhook_auth
-from voice_agent.vobiz import build_answer_xml, parse_start_message
+from voice_agent import inbound_hours
+from voice_agent.vobiz import build_answer_xml, build_transfer_xml, parse_start_message
 
 router = APIRouter(tags=["voice"])
 
@@ -283,6 +284,14 @@ async def vobiz_answer(request: Request):
     }
     if stream_query.get("job_id", "").isdigit():
         await asyncio.to_thread(call_queue.on_answered, int(stream_query["job_id"]))
+    if not stream_query.get("lead_id") and not stream_query.get("job_id"):
+        # An incoming call: outside the AI's hours (set on the Inbound page) it goes to the team's phone
+        transfer_to = inbound_hours.transfer_number_now()
+        if transfer_to:
+            logger.info(f"Vobiz answer · incoming call {stream_query.get('call_id')} from {stream_query.get('from')} "
+                        f"outside AI hours: forwarding to the team")
+            caller_id = os.getenv("VOBIZ_CALLER_ID", "") or stream_query.get("to", "")
+            return Response(content=build_transfer_xml(transfer_to, caller_id), media_type="application/xml")
     stream_url = f"{_public_ws_base(request)}/api/voice/vobiz/stream"
     if stream_query:
         stream_url += "?" + urlencode(stream_query)

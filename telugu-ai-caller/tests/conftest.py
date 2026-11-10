@@ -24,6 +24,7 @@ os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB.as_posix()}"
 os.environ["DIALER_PROVIDER"] = "fake"
 os.environ["RECORDINGS_DIR"] = str(_TEST_DB.parent / "recordings")
 os.environ["CALL_ENGINE_FILE"] = str(_TEST_DB.parent / "call_engine.json")
+os.environ["INBOUND_HOURS_FILE"] = str(_TEST_DB.parent / "inbound_hours.json")
 for _secret in ("VOBIZ_AUTH_ID", "VOBIZ_AUTH_TOKEN", "VOBIZ_CALLER_ID", "VOBIZ_WEBHOOK_SECRET",
                 "SAMVAAD_API_KEY", "SAMVAAD_ORG_ID", "SAMVAAD_WORKSPACE_ID", "SAMVAAD_APP_ID",
                 "SAMVAAD_APP_VERSION", "SAMVAAD_CONNECTION_ID", "SAMVAAD_AGENT_NUMBER",

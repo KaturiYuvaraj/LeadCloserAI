@@ -54,6 +54,21 @@ def build_answer_xml(stream_url: str, status_callback_url: Optional[str] = None)
     )
 
 
+def build_transfer_xml(number: str, caller_id: str, timeout: int = 30) -> str:
+    """XML for Vobiz's Answer URL that forwards an incoming call to the team's phone.
+    Vobiz needs callerId to be one of our own Vobiz numbers for the forwarded leg."""
+    caller = f' callerId="{escape(caller_id)}"' if caller_id else ""
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        "<Response>\n"
+        f'  <Dial{caller} timeout="{int(timeout)}">\n'
+        f"    <Number>{escape(number)}</Number>\n"
+        "  </Dial>\n"
+        "  <Hangup/>\n"
+        "</Response>\n"
+    )
+
+
 def parse_start_message(message: Dict[str, Any]) -> Dict[str, Any]:
     """
     Extract call details from Vobiz's `start` event. streamId may be top-level or

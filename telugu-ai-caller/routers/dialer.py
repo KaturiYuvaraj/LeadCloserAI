@@ -23,7 +23,7 @@ from core.auth import get_current_user, get_optional_user, get_request_account_i
 from core.db import SessionLocal
 from database import clean_phone, create_lead
 from models import Call, CallJob, Lead
-from voice_agent import credits, samvaad
+from voice_agent import credits, inbound_hours, samvaad
 from voice_agent.dialer import call_queue
 from voice_agent.rules import is_dialable_number
 
@@ -202,6 +202,22 @@ async def dialer_set_engine(payload: Dict[str, Any], user: Dict[str, Any] = Depe
         raise HTTPException(status_code=400, detail=str(e))
     logger.info(f"Calling engine set to {samvaad.current_engine()} by {user.get('email') or user.get('id')}")
     return samvaad.engine_options()
+
+
+@router.get("/api/inbound/hours")
+async def get_inbound_hours(user: Dict[str, Any] = Depends(get_current_user)):
+    """When the AI answers incoming calls, and where other calls are forwarded."""
+    return inbound_hours.status()
+
+
+@router.post("/api/inbound/hours")
+async def set_inbound_hours(payload: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):
+    try:
+        inbound_hours.save_settings(payload or {})
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    logger.info(f"Inbound AI hours set to {inbound_hours.get_settings()} by {user.get('email') or user.get('id')}")
+    return inbound_hours.status()
 
 
 @router.get("/api/dialer/status")

@@ -1132,6 +1132,40 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   window.loadCallEngine();
 
+  // Inbound page: the hours when the AI answers incoming calls; other calls go to the transfer number
+  const showInboundHours = (data) => {
+    const $ = (id) => document.getElementById(id);
+    if (!$("inboundHoursEnabled")) return;
+    $("inboundHoursEnabled").checked = !!data.enabled;
+    $("inboundHoursStart").value = data.start || "20:00";
+    $("inboundHoursEnd").value = data.end || "10:00";
+    if (data.transfer_number) $("inboundTransferNumber").value = data.transfer_number;
+    const label = (t) => new Date(`2000-01-01T${t}`).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    $("inboundHoursBadge").innerText = data.enabled ? `AI ${label(data.start)} – ${label(data.end)}` : "Active 24/7";
+    $("inboundHoursStatus").innerText = !data.enabled ? "Now: the AI answers every incoming call."
+      : data.ai_answering_now ? "Now: the AI is answering incoming calls."
+      : `Now: incoming calls go to ${data.transfer_number}.`;
+  };
+  window.loadInboundHours = async () => {
+    try {
+      const resp = await fetch("/api/inbound/hours");
+      if (resp.ok) showInboundHours(await resp.json());
+    } catch (_) {}
+  };
+  window.saveInboundHours = async () => {
+    const $ = (id) => document.getElementById(id);
+    const resp = await fetch("/api/inbound/hours", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled: $("inboundHoursEnabled").checked, start: $("inboundHoursStart").value,
+                             end: $("inboundHoursEnd").value, transfer_number: $("inboundTransferNumber").value }),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) { alert(data.detail || "Could not save the inbound hours."); return; }
+    showInboundHours(data);
+    alert("Saved.");
+  };
+  window.loadInboundHours();
+
   // "Call a number": type any number; it is added as a lead if new, then the normal Call now flow runs
   window.openCallNumber = () => {
     if (document.getElementById("callNumberBox")) return;

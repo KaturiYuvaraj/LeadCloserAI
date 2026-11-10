@@ -14,6 +14,12 @@ def _item(code: str, name: str, category: str, price: float, days: int, delivera
             "max_discount_pct": 10.0, "delivery_days": days, "deliverables": deliverables, "active": True}
 
 
+# Standard and Premium apps include the growth work (marketing and leads), which is why they cost more
+_APP_STANDARD = ("For growing businesses. We build your app to win new customers and grow your business: the app, its launch, "
+                 "plus digital marketing and lead generation to bring customers to it. 8-12 weeks. Server and hosting paid by the client.")
+_APP_PREMIUM = ("For large-scale products. A scalable app platform designed to grow with your business and your profits: built for "
+                "many users, plus digital marketing, lead generation and growth support. 4-6 months. Server and hosting paid by the client.")
+
 # delivery_days 0 = not agreed yet: the team confirms it
 PRICE_BOOK: List[Dict[str, Any]] = [
     _item("pkg_starter", "Starter Package (website + marketing)", "Website + Digital Marketing", 24500, 0,
@@ -48,10 +54,10 @@ PRICE_BOOK: List[Dict[str, Any]] = [
     _item("svc_premium_gmb", "GMB Setup + GMB Ads, Premium", "Individual Services", 15500, 0, "One-time setup, GMB Ads included. Ad budget Rs 1,000/day."),
     _item("app_basic_android", "Mobile App Basic / MVP, Android", "Mobile App", 200000, 42, "Single platform, first version. 4-6 weeks. Server and hosting paid by the client."),
     _item("app_basic_both", "Mobile App Basic / MVP, Android + iOS", "Mobile App", 300000, 42, "First version. 4-6 weeks. Server and hosting paid by the client."),
-    _item("app_standard_android", "Mobile App Standard / Business Growth, Android", "Mobile App", 600000, 84, "Business growth app. 8-12 weeks. Server and hosting paid by the client."),
-    _item("app_standard_both", "Mobile App Standard / Business Growth, Android + iOS", "Mobile App", 1000000, 84, "Business growth app. 8-12 weeks. Server and hosting paid by the client."),
-    _item("app_premium_android", "Mobile App Premium / Enterprise, Android", "Mobile App", 1500000, 180, "Enterprise, scalable platform. 4-6 months. Server and hosting paid by the client."),
-    _item("app_premium_both", "Mobile App Premium / Enterprise, Android + iOS", "Mobile App", 3000000, 180, "Enterprise, scalable platform. 4-6 months. Server and hosting paid by the client."),
+    _item("app_standard_android", "Business Growth Application (Standard), Android", "Mobile App", 600000, 84, _APP_STANDARD),
+    _item("app_standard_both", "Business Growth Application (Standard), Android + iOS", "Mobile App", 1000000, 84, _APP_STANDARD),
+    _item("app_premium_android", "Enterprise & Scalable Platform (Premium), Android", "Mobile App", 1500000, 180, _APP_PREMIUM),
+    _item("app_premium_both", "Enterprise & Scalable Platform (Premium), Android + iOS", "Mobile App", 3000000, 180, _APP_PREMIUM),
     _item("erp_basic", "ERP Basic / MVP", "ERP", 200000, 42, "Single platform. 4-6 weeks. Server and hosting paid by the client."),
     _item("erp_standard", "ERP Standard / Business Growth", "ERP", 600000, 84, "Growing businesses. 8-12 weeks. Server and hosting paid by the client."),
     _item("erp_premium", "ERP Premium / Enterprise", "ERP", 1500000, 180, "Large-scale operations. 4-6 months. Server and hosting paid by the client."),
@@ -107,8 +113,9 @@ Package prices and individual prices are separate lists: never mix them. For exa
 
 MOBILE APPS (server and hosting paid separately by the client, GST 18% extra):
 - Basic / MVP (first version), 4-6 weeks: Android only ₹2,00,000; Android + iPhone ₹3,00,000.
-- Standard / Business Growth (growing businesses), 8-12 weeks: Android only ₹6,00,000; Android + iPhone ₹10,00,000.
-- Premium / Enterprise (large products), 4-6 months: Android only ₹15,00,000; Android + iPhone ₹30,00,000.
+- Standard: Business Growth Application (for growing businesses), 8-12 weeks: Android only ₹6,00,000; Android + iPhone ₹10,00,000. We build the app to win new customers and grow their business: the app and its launch, plus digital marketing and lead generation to bring customers to it.
+- Premium: Enterprise & Scalable Platform (for large-scale products), 4-6 months: Android only ₹15,00,000; Android + iPhone ₹30,00,000. A scalable app platform designed to grow with their business and profits: built for many users, plus digital marketing, lead generation and growth support.
+- If they ask why Standard and Premium cost much more than Basic: Basic is only the first version of the app. Standard and Premium are complete growth solutions: we build the app and also do the marketing and lead generation that bring them customers. The team shares the full list of what's included in the detailed quotation; never promise a specific feature, campaign or number of leads yourself.
 
 ERP SOFTWARE (server and hosting paid by the client, GST extra): Basic / MVP, 4-6 weeks, ₹2,00,000. Standard / Business Growth, 8-12 weeks, ₹6,00,000. Premium / Enterprise, 4-6 months, ₹15,00,000.
 
