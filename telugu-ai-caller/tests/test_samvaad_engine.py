@@ -243,3 +243,18 @@ def test_shriya_not_answering_is_retried(shriya):
     shriya.on_samvaad_result(job.id, {"attempt_id": "a", "status": "no_answer"})
     after = job_for(lead)
     assert after.state == "retry_scheduled" and after.last_disposition == "no_answer"
+
+
+def test_call_now_on_a_waiting_follow_up_gets_the_full_five_tries(queue):
+    from datetime import timedelta as td
+    from voice_agent.rules import db_time
+    lead = make_lead(name="Follow Up Phani", phone="+919812300960")
+    session = SessionLocal()
+    session.add(CallJob(account_id=1, lead_id=lead, phone_e164="+919812300960", state="scheduled", priority=1,
+                        attempt=0, max_attempts=1, last_disposition="followup",
+                        next_attempt_at=db_time(session, MONDAY_11_IST + td(days=6))))
+    session.commit()
+    session.close()
+    queue.enqueue([lead], priority=0, consent_confirmed=True)
+    job = job_for(lead)
+    assert job.state == "queued" and job.attempt == 0 and job.max_attempts == 5

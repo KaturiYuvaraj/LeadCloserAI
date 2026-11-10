@@ -135,6 +135,9 @@ class CallQueue:
                             oj.priority = 0
                             oj.next_attempt_at = db_time(session, now)
                             oj.block_reason = None
+                            # a fresh call with the full retries, even if this was a 1-try follow-up (10 Nov)
+                            oj.attempt, oj.last_error = 0, None
+                            oj.max_attempts = max(oj.max_attempts or 0, max_attempts or followups.MAX_ATTEMPTS)
                             if language:
                                 oj.language = language
                             if consent_confirmed and not lead.consent_source:
