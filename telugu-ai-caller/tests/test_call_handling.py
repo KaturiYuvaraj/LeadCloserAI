@@ -589,7 +589,7 @@ def test_talking_after_goodbye_pauses_the_hangup_until_the_words_arrive():
     async def scenario():
         session = BaseCallSession.__new__(BaseCallSession)
         session.session_id, session.hangup_pending, session.ended_by = "t", False, None
-        session._hangup_paused, session.reopened_after_goodbye = False, False
+        session._hangup_paused, session.reopened_after_goodbye = False, 0
         session.end_reason, session.task, session.done = None, object(), aio.Event()
         session.send_event = lambda *a, **k: None
         await session._on_conversation_concluded()
@@ -621,9 +621,10 @@ def test_noise_in_other_scripts_is_ignored_but_real_speech_is_kept():
 
 def test_closing_words_after_goodbye():
     from voice_agent.call_guard import is_closing_word
-    for text in ("Okay.", "Good night.", "ఓకే అండి.", "Hello.", "ओके ओके, चला चला.", "థాంక్యూ"):
+    for text in ("Okay.", "Good night.", "ఓకే అండి.", "ओके ओके, चला चला.", "థాంక్యూ", "కలవండి, థాంక్యూ."):
         assert is_closing_word(text), text
-    for text in ("మీకు వాట్సాప్ ఉందా అండి?", "మీ దగ్గర ఏ services ఉన్నాయి?", "what services do you have"):
+    for text in ("మీకు వాట్సాప్ ఉందా అండి?", "మీ దగ్గర ఏ services ఉన్నాయి?", "what services do you have",
+                 "Hello.", "wait wait", "ఆగండి", "A W."):
         assert not is_closing_word(text), text
 
 
@@ -632,13 +633,13 @@ def _ending_session():
     from voice_agent.session import BaseCallSession
     s = BaseCallSession.__new__(BaseCallSession)
     s.session_id, s.hangup_pending, s.ended_by, s._hangup_paused = "t", False, None, False
-    s.reopened_after_goodbye, s.end_reason, s.task, s.done = False, None, object(), aio.Event()
+    s.reopened_after_goodbye, s.end_reason, s.task, s.done = 0, None, object(), aio.Event()
     s.language, s.router = "te-IN", None
     s.send_event = lambda *a, **k: None
     return s
 
 
-def test_goodbye_is_said_once_even_if_the_customer_keeps_talking():
+def test_after_goodbye_closing_words_end_the_call_and_anything_else_is_heard():
     import asyncio as aio
 
     async def scenario():
@@ -649,12 +650,13 @@ def test_goodbye_is_said_once_even_if_the_customer_keeps_talking():
         assert s.hangup_pending
 
         s2 = _ending_session()
+        for heard in ("Hello.", "ఆగండి ఆగండి", "మీకు వాట్సాప్ ఉందా అండి?"):  # 10 Nov: "Hello." was cut off
+            await s2._on_conversation_concluded()
+            s2.on_user_started_speaking()
+            assert s2.drop_transcript(heard) is False, heard
+            assert not s2.hangup_pending
         await s2._on_conversation_concluded()
-        s2.on_user_started_speaking()
-        assert s2.drop_transcript("మీకు వాట్సాప్ ఉందా అండి?") is False  # a real question reopens it, once
-        assert not s2.hangup_pending and s2.reopened_after_goodbye
-        await s2._on_conversation_concluded()
-        assert s2.drop_transcript("మరి మీ వాట్సాప్ ఏంటిది?") is True  # the second time, the call ends
+        assert s2.drop_transcript("మరి ఇంకా?") is True  # after 3 reopenings the next goodbye is final
         for task in (s._end_task, s2._end_task):
             task.cancel()
 
@@ -677,3 +679,13 @@ def test_no_senior_sales_closer_or_tech_lead_promises():
     from services.sales_agent import sales_agent
     prompt = sales_agent._build_system_prompt(None)
     assert "Senior Sales Closer" not in prompt and "senior tech lead will connect" not in prompt
+
+
+def test_goodbyes_are_formal_and_hello_is_not_greeted_again():
+    from services.sales_agent import sales_agent
+    from voice_agent.session import VOICE_RULES
+    prompt = sales_agent._build_system_prompt(None) + VOICE_RULES
+    assert "ఉంటానండి, సెలవు" not in prompt and "never say \"సెలవు\"" in VOICE_RULES
+    assert "don't greet again" in VOICE_RULES and "ఇంకా ఏమైనా తెలుసుకోవాలనుకుంటున్నారా" in VOICE_RULES
+    assert "పదకొండు గంటలకా" not in prompt and "11 గంటలకు మా సీనియర్" not in prompt
+

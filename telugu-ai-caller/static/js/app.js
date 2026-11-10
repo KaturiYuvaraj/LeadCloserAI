@@ -1044,7 +1044,8 @@ document.addEventListener("DOMContentLoaded", () => {
         window.showCallTracker(`✅ Call finished with ${who}: ${(job.last_disposition || "completed").replace(/_/g, " ")}.`, "ok", job.call_id);
         try { await refreshLeads(); } catch (_) {}
       } else if (job.state === "retry_scheduled") {
-        window.showCallTracker(`📵 ${who} did not answer. It will be retried ${job.next_attempt_at ? "at " + istTime(job.next_attempt_at) : "later"}.`, "warn");
+        const missed = job.last_disposition === "busy" ? "was busy or declined the call" : "did not answer";
+        window.showCallTracker(`📵 ${who} ${missed}. It will be retried ${job.next_attempt_at ? "at " + istTime(job.next_attempt_at) : "later"}.`, "warn");
       } else if (job.state === "not_reachable" && job.provider === "samvaad" && job.last_error) {
         window.showCallTracker(`⛔ Sarvam Agent could not start the call: ${job.last_error}`, "bad");
       } else if (job.state === "not_reachable") {

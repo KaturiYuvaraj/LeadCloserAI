@@ -89,23 +89,19 @@ def is_foreign_noise(text: str, call_languages: set) -> bool:
     return count > 0 and count >= letters / 2 and lang not in call_languages
 
 
-# Short things people say when a call is ending: they don't need another goodbye
+# What people say when a call is ending: these don't need another goodbye. Only these end the call
+# after our goodbye; "hello", "wait" or anything else is answered (10 Nov: "Hello." after the goodbye was cut off).
 _CLOSING_WORDS = re.compile(
-    r"^\s*(ok(ay)?|ok\s*ok|hm+|hello|hi|yes|yeah|no|thanks?|thank\s+you|bye|good\s*(night|bye|day)|sure|"
-    r"సరే|ఓకే|హలో|అలాగే|థాంక్స్|థాంక్యూ|ధన్యవాదాలు|ఉంటాను|బై|హా|అవును|అండి|ఓకే\s+అండి|"
-    r"ठीक\s+है|ओके|हाँ|हां|जी|धन्यवाद|बाय|चलो|चला)[\s.,!?।]*(అండి|जी|sir|madam)?[\s.,!?।]*$",
+    r"^\s*(ok(ay)?|thanks?|thank|you|bye|good|night|morning|day|sure|fine|take|care|see|later|"
+    r"సరే|ఓకే|అలాగే|థాంక్స్|థాంక్యూ|ధన్యవాదాలు|ఉంటాను|బై|కలవండి|అండి|"
+    r"ठीक|है|ओके|धन्यवाद|शुक्रिया|बाय|चलो|चला|जी)[\s.,!?।]*(అండి|जी|sir|madam)?[\s.,!?।]*$",
     re.IGNORECASE)
 
 
 def is_closing_word(text: str) -> bool:
-    """'ok', 'thank you', 'good night', 'సరే అండి', 'ओके ओके, चला चला'… or under 3 words that aren't a question."""
-    text = (text or "").strip()
-    if _CLOSING_WORDS.match(text):
-        return True
-    parts = [p for p in re.split(r"[\s,.!?।]+", text) if p]
-    if parts and all(_CLOSING_WORDS.match(p) for p in parts):
-        return True
-    return len(text.split()) < 3 and not text.endswith("?") and not _ASKS_SOMETHING.search(text)
+    """'ok', 'thank you', 'good night', 'సరే అండి', 'ओके ओके, चला चला': every word is a closing word."""
+    parts = [p for p in re.split(r"[\s,.!?।]+", (text or "").strip()) if p]
+    return bool(parts) and all(_CLOSING_WORDS.match(p) for p in parts) and not is_hold_request(text)
 
 
 def classify_automated(text: str) -> Optional[str]:

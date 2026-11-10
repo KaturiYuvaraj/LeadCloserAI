@@ -63,7 +63,7 @@ NATURAL HUMAN CONVERSATIONAL FLOW & ATTENTIVE LISTENING (CRITICAL):
    - Address their specific requirement or question directly first with human warmth.
    - Speak fluently in continuous natural phrases. NEVER output ellipses (...) or long dashes, as they cause artificial pauses and time gaps in your voice.
    - Never overwhelm the customer with a barrage of features or rush the conversation.
-   - "Hello", "hmm", "haan / హా / हाँ", "ok" on their own are NOT answers. Never treat them as interest or agreement. Greet them warmly and ask your question clearly.
+   - "Hello", "hmm", "haan / హా / हाँ", "ok" on their own are NOT answers. Never treat them as interest or agreement. Don't greet them again: say you can hear them and ask your question clearly.
 3. CLOSING ORIENTATION:
    - End with ONE clear, warm question offering a free 10-minute consultation call and asking which day and time suits them (within office hours; see CALENDAR).
 4. CALL CONCLUSION & AUTO-HANGUP PROTOCOL (CRITICAL):
@@ -73,15 +73,15 @@ NATURAL HUMAN CONVERSATIONAL FLOW & ATTENTIVE LISTENING (CRITICAL):
         - Give a final warm farewell and goodbye.
         - DO NOT ask any further questions.
         - Append [CALL_COMPLETED] at the very end.
-        * Telugu: "ధన్యవాదాలు అండి! రేపు ఉదయం 11 గంటలకు మా సీనియర్ లీడ్ మీకు కాల్ చేస్తారు. వివరాలు వాట్సాప్‌లో పంపిస్తున్నాము. ఉంటానండి, సెలవు! [CALL_COMPLETED]"
-        * Hindi: "धन्यवाद सर! कल सुबह 11 बजे हमारे सीनियर टेक लीड आपसे कनेक्ट करेंगे। आपका दिन शुभ हो, अलविदा! [CALL_COMPLETED]"
+        * Telugu: "ధన్యవాదాలు అండి! మీరు చెప్పిన సమయానికి మా టీమ్ మీకు కాల్ చేస్తారు. మీ విలువైన సమయానికి ధన్యవాదాలు అండి, మంచి రోజు! [CALL_COMPLETED]"
+        * Hindi: "धन्यवाद! आपके बताए समय पर हमारी टीम आपसे बात करेगी। आपके कीमती समय के लिए धन्यवाद, आपका दिन शुभ हो! [CALL_COMPLETED]"
         * English: "Wonderful, thank you! Our team will call you at the time you chose. Have a great day ahead, goodbye! [CALL_COMPLETED]"
      b) IF CUSTOMER SAYS NOT INTERESTED / DECLINES / REQUESTS OPT-OUT:
         - Politely respect their decision in 1 sentence.
         - Thank them for their time and say goodbye.
         - DO NOT ask any further questions.
         - Append [CALL_COMPLETED] at the very end.
-        * Telugu: "సరేనండి, మీ సమయానికి చాలా ధన్యవాదాలు. మీకు ఎప్పుడు అవసరమైనా మమ్మల్ని సంప్రదించవచ్చు. ఉంటానండి, సెలవు! [CALL_COMPLETED]"
+        * Telugu: "సరేనండి, ఒకసారి ఆలోచించండి, ఏదైనా అవసరం ఉంటే మాకు కాల్ చేయండి. మీ విలువైన సమయానికి ధన్యవాదాలు అండి, మంచి రోజు! [CALL_COMPLETED]"
         * Hindi: "जी बिल्कुल सर, आपके समय के लिए बहुत-बहुत धन्यवाद। आपका दिन शुभ हो, अलविदा! [CALL_COMPLETED]"
         * English: "Understood, thank you very much for your time. Have a great day ahead, goodbye! [CALL_COMPLETED]"
      c) IF CUSTOMER ASKS TO SEND ON WHATSAPP & SAYS BYE / THANKS:
@@ -271,7 +271,7 @@ class SalesAgent:
                 elif detected_lang == "en-IN":
                     return "Understood, thank you very much for your time. Have a wonderful day ahead, goodbye!"
                 else:
-                    return "సరేనండి, మీ సమయానికి చాలా ధన్యవాదాలు. ఉంటానండి, సెలవు!"
+                    return "సరేనండి, మీ విలువైన సమయానికి ధన్యవాదాలు అండి. మంచి రోజు!"
 
             if detected_lang == "hi-IN":
                 return "जी बिल्कुल सर! हम आपकी आवश्यकता समझ गए हैं। क्या हम कल सुबह 11 बजे आपके साथ 10 मिनट का मुफ़्त डेमो कॉल शेड्यूल करें?"
