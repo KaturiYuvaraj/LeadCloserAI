@@ -34,7 +34,7 @@ def test_ai_is_told_every_price_and_the_rules():
     for text in ("₹24,500", "₹66,500", "₹1,21,500", "₹6,700", "₹6,500", "₹8,500", "₹9,500", "₹6,000", "₹2,00,000", "₹3,00,000",
                  "₹6,00,000", "₹10,00,000", "₹15,00,000", "₹30,00,000", "₹60,000 to ₹1,20,000", "₹3,000", "excludes 18% GST"):
         assert text in prompt, text
-    assert "never offer or agree to a discount" in prompt and "team will confirm" in prompt
+    assert "the price is negotiable" in prompt and "Never name a discount" in prompt and "team will confirm" in prompt
 
 
 def test_old_prices_are_gone_from_what_the_ai_sees():
@@ -61,7 +61,7 @@ def test_monthly_amounts_and_gst_figures_are_right():
 
 
 def test_guide_rules_are_in_the_prompt():
-    for text in ("Our prices are fixed", "free consultation", "server and hosting", "in lakhs and thousands",
+    for text in ("I understand your requirement", "free consultation", "server and hosting", "in lakhs and thousands",
                  "Why is the ad budget separate", "Never promise a shorter time", "[CONTACT: name | number]"):
         assert text.lower() in PRICE_LIST_FOR_AI.lower(), text
 
@@ -128,3 +128,8 @@ def test_individual_totals_and_every_gst_figure():
                   126500, 200000, 300000, 600000, 1000000, 1500000, 3000000, 60000, 120000):
         assert rupees(round(price * 1.18)) in PRICE_LIST_FOR_AI, price
 
+
+def test_price_is_negotiable_and_big_requirements_go_to_the_team():
+    assert "NEGOTIABLE:" in PRICE_LIST_FOR_AI and "the team decides the final price" in PRICE_LIST_FOR_AI
+    assert "don't add up prices or guess a total" in PRICE_LIST_FOR_AI
+    assert "send you the pricing as soon as possible" in PRICE_LIST_FOR_AI and "Our prices are fixed" not in PRICE_LIST_FOR_AI

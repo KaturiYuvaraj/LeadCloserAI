@@ -110,8 +110,8 @@ def check_can_call(session: Session, account: Account, lead: Lead, now_utc: date
     """
     Run every rule in order; the first one that fails decides.
     is_retry: a retry / requested callback / follow-up (skips the "called recently" gap).
-    manual: a person pressed "Call now" (skips calling hours as well; the person is responsible).
-    Automatic dials, including retries and follow-ups, always keep the calling hours.
+    manual: a person pressed "Call now" (skips calling hours and the weekly limit as well; the page
+    warns them and they are responsible). Automatic dials, including retries and follow-ups, keep both.
     """
     # Never call
     if not account.calling_approved:
@@ -142,10 +142,10 @@ def check_can_call(session: Session, account: Account, lead: Lead, now_utc: date
             return RuleResult("deferred", "called_recently", next_window_start(later, account))
 
     week_ago = now_utc - timedelta(days=7)
-    calls_this_week = session.query(func.count(Call.id)).filter(
-        Call.lead_id == lead.id, Call.created_at >= db_time(session, week_ago)
+    calls_this_week = session.query(func.count(Call.id)).filter(  # answered calls: missed tries don't count
+        Call.lead_id == lead.id, Call.created_at >= db_time(session, week_ago), Call.talk_seconds > 0
     ).scalar() or 0
-    if calls_this_week >= WEEKLY_CALL_LIMIT:
+    if calls_this_week >= WEEKLY_CALL_LIMIT and not manual:
         return RuleResult("deferred", "weekly_limit", next_window_start(now_utc + timedelta(days=2), account))
 
     if MIN_CREDIT > 0 and credit_balance(session, account.id) < MIN_CREDIT:

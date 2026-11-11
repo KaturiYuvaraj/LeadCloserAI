@@ -19,6 +19,8 @@ caller is behaving.
    The LLM still decides; the hints only make the right reaction very likely.
 """
 
+import asyncio
+import os
 import re
 import time
 from typing import Awaitable, Callable, List, Optional
@@ -53,6 +55,54 @@ AUTOMATED_PATTERNS = {
 }
 _AUTOMATED = {kind: [re.compile(p, re.IGNORECASE) for p in pats] for kind, pats in AUTOMATED_PATTERNS.items()}
 
+# The network's recording while the customer has put us on hold (they took another call).
+# On 9 Nov this played for 5 minutes and the agent kept answering it as if the customer spoke.
+CARRIER_HOLD_PATTERNS = [
+    r"put\s+(your|the)\s+call\s+on\s+hold", r"call\s+(has\s+been\s+|is\s+)?(put\s+)?on\s+hold",
+    r"(please\s+)?stay\s+on\s+the\s+line", r"please\s+hold\s+the\s+line",
+    r"hold\s+par\s+rakha", r"line\s+par\s+bane", r"होल्ड\s+पर", r"लाइन\s+पर\s+बने",
+    r"హోల్డ్‌?\s*లో\s+(పెట్ట|ఉంచ)", r"లైన్‌?\s*లో\s+(ఉండండి|వేచి)",
+]
+_CARRIER_HOLD = [re.compile(p, re.IGNORECASE) for p in CARRIER_HOLD_PATTERNS]
+CARRIER_HOLD_SECS = float(os.getenv("VOICE_CARRIER_HOLD_SECS", "45"))
+
+
+def is_carrier_hold(text: str) -> bool:
+    return any(p.search(text or "") for p in _CARRIER_HOLD)
+
+
+# Unicode blocks of Indian scripts, to spot noise that STT wrote in a language nobody on the call speaks
+# (9 Nov call 42: line noise came back as Tamil, Malayalam, Bengali and Punjabi words, and the agent answered)
+SCRIPTS = {"te-IN": (0x0C00, 0x0C7F), "hi-IN": (0x0900, 0x097F), "ta-IN": (0x0B80, 0x0BFF),
+           "kn-IN": (0x0C80, 0x0CFF), "ml-IN": (0x0D00, 0x0D7F), "bn-IN": (0x0980, 0x09FF),
+           "pa-IN": (0x0A00, 0x0A7F), "gu-IN": (0x0A80, 0x0AFF), "or-IN": (0x0B00, 0x0B7F)}
+
+
+def is_foreign_noise(text: str, call_languages: set) -> bool:
+    """A short transcript (up to 4 words) written mostly in a script none of the call languages use."""
+    words = (text or "").split()
+    if not words or len(words) > 4:
+        return False
+    counts = {lang: sum(lo <= ord(ch) <= hi for ch in text) for lang, (lo, hi) in SCRIPTS.items()}
+    lang, count = max(counts.items(), key=lambda kv: kv[1])
+    letters = sum(ch.isalpha() for ch in text)
+    return count > 0 and count >= letters / 2 and lang not in call_languages
+
+
+# What people say when a call is ending: these don't need another goodbye. Only these end the call
+# after our goodbye; "hello", "wait" or anything else is answered (10 Nov: "Hello." after the goodbye was cut off).
+_CLOSING_WORDS = re.compile(
+    r"^\s*(ok(ay)?|thanks?|thank|you|bye|good|night|morning|day|sure|fine|take|care|see|later|"
+    r"సరే|ఓకే|అలాగే|థాంక్స్|థాంక్యూ|ధన్యవాదాలు|ఉంటాను|బై|కలవండి|అండి|"
+    r"ठीक|है|ओके|धन्यवाद|शुक्रिया|बाय|चलो|चला|जी)[\s.,!?।]*(అండి|जी|sir|madam)?[\s.,!?।]*$",
+    re.IGNORECASE)
+
+
+def is_closing_word(text: str) -> bool:
+    """'ok', 'thank you', 'good night', 'సరే అండి', 'ओके ओके, चला चला': every word is a closing word."""
+    parts = [p for p in re.split(r"[\s,.!?।]+", (text or "").strip()) if p]
+    return bool(parts) and all(_CLOSING_WORDS.match(p) for p in parts) and not is_hold_request(text)
+
 
 def classify_automated(text: str) -> Optional[str]:
     """'unreachable' | 'voicemail' | 'ivr' when the text is a recording or menu, else None."""
@@ -66,9 +116,9 @@ def classify_automated(text: str) -> Optional[str]:
 
 HOLD_PATTERNS = [
     r"\b(one|1|a)\s+(minute|min|sec|second|moment)\b", r"\bjust\s+a\s+(sec|second|minute|moment)\b",
-    r"\bhold\s+on\b", r"^\s*wait\b", r"\bgive\s+me\s+a\s+(minute|second|moment)\b", r"\blet\s+me\s+check\b",
+    r"\bhold\s+on\b", r"^\s*wait\b", r"\bwait\s+wait\b", r"\bgive\s+me\s+a\s+(minute|second|moment)\b", r"\blet\s+me\s+check\b",
     r"एक\s+(मिनट|सेकंड|सेकेंड)", r"रुकि?ए|रुको|ज़?रा\s+रुक", r"\bek\s+(minute|min|second)\b", r"\bruk(o|iye|na)\b",
-    r"ఒక్?క?\s*(నిమిషం|సెకన్|సెకండ్)", r"ఆగండి|ఉండండి", r"\bok+a\s+nimisham\b", r"\baagandi\b|\bundandi\b",
+    r"ఒక్?క?\s*(నిమిషం|సెకన్|సెకండ్)", r"ఆగండి|ఉండండి|ఆగు|ఉండు", r"\bok+a\s+nimisham\b", r"\baa?gandi\b|\bundandi\b|\baa?gu\b|\bundu\b",
     r"ஒரு\s+(நிமிஷம்|நிமிடம்)", r"இருங்க", r"ಒಂದು\s+ನಿಮಿಷ", r"ഒരു\s+മിനിറ്റ്",
 ]
 OPT_OUT_PATTERNS = [
@@ -97,12 +147,15 @@ _UPSET = [re.compile(p, re.IGNORECASE) for p in UPSET_PATTERNS]
 NOT_INTERESTED_PATTERNS = [
     r"\bnot\s+interested\b", r"\bno\s+need\b", r"\bdon'?t\s+(need|want)\b",
     r"नहीं\s+चाहिए", r"ज़?रूरत\s+नहीं", r"दिलचस्पी\s+नहीं",
-    r"వద్దు", r"అవసరం\s+లేదు", r"ఆసక్తి\s+లేదు", r"ఇంట్రెస్ట్\s+లేదు", r"కావాల్సిన\s+అవసరం\s+లేదు",
+    r"వద్దు", r"వద్దండి", r"అవసరం\s+లేద", r"అక్కర్లేద", r"ఆసక్తి\s+లేద", r"ఇంట్రెస్ట్\s+లేద",
+    r"రిక్వైర్‌?మెంట్\s+లేద", r"\bno\s+requirement\b", r"\bnot\s+required\b",
 ]
 ASKS_SOMETHING = r"ఎంత|ఎప్పుడు|ఏంటి|ఎలా|ఎందుకు|చెప్పండి|ప్రైస్|how|what|when|why|price|tell|कितन|क्या|कब|बताइए"
 NOT_INTERESTED_FIRST = ("This is their first no. Do NOT say goodbye yet. Respect it in a few words, then ask one short "
                         "question: why, or what they use today, or if details on WhatsApp or a later call would help.")
-NOT_INTERESTED_AGAIN = "They have said no again. Thank them, say goodbye and add [CALL_COMPLETED]. Do not try again."
+NOT_INTERESTED_AGAIN = ("They have said no again. Don't try again. Close warmly in one or two short sentences: ask them to "
+                        "think it over and contact us if anything comes up, thank them for their valuable time, say goodbye "
+                        "and add [CALL_COMPLETED].")
 _NOT_INTERESTED = [re.compile(p, re.IGNORECASE) for p in NOT_INTERESTED_PATTERNS]
 _ASKS_SOMETHING = re.compile(ASKS_SOMETHING, re.IGNORECASE)
 # "call me tomorrow at 4": a time word and a call-me-back request together
@@ -172,18 +225,36 @@ class CallGuard(FrameProcessor):
     Watches the first caller transcripts of an outbound call for voicemail, IVR menus
     and carrier messages. A match is swallowed (the LLM never answers a machine) and
     reported once through `on_automated(kind, text)`; the session then ends the call.
+
+    At any time in the call, the network's "your call is on hold" recording is swallowed too.
+    If the customer doesn't come back within hold_secs, it is reported as "customer_hold".
     """
 
     def __init__(self, on_automated: AutomatedCallback, window_secs: float = 30.0,
-                 max_transcripts: int = 3, enabled: bool = True, **kwargs):
+                 max_transcripts: int = 3, enabled: bool = True, hold_secs: Optional[float] = None,
+                 drop_transcript: Optional[Callable[[str], bool]] = None, **kwargs):
         super().__init__(**kwargs)
         self._on_automated = on_automated
+        self._drop_transcript = drop_transcript  # the session's say: noise, or words after the goodbye
         self._window_secs = window_secs
         self._max_transcripts = max_transcripts
         self._enabled = enabled
+        self._hold_secs = CARRIER_HOLD_SECS if hold_secs is None else hold_secs
+        self._hold_timer: Optional[asyncio.Task] = None
         self._started = time.monotonic()
         self._seen = 0
         self.detected: Optional[str] = None
+
+    async def _end_after_hold(self, text: str):
+        await asyncio.sleep(self._hold_secs)
+        if not self.detected:
+            self.detected = "customer_hold"
+            await self._on_automated("customer_hold", text)
+
+    def _customer_back(self):
+        if self._hold_timer:
+            self._hold_timer.cancel()
+            self._hold_timer = None
 
     def restart_window(self):
         """Start the detection window when the call is answered (not when the pipeline is built)."""
@@ -200,6 +271,13 @@ class CallGuard(FrameProcessor):
         if isinstance(frame, TranscriptionFrame) and frame.text.strip():
             if self.detected:
                 return  # call is ending; nothing more goes to the LLM
+            if self._hold_secs > 0 and is_carrier_hold(frame.text):
+                if not self._hold_timer:
+                    self._hold_timer = asyncio.create_task(self._end_after_hold(frame.text.strip()))
+                return
+            self._customer_back()
+            if self._drop_transcript and self._drop_transcript(frame.text.strip()):
+                return
             if self._watching():
                 self._seen += 1
                 kind = classify_automated(frame.text)

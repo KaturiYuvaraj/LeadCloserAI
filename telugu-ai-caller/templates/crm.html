@@ -3578,6 +3578,12 @@ input[type="checkbox"] {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
               <span>Export</span>
             </a>
+            <select id="callEngineSelect" class="crm-action-pill" onchange="window.changeCallEngine(this)" aria-label="Calling engine" title="Engine for the next calls" style="font-weight:600;cursor:pointer;">
+              <option value="pipecat">Our engine (Shreya)</option>
+            </select>
+            <button class="crm-action-pill" id="openCallNumberBtn" onclick="window.openCallNumber()" title="Type any number and call it now" style="color:#ea580c;border-color:#fed7aa;background:#fff7ed;font-weight:700;">
+              <span>📞 Call a number</span>
+            </button>
             <button class="crm-btn-orange" id="openAddLeadBtn" onclick="window.openLeadModal()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               <span>Add Lead</span>
@@ -4211,6 +4217,9 @@ input[type="checkbox"] {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                   <span>Export</span>
                 </a>
+                <button class="crm-action-pill" onclick="window.openCallNumber()" title="Type any number and call it now" style="color:#ea580c;border-color:#fed7aa;background:#fff7ed;font-weight:700;">
+                  📞 Call a number
+                </button>
                 <button class="crm-btn-orange" onclick="window.openLeadModal()">
                   + Add Lead
                 </button>
@@ -5262,7 +5271,24 @@ input[type="checkbox"] {
             <div class="crm-panel-card" style="padding: 20px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0;">Virtual Receptionist Settings</h3>
-                <span class="crm-lead-badge badge-qualified">Active 24/7</span>
+                <span class="crm-lead-badge badge-qualified" id="inboundHoursBadge">Active 24/7</span>
+              </div>
+              <div style="padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 12px;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="checkbox" id="inboundHoursEnabled" /> AI answers incoming calls only at these times
+                </label>
+                <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                  <div style="flex: 1; min-width: 110px;">
+                    <label for="inboundHoursStart" style="font-size: 0.72rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">From</label>
+                    <input type="time" id="inboundHoursStart" value="20:00" style="width: 100%; height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
+                  </div>
+                  <div style="flex: 1; min-width: 110px;">
+                    <label for="inboundHoursEnd" style="font-size: 0.72rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">To</label>
+                    <input type="time" id="inboundHoursEnd" value="10:00" style="width: 100%; height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
+                  </div>
+                </div>
+                <div style="font-size: 0.72rem; color: #64748b; margin-top: 8px;">India time. The hours may cross midnight (8 PM to 10 AM). Outside them, calls are forwarded to the transfer number below. Switched off, the AI answers all day.</div>
+                <div id="inboundHoursStatus" style="font-size: 0.74rem; font-weight: 700; color: #334155; margin-top: 6px;"></div>
               </div>
               <div class="form-group" style="margin-bottom: 12px;">
                 <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Greeting Message</label>
@@ -5270,9 +5296,9 @@ input[type="checkbox"] {
               </div>
               <div class="form-group" style="margin-bottom: 14px;">
                 <label style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Human Fallback Transfer Number</label>
-                <input type="tel" placeholder="+91..." value="{{ profile.phone if profile and profile.phone else '' }}" style="width: 100%; height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
+                <input type="tel" id="inboundTransferNumber" placeholder="+91 77802 36242" value="{{ profile.phone if profile and profile.phone else '' }}" style="width: 100%; height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 0.82rem;" />
               </div>
-              <button class="crm-btn-purple" onclick="alert('Inbound routing rules saved successfully!')" style="font-size: 0.8rem; padding: 8px 16px;">
+              <button class="crm-btn-purple" onclick="window.saveInboundHours()" style="font-size: 0.8rem; padding: 8px 16px;">
                 Save Inbound Config
               </button>
             </div>
@@ -6150,7 +6176,7 @@ input[type="checkbox"] {
   <script src="/api/voice/config.js"></script>
   <script src="/static/js/call_client.js"></script>
   <script src="/static/js/pipecat_call_client.js?v=2.0"></script>
-  <script src="/static/js/app.js?v=5.2.0"></script>
+  <script src="/static/js/app.js?v=5.5.0"></script>
   <script>
     // Initialize lead selection safely once DOMContentLoaded has finished
     document.addEventListener("DOMContentLoaded", function() {

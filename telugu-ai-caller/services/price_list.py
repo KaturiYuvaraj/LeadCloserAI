@@ -14,6 +14,12 @@ def _item(code: str, name: str, category: str, price: float, days: int, delivera
             "max_discount_pct": 10.0, "delivery_days": days, "deliverables": deliverables, "active": True}
 
 
+# Standard and Premium apps include the growth work (marketing and leads), which is why they cost more
+_APP_STANDARD = ("For growing businesses. We build your app to win new customers and grow your business: the app, its launch, "
+                 "plus digital marketing and lead generation to bring customers to it. 8-12 weeks. Server and hosting paid by the client.")
+_APP_PREMIUM = ("For large-scale products. A scalable app platform designed to grow with your business and your profits: built for "
+                "many users, plus digital marketing, lead generation and growth support. 4-6 months. Server and hosting paid by the client.")
+
 # delivery_days 0 = not agreed yet: the team confirms it
 PRICE_BOOK: List[Dict[str, Any]] = [
     _item("pkg_starter", "Starter Package (website + marketing)", "Website + Digital Marketing", 24500, 0,
@@ -48,10 +54,10 @@ PRICE_BOOK: List[Dict[str, Any]] = [
     _item("svc_premium_gmb", "GMB Setup + GMB Ads, Premium", "Individual Services", 15500, 0, "One-time setup, GMB Ads included. Ad budget Rs 1,000/day."),
     _item("app_basic_android", "Mobile App Basic / MVP, Android", "Mobile App", 200000, 42, "Single platform, first version. 4-6 weeks. Server and hosting paid by the client."),
     _item("app_basic_both", "Mobile App Basic / MVP, Android + iOS", "Mobile App", 300000, 42, "First version. 4-6 weeks. Server and hosting paid by the client."),
-    _item("app_standard_android", "Mobile App Standard / Business Growth, Android", "Mobile App", 600000, 84, "Business growth app. 8-12 weeks. Server and hosting paid by the client."),
-    _item("app_standard_both", "Mobile App Standard / Business Growth, Android + iOS", "Mobile App", 1000000, 84, "Business growth app. 8-12 weeks. Server and hosting paid by the client."),
-    _item("app_premium_android", "Mobile App Premium / Enterprise, Android", "Mobile App", 1500000, 180, "Enterprise, scalable platform. 4-6 months. Server and hosting paid by the client."),
-    _item("app_premium_both", "Mobile App Premium / Enterprise, Android + iOS", "Mobile App", 3000000, 180, "Enterprise, scalable platform. 4-6 months. Server and hosting paid by the client."),
+    _item("app_standard_android", "Business Growth Application (Standard), Android", "Mobile App", 600000, 84, _APP_STANDARD),
+    _item("app_standard_both", "Business Growth Application (Standard), Android + iOS", "Mobile App", 1000000, 84, _APP_STANDARD),
+    _item("app_premium_android", "Enterprise & Scalable Platform (Premium), Android", "Mobile App", 1500000, 180, _APP_PREMIUM),
+    _item("app_premium_both", "Enterprise & Scalable Platform (Premium), Android + iOS", "Mobile App", 3000000, 180, _APP_PREMIUM),
     _item("erp_basic", "ERP Basic / MVP", "ERP", 200000, 42, "Single platform. 4-6 weeks. Server and hosting paid by the client."),
     _item("erp_standard", "ERP Standard / Business Growth", "ERP", 600000, 84, "Growing businesses. 8-12 weeks. Server and hosting paid by the client."),
     _item("erp_premium", "ERP Premium / Enterprise", "ERP", 1500000, 180, "Large-scale operations. 4-6 months. Server and hosting paid by the client."),
@@ -107,8 +113,9 @@ Package prices and individual prices are separate lists: never mix them. For exa
 
 MOBILE APPS (server and hosting paid separately by the client, GST 18% extra):
 - Basic / MVP (first version), 4-6 weeks: Android only ₹2,00,000; Android + iPhone ₹3,00,000.
-- Standard / Business Growth (growing businesses), 8-12 weeks: Android only ₹6,00,000; Android + iPhone ₹10,00,000.
-- Premium / Enterprise (large products), 4-6 months: Android only ₹15,00,000; Android + iPhone ₹30,00,000.
+- Standard: Business Growth Application (for growing businesses), 8-12 weeks: Android only ₹6,00,000; Android + iPhone ₹10,00,000. We build the app to win new customers and grow their business: the app and its launch, plus digital marketing and lead generation to bring customers to it.
+- Premium: Enterprise & Scalable Platform (for large-scale products), 4-6 months: Android only ₹15,00,000; Android + iPhone ₹30,00,000. A scalable app platform designed to grow with their business and profits: built for many users, plus digital marketing, lead generation and growth support.
+- If they ask why Standard and Premium cost much more than Basic: Basic is only the first version of the app. Standard and Premium are complete growth solutions: we build the app and also do the marketing and lead generation that bring them customers. The team shares the full list of what's included in the detailed quotation; never promise a specific feature, campaign or number of leads yourself.
 
 ERP SOFTWARE (server and hosting paid by the client, GST extra): Basic / MVP, 4-6 weeks, ₹2,00,000. Standard / Business Growth, 8-12 weeks, ₹6,00,000. Premium / Enterprise, 4-6 months, ₹15,00,000.
 
@@ -125,7 +132,9 @@ FINAL AMOUNT WITH 18% GST, only if they ask:
 HOW TO TALK ABOUT PRICE:
 - Give the exact price at once, then the extras that apply, in the customer's language. A price reply may be up to about 45 words. Never read out the list.
 - Say amounts in words, in lakhs and thousands, never "hundred thousand". Telugu: ₹24,500 = ఇరవై నాలుగు వేల ఐదు వందల రూపాయలు; ₹1,21,500 = ఒక లక్ష ఇరవై ఒక్క వేల ఐదు వందల రూపాయలు; ₹2,00,000 = రెండు లక్షల రూపాయలు. English: one lakh twenty-one thousand five hundred rupees.
-- Never invent a price, never add prices yourself, and never offer or agree to a discount. If they ask for one, say the meaning of: "Our prices are fixed, but our team can suggest the package that fits your budget best."
+- Never invent a price and never add prices yourself.
+- NEGOTIABLE: after giving a price, mention once, politely, that the price is negotiable and our team can discuss the final amount with them, for example if they want to start soon. Never name a discount, a percentage or a lower amount yourself: the team decides the final price.
+- SEVERAL SERVICES OR A DETAILED REQUIREMENT: when the customer explains a full requirement (several services together, a custom app or software with many features) and asks what it will cost in total, don't add up prices or guess a total. Say politely, in their language, the meaning of: "I understand your requirement. I'll share it with our team, and they'll send you the pricing as soon as possible." Then ask for their name and WhatsApp number.
 - If a price isn't here or is marked team will confirm, say the team will confirm that price and call back. The same goes for how packages are billed after the first month, payment terms, whether domain and hosting repeats every year, and anything else not written here.
 - Timelines: use only the times above for apps and ERP. For websites and everything else, say the team will confirm the timeline after the free consultation. Never promise a shorter time than listed.
 
@@ -133,7 +142,7 @@ COMMON QUESTIONS (say the meaning, in their language):
 - Why is the ad budget separate? It goes directly to Facebook or Google to show their ads. Our fee is for planning, creating and managing those ads. They stay in full control of how much they spend.
 - What is domain and hosting? The domain is the website name, like yourbusiness.com. Hosting keeps the website online. Together they are ₹3,000.
 - Can I start small? Yes. Starter or individual services are a good start, and they can move to Growth later.
-- Too expensive? Don't discount. Say you understand and will suggest an option that fits their budget, then offer Starter or individual services and a free consultation call.
+- Too expensive? Say you understand, that the price is negotiable and our team will discuss it with them. You can also suggest Starter or individual services, and offer a free consultation call.
 
 CLOSING. A demo and a free consultation are the same call: call it a free consultation. End every pricing conversation by asking for their name and WhatsApp number, one at a time, and offering the free consultation with a detailed quotation. If you already know their name, don't ask it again; ask if this same number is on WhatsApp. When they give these details, add [CONTACT: name | number] at the end of the reply, writing "same" for the number they are calling on.
 """

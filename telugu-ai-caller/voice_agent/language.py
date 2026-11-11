@@ -13,6 +13,7 @@ For every final caller transcription the router:
 from __future__ import annotations
 
 import asyncio
+import os
 import re
 from typing import Awaitable, Callable, Optional, Set
 
@@ -38,13 +39,22 @@ except ImportError:
 
 # bulbul:v4-flash speakers for all supported languages
 VOICES = {
-    "te-IN": "kavitha_te_conversation",
+    "te-IN": "pooja_te_conversation",  # the voice of Sarvam's agent Shriya; clearer than Kavitha (9 Nov)
     "hi-IN": "kavya_hi_conversational",  # female, to match the agent Shreya
     "en-IN": "simran_en_sales",
     "ta-IN": "kavitha_te_conversation",
     "kn-IN": "chaitra_kn_conversation",
     "ml-IN": "kavitha_te_conversation",
 }
+
+# Speaking speed per language: 1.0 dragged words (9 Nov); the owner wants Telugu especially fluent and quick
+TTS_PACE = float(os.getenv("VOICE_TTS_PACE", "1.1"))
+TTS_PACE_TELUGU = float(os.getenv("VOICE_TTS_PACE_TE", "1.2"))
+
+
+def pace_for(language: str) -> float:
+    return TTS_PACE_TELUGU if language == "te-IN" else TTS_PACE
+
 
 LANGUAGE_NAMES = {
     "te-IN": "Telugu",
@@ -229,7 +239,8 @@ class LanguageRouter(FrameProcessor):
             self._pending_count = 0
             self._current = explicit_request
             switch_frame = TTSUpdateSettingsFrame(
-                delta=SarvamTTSService.Settings(voice=VOICES[explicit_request], language=explicit_request)
+                delta=SarvamTTSService.Settings(voice=VOICES[explicit_request], language=explicit_request,
+                                                pace=pace_for(explicit_request))
             )
         else:
             # Step 2: Continuous verification through multi-turn confirmation (2-3 check rule)
@@ -245,7 +256,8 @@ class LanguageRouter(FrameProcessor):
                     self._pending_count = 0
                     self._current = detected
                     switch_frame = TTSUpdateSettingsFrame(
-                        delta=SarvamTTSService.Settings(voice=VOICES[detected], language=detected)
+                        delta=SarvamTTSService.Settings(voice=VOICES[detected], language=detected,
+                                                        pace=pace_for(detected))
                     )
 
         name = LANGUAGE_NAMES.get(self._current, "the customer's language")

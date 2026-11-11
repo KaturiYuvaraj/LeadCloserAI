@@ -73,3 +73,8 @@ def test_short_reply_in_current_language_resets_the_pending_switch():
     router.prepare("Hello there friend")
     router.prepare("అవునండీ బాగుంది")  # current language reply resets pending counter
     assert router.prepare("Okay sure")[1] is None and router.current_language == "te-IN"
+
+
+def test_telugu_calls_use_shriyas_voice_pooja():
+    from voice_agent.language import VOICES
+    assert VOICES["te-IN"] == "pooja_te_conversation"

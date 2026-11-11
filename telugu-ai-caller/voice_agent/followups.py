@@ -13,6 +13,8 @@ A callback booked during the call ([CALLBACK]) always wins: it is already a wait
 The calling rules (voice_agent/rules.py) still apply to every job: hours, opt-out, weekly limit.
 """
 
+import os
+import random
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
@@ -22,6 +24,10 @@ from services.outcomes import normalize_outcome
 from voice_agent.rules import IST, as_utc, db_time
 
 WAITING_STATES = ("queued", "scheduled", "retry_scheduled")
+# Not answered: try again 30-45 minutes later, up to MAX_ATTEMPTS calls in all (voice_agent/dialer.py)
+RETRY_MIN_MINUTES = float(os.getenv("DIALER_RETRY_MIN_MINUTES", "30"))
+RETRY_MAX_MINUTES = float(os.getenv("DIALER_RETRY_MAX_MINUTES", "45"))
+MAX_ATTEMPTS = int(os.getenv("DIALER_MAX_ATTEMPTS", "5"))
 FOLLOWUP_DISPOSITION = "followup"  # CallJob.last_disposition of jobs created here
 MISSED_CALL_WHATSAPP = "missed_call: we tried calling you"
 
@@ -131,11 +137,13 @@ def after_conversation(session, job: CallJob, outcome: str, now_utc: Optional[da
 
 
 def retry_time(attempt: int, now_utc: Optional[datetime] = None) -> datetime:
-    """When to try again after `attempt` unanswered tries: +2 h, next day at another time, day-3 evening."""
+    """
+    When to try again after an unanswered try: 30-45 minutes later (the owner's rule, 9 Nov), a
+    random time in that range so it doesn't ring at the same minute each time. Calling hours still
+    apply when the retry is dialled (outside them it moves to the next allowed time).
+    """
     now_utc = now_utc or datetime.now(timezone.utc)
-    plan = compute_next_followup_step("no_answer", attempt_number=attempt, consecutive_misses=attempt,
-                                      now_ist=now_utc.astimezone(IST))
-    return datetime.fromisoformat(plan["next_action_at"]).astimezone(timezone.utc)
+    return now_utc + timedelta(minutes=random.uniform(RETRY_MIN_MINUTES, RETRY_MAX_MINUTES))
 
 
 def after_unreachable(session, job: CallJob, now_utc: Optional[datetime] = None) -> Optional[datetime]:

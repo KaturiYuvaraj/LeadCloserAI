@@ -43,6 +43,7 @@ class DialRequest:
     to_number: str
     language: Optional[str] = None
     max_call_seconds: int = 600
+    lead_name: Optional[str] = None
 
 
 class DialError(Exception):

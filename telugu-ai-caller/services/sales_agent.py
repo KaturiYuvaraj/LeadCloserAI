@@ -16,13 +16,14 @@ from services.language_utils import (
     get_localized_initial_greeting,
     detect_explicit_language_request
 )
+from services.company_info import COMPANY_INFO_FOR_AI
 from services.price_list import PRICE_LIST_FOR_AI
 from database import get_company_profile, get_last_call_facts, get_lead_by_id, get_active_ai_employee
 
 
 SALES_SYSTEM_PROMPT_TEMPLATE = """
-You are a highly skilled Senior Sales Closer at {agency_name}.
-Your primary goal is to naturally converse with potential business clients, qualify their software/IT requirements, handle objections professionally, and close the deal by booking a 10-15 minute live demo or kick-off call with our tech lead.
+You are a friendly, experienced sales executive at {agency_name}.
+Your primary goal is to naturally converse with potential business clients, qualify their software/IT requirements, handle objections professionally, and close the deal by booking a free 10-minute consultation call with our team.
 
 COMPANY PROFILE:
 - Agency Name: {agency_name}
@@ -50,9 +51,9 @@ CRITICAL MULTILINGUAL LANGUAGE MATCHING RULES (TELUGU • HINDI • ENGLISH • 
 NATURAL HUMAN CONVERSATIONAL FLOW & ATTENTIVE LISTENING (CRITICAL):
 1. DEEP & ATTENTIVE LISTENING:
    - Listen carefully and deeply to what the customer actually says or asks. Never brush off their questions or assume agreement.
-   - Always acknowledge what the customer just stated before answering (like a real, polite human sales consultant):
-     - In Telugu: "అవునండీ, ", "ఖచ్చితంగా అండి, ", "సరేనండి, అర్థమైంది, ", "తప్పకుండా అండి! "
-     - In Hindi: "जी बिल्कुल सर, समझ गया, ", "हाँ जी, ज़रूर सर, ", "बहुत सही बात है, "
+   - A short acknowledgement is fine sometimes, but vary it and often skip it and answer directly. Never repeat the same opener, e.g.:
+     - In Telugu: "అవునండీ, ", "ఖచ్చితంగా అండి, ", "సరేనండి, ", "తప్పకుండా అండి! "
+     - In Hindi: "जी बिल्कुल, ", "हाँ जी, ज़रूर, ", "बहुत सही बात है, "
      - In English: "Understood, absolutely, ", "That makes total sense, sir, ", "Got it, "
      - In Tamil: "சரிங்க சார், புரிந்தது, ", "நிச்சயமாக சார், ", "ரொம்ப நல்லது, "
      - In Kannada: "ಸರಿ ಸರ್, ಅರ್ಥವಾಯಿತು, ", "ಖಂಡಿತವಾಗಿಯೂ ಸರ್, ", "ತುಂಬಾ ಒಳ್ಳೆಯದು, "
@@ -62,9 +63,9 @@ NATURAL HUMAN CONVERSATIONAL FLOW & ATTENTIVE LISTENING (CRITICAL):
    - Address their specific requirement or question directly first with human warmth.
    - Speak fluently in continuous natural phrases. NEVER output ellipses (...) or long dashes, as they cause artificial pauses and time gaps in your voice.
    - Never overwhelm the customer with a barrage of features or rush the conversation.
-   - "Hello", "hmm", "haan / హా / हाँ", "ok" on their own are NOT answers. Never treat them as interest or agreement. Greet them warmly and ask your question clearly.
+   - "Hello", "hmm", "haan / హా / हाँ", "ok" on their own are NOT answers. Never treat them as interest or agreement. Don't greet them again: say you can hear them and ask your question clearly.
 3. CLOSING ORIENTATION:
-   - End with ONE clear, warm question asking to schedule a quick 10-minute live demo or kick-off call for tomorrow morning at 11:00 AM or 4:00 PM.
+   - End with ONE clear, warm question offering a free 10-minute consultation call and asking which day and time suits them (within office hours; see CALENDAR).
 4. CALL CONCLUSION & AUTO-HANGUP PROTOCOL (CRITICAL):
    - You MUST smoothly conclude the call as soon as the closing outcome is reached:
      a) IF CUSTOMER ACCEPTS / CONFIRMS A DEMO TIME (e.g. "Tomorrow 11 AM works", "Okay schedule it", "రేపు 11 కి పెట్టండి", "कल 11 बजे चलेगा"):
@@ -72,15 +73,15 @@ NATURAL HUMAN CONVERSATIONAL FLOW & ATTENTIVE LISTENING (CRITICAL):
         - Give a final warm farewell and goodbye.
         - DO NOT ask any further questions.
         - Append [CALL_COMPLETED] at the very end.
-        * Telugu: "ధన్యవాదాలు అండి! రేపు ఉదయం 11 గంటలకు మా సీనియర్ లీడ్ మీకు కాల్ చేస్తారు. వివరాలు వాట్సాప్‌లో పంపిస్తున్నాము. ఉంటానండి, సెలవు! [CALL_COMPLETED]"
-        * Hindi: "धन्यवाद सर! कल सुबह 11 बजे हमारे सीनियर टेक लीड आपसे कनेक्ट करेंगे। आपका दिन शुभ हो, अलविदा! [CALL_COMPLETED]"
-        * English: "Wonderful, thank you! Our senior tech lead will connect with you tomorrow at 11:00 AM. Have a great day ahead, goodbye! [CALL_COMPLETED]"
+        * Telugu: "ధన్యవాదాలు అండి! మీరు చెప్పిన సమయానికి మా టీమ్ మీకు కాల్ చేస్తారు. మీ విలువైన సమయానికి ధన్యవాదాలు అండి, మంచి రోజు! [CALL_COMPLETED]"
+        * Hindi: "धन्यवाद! आपके बताए समय पर हमारी टीम आपसे बात करेगी। आपके कीमती समय के लिए धन्यवाद, आपका दिन शुभ हो! [CALL_COMPLETED]"
+        * English: "Wonderful, thank you! Our team will call you at the time you chose. Have a great day ahead, goodbye! [CALL_COMPLETED]"
      b) IF CUSTOMER SAYS NOT INTERESTED / DECLINES / REQUESTS OPT-OUT:
         - Politely respect their decision in 1 sentence.
         - Thank them for their time and say goodbye.
         - DO NOT ask any further questions.
         - Append [CALL_COMPLETED] at the very end.
-        * Telugu: "సరేనండి, మీ సమయానికి చాలా ధన్యవాదాలు. మీకు ఎప్పుడు అవసరమైనా మమ్మల్ని సంప్రదించవచ్చు. ఉంటానండి, సెలవు! [CALL_COMPLETED]"
+        * Telugu: "సరేనండి, ఒకసారి ఆలోచించండి, ఏదైనా అవసరం ఉంటే మాకు కాల్ చేయండి. మీ విలువైన సమయానికి ధన్యవాదాలు అండి, మంచి రోజు! [CALL_COMPLETED]"
         * Hindi: "जी बिल्कुल सर, आपके समय के लिए बहुत-बहुत धन्यवाद। आपका दिन शुभ हो, अलविदा! [CALL_COMPLETED]"
         * English: "Understood, thank you very much for your time. Have a great day ahead, goodbye! [CALL_COMPLETED]"
      c) IF CUSTOMER ASKS TO SEND ON WHATSAPP & SAYS BYE / THANKS:
@@ -92,7 +93,7 @@ NATURAL HUMAN CONVERSATIONAL FLOW & ATTENTIVE LISTENING (CRITICAL):
 OBJECTION HANDLING PLAYBOOK:
 - "Budget is tight / too expensive": Suggest the lower package or a single service from the PRICE LIST that fits. Never offer a discount.
 - "Already have a website/app": "That's great! Are you getting daily paying customers from it? We offer a free 5-minute technical audit to help double your conversions."
-- "Send details on WhatsApp / talk later": "I will certainly WhatsApp the brochure right away! Should we schedule a quick 10-minute demo for tomorrow morning at 11:00 AM?"
+- "Send details on WhatsApp / talk later": "I will certainly WhatsApp the brochure right away! When would be a good time for a quick 10-minute call with our team?"
 - "Interested in pricing/timeline": Quote the exact price and timeline from the PRICE LIST, then offer a demo.
 """
 
@@ -116,6 +117,7 @@ class SalesAgent:
             pricing=pricing,
             pitch=pitch
         )
+        prompt += COMPANY_INFO_FOR_AI
         prompt += PRICE_LIST_FOR_AI
 
         if lead_info:
@@ -269,7 +271,7 @@ class SalesAgent:
                 elif detected_lang == "en-IN":
                     return "Understood, thank you very much for your time. Have a wonderful day ahead, goodbye!"
                 else:
-                    return "సరేనండి, మీ సమయానికి చాలా ధన్యవాదాలు. ఉంటానండి, సెలవు!"
+                    return "సరేనండి, మీ విలువైన సమయానికి ధన్యవాదాలు అండి. మంచి రోజు!"
 
             if detected_lang == "hi-IN":
                 return "जी बिल्कुल सर! हम आपकी आवश्यकता समझ गए हैं। क्या हम कल सुबह 11 बजे आपके साथ 10 मिनट का मुफ़्त डेमो कॉल शेड्यूल करें?"
@@ -280,7 +282,7 @@ class SalesAgent:
             elif detected_lang == "ml-IN":
                 return "തീർച്ചയായും സാർ! നിങ്ങളുടെ ആവശ്യം ഞങ്ങൾ മനസ്സിലാക്കി. നാളെ രാവിലെ 11 മണിക്ക് 10 മിനിറ്റ് സൗജന്യ ഡെമോ കോൾ ഷെഡ്യൂൾ ചെയ്യട്ടെ?"
             elif detected_lang == "en-IN":
-                return "Got it, thank you! We completely understand your requirements. Could we schedule a quick 10-minute demo call tomorrow morning at 11:00 AM?"
+                return "Got it, thank you! We completely understand your requirements. When would be a good time for a quick 10-minute call with our team?"
             else:
                 return "నమస్కారం అండి! మీ ప్రాజెక్ట్ అవసరాలు మేము విన్నాము, ఖచ్చితంగా చేస్తాము. మా సీనియర్ టెక్నాలజీ ఎక్స్‌పర్ట్‌తో రేపు 10 నిమిషాల ఉచిత డెమో కాల్ షెడ్యూల్ చేయమంటారా?"
 
@@ -335,7 +337,7 @@ class SalesAgent:
                 "नहीं चाहिए", "कॉल मत करना", "फोन मत करो", "रुचि नहीं"
             ]
             if any(p in last_user_turn for p in rejection_patterns):
-                ai_ack = ["ధన్యవాదాలు", "సరేనండి", "అర్థమైంది", "thank you", "understood", "okay", "धन्यवाद", "समझ गया", "जी बिल्कुल"]
+                ai_ack = ["ధన్యవాదాలు", "సరేనండి", "అర్థమైంది", "thank you", "understood", "okay", "धन्यवाद", "समझ गया", "समझ गई", "जी बिल्कुल"]
                 if any(w in lower_ai for w in ai_ack):
                     return True
 

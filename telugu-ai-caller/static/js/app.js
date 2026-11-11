@@ -1025,6 +1025,9 @@ document.addEventListener("DOMContentLoaded", () => {
         job = ((await resp.json()).jobs || []).find((j) => j.id === jobId);
       } catch (_) { return; }
       if (!job) return;
+      if (job.provider === "samvaad" && job.state === "dialing") {
+        return window.showCallTracker(`📞 Sarvam Agent (Shriya) is calling ${who}. The result appears here when the call ends.`, "info");
+      }
       const live = CALL_STATES[job.state];
       if (job.state === "queued" && job.last_disposition === "service_unavailable") {
         clearInterval(callTrackerTimer);
@@ -1041,7 +1044,10 @@ document.addEventListener("DOMContentLoaded", () => {
         window.showCallTracker(`✅ Call finished with ${who}: ${(job.last_disposition || "completed").replace(/_/g, " ")}.`, "ok", job.call_id);
         try { await refreshLeads(); } catch (_) {}
       } else if (job.state === "retry_scheduled") {
-        window.showCallTracker(`📵 ${who} did not answer. It will be retried ${job.next_attempt_at ? "at " + istTime(job.next_attempt_at) : "later"}.`, "warn");
+        const missed = job.last_disposition === "busy" ? "was busy or declined the call" : "did not answer";
+        window.showCallTracker(`📵 ${who} ${missed}. It will be retried ${job.next_attempt_at ? "at " + istTime(job.next_attempt_at) : "later"}.`, "warn");
+      } else if (job.state === "not_reachable" && job.provider === "samvaad" && job.last_error) {
+        window.showCallTracker(`⛔ Sarvam Agent could not start the call: ${job.last_error}`, "bad");
       } else if (job.state === "not_reachable") {
         window.showCallTracker(`📵 ${who} could not be reached.`, "warn");
       } else {
@@ -1060,7 +1066,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const post = async () => {
       const resp = await fetch(`/api/dialer/call-now/${encodeURIComponent(lead.id)}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ consent_confirmed: !!opts.consent, schedule: !!opts.schedule }),
+        body: JSON.stringify({ consent_confirmed: !!opts.consent, schedule: !!opts.schedule, language: opts.language || undefined }),
       });
       if (resp.status === 401) { alert("Your session has ended. Please log in again."); location.href = "/login?next=" + location.pathname; return null; }
       const data = await resp.json();
@@ -1076,6 +1082,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (check.simulated) warn += "\n⚠ The phone line is in SIMULATION mode: no real phone will ring.";
       if (check.can_call && check.outside_calling_hours) warn += "\n⚠ It is outside your calling hours. Calls to customers at this time may break calling-time rules.";
       if (check.can_call && check.last_called_hours_ago !== null && check.last_called_hours_ago < 24) warn += `\n⚠ This lead was called ${check.last_called_hours_ago} hours ago.`;
+      if (check.can_call && check.calls_this_week >= 4) warn += `\n⚠ This number has had ${check.calls_this_week} calls in the last 7 days.`;
       if (check.status === "service_unavailable" || check.status === "paused" || (check.status === "blocked" && !check.needs_consent)) {
         alert(check.message); return;
       }
@@ -1086,7 +1093,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const when = check.next_allowed_at ? istTime(check.next_allowed_at) : "the next allowed time";
         if (!confirm(`${check.message}\n\nSchedule the call for ${when}?`)) return;
         opts = { ...opts, schedule: true };
-      } else if (!confirm(`Initiate live AI outbound call to ${who} via Vobiz Carrier Line (+917965482229)?\nThe AI voice employee will speak with the customer.${warn}`)) return;
+      } else if (!confirm(`Initiate live AI outbound call to ${who} via Vobiz Carrier Line (+917965482229)?\nEngine: ${check.engine_label || "Our engine (Shreya)"}${check.engine === "samvaad" ? " · billed by Sarvam, about ₹3.50 a minute" : ""}.${warn}`)) return;
 
       const data = await post();
       if (!data) return;
@@ -1099,6 +1106,116 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.dialSelectedLeadPhone = () => window.callLeadNow(selectedLead);
+
+  // Engine picker: our engine (Shreya) or Sarvam's own agent (Shriya) places the next calls
+  window.loadCallEngine = async () => {
+    const select = document.getElementById("callEngineSelect");
+    if (!select) return;
+    try {
+      const resp = await fetch("/api/dialer/engine");
+      if (!resp.ok) return;
+      const data = await resp.json();
+      select.innerHTML = data.options.map((o) =>
+        `<option value="${o.id}" ${o.ready ? "" : "disabled"}>${o.label}${o.ready ? "" : " (not set up)"}</option>`).join("");
+      select.value = data.engine;
+      const notReady = data.options.find((o) => !o.ready);
+      select.title = notReady ? `${notReady.label} needs in .env: ${notReady.missing.join(", ")}` : "Engine for the next calls";
+    } catch (_) {}
+  };
+  window.changeCallEngine = async (select) => {
+    const resp = await fetch("/api/dialer/engine", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ engine: select.value }),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) alert(data.detail || "Could not change the engine.");
+    await window.loadCallEngine();
+  };
+  window.loadCallEngine();
+
+  // Inbound page: the hours when the AI answers incoming calls; other calls go to the transfer number
+  const showInboundHours = (data) => {
+    const $ = (id) => document.getElementById(id);
+    if (!$("inboundHoursEnabled")) return;
+    $("inboundHoursEnabled").checked = !!data.enabled;
+    $("inboundHoursStart").value = data.start || "20:00";
+    $("inboundHoursEnd").value = data.end || "10:00";
+    if (data.transfer_number) $("inboundTransferNumber").value = data.transfer_number;
+    const label = (t) => new Date(`2000-01-01T${t}`).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    $("inboundHoursBadge").innerText = data.enabled ? `AI ${label(data.start)} – ${label(data.end)}` : "Active 24/7";
+    $("inboundHoursStatus").innerText = !data.enabled ? "Now: the AI answers every incoming call."
+      : data.ai_answering_now ? "Now: the AI is answering incoming calls."
+      : `Now: incoming calls go to ${data.transfer_number}.`;
+  };
+  window.loadInboundHours = async () => {
+    try {
+      const resp = await fetch("/api/inbound/hours");
+      if (resp.ok) showInboundHours(await resp.json());
+    } catch (_) {}
+  };
+  window.saveInboundHours = async () => {
+    const $ = (id) => document.getElementById(id);
+    const resp = await fetch("/api/inbound/hours", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled: $("inboundHoursEnabled").checked, start: $("inboundHoursStart").value,
+                             end: $("inboundHoursEnd").value, transfer_number: $("inboundTransferNumber").value }),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) { alert(data.detail || "Could not save the inbound hours."); return; }
+    showInboundHours(data);
+    alert("Saved.");
+  };
+  window.loadInboundHours();
+
+  // "Call a number": type any number; it is added as a lead if new, then the normal Call now flow runs
+  window.openCallNumber = () => {
+    if (document.getElementById("callNumberBox")) return;
+    const overlay = document.createElement("div");
+    overlay.id = "callNumberBox";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:9997;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;";
+    overlay.innerHTML = `
+      <form style="background:#fff;color:#18181b;border-radius:14px;padding:20px;width:100%;max-width:360px;display:grid;gap:12px;font:500 14px system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.3);">
+        <div style="font-size:17px;font-weight:700;">📞 Call a number</div>
+        <label style="display:grid;gap:4px;">Phone number
+          <input id="callNumberPhone" type="tel" required autocomplete="off" placeholder="9876543210" style="padding:9px 10px;border:1px solid #d4d4d8;border-radius:8px;font-size:15px;">
+        </label>
+        <label style="display:grid;gap:4px;">Name (optional)
+          <input id="callNumberName" type="text" autocomplete="off" style="padding:9px 10px;border:1px solid #d4d4d8;border-radius:8px;font-size:15px;">
+        </label>
+        <label style="display:grid;gap:4px;">Start in
+          <select id="callNumberLang" style="padding:9px 10px;border:1px solid #d4d4d8;border-radius:8px;font-size:15px;">
+            <option value="te-IN">Telugu</option><option value="hi-IN">Hindi</option><option value="en-IN">English</option>
+          </select>
+        </label>
+        <div id="callNumberError" role="alert" style="color:#dc2626;font-size:13px;" hidden></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button type="button" id="callNumberCancel" style="background:#f4f4f5;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;">Cancel</button>
+          <button type="submit" style="background:#ea580c;color:#fff;border:0;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;">Call now</button>
+        </div>
+      </form>`;
+    document.body.appendChild(overlay);
+    const phone = document.getElementById("callNumberPhone");
+    const error = document.getElementById("callNumberError");
+    phone.focus();
+    document.getElementById("callNumberCancel").onclick = () => overlay.remove();
+    overlay.querySelector("form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      error.hidden = true;
+      const language = document.getElementById("callNumberLang").value;
+      try {
+        const resp = await fetch("/api/dialer/lead-for-number", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: phone.value, name: document.getElementById("callNumberName").value, language }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) { error.textContent = data.detail || "Could not use this number."; error.hidden = false; return; }
+        overlay.remove();
+        await window.callLeadNow(data, { language });
+      } catch (e) {
+        error.textContent = "Network error: " + e.message;
+        error.hidden = false;
+      }
+    });
+  };
 
   if (phoneCallBtn) phoneCallBtn.addEventListener("click", window.dialSelectedLeadPhone);
 

@@ -49,7 +49,8 @@ from pipecat.runner.utils import parse_telephony_websocket
 from voice_agent.session import BaseCallSession, PhoneCallSession, VobizCallSession, WebCallSession
 from voice_agent.dialer import call_queue
 from voice_agent import webhook_auth
-from voice_agent.vobiz import build_answer_xml, parse_start_message
+from voice_agent import inbound_hours
+from voice_agent.vobiz import build_answer_xml, build_transfer_xml, parse_start_message
 
 router = APIRouter(tags=["voice"])
 
@@ -283,6 +284,14 @@ async def vobiz_answer(request: Request):
     }
     if stream_query.get("job_id", "").isdigit():
         await asyncio.to_thread(call_queue.on_answered, int(stream_query["job_id"]))
+    if not stream_query.get("lead_id") and not stream_query.get("job_id"):
+        # An incoming call: outside the AI's hours (set on the Inbound page) it goes to the team's phone
+        transfer_to = inbound_hours.transfer_number_now()
+        if transfer_to:
+            logger.info(f"Vobiz answer · incoming call {stream_query.get('call_id')} from {stream_query.get('from')} "
+                        f"outside AI hours: forwarding to the team")
+            caller_id = os.getenv("VOBIZ_CALLER_ID", "") or stream_query.get("to", "")
+            return Response(content=build_transfer_xml(transfer_to, caller_id), media_type="application/xml")
     stream_url = f"{_public_ws_base(request)}/api/voice/vobiz/stream"
     if stream_query:
         stream_url += "?" + urlencode(stream_query)
@@ -305,6 +314,27 @@ async def vobiz_hangup(request: Request):
             call_queue.on_provider_hangup, int(job_id), params.get("CallStatus", ""),
             _to_int(params.get("Duration")), params.get("HangupCause", ""),
         )
+    return {"success": True}
+
+
+@router.post("/api/voice/samvaad/webhook")
+async def samvaad_webhook(request: Request):
+    """Sarvam's agent (Shriya) reports a call it placed for us: saved like any other call."""
+    params = dict(request.query_params)
+    if not webhook_auth.allowed(params):
+        logger.warning(f"Sarvam Agent webhook rejected: wrong or missing key (from {request.client.host if request.client else '?'})")
+        return Response(status_code=403, content="forbidden")
+    try:
+        payload = await request.json()
+    except ValueError:
+        return Response(status_code=400, content="expected JSON")
+    if not isinstance(payload, dict):
+        return Response(status_code=400, content="expected a JSON object")
+    metadata = (payload.get("webhook_config") or {}).get("metadata") or {}
+    job_id = str(params.get("job_id") or metadata.get("job_id") or "")
+    logger.info(f"Sarvam Agent result · job {job_id} · status {payload.get('status')} · {payload.get('duration')}s")
+    if job_id.isdigit():
+        await asyncio.to_thread(call_queue.on_samvaad_result, int(job_id), payload)
     return {"success": True}
 
 

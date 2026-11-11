@@ -449,6 +449,28 @@ def test_wait_inside_a_request_is_not_a_hold():
     assert is_hold_request("ఒక్క నిమిషం ఆగండి") and is_hold_request("hold on please")
 
 
+def test_casual_wait_words_are_a_hold():
+    for text in ("ఆగు ఆగు", "agu agu", "aagu", "wait wait", "ఉండు ఒక్క నిమిషం"):
+        assert is_hold_request(text), text
+    assert not is_hold_request("ఆగు ఆగు ముందు ప్రైస్ ఎంతో చెప్పండి")
+
+
+def test_no_repeated_intro_or_stock_acknowledgement():
+    from services.sales_agent import sales_agent
+    from voice_agent.session import VOICE_RULES
+    prompt = sales_agent._build_system_prompt(None) + VOICE_RULES
+    assert "introduce yourself again" not in prompt and "Introduce yourself only in the opening greeting" in VOICE_RULES
+    assert "Always acknowledge" not in prompt and "समझ गया" not in prompt
+
+
+def test_company_facts_reach_the_ai():
+    from services.sales_agent import sales_agent
+    prompt = sales_agent._build_system_prompt(None)
+    for fact in ("Gayatri Heights, Madhapur", "HITEC City", "+91 77802 36242", "info@spassociates.online",
+                 "Sunday closed", "Balaga Sankara Rao", "never invent anything else"):
+        assert fact in prompt, fact
+
+
 def test_first_no_gets_one_attempt_second_no_ends():
     from voice_agent.call_guard import caller_hints
     assert "Do NOT say goodbye yet" in caller_hints("మాకు ఏమీ అవసరం లేదు", False)
@@ -482,3 +504,195 @@ def test_every_opening_line_names_shreya_and_says_nothing_about_recording():
             assert names[lang] in text
             assert "రికార్డ్" not in text and "record" not in text.lower() and "AI" not in text
 
+
+
+def test_carrier_hold_message_is_recognised():
+    from voice_agent.call_guard import is_carrier_hold
+    for text in ("The person you are speaking with has put your call on hold. Please stay on the line.",
+                 "Stay on the line.", "Aap jis vyakti se baat kar rahe hain, unhone aapke call ko hold par rakha hai.",
+                 "कृपया लाइन पर बने रहें"):
+        assert is_carrier_hold(text), text
+    for text in ("ఆగండి ఒక్క నిమిషం", "hold on please", "నేను లైన్ లోనే ఉన్నాను", "I need a website"):
+        assert not is_carrier_hold(text), text
+
+
+@pytest.mark.asyncio
+async def test_hold_recording_is_never_answered_and_ends_the_call(monkeypatch):
+    import asyncio as aio
+    from pipecat.processors.frame_processor import FrameProcessor
+
+    async def skip(self, frame, direction):
+        return None
+
+    monkeypatch.setattr(FrameProcessor, "process_frame", skip)
+    detected, passed = [], []
+
+    async def on_machine(kind, text):
+        detected.append(kind)
+
+    async def capture(frame, direction=None):
+        passed.append(frame.text)
+
+    guard = CallGuard(on_machine, hold_secs=0.05)
+    monkeypatch.setattr(guard, "push_frame", capture)
+    await guard.process_frame(TranscriptionFrame("మీది ఎక్కడండి కంపెనీ?", "u", "t"), None)
+    await guard.process_frame(TranscriptionFrame("Stay on the line.", "u", "t"), None)
+    await guard.process_frame(TranscriptionFrame("Hello", "u", "t"), None)  # back before the limit
+    await aio.sleep(0.1)
+    assert detected == [] and passed == ["మీది ఎక్కడండి కంపెనీ?", "Hello"]
+
+    await guard.process_frame(TranscriptionFrame("Your call has been put on hold. Please stay on the line.", "u", "t"), None)
+    await guard.process_frame(TranscriptionFrame("Stay on the line.", "u", "t"), None)
+    await aio.sleep(0.1)
+    assert detected == ["customer_hold"] and len(passed) == 2
+
+
+def test_experience_is_said_as_years_and_speech_is_faster():
+    from services.company_info import COMPANY_INFO_FOR_AI
+    from voice_agent.language import pace_for
+    from voice_agent.session import VOICE_RULES
+    assert "23 years" in COMPANY_INFO_FOR_AI and "Never say the year 2003" in COMPANY_INFO_FOR_AI
+    assert "started in 2003" not in COMPANY_INFO_FOR_AI and "Never read a year as a count" in VOICE_RULES
+    assert pace_for("te-IN") == 1.2 and pace_for("hi-IN") == 1.1 and pace_for("en-IN") == 1.1
+
+
+def test_everyday_no_gets_one_gentle_try_then_a_warm_close():
+    from voice_agent.call_guard import caller_hints
+    for text in ("ఇస్తాం, నాకేం అవసరం లేదండి", "వద్దండి", "అక్కర్లేదు", "not required"):
+        assert "Do NOT say goodbye yet" in caller_hints(text, False), text
+    again = caller_hints("వద్దు అన్నాను కదా", True)
+    assert "think it over" in again and "valuable time" in again and "[CALL_COMPLETED]" in again
+
+
+def test_every_goodbye_thanks_for_their_time():
+    from voice_agent.session import VOICE_RULES
+    assert "EVERY goodbye thanks them for their valuable time" in VOICE_RULES and "ఒకసారి ఆలోచించండి" in VOICE_RULES
+
+
+def test_later_today_is_open_and_no_fixed_slots():
+    from datetime import datetime
+    from services.sales_agent import sales_agent
+    from voice_agent.session import IST, calendar_hint
+    at = lambda s: datetime.strptime(s, "%Y-%m-%d %H:%M").replace(tzinfo=IST)  # noqa: E731
+    noon = calendar_hint(at("2026-11-09 12:24"))  # Monday: 2 PM must be bookable
+    assert "Times still open TODAY: from 1 PM to 7 PM" in noon and "accept any time inside these hours" in noon
+    assert "No more times today" in calendar_hint(at("2026-11-09 18:45"))
+    assert "Sunday 15 November (closed)" in calendar_hint(at("2026-11-14 12:00"))
+    assert "No more times today" in calendar_hint(at("2026-11-15 11:00"))  # Sunday
+    assert "11:00 AM or 4:00 PM" not in sales_agent._build_system_prompt(None)
+
+
+def test_talking_after_goodbye_pauses_the_hangup_until_the_words_arrive():
+    import asyncio as aio
+    from voice_agent.session import BaseCallSession
+
+    async def scenario():
+        session = BaseCallSession.__new__(BaseCallSession)
+        session.session_id, session.hangup_pending, session.ended_by = "t", False, None
+        session._hangup_paused, session.reopened_after_goodbye = False, 0
+        session.end_reason, session.task, session.done = None, object(), aio.Event()
+        session.send_event = lambda *a, **k: None
+        await session._on_conversation_concluded()
+        fallback = session._hangup_fallback
+        session.on_user_started_speaking()
+        await aio.sleep(0)
+        assert session.hangup_pending and session._hangup_paused and fallback.cancelled()
+        assert not session._end_task.done()  # waits POST_GOODBYE_WAIT_SECS for the words
+        session._end_task.cancel()
+
+    aio.run(scenario())
+
+
+def test_customer_is_addressed_respectfully_without_guessing_gender():
+    from voice_agent.session import VOICE_RULES
+    assert "RESPECT:" in VOICE_RULES and '"sir" to a man and "madam" to a woman only once it is clear' in VOICE_RULES
+    assert "Never guess" in VOICE_RULES and "అండి" in VOICE_RULES
+
+
+def test_noise_in_other_scripts_is_ignored_but_real_speech_is_kept():
+    from voice_agent.call_guard import is_foreign_noise
+    allowed = {"te-IN", "hi-IN"}
+    for noise in ("ஒன்னு.", "ഹലോ.", "তাও তো।", "ਹਾਂਜੀ ਮੈਂ ਲਿਖਦੀ।", "ഡേറ്റ് ഒക്കെ എത്ര?"):
+        assert is_foreign_noise(noise, allowed), noise
+    for speech in ("ఇంకా మాట్లాడలేదండి", "हाँ जी", "Hello.", "Growth package.", "వెబ్సైట్ కావాలి"):
+        assert not is_foreign_noise(speech, allowed), speech
+    assert not is_foreign_noise("ஒன்னு.", {"te-IN", "ta-IN"})  # a Tamil call keeps Tamil
+
+
+def test_closing_words_after_goodbye():
+    from voice_agent.call_guard import is_closing_word
+    for text in ("Okay.", "Good night.", "ఓకే అండి.", "ओके ओके, चला चला.", "థాంక్యూ", "కలవండి, థాంక్యూ."):
+        assert is_closing_word(text), text
+    for text in ("మీకు వాట్సాప్ ఉందా అండి?", "మీ దగ్గర ఏ services ఉన్నాయి?", "what services do you have",
+                 "Hello.", "wait wait", "ఆగండి", "A W."):
+        assert not is_closing_word(text), text
+
+
+def _ending_session():
+    import asyncio as aio
+    from voice_agent.session import BaseCallSession
+    s = BaseCallSession.__new__(BaseCallSession)
+    s.session_id, s.hangup_pending, s.ended_by, s._hangup_paused = "t", False, None, False
+    s.reopened_after_goodbye, s.end_reason, s.task, s.done = 0, None, object(), aio.Event()
+    s.language, s.router = "te-IN", None
+    s.send_event = lambda *a, **k: None
+    return s
+
+
+def test_after_goodbye_closing_words_end_the_call_and_anything_else_is_heard():
+    import asyncio as aio
+
+    async def scenario():
+        s = _ending_session()
+        await s._on_conversation_concluded()
+        s.on_user_started_speaking()
+        assert s.drop_transcript("Good night.") is True  # no second goodbye: the call ends
+        assert s.hangup_pending
+
+        s2 = _ending_session()
+        for heard in ("Hello.", "ఆగండి ఆగండి", "మీకు వాట్సాప్ ఉందా అండి?"):  # 10 Nov: "Hello." was cut off
+            await s2._on_conversation_concluded()
+            s2.on_user_started_speaking()
+            assert s2.drop_transcript(heard) is False, heard
+            assert not s2.hangup_pending
+        await s2._on_conversation_concluded()
+        assert s2.drop_transcript("మరి ఇంకా?") is True  # after 3 reopenings the next goodbye is final
+        for task in (s._end_task, s2._end_task):
+            task.cancel()
+
+    aio.run(scenario())
+
+
+def test_the_same_question_twice_gets_a_stop_asking_hint():
+    from voice_agent.session import BaseCallSession
+    s = BaseCallSession.__new__(BaseCallSession)
+    q = "ఈరోజు సాయంత్రం నాలుగు గంటలకా లేక రేపు ఉదయం ఏ టైమ్ వీలవుతుంది అండి?"
+    s.transcript = [{"role": "assistant", "content": "మా టీమ్‌లో పది మంది ఉన్నారు. " + q},
+                    {"role": "user", "content": "Riya."},
+                    {"role": "assistant", "content": "సరే అండి. మరి ఆ కాల్ ఎప్పుడు? " + q}]
+    assert "Do not ask it again" in s.repeat_hint()
+    s.transcript[-1]["content"] = "మీ బిజినెస్ ఏ రకమైనది అండి?"
+    assert s.repeat_hint() is None
+
+
+def test_no_senior_sales_closer_or_tech_lead_promises():
+    from services.sales_agent import sales_agent
+    prompt = sales_agent._build_system_prompt(None)
+    assert "Senior Sales Closer" not in prompt and "senior tech lead will connect" not in prompt
+
+
+def test_goodbyes_are_formal_and_hello_is_not_greeted_again():
+    from services.sales_agent import sales_agent
+    from voice_agent.session import VOICE_RULES
+    prompt = sales_agent._build_system_prompt(None) + VOICE_RULES
+    assert "ఉంటానండి, సెలవు" not in prompt and "never say \"సెలవు\"" in VOICE_RULES
+    assert "don't greet again" in VOICE_RULES and "ఇంకా ఏమైనా తెలుసుకోవాలనుకుంటున్నారా" in VOICE_RULES
+    assert "పదకొండు గంటలకా" not in prompt and "11 గంటలకు మా సీనియర్" not in prompt
+
+
+
+def test_personal_questions_get_a_warm_short_answer_without_volunteering_ai():
+    from voice_agent.session import VOICE_RULES
+    assert "PERSONAL QUESTIONS" in VOICE_RULES and "Never invent a personal life" in VOICE_RULES
+    assert "never bring up being a virtual assistant or AI yourself" in VOICE_RULES
+    assert "Only if the customer sincerely and directly asks whether you are a robot" in VOICE_RULES
