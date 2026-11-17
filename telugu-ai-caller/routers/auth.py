@@ -42,7 +42,10 @@ VALID_ROLES = {"owner", "admin", "manager", "salesperson", "member"}
 @router.get("/login", response_class=HTMLResponse)
 async def serve_login_page(request: Request):
     """Serve the LeadCloser AI team login page. Redirects authenticated users to CRM."""
-    user = get_optional_user(request)
+    try:
+        user = get_optional_user(request)
+    except HTTPException:  # AUTH_STRICT=true raises 401 for a logged-out visitor: they need this page
+        user = None
     if user:
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url="/crm", status_code=302)
