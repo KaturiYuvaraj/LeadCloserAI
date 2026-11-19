@@ -33,17 +33,17 @@ def test_router_switches_voice_only_when_language_changes():
 
     annotated, switch = router.prepare("మాకు యాప్ కావాలి")
     assert switch is None
-    assert annotated.endswith("(Reply only in Telugu.)")
+    assert "(Reply only in Telugu, mixing in everyday English" in annotated
 
     # one sentence in a new language is only a candidate; the third in a row switches (2-3 check rule)
-    assert router.prepare("हमें ऐप चाहिए")[1] is None
-    assert router.prepare("हमें ऐप चाहिए")[1] is None
-    annotated, switch = router.prepare("हमें ऐप चाहिए")
+    assert router.prepare("हमें एक ऐप चाहिए")[1] is None
+    assert router.prepare("हमें एक ऐप चाहिए")[1] is None
+    annotated, switch = router.prepare("हमें एक ऐप चाहिए")
     assert isinstance(switch, TTSUpdateSettingsFrame)
     assert switch.delta.voice == VOICES["hi-IN"]
     assert switch.delta.language == "hi-IN"
     assert router.current_language == "hi-IN"
-    assert annotated.endswith("(Reply only in Hindi.)")
+    assert "(Reply only in Hindi, mixing in everyday English" in annotated
 
     annotated, switch = router.prepare("ठीक है")
     assert switch is None

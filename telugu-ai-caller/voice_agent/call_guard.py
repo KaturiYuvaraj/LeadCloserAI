@@ -92,7 +92,8 @@ def is_foreign_noise(text: str, call_languages: set) -> bool:
 # What people say when a call is ending: these don't need another goodbye. Only these end the call
 # after our goodbye; "hello", "wait" or anything else is answered (10 Nov: "Hello." after the goodbye was cut off).
 _CLOSING_WORDS = re.compile(
-    r"^\s*(ok(ay)?|thanks?|thank|you|bye|good|night|morning|day|sure|fine|take|care|see|later|"
+    r"^\s*(ok(ay)?|thanks?|thank|you|bye|good|night|morning|day|sure|fine|take|care|see|later|have|a|nice|great|"
+    r"same|to|too|welcome|sir|madam|ji|"
     r"సరే|ఓకే|అలాగే|థాంక్స్|థాంక్యూ|ధన్యవాదాలు|ఉంటాను|బై|కలవండి|అండి|"
     r"ठीक|है|ओके|धन्यवाद|शुक्रिया|बाय|चलो|चला|जी)[\s.,!?।]*(అండి|जी|sir|madam)?[\s.,!?।]*$",
     re.IGNORECASE)
@@ -118,7 +119,10 @@ HOLD_PATTERNS = [
     r"\b(one|1|a)\s+(minute|min|sec|second|moment)\b", r"\bjust\s+a\s+(sec|second|minute|moment)\b",
     r"\bhold\s+on\b", r"^\s*wait\b", r"\bwait\s+wait\b", r"\bgive\s+me\s+a\s+(minute|second|moment)\b", r"\blet\s+me\s+check\b",
     r"एक\s+(मिनट|सेकंड|सेकेंड)", r"रुकि?ए|रुको|ज़?रा\s+रुक", r"\bek\s+(minute|min|second)\b", r"\bruk(o|iye|na)\b",
-    r"ఒక్?క?\s*(నిమిషం|సెకన్|సెకండ్)", r"ఆగండి|ఉండండి|ఆగు|ఉండు", r"\bok+a\s+nimisham\b", r"\baa?gandi\b|\bundandi\b|\baa?gu\b|\bundu\b",
+    r"ఒక్?క?\s*(నిమిషం|సెకన్|సెకండ్)", r"ఆగండి|ఆగు", r"\bok+a\s+nimisham\b", r"\baa?gandi\b|\baa?gu\b",
+    # ఉండండి / ఉండు only on their own ("ఉండండి ఉండండి"): STT also writes "ఉందండి" (there is) as ఉండండి,
+    # and "మొబైల్ అప్లికేషన్ అవసరం ఉండండి" (I need an app) got "take your time" (18 Nov call 100)
+    r"^\W*((ఉండండి|ఉండు|undandi|undu)\W*){1,3}$",
     r"ஒரு\s+(நிமிஷம்|நிமிடம்)", r"இருங்க", r"ಒಂದು\s+ನಿಮಿಷ", r"ഒരു\s+മിനിറ്റ്",
 ]
 OPT_OUT_PATTERNS = [
@@ -133,8 +137,13 @@ HUMAN_PATTERNS = [
     r"మనిషితో|మేనేజర్‌?తో", r"\b(manager|executive)\s+(ki|ko|tho)\b",
 ]
 UPSET_PATTERNS = [
-    r"\b(fraud|scam|cheat(er|ing)?|nonsense|stupid|idiot|irritat\w*|harass\w*|waste\s+of\s+time)\b",
-    r"बकवास|धोखा|फ्रॉड|परेशान", r"మోసం|విసిగి|చిరాకు|ఫ్రాడ్", r"\b(bakwas|dhokha|pareshan)\b",
+    r"\b(fraud|scam|cheat(er|ing)?|nonsense|stupid|idiot|irritat\w*|harass\w*|waste\s+of\s+time|rude(ly)?|"
+    r"disturb\w*|annoy\w*|repeated(ly)?\s+call\w*|again\s+and\s+again|bad\s+behaviou?r|shut\s+up)\b",
+    r"बकवास|धोखा|फ्रॉड|परेशान|तंग\s+कर|दिमाग\s+मत|बार\s*-?\s*बार\s+(कॉल|फोन)|बदतमीज़?|रूड",
+    r"మోసం|విసిగి|విసిగిస్త|చిరాకు|చీదరించ|ఫ్రాడ్|రూడ్|బిహేవియర్\s+(ఏం\s+)?బాలేదు|బుద్ధి\s+లేద|"
+    r"ఎటకారం|ఎటాకారం|వెటకారం|డిస్టర్బ్|రిపీటెడ్\s+కాల్|పదే\s+పదే\s+(కాల్|ఫోన్)|మళ్ళీ\s+మళ్ళీ\s+(కాల్|ఫోన్)|"
+    r"విసుగ|టైం\s+వేస్ట్|టైమ్\s+వేస్ట్",
+    r"\b(bakwas|dhokha|pareshan|chiraku|visugu)\b",
 ]
 # Signs that STT heard noise or a broken line rather than clear speech
 UNCLEAR_PATTERNS = [r"(\.\.\.|…).*(\.\.\.|…)", r"\[(noise|inaudible|unclear|music)\]", r"<unk>", r"\binaudible\b"]
@@ -177,8 +186,9 @@ HINTS = {
               "if they haven't said it, and add [HUMAN_HANDOFF]."),
     "unclear": ("The audio was broken or noisy. Do not guess what they meant: say you couldn't hear clearly "
                 "and ask them to repeat."),
-    "upset": ("The customer sounds upset. Stay calm and respectful, apologise briefly, do not argue or "
-              "push the sale; offer to call later or stop calling."),
+    "upset": ("The customer sounds upset or irritated. Don't argue, defend yourself or push the sale, and don't "
+              "ask anything. In this one reply: a short sorry, kindly ask them not to worry, say our team will call "
+              "them later at a better time, thank them for their valuable time, say goodbye and add [CALL_COMPLETED]."),
 }
 
 

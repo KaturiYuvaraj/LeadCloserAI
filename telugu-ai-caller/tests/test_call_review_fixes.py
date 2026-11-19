@@ -50,9 +50,9 @@ def test_prompt_carries_the_calendar_and_the_new_rules():
     assert "Monday 9 November" in rules and "never guess a date or weekday" in rules
     assert "already passed today" in rules
     assert "Repeat back only what the customer actually said" in rules
-    assert "script of the language you are speaking" in rules
+    assert "English words in English letters" in rules
     assert "our team will call you" in rules and "do not also add [CALLBACK]".lower() in rules.lower()
-    assert "మీ బిజినెస్ కోసం డెమో" in rules  # the right/wrong script example
+    assert "మీ business కి website ఉంటే" in rules and "Wrong: \"జనరేషన్\"" in rules  # the right/wrong script example
     assert "If the customer asks for a time today that is still ahead" in rules  # 4 PM at 3:12 PM is fine
     assert "have NOT chosen" in rules and "Never book a time the customer said they cannot do" in rules
 

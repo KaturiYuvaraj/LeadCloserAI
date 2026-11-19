@@ -34,7 +34,7 @@ def test_ai_is_told_every_price_and_the_rules():
     for text in ("₹24,500", "₹66,500", "₹1,21,500", "₹6,700", "₹6,500", "₹8,500", "₹9,500", "₹6,000", "₹2,00,000", "₹3,00,000",
                  "₹6,00,000", "₹10,00,000", "₹15,00,000", "₹30,00,000", "₹60,000 to ₹1,20,000", "₹3,000", "excludes 18% GST"):
         assert text in prompt, text
-    assert "the price is negotiable" in prompt and "Never name a discount" in prompt and "team will confirm" in prompt
+    assert "the price is negotiable" in prompt and "Never name a percentage" in prompt and "team will confirm" in prompt
 
 
 def test_old_prices_are_gone_from_what_the_ai_sees():
@@ -49,11 +49,16 @@ def test_profile_and_quotations_use_the_same_list():
     assert "₹6,700" in PRICE_LIST_FOR_AI
 
 
-def test_monthly_amounts_and_gst_figures_are_right():
-    for price, with_gst in ((24500, "₹28,910"), (66500, "₹78,470"), (121500, "₹1,43,370"), (200000, "₹2,36,000"), (300000, "₹3,54,000")):
-        lakhs = round(price * 1.18)
-        digits = "".join(ch for ch in with_gst if ch.isdigit())
-        assert int(digits) == lakhs and with_gst in PRICE_LIST_FOR_AI
+def test_no_gst_totals_so_they_are_never_quoted_as_the_price():
+    # 18 Nov calls 90, 91, 97 quoted ₹3,54,000 (₹3L with GST) as the starting price, and call 97 worked out a
+    # wrong total itself (₹11,466). Prices are quoted without GST, "plus eighteen percent GST".
+    for with_gst in ("₹28,910", "₹78,470", "₹1,43,370", "₹2,36,000", "₹3,54,000", "₹11,80,000"):
+        assert with_gst not in PRICE_LIST_FOR_AI, with_gst
+    assert "never work out a total with GST yourself" in PRICE_LIST_FOR_AI
+    assert "no totals, no sums, no GST maths" in PRICE_LIST_FOR_AI
+
+
+def test_monthly_amounts_stay_out():
     # the owner said these from-second-month amounts are wrong: the AI must not quote them
     for wrong in ("₹19,500 a month", "₹47,000 a month", "₹76,000 a month", "From the second month"):
         assert wrong not in PRICE_LIST_FOR_AI
@@ -126,7 +131,24 @@ def test_individual_totals_and_every_gst_figure():
 
     for price in (24500, 66500, 121500, 6700, 6500, 8500, 9500, 6000, 37200, 14500, 16500, 10500, 35500, 32500, 15500,
                   126500, 200000, 300000, 600000, 1000000, 1500000, 3000000, 60000, 120000):
-        assert rupees(round(price * 1.18)) in PRICE_LIST_FOR_AI, price
+        assert rupees(price) in PRICE_LIST_FOR_AI, price
+
+
+def test_app_plans_are_a_clear_table():
+    # 18 Nov calls 92 and 98 called ₹3,00,000 "Standard with marketing"; calls 95 and 100 said Basic for both is ₹2L
+    table = PRICE_LIST_FOR_AI.split("MOBILE APPS")[1].split("ERP SOFTWARE")[0]
+    assert "| Basic (MVP) | the first version of the app, app only | 4-6 weeks | ₹2,00,000 | ₹3,00,000 |" in table
+    assert "| Standard: Business Growth Application |" in table and "| ₹6,00,000 | ₹10,00,000 |" in table
+    assert "| Premium: Enterprise & Scalable Platform |" in table and "| ₹15,00,000 | ₹30,00,000 |" in table
+    assert "Android + iPhone Basic = ₹3,00,000, not ₹2,00,000" in table
+    assert 'never call ₹3,00,000 "Standard"' in table
+
+
+def test_prices_only_when_asked_and_start_ups_hear_about_the_discount():
+    assert "only when the customer asks about price" in PRICE_LIST_FOR_AI and "Never ask the customer for their budget" in PRICE_LIST_FOR_AI
+    assert "we give start-ups a good discount" in PRICE_LIST_FOR_AI
+    assert "Starter has a static website; a dynamic website is in Growth" in PRICE_LIST_FOR_AI
+    assert "Never give a CRM timeline yourself" in PRICE_LIST_FOR_AI
 
 
 def test_price_is_negotiable_and_big_requirements_go_to_the_team():

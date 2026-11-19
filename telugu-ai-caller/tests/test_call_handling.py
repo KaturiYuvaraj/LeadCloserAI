@@ -438,7 +438,7 @@ def test_greetings_are_not_answers_rule_is_in_the_prompt():
 def test_prompt_says_disclosure_once_and_one_retry_on_not_interested():
     from voice_agent.session import VOICE_RULES
     assert "You are Shreya" in VOICE_RULES and "Don't bring up that the call is recorded" in VOICE_RULES
-    assert "make one short attempt" in VOICE_RULES and "[DO_NOT_CALL] [CALL_COMPLETED]" in VOICE_RULES
+    assert "make one short WHY GO DIGITAL point" in VOICE_RULES and "[DO_NOT_CALL] [CALL_COMPLETED]" in VOICE_RULES
 
 
 # ----------------------------------------------------------------------------- from the scenario caller
@@ -498,7 +498,7 @@ def test_language_requests_in_indian_scripts():
 
 def test_every_opening_line_names_shreya_and_says_nothing_about_recording():
     from voice_agent.session import AGENT_GREETING, INBOUND_GREETING, VOICES
-    names = {"te-IN": "శ్రేయ", "hi-IN": "श्रेया", "en-IN": "Shreya", "ta-IN": "ஸ்ரேயா", "kn-IN": "ಶ್ರೇಯಾ", "ml-IN": "ശ്രേയ"}
+    names = {"te-IN": "Shreya", "hi-IN": "Shreya", "en-IN": "Shreya", "ta-IN": "ஸ்ரேயா", "kn-IN": "ಶ್ರೇಯಾ", "ml-IN": "ശ്രേയ"}
     for lang in VOICES:
         for text in (AGENT_GREETING[lang], INBOUND_GREETING[lang]):
             assert names[lang] in text
@@ -685,8 +685,9 @@ def test_goodbyes_are_formal_and_hello_is_not_greeted_again():
     from services.sales_agent import sales_agent
     from voice_agent.session import VOICE_RULES
     prompt = sales_agent._build_system_prompt(None) + VOICE_RULES
-    assert "ఉంటానండి, సెలవు" not in prompt and "never say \"సెలవు\"" in VOICE_RULES
-    assert "don't greet again" in VOICE_RULES and "ఇంకా ఏమైనా తెలుసుకోవాలనుకుంటున్నారా" in VOICE_RULES
+    assert "ఉంటానండి, సెలవు" not in prompt and "Never say \"సెలవు\"" in VOICE_RULES
+    assert "don't greet again" in VOICE_RULES and "ఇంకా ఏమైనా తెలుసుకోవాలా sir?" in VOICE_RULES
+    assert "Say goodbye only once" in VOICE_RULES and "have a nice day" in VOICE_RULES
     assert "పదకొండు గంటలకా" not in prompt and "11 గంటలకు మా సీనియర్" not in prompt
 
 

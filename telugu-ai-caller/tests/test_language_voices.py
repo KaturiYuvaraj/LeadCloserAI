@@ -33,7 +33,7 @@ def test_single_sentence_does_not_switch_without_verification():
     text, frame = router.prepare("Yes I need a website for my business")
     # First check: does NOT switch immediately
     assert frame is None and router.current_language == "te-IN"
-    assert "(Reply only in Telugu." in text
+    assert "(Reply only in Telugu," in text
 
 
 def test_two_substantive_sentences_verify_and_switch_language():
@@ -48,16 +48,14 @@ def test_two_substantive_sentences_verify_and_switch_language():
     assert "(Reply only in English." in text2
 
 
-def test_three_short_turns_verify_and_switch_language():
-    """Rule: 3 consecutive short turns in new language verify and confirm the switch."""
+def test_short_bits_do_not_switch_but_one_real_sentence_does():
+    """2-3 words in another script are often line noise (18 Nov call 92); a real sentence switches at once."""
     router = LanguageRouter("te-IN")
-    # Check 1:
     assert router.prepare("हाँ जी")[1] is None and router.current_language == "te-IN"
-    # Check 2:
     assert router.prepare("बात सुनो")[1] is None and router.current_language == "te-IN"
-    # Check 3 (verified):
-    text3, frame3 = router.prepare("क्या प्राइस है")
-    assert frame3 is not None and router.current_language == "hi-IN"
+    assert router.prepare("क्या प्राइस है")[1] is None and router.current_language == "te-IN"
+    text4, frame4 = router.prepare("मुझे हिंदी में बात करनी है")
+    assert frame4 is not None and router.current_language == "hi-IN"
 
 
 def test_explicit_language_change_request_switches_immediately():

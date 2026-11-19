@@ -105,16 +105,32 @@ NO_MORE_CALLS = re.compile(
 )
 
 
+# The closing line of a goodbye, in the languages we speak ("… thank you sir, have a nice day!")
+GOODBYE_END = re.compile(
+    r"(have\s+a\s+(nice|good|great|wonderful)\s+day(\s+ahead)?|good\s*bye|మంచి\s+రోజు|शुभ\s+हो|अलविदा)"
+    r"[\s,]*(sir|madam|అండి|जी)?[\s.!।]*$",
+    re.IGNORECASE,
+)
+
+
 def guard_actions(spoken: str, actions: List[Action]) -> List[Action]:
     """
     Safety rules on top of the LLM's markers:
-      - a reply that ends with a question never hangs up (the customer must be able to answer),
-        and books nothing: a callback or meeting it mentions is only a proposal so far;
+      - a reply that asks anything never hangs up, wherever the question is: the customer must be
+        able to answer (18 Nov call 98: "May I have your name and WhatsApp number? Thank you, see you
+        tomorrow!" hung up before the answer);
+      - a reply that ends with a question books nothing: a callback or meeting it mentions is only a proposal so far;
+      - a goodbye without the marker still ends the call (18 Nov call 97 said goodbye six times and went on);
       - a reply that promises no more calls always records Do-Not-Call.
     """
     tags = [tag for tag, _ in actions]
-    if spoken.strip().endswith(("?", "？")):
-        actions = [a for a in actions if a[0] not in ("CALL_COMPLETED", "CALLBACK", "MEETING")]
+    text = spoken.strip()
+    if text.endswith(("?", "？")):
+        actions = [a for a in actions if a[0] not in ("CALLBACK", "MEETING")]
+    if "?" in text or "？" in text:
+        actions = [a for a in actions if a[0] != "CALL_COMPLETED"]
+    elif "CALL_COMPLETED" not in tags and GOODBYE_END.search(text):
+        actions = actions + [("CALL_COMPLETED", "")]
     if NO_MORE_CALLS.search(spoken) and "DO_NOT_CALL" not in tags:
         actions = [("DO_NOT_CALL", "")] + actions
     return actions

@@ -131,12 +131,41 @@ _EXPLICIT_REGEXES = {
 }
 
 
-def detect_explicit_language_request(text: str) -> Optional[str]:
-    """Detect if caller explicitly asked to switch language (e.g. 'Can you speak in English?')."""
+# A language named in a short message, in any script: "Telugu or English?", "तेलुगु और इंग्लिश में बात करो",
+# "నేను తెలుగులో మాట్లాడుతుంటే మీరు హిందీలో…". 18 Nov call 93: the customer asked twice for Telugu or English
+# in a Hindi call and the agent stayed in Hindi.
+LANGUAGE_NAMES_ANY_SCRIPT = {
+    "te-IN": r"\btelugu\b|తెలుగు|तेलुगु|तेलगू",
+    "en-IN": r"\benglish\b|ఇంగ్లీష్|ఇంగ్లిష్|इंग्लिश|अंग्रेज़?ी",
+    "hi-IN": r"\bhindi\b|హిందీ|हिंदी|हिन्दी",
+    "ta-IN": r"\btamil\b|తమిళ|तमिल|தமிழ்",
+    "kn-IN": r"\bkannada\b|కన్నడ|कन्नड़?|ಕನ್ನಡ",
+    "ml-IN": r"\bmalayalam\b|మలయాళ|मलयालम|മലയാളം",
+}
+_NAME_REGEXES = {lang: re.compile(p, re.IGNORECASE) for lang, p in LANGUAGE_NAMES_ANY_SCRIPT.items()}
+MAX_WORDS_FOR_NAMED_LANGUAGE = 15
+
+
+def detect_explicit_language_request(text: str, current: Optional[str] = None) -> Optional[str]:
+    """
+    The language the caller asked for ('Can you speak in English?'), or the first language they name in a
+    short message, skipping the language we already speak: "Telugu or English?" in a Hindi call → Telugu.
+    """
     if not text:
         return None
+    found = []
     for lang, regex_list in _EXPLICIT_REGEXES.items():
-        if any(r.search(text) for r in regex_list):
+        for r in regex_list:
+            m = r.search(text)
+            if m:
+                found.append((m.start(), lang))
+    if len(text.split()) <= MAX_WORDS_FOR_NAMED_LANGUAGE:
+        for lang, r in _NAME_REGEXES.items():
+            m = r.search(text)
+            if m:
+                found.append((m.start(), lang))
+    for _, lang in sorted(found):
+        if lang != current:
             return lang
     return None
 
@@ -232,7 +261,7 @@ class LanguageRouter(FrameProcessor):
         clean_text = text.strip()
 
         # Step 1: Check for explicit caller instruction to change language (e.g. "Speak in English")
-        explicit_request = detect_explicit_language_request(clean_text)
+        explicit_request = detect_explicit_language_request(clean_text, self._current)
         if explicit_request and explicit_request in VOICES and explicit_request != self._current:
             logger.info(f"🗣 Explicit language switch requested by caller: {self._current} → {explicit_request}")
             self._pending_lang = None
@@ -263,7 +292,9 @@ class LanguageRouter(FrameProcessor):
         name = LANGUAGE_NAMES.get(self._current, "the customer's language")
         hint = self._hint_provider(clean_text) if self._hint_provider else None
         hint = f" {hint}" if hint else ""
-        return f"{clean_text}\n(Reply only in {name}.{hint})", switch_frame
+        mix = ("" if self._current == "en-IN"
+               else ", mixing in everyday English words the way people really talk, written in English letters")
+        return f"{clean_text}\n(Reply only in {name}{mix}.{hint})", switch_frame
 
     def _should_switch(self, text: str, language: str) -> bool:
         """
@@ -288,6 +319,14 @@ class LanguageRouter(FrameProcessor):
         else:
             self._pending_lang = language
             self._pending_count = 1
+
+        # A full sentence (5+ words) in another Indian script switches at once: STT writes Telugu speech in
+        # Telugu letters, and a Telugu speaker greeted in Hindi got a Hindi reply first (18 Nov call 96).
+        # Short bits stay unswitched: line noise comes back as 2-3 Hindi-script words ("फोन बच्चे से।").
+        if language != "en-IN" and len(words) >= 5:
+            return True
+        if language != "en-IN" and len(words) < 4:
+            return False  # 2-3 words in another script are too often noise to count towards a switch
 
         # Check twice or thrice rule:
         # Check 1: never switch.
