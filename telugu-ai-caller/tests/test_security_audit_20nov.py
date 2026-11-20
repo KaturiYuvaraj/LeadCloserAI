@@ -78,3 +78,21 @@ def test_outbound_call_needs_login_whatever_the_provider(anon):
     # naming another provider used to skip the login check
     for body in ({"lead_id": 1, "phone": "+919000000001"}, {"lead_id": 1, "phone": "+919000000001", "provider": "exotel"}):
         assert anon.post("/api/call/outbound", json=body).status_code == 401
+
+
+def test_new_leads_target_includes_leads_marked_new_again():
+    # 20 Nov: importing known numbers set them back to NEW, but "New leads" only took never-called leads
+    from core.db import SessionLocal
+    from models import Call, Lead
+    from routers.dialer import resolve_targets
+    s = SessionLocal()
+    try:
+        called_new = Lead(account_id=1, name="Again", phone_e164="+919000000301", variables={"status": "NEW"})
+        called_old = Lead(account_id=1, name="Done", phone_e164="+919000000302", variables={"status": "CONTACTED"})
+        fresh = Lead(account_id=1, name="Fresh", phone_e164="+919000000303", variables={})
+        s.add_all([called_new, called_old, fresh]); s.commit()
+        s.add_all([Call(account_id=1, lead_id=called_new.id), Call(account_id=1, lead_id=called_old.id)]); s.commit()
+        ids = resolve_targets("new")
+        assert called_new.id in ids and fresh.id in ids and called_old.id not in ids
+    finally:
+        s.close()

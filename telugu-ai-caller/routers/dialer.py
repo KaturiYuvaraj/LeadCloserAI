@@ -14,6 +14,7 @@ The campaign window in the CRM uses these through /api/campaign/* when
 """
 
 import asyncio
+import json
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -44,13 +45,23 @@ def resolve_targets(target: str = "new", lead_ids: Optional[List[int]] = None,
         return [int(lead_id)] if lead_id else []
     session = SessionLocal()
     try:
-        query = session.query(Lead.id).filter(Lead.opt_out.is_(False))
-        if target != "all":
-            called = session.query(Call.lead_id).filter(Call.lead_id.isnot(None)).distinct()
-            query = query.filter(~Lead.id.in_(called))
-        return [row.id for row in query.order_by(Lead.id).all()]
+        query = session.query(Lead.id, Lead.variables).filter(Lead.opt_out.is_(False))
+        rows = query.order_by(Lead.id).all()
+        if target == "all":
+            return [row.id for row in rows]
+        # "new" = never called, or marked NEW again (an import of a known number sets it back to NEW, 20 Nov)
+        called = {lid for (lid,) in session.query(Call.lead_id).filter(Call.lead_id.isnot(None)).distinct()}
+        return [row.id for row in rows if row.id not in called or _status(row.variables) == "NEW"]
     finally:
         session.close()
+
+
+def _status(variables: Any) -> str:
+    try:
+        data = json.loads(variables) if isinstance(variables, str) else (variables or {})
+        return str(data.get("status") or "").upper()
+    except (ValueError, AttributeError):
+        return ""
 
 
 def start_calling(payload: Dict[str, Any]) -> Dict[str, Any]:
