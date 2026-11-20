@@ -653,9 +653,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 3. AUTONOMOUS AUTO-CALLING CAMPAIGN CONTROLLER
-  window.openCampaignModal = () => {
+  window.openCampaignModal = async () => {
     const modal = document.getElementById("campaignModal");
     if (modal) modal.classList.add("open");
+    const select = document.getElementById("campaignEngineSelect");
+    if (!select) return;
+    try {  // show the engines as the picker does, with the current one chosen
+      const resp = await fetch("/api/dialer/engine");
+      if (!resp.ok) return;
+      const data = await resp.json();
+      select.innerHTML = data.options.map((o) =>
+        `<option value="${o.id}" ${o.ready ? "" : "disabled"}>${o.label}${o.ready ? "" : " (not set up)"}</option>`).join("");
+      select.value = data.engine;
+    } catch (_) {}
   };
 
   window.closeCampaignModal = () => {
@@ -695,6 +705,7 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: mode,
+          engine: document.getElementById("campaignEngineSelect")?.value || "",
           delay_seconds: 2,
           target: targetSel,
           lead_id: targetSel === "selected" && selectedLead ? selectedLead.id : null,
@@ -705,6 +716,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await resp.json();
       if (resp.ok && data.success) {
         window.closeCampaignModal();
+        if (window.loadCallEngine) window.loadCallEngine();  // the top picker shows the campaign's engine
         const banner = document.getElementById("campaignBanner");
         if (banner) banner.style.display = "block";
         const modeBadge = document.getElementById("campaignModeBadge");

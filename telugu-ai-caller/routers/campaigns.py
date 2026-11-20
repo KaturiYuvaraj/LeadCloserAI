@@ -31,6 +31,14 @@ def _dialer():
 @router.post("/api/campaign/start")
 async def api_start_campaign(payload: Dict[str, Any], request: Request):
     account_id = get_request_account_id(request) or 1
+    engine = str(payload.get("engine") or "").strip()
+    if engine:
+        # The campaign window's engine choice: the same switch as the engine picker, set at launch
+        from voice_agent import samvaad
+        try:
+            samvaad.set_engine(engine)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
     dialer = _dialer()
     if dialer is not None:
         # Ensure consent is passed through to the queue (default True when launched via API if not explicitly False)

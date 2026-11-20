@@ -91,6 +91,17 @@ def in_calling_window(now_utc: datetime, account: Account) -> bool:
     return next_window_start(now_utc, account) == now_utc
 
 
+def test_numbers() -> set:
+    """Last 10 digits of the numbers in DIALER_TEST_NUMBERS (comma separated)."""
+    raw = os.getenv("DIALER_TEST_NUMBERS", "")
+    return {d[-10:] for d in ("".join(ch for ch in part if ch.isdigit()) for part in raw.split(",")) if len(d) >= 10}
+
+
+def is_test_number(phone: str) -> bool:
+    digits = "".join(ch for ch in str(phone or "") if ch.isdigit())
+    return len(digits) >= 10 and digits[-10:] in test_numbers()
+
+
 def is_dialable_number(phone: str) -> bool:
     phone = (phone or "").strip()
     if phone.startswith("+91"):
@@ -134,7 +145,11 @@ def check_can_call(session: Session, account: Account, lead: Lead, now_utc: date
         if window_start != now_utc:
             return RuleResult("deferred", "outside_calling_hours", window_start)
 
-    if not is_retry and account.recent_call_hours:
+    # Our own test numbers (DIALER_TEST_NUMBERS) skip the 24-hour gap and the weekly limit, so the team
+    # can test as often as needed; real customers keep both protections (20 Nov campaign test).
+    test = is_test_number(lead.phone_e164)
+
+    if not is_retry and not test and account.recent_call_hours:
         last_call = session.query(func.max(Call.created_at)).filter(Call.lead_id == lead.id).scalar()
         last_call = as_utc(last_call)
         if last_call and now_utc - last_call < timedelta(hours=account.recent_call_hours):
@@ -145,7 +160,7 @@ def check_can_call(session: Session, account: Account, lead: Lead, now_utc: date
     calls_this_week = session.query(func.count(Call.id)).filter(  # answered calls: missed tries don't count
         Call.lead_id == lead.id, Call.created_at >= db_time(session, week_ago), Call.talk_seconds > 0
     ).scalar() or 0
-    if calls_this_week >= WEEKLY_CALL_LIMIT and not manual:
+    if calls_this_week >= WEEKLY_CALL_LIMIT and not manual and not test:
         return RuleResult("deferred", "weekly_limit", next_window_start(now_utc + timedelta(days=2), account))
 
     if MIN_CREDIT > 0 and credit_balance(session, account.id) < MIN_CREDIT:

@@ -96,3 +96,45 @@ def test_new_leads_target_includes_leads_marked_new_again():
         assert called_new.id in ids and fresh.id in ids and called_old.id not in ids
     finally:
         s.close()
+
+
+def test_test_numbers_skip_the_gap_and_weekly_limit_but_customers_do_not(monkeypatch):
+    from datetime import datetime, timedelta, timezone
+    from core.db import SessionLocal
+    from models import Account, Call, Lead
+    from voice_agent.rules import IST, check_can_call
+    monkeypatch.setenv("DIALER_TEST_NUMBERS", "+91 79898 22906, 8309831866")
+    s = SessionLocal()
+    try:
+        account = s.get(Account, 1)
+        now = datetime(2026, 11, 20, 12, 0, tzinfo=IST).astimezone(timezone.utc)
+        tester = Lead(account_id=1, name="Tester", phone_e164="+917989822906", consent_source="test")
+        customer = Lead(account_id=1, name="Customer", phone_e164="+919000000777", consent_source="test")
+        s.add_all([tester, customer]); s.commit()
+        for lead in (tester, customer):  # five answered calls today, the last one ten minutes ago
+            for i in range(5):
+                s.add(Call(account_id=1, lead_id=lead.id, talk_seconds=60,
+                           created_at=(now - timedelta(minutes=10 + i)).replace(tzinfo=None)))
+        s.commit()
+        account.calling_approved = True
+        assert check_can_call(s, account, tester, now).status == "allowed"
+        assert check_can_call(s, account, customer, now).status == "deferred"
+    finally:
+        s.close()
+
+
+def test_campaign_can_choose_the_engine(monkeypatch):
+    from starlette.testclient import TestClient
+    from core.auth import create_access_token
+    import routers.campaigns as campaigns
+    chosen = []
+    monkeypatch.setattr("voice_agent.samvaad.set_engine", lambda e: chosen.append(e) or e)
+    monkeypatch.setattr(campaigns, "_dialer", lambda: None)
+
+    async def fake_start(**kwargs):
+        return True
+    monkeypatch.setattr(campaigns.campaign_service, "start_campaign", fake_start)
+    c = TestClient(main.app)
+    c.headers["Authorization"] = "Bearer " + create_access_token(1, 1, "admin@leadcloser.ai", "owner")
+    assert c.post("/api/campaign/start", json={"target": "new", "engine": "pipecat", "consent_confirmed": True}).status_code == 200
+    assert chosen == ["pipecat"]
