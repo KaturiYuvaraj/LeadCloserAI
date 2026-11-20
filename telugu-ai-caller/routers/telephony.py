@@ -55,6 +55,10 @@ async def api_list_phone_numbers(request: Request):
 
 @router.post("/api/call/outbound")
 async def api_outbound_call(payload: Dict[str, Any], request: Request):
+    from core.auth import get_current_user
+    # Placing a call always needs a signed-in user. Before 20 Nov, naming another provider in the
+    # request ("provider": "exotel") skipped the login check below.
+    get_current_user(request)
     to_phone = payload.get("phone")
     lead_id = payload.get("lead_id")
     provider_override = payload.get("provider")

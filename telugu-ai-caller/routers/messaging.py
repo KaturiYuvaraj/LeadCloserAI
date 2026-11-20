@@ -10,7 +10,10 @@ from loguru import logger
 from database import get_all_leads, get_lead_by_id, update_lead
 from providers import registry, ProviderType
 
+from core.auth import login_when_strict
+from fastapi import Depends
 router = APIRouter(tags=["messaging"])
+_login = [Depends(login_when_strict)]
 
 
 @router.get("/api/webhooks/whatsapp")
@@ -53,7 +56,7 @@ async def handle_whatsapp_webhook(request: Request):
         return {"status": "error", "message": str(e)}
 
 
-@router.post("/api/messaging/whatsapp/send")
+@router.post("/api/messaging/whatsapp/send", dependencies=_login)
 async def api_send_whatsapp_message(payload: Dict[str, Any]):
     """Send WhatsApp message or template to a lead."""
     lead_id = payload.get("lead_id")
@@ -91,7 +94,7 @@ async def api_send_whatsapp_message(payload: Dict[str, Any]):
     return res
 
 
-@router.post("/api/calendar/book")
+@router.post("/api/calendar/book", dependencies=_login)
 async def api_book_calendar_meeting(payload: Dict[str, Any]):
     """Book a Google Calendar demo meeting with Google Meet link."""
     lead_id = payload.get("lead_id")
@@ -140,7 +143,7 @@ async def api_book_calendar_meeting(payload: Dict[str, Any]):
     return res
 
 
-@router.get("/api/calendar/availability")
+@router.get("/api/calendar/availability", dependencies=_login)
 async def api_check_calendar_availability(start_time: str, end_time: str):
     """Check busy time slots on Google Calendar."""
     calendar_provider = registry.get(ProviderType.CALENDAR, "google_calendar")

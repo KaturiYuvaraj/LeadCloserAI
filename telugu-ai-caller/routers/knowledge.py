@@ -13,14 +13,15 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
+from fastapi import Depends
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 
-from core.auth import get_request_account_id
+from core.auth import get_request_account_id, login_when_strict
 from core.db import SessionLocal
 from models import Call, Employee
 from voice_agent.knowledge import ALLOWED_SUFFIXES, add_doc, delete_doc, extract_text, list_docs
 
-router = APIRouter(tags=["knowledge"])
+router = APIRouter(tags=["knowledge"], dependencies=[Depends(login_when_strict)])
 
 MAX_UPLOAD_BYTES = 15 * 1024 * 1024
 

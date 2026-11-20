@@ -2,8 +2,9 @@
 Integrations Router - Third-Party Providers, Company Profile & Voice Testing
 """
 from typing import Dict, Any
+from fastapi import Depends
 from fastapi import APIRouter, HTTPException, Response, Request
-from core.auth import get_request_account_id
+from core.auth import get_request_account_id, login_when_strict
 from loguru import logger
 
 from config import DEFAULT_TTS_SPEAKER, DEFAULT_TTS_MODEL
@@ -17,7 +18,7 @@ from database import (
 from services.sarvam_service import sarvam_client
 from providers import registry, ProviderType
 
-router = APIRouter(tags=["integrations"])
+router = APIRouter(tags=["integrations"], dependencies=[Depends(login_when_strict)])
 
 
 @router.get("/api/profile")

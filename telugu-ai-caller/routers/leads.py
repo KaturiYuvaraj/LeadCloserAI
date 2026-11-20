@@ -7,7 +7,8 @@ from fastapi import APIRouter, Form, HTTPException, UploadFile, File, Response, 
 from fastapi.responses import JSONResponse
 from loguru import logger
 
-from core.auth import get_optional_user, get_request_account_id
+from fastapi import Depends
+from core.auth import get_optional_user, get_request_account_id, login_when_strict
 from database import (
     get_all_leads,
     get_lead_by_id,
@@ -366,7 +367,7 @@ async def api_override_lead_outcome(lead_id: int, payload: Dict[str, Any], reque
     return {"success": True, "lead": updated}
 
 
-@router.post("/api/leads/discover")
+@router.post("/api/leads/discover", dependencies=[Depends(login_when_strict)])
 async def api_discover_leads(payload: Dict[str, Any]):
     """Discover prospective leads via Apollo.io B2B search or Apify web scraping."""
     provider_name = payload.get("provider", "apollo").lower()

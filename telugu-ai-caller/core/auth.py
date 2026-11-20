@@ -207,6 +207,15 @@ def get_optional_user(request: Request) -> Optional[Dict[str, Any]]:
     return None
 
 
+def login_when_strict(request: Request) -> None:
+    """
+    Router-wide guard: with AUTH_STRICT=true (production) a signed-in user is required (401 otherwise).
+    20 Nov audit: campaign pause/resume/stop, AI employee changes, provider settings, voice tests,
+    lead discovery and the developer pages answered on the public site without a login.
+    """
+    get_optional_user(request)
+
+
 def get_request_account_id(request: Request) -> Optional[int]:
     """
     Returns the authenticated user's `account_id` for strict multi-account isolation.

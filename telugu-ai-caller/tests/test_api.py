@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock
 
 import httpx
+from core.auth import create_access_token
 
 import database
 from database import init_db
@@ -67,7 +68,8 @@ class CrmApiTests(unittest.IsolatedAsyncioTestCase):
         )
         try:
             response = await self.client.post(
-                "/api/call/outbound", json={"phone": "+919999999999", "lead_id": 1}
+                "/api/call/outbound", json={"phone": "+919999999999", "lead_id": 1},
+                headers={"Authorization": "Bearer " + create_access_token(1, 1, "admin@leadcloser.ai", "owner")},
             )
         finally:
             telephony_service.initiate_outbound_call = original

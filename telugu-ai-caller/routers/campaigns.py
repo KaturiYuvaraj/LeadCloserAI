@@ -11,12 +11,12 @@ weekly call limits, and automatic retries.
 The legacy fake in-memory simulation mode is removed from the campaign flow.
 """
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException, Request
-from core.auth import get_request_account_id
+from fastapi import APIRouter, Depends, HTTPException, Request
+from core.auth import get_request_account_id, login_when_strict
 
 from services.campaign_service import campaign_service
 
-router = APIRouter(tags=["campaigns"])
+router = APIRouter(tags=["campaigns"], dependencies=[Depends(login_when_strict)])
 
 
 def _dialer():

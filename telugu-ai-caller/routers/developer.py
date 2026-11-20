@@ -3,8 +3,8 @@ Developer Router - Public REST API Platform, API Keys & Billing Store
 """
 import json
 from typing import Dict, Any
-from fastapi import APIRouter, Request, HTTPException
-from core.auth import get_request_account_id
+from fastapi import APIRouter, Depends, Request, HTTPException
+from core.auth import get_optional_user, get_request_account_id, login_when_strict
 
 from database import (
     get_all_api_keys,
@@ -24,7 +24,7 @@ from services.sales_agent import sales_agent
 router = APIRouter(tags=["developer"])
 
 
-@router.get("/api/v1/keys")
+@router.get("/api/v1/keys", dependencies=[Depends(login_when_strict)])
 async def api_list_keys(request: Request):
     acc_id = get_request_account_id(request)
     keys = get_all_api_keys(account_id=acc_id)
@@ -36,7 +36,7 @@ async def api_list_keys(request: Request):
     return {"keys": masked, "primary_key": get_primary_api_key()}
 
 
-@router.post("/api/v1/keys")
+@router.post("/api/v1/keys", dependencies=[Depends(login_when_strict)])
 async def api_create_key(data: Dict[str, Any], request: Request):
     acc_id = get_request_account_id(request) or 1
     if "account_id" not in data:
@@ -50,18 +50,18 @@ async def api_create_key(data: Dict[str, Any], request: Request):
     return {"success": True, "key": new_key}
 
 
-@router.delete("/api/v1/keys/{key_id}")
+@router.delete("/api/v1/keys/{key_id}", dependencies=[Depends(login_when_strict)])
 async def api_revoke_key(key_id: int):
     ok = revoke_api_key(key_id)
     return {"success": ok}
 
 
-@router.get("/api/v1/billing/orders")
+@router.get("/api/v1/billing/orders", dependencies=[Depends(login_when_strict)])
 async def api_get_orders():
     return {"orders": get_billing_orders()}
 
 
-@router.post("/api/v1/billing/purchase-credits")
+@router.post("/api/v1/billing/purchase-credits", dependencies=[Depends(login_when_strict)])
 async def api_purchase_credits(data: Dict[str, Any]):
     """
     Checkout & purchase talk-time API credits.
@@ -102,11 +102,10 @@ async def api_dispatch_call(request: Request, data: Dict[str, Any]):
     if not token:
         token = data.get("api_key", "")
 
+    # A real key is required. It used to fall back to the primary key, so anyone could call this (20 Nov).
     key_record = get_api_key_by_token(token) if token else None
     if not key_record:
-        key_record = get_primary_api_key()
-        if not key_record:
-            raise HTTPException(status_code=401, detail="Unauthorized: Invalid or missing API key.")
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid or missing API key.")
 
     if key_record.get("credits_inr", 0) < 5.0:
         raise HTTPException(
@@ -174,7 +173,18 @@ async def api_dispatch_call(request: Request, data: Dict[str, Any]):
 
 
 @router.get("/api/v1/calls/{call_id}/intelligence")
-async def api_get_call_intelligence(call_id: int):
+async def api_get_call_intelligence(call_id: int, request: Request):
+    # A signed-in user or a valid API key. It used to return any call (transcript, phone) to anyone (20 Nov).
+    auth_header = request.headers.get("Authorization") or request.headers.get("x-api-key") or ""
+    token = auth_header.replace("Bearer ", "").strip()
+    has_key = bool(token.startswith("lc_") and get_api_key_by_token(token))
+    if not has_key:
+        try:
+            user = get_optional_user(request)
+        except HTTPException:
+            user = None
+        if not user:
+            raise HTTPException(status_code=401, detail="Unauthorized: sign in or send a valid API key.")
     call = get_call_by_id(call_id)
     if not call:
         raise HTTPException(status_code=404, detail="Call record not found")

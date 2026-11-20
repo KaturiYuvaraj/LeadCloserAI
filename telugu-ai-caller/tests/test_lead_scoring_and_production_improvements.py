@@ -68,7 +68,8 @@ def test_password_strength_validation():
     assert validate_password_strength("ValidPassword123") is None
 
 
-def test_self_service_account_registration():
+def test_self_service_account_registration(monkeypatch):
+    monkeypatch.setenv("SIGNUP_ENABLED", "true")  # sign-up is closed unless switched on (20 Nov)
     unique_email = f"leadcloser_owner_{secrets.token_hex(4)}@example.com"
     payload = {
         "company_name": "Apex Sales Corp",

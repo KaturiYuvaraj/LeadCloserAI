@@ -2,8 +2,9 @@
 AI Employees Router - Persona Management, Draft Generation & Lifecycle
 """
 from typing import Dict, Any, Optional
+from fastapi import Depends
 from fastapi import APIRouter, HTTPException, Request
-from core.auth import get_request_account_id
+from core.auth import get_request_account_id, login_when_strict
 
 from database import (
     get_all_ai_employees,
@@ -16,7 +17,7 @@ from database import (
 )
 from services.employee_builder import employee_builder
 
-router = APIRouter(tags=["employees"])
+router = APIRouter(tags=["employees"], dependencies=[Depends(login_when_strict)])
 
 
 @router.get("/api/employees")

@@ -4687,7 +4687,7 @@ input[type="checkbox"] {
       const originalHtml = btn.innerHTML;
       btn.innerHTML = '⏳ <span>Synthesizing...</span>';
       try {
-        const resp = await fetch('/api/tts/test', {
+        const resp = await fetch('/api/tts/demo', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -4769,7 +4769,7 @@ input[type="checkbox"] {
       }
       btn.innerText = '⏳ Loading...';
       try {
-        const resp = await fetch('/api/tts/test', {
+        const resp = await fetch('/api/tts/demo', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

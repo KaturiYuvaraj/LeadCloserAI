@@ -117,3 +117,44 @@ async def serve_crm(request: Request):
         "vobiz_auth_id_masked": vobiz_auth_id_masked,
         "dialer_provider": dialer_provider,
     })
+
+
+# ---------------------------------------------------------------- homepage voice demo
+# The homepage plays sample voices. /api/tts/test (any text) now needs a login, because anyone could make it
+# read unlimited text on our Sarvam account (20 Nov). This public route only voices the homepage's fixed
+# samples and the AI employees' saved greetings, with the voice the page asks for, and keeps each result,
+# so a sample costs Sarvam once.
+HOMEPAGE_DEMO_TEXTS = {
+    "नमस्ते! मैं एस पी एसोसिएट्स से बात कर रहा हूँ। क्या आप अपने व्यापार के लिए कस्टम सॉफ़्टवेयर समाधान ढूंढ रहे हैं?",
+    "Hello! This is Simran from S P Associates. We specialize in custom software development and AI automation.",
+    "నమస్కారం అండి! నేను ఎస్ పి అసోసియేట్స్ నుండి మాట్లాడుతున్నాను. మీ వ్యాపారం కోసం అధునాతన సాఫ్ట్‌వేర్ సేవల గురించి చర్చించవచ్చా?",
+    "నమస్కారం అండి! నేను ఎస్ పి అసోసియేట్స్ నుండి మాట్లాడుతున్నాను.",
+}
+_demo_audio: dict = {}
+
+
+def demo_text_allowed(text: str) -> bool:
+    if text in HOMEPAGE_DEMO_TEXTS:
+        return True
+    try:
+        return any((e.get("greeting") or "").strip() == text for e in get_all_ai_employees())
+    except Exception:
+        return False
+
+
+@router.post("/api/tts/demo")
+async def homepage_voice_demo(payload: dict):
+    from fastapi import Response
+    from voice_agent.language import VOICES
+    from services.sarvam_service import sarvam_client
+    text = str(payload.get("text") or "").strip()
+    speaker = str(payload.get("speaker") or "")
+    allowed_speakers = set(VOICES.values()) | {"kavitha_te_conversation", "aditya_hi_sales", "simran_en_sales"}
+    if not text or len(text) > 400 or not demo_text_allowed(text) or speaker not in allowed_speakers:
+        raise HTTPException(status_code=403, detail="Only the homepage samples can be played.")
+    key = (speaker, text)
+    if key not in _demo_audio:
+        if len(_demo_audio) >= 50:
+            _demo_audio.clear()
+        _demo_audio[key] = await sarvam_client.text_to_speech(text=text, speaker=speaker)
+    return Response(content=_demo_audio[key], media_type="audio/wav")

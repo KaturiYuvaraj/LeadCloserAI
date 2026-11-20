@@ -152,6 +152,9 @@ async def api_register(payload: Dict[str, Any], request: Request, response: Resp
     Self-service account registration:
     Creates an Account and the initial Owner User with validated credentials.
     """
+    # 20 Nov: anyone on the public site could create an account that was already approved to place calls
+    if os.getenv("SIGNUP_ENABLED", "false").strip().lower() != "true":
+        raise HTTPException(status_code=403, detail="Sign-up is closed. Please contact S P Associates for an account.")
     company_name = (payload.get("company_name") or payload.get("account_name") or "").strip()
     email = (payload.get("email") or "").strip().lower()
     password = payload.get("password") or ""
@@ -171,7 +174,7 @@ async def api_register(payload: Dict[str, Any], request: Request, response: Resp
         if existing:
             raise HTTPException(status_code=409, detail="An account with this email address already exists.")
 
-        account = Account(name=company_name, calling_approved=True)
+        account = Account(name=company_name, calling_approved=False)  # an admin approves calling
         session.add(account)
         session.flush()
 
