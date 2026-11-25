@@ -43,7 +43,10 @@ ASKED = {
     "day and time": r"(what|which)\s+(day|time)|ఏ\s*(రోజు|టైమ్|time|day)|कौन\s*सा\s*(दिन|समय|time)|convenient|వీలవుతుంది",
     "what they need": r"(website|app).*(need|want|కావాలా|అవసరం)|ఏం\s+(కావాలి|అవసరం)|क्या\s+चाहिए",
     "platform": r"android.*(iphone|ios)|(iphone|ios).*android",
-    "their business": r"(what|which)\s+(kind\s+of\s+)?business|business\s+(ఏంటి|ఏమిటి|ఎలాంటి)|బిజినెస్\s+(ఏంటి|ఏమిటి)|कौन\s*सा\s*बिज़?नेस",
+    # 25 Nov eval 35: "మీది ఏ business అండి?" three times in a row was not recognised
+    "their business": r"(what|which)\s+(kind\s+of\s+)?business|business\s+do\s+you|your\s+business|"
+                      r"(business|బిజినెస్)\s+(ఏంటి|ఏమిటి|ఎలాంటి|ఏంటో|ఏమిటో|దేని)|ఏ\s*(business|బిజినెస్)|"
+                      r"कौन\s*सा\s*(बिज़?नेस|business)|(business|बिज़?नेस)\s+(किस|क्या)",
     "when to start": r"timeline|when.*(start|launch|ready)|ఎప్పటి(లోగా|కి)|ఎంత\s+(టైమ్|time)|कब\s+तक",
 }
 
@@ -132,7 +135,8 @@ class CallState:
         recent = [t for t in self.last_asked if t not in stop]
         if recent:
             parts.append("Your last reply asked about " + ", ".join(recent)
-                         + ": don't ask it again in this reply; if they didn't answer it, answer them and move on.")
+                         + ". Do NOT ask about " + ", ".join(recent) + " in this reply, in any words. If they didn't "
+                         "answer it, answer what they said and ask about something else, or ask nothing.")
         if self.decided:
             parts.append("Decided: " + "; ".join(self.decided) + ".")
         flags = []

@@ -342,7 +342,7 @@ async def test_filter_removes_marker_split_across_tokens(monkeypatch):
 @pytest.mark.asyncio
 async def test_filter_passes_normal_reply_and_brackets(monkeypatch):
     text, concluded = await _run_filter(["Our price is ", "[starting] ₹25,000", ". Shall we book a demo?"], monkeypatch)
-    assert text == "Our price is [starting] ₹25,000. Shall we book a demo?"
+    assert text == "Our price is [starting] twenty five thousand rupees. Shall we book a demo?"  # digits spoken as words (25 Nov)
     assert not concluded
 
 

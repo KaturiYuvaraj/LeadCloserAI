@@ -291,10 +291,13 @@ class LanguageRouter(FrameProcessor):
 
         name = LANGUAGE_NAMES.get(self._current, "the customer's language")
         hint = self._hint_provider(clean_text) if self._hint_provider else None
-        hint = f" {hint}" if hint else ""
         mix = ("" if self._current == "en-IN"
                else ", mixing in everyday English words the way people really talk, written in English letters")
-        return f"{clean_text}\n(Reply only in {name}{mix}.{hint})", switch_frame
+        # the language comes last: 25 Nov eval 55, an English call got a Telugu reply after the price guide
+        # (which has Telugu example lines) was placed after the language line
+        if hint:
+            return f"{clean_text}\n({hint}\nReply only in {name}{mix}.)", switch_frame
+        return f"{clean_text}\n(Reply only in {name}{mix}.)", switch_frame
 
     def _should_switch(self, text: str, language: str) -> bool:
         """

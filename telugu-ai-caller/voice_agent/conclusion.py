@@ -31,6 +31,8 @@ from pipecat.frames.frames import (
 )
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 
+from voice_agent.numbers import NUMBER_TAIL, spoken_numbers
+
 CALL_COMPLETED_MARKER = "[CALL_COMPLETED]"
 ACTION_TAGS = ("CALL_COMPLETED", "CALLBACK", "MEETING", "DO_NOT_CALL", "HUMAN_HANDOFF",
                "WRONG_PERSON", "SEND_WHATSAPP", "CONTACT")
@@ -105,6 +107,10 @@ NO_MORE_CALLS = re.compile(
 )
 
 
+# A question asking for their WhatsApp, number or name: nothing can be saved until they answer
+ASKS_CONTACT = re.compile(r"whatsapp|వాట్సాప్|व्हाट्सऐप|व्हाट्सएप|number|నంబర్|నెంబర్|नंबर|name|పేరు|नाम", re.IGNORECASE)
+
+
 # The closing line of a goodbye, in the languages we speak ("… thank you sir, have a nice day!")
 GOODBYE_END = re.compile(
     r"(have\s+a\s+(nice|good|great|wonderful)\s+day(\s+ahead)?|good\s*bye|మంచి\s+రోజు|शुभ\s+हो|अलविदा)"
@@ -127,6 +133,10 @@ def guard_actions(spoken: str, actions: List[Action]) -> List[Action]:
     text = spoken.strip()
     if text.endswith(("?", "？")):
         actions = [a for a in actions if a[0] not in ("CALLBACK", "MEETING")]
+    # 25 Nov eval 54: "Is this number on WhatsApp?" with [CONTACT: Ravi | same] before any answer
+    questions = " ".join(re.findall(r"[^.!?।]*[?？]", text))
+    if ASKS_CONTACT.search(questions):
+        actions = [a for a in actions if a[0] != "CONTACT"]
     if "?" in text or "？" in text:
         actions = [a for a in actions if a[0] != "CALL_COMPLETED"]
     elif "CALL_COMPLETED" not in tags and GOODBYE_END.search(text):
@@ -162,6 +172,11 @@ class CallConclusionFilter(FrameProcessor):
         if isinstance(frame, LLMTextFrame):
             emit, self._held, actions = split_actions(self._held + frame.text)
             self._actions.extend(actions)
+            if not self._held:  # a number still arriving ("₹2," then "00,000") waits for its next piece
+                tail = NUMBER_TAIL.search(emit)
+                if tail:
+                    emit, self._held = emit[:tail.start()], emit[tail.start():]
+            emit = spoken_numbers(emit)
             self._spoken += emit
             if emit:
                 clean_emit = emit.replace("...", ", ").replace("..", ", ")
@@ -171,6 +186,7 @@ class CallConclusionFilter(FrameProcessor):
         if isinstance(frame, LLMFullResponseEndFrame):
             leftover, self._held = self._held, ""
             if leftover and not _could_become_tag(leftover):
+                leftover = spoken_numbers(leftover)
                 self._spoken += leftover
                 await self.push_frame(LLMTextFrame(leftover), direction)
             await self.push_frame(frame, direction)

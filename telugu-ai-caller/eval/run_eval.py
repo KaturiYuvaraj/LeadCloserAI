@@ -33,14 +33,16 @@ SCRIPT = {"te-IN": (0x0C00, 0x0C7F), "hi-IN": (0x0900, 0x097F)}
 PRICE_WORDS = re.compile(r"లక్ష|వేల\s+రూపాయ|రూపాయలు|lakh|thousand\s+rupees|rupees|लाख|हज़ार\s+रुपये|रुपये", re.I)
 AI_WORDS = re.compile(r"\bAI\b|virtual\s+assistant|artificial|ఏఐ|ఎఐ|रोबोट|robot", re.I)
 FAMILIAR_BYE = re.compile(r"సెలవు|ఉంటాను|ఉంటానండి")
-BUDGET_Q = re.compile(r"(budget|బడ్జెట్|बजट)[^?]*\?", re.I)
+# only a question sentence that asks about budget ("the ad budget is separate. Is this your WhatsApp?" is fine)
+BUDGET_Q = re.compile(r"(budget|బడ్జెట్|बजट)[^.!?।]*\?", re.I)
 ASKS_AI = re.compile(r"robot|\bAI\b|machine|ఏఐ|మనిషా", re.I)
-PRICE_ASK = re.compile(r"ఎంత|price|cost|charges?|rates?|ధర|कीमत|कितन|discount|quotation|expensive|costly|ఎక్కువ|महंगा", re.I)
+PRICE_ASK = re.compile(r"ఎంత|entha|price|cost|charges?|rates?|how\s+much|kitn|ధర|कीमत|कितन|discount|quotation|"
+                       r"expensive|costly|ఎక్కువ|महंगा|budget|బడ్జెట్|बजट", re.I)
 
 
 def in_language(text: str, lang: str) -> bool:
     letters = [ch for ch in text if ch.isalpha()]
-    if not letters:
+    if not letters or len(text.split()) <= 6:  # "Sure అండి, take your time." is natural in every language
         return True
     if lang in SCRIPT:
         lo, hi = SCRIPT[lang]
@@ -75,6 +77,7 @@ def _in_office_hours(arg: str) -> bool:
 async def run_scenario(sc: Dict[str, Any], llm) -> Dict[str, Any]:
     from voice_agent.conclusion import guard_actions, split_actions
     from voice_agent.language import LanguageRouter
+    from voice_agent.numbers import spoken_numbers
     from voice_agent.session import AGENT_GREETING, BaseCallSession
 
     lead = {"id": None, "name": "Ravi", "phone": "+919000000001", "preferred_language": sc["lang"]}
@@ -96,15 +99,18 @@ async def run_scenario(sc: Dict[str, Any], llm) -> Dict[str, Any]:
         raw = await llm(messages)
         seconds = round(time.monotonic() - started, 2)
         spoken, _, actions = split_actions(raw)
+        model_text = spoken
+        spoken = spoken_numbers(spoken).strip()  # as the live call does before the voice
         actions = guard_actions(spoken, actions)
-        spoken = spoken.strip()
         messages.append({"role": "assistant", "content": spoken})
+        session.transcript += [{"role": "user", "content": text}, {"role": "assistant", "content": spoken}]
         session.state.on_reply(spoken)
         topics = set(session.state.last_asked)
         for tag, arg in actions:
             session.state.on_action(tag, arg)
         ended = any(tag == "CALL_COMPLETED" for tag, _ in actions)
         checks = check_reply(spoken, ctx)
+        checks["numbers_in_words"] = not DIGITS.search(model_text)  # the AI itself, before the safety net
         # 25 Nov first run: "when do you want to start?" twice in a row; a 4 PM callback saved as 04:00
         checks["no_repeated_question"] = not (topics & previous_topics)
         previous_topics = topics
@@ -141,7 +147,15 @@ async def main():
     from voice_agent.session import LLM_MODEL
 
     async def llm(messages):
-        return await sarvam_client.chat_completion(messages, model=LLM_MODEL, temperature=0.5, max_tokens=240)
+        # 25 Nov: Sarvam answered 429 "Rate limit exceeded" after about 100 quick requests; pace and retry
+        for attempt in range(5):
+            await asyncio.sleep(1.0)
+            try:
+                return await sarvam_client.chat_completion(messages, model=LLM_MODEL, temperature=0.5, max_tokens=240)
+            except Exception as e:
+                if "429" not in str(e) and "rate limit" not in str(e).lower() or attempt == 4:
+                    raise
+                await asyncio.sleep(10 * (attempt + 1))
 
     results = []
     for sc in chosen:
@@ -178,7 +192,8 @@ async def main():
         print(f"LLM reply time: average {sum(seconds) / len(seconds):.2f}s, slowest {max(seconds):.2f}s")
     out = Path(__file__).resolve().parent / "results"
     out.mkdir(exist_ok=True)
-    path = out / f"{datetime.now():%Y%m%d-%H%M}.json"
+    label = args.group or ("ids" if args.ids else "first")
+    path = out / f"{datetime.now():%Y%m%d-%H%M%S}-{label}.json"  # one file per run, never overwritten
     path.write_text(json.dumps(results, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"Saved: {path}")
 

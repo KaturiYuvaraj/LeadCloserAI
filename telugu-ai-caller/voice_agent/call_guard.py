@@ -129,6 +129,9 @@ OPT_OUT_PATTERNS = [
     r"\b(don'?t|do\s+not|never|stop)\s+(call|calling|phone)", r"remove\s+my\s+number", r"\bunsubscribe\b",
     r"(कॉल|फो?न)\s+मत\s+(करना|करो|कीजिए|करें)", r"\b(call|phone)\s+mat\s+kar", r"दोबारा\s+मत",
     r"(కాల్|ఫోన్)\s+చేయ(కండి|వద్దు)", r"\b(call|phone)\s+chey+(akandi|avaddu)\b",
+    # 25 Nov eval 43: "మళ్ళీ call చేయొద్దు" (STT writes call in English letters) got a sales pitch
+    r"(కాల్|ఫోన్|call|phone)\s*(లు\s*)?చే(య|స్త)?(కండి|వద్దు|యొద్దు|ొద్దు|యద్దు|ద్దు)", r"(call|phone|कॉल|फो?न)\s+मत",
+    r"\b(call|phone)\s+(cheyodd?u|cheyyodd?u|cheyaddu)\b",
     r"(கால்|போன்)\s+பண்ணாதீங்க", r"ಕರೆ\s+ಮಾಡಬೇಡಿ", r"വിളിക്കരുത്",
 ]
 HUMAN_PATTERNS = [
@@ -217,8 +220,10 @@ def caller_signals(text: str) -> List[str]:
 
 def caller_hints(text: str, not_interested_before: bool = False) -> Optional[str]:
     signals = caller_signals(text)
-    if "opt_out" in signals and "not_interested" in signals:
-        signals.remove("not_interested")  # "don't call me" is stronger: no second attempt
+    if ("opt_out" in signals or "upset" in signals) and "not_interested" in signals:
+        # "don't call me" or "बकवास बंद करो, मुझे कुछ नहीं चाहिए" is stronger: no second attempt
+        # (25 Nov eval 40: both hints together, she apologised and then asked about WhatsApp)
+        signals.remove("not_interested")
     parts = [HINTS[s] for s in signals if s != "not_interested"]
     if "not_interested" in signals:
         parts.append(NOT_INTERESTED_AGAIN if not_interested_before else NOT_INTERESTED_FIRST)
