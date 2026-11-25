@@ -46,7 +46,7 @@ def in_language(text: str, lang: str) -> bool:
         return True
     if lang in SCRIPT:
         lo, hi = SCRIPT[lang]
-        return sum(lo <= ord(ch) <= hi for ch in letters) / len(letters) >= 0.25  # Tenglish keeps English words
+        return sum(lo <= ord(ch) <= hi for ch in letters) / len(letters) >= 0.15  # Tenglish keeps English words (and prices are spoken as English number words)
     return sum(ch.isascii() for ch in letters) / len(letters) >= 0.9
 
 
