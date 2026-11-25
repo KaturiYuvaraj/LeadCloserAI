@@ -47,6 +47,10 @@ from loguru import logger
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
+from pipecat.audio.turn.smart_turn.base_smart_turn import SmartTurnParams
+from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
+from pipecat.turns.user_stop import TurnAnalyzerUserTurnStopStrategy
+from pipecat.turns.user_turn_strategies import UserTurnStrategies
 from pipecat.frames.frames import (
     BotStartedSpeakingFrame,
     BotStoppedSpeakingFrame,
@@ -100,6 +104,8 @@ from voice_agent.conclusion import CallConclusionFilter
 from voice_agent.knowledge import KnowledgeBase, list_docs
 from voice_agent.language import VOICES, LanguageRouter, pace_for
 from voice_agent.rules import IST
+from voice_agent.call_state import CallState
+from voice_agent.shreya_prompt import asks_about_price, build_voice_prompt, price_guide_hint
 from voice_agent.vobiz import VOBIZ_SAMPLE_RATE, VobizFrameSerializer
 
 STT_MODEL = os.getenv("VOICE_STT_MODEL", "saaras:v4")
@@ -197,7 +203,7 @@ LIVE PHONE CONVERSATION RULES (override anything above that conflicts):
 - CALENDAR: {calendar}
   Use only these dates (also inside markers); never guess a date or weekday. Never offer a time that has already passed today. If the customer asks for a time today that is still ahead of the time now (for example 4 PM when it is 3:12 PM), accept it. Only refuse a time that has already passed. Say times in words ("three PM", "మధ్యాహ్నం మూడు గంటలకి"); after five PM it is evening (సాయంత్రం), not afternoon.
 - Never invent prices, offers or facts beyond the company information. If you don't know, say the team will confirm.
-- PRICES: only when the customer asks (see WHEN TO TALK ABOUT PRICE). Never ask for their budget.
+- PRICES: only when the customer asks; the full price guide is given to you with that message. Never ask for their budget.
 
 WHY GO DIGITAL (your main pitch; use it whenever the customer is unsure, says they don't need it, or asks why)
 - Convince them warmly and confidently, one short point at a time, linked to their own business: today customers first search on Google and on their phone. A business that is not online loses those customers to competitors who are, and it doesn't grow. Even a simple website and a Google listing is enough to start, and we help them get customers online.
@@ -252,9 +258,21 @@ TIME_UP_NOTE = ("(System note: the call time limit is close. Wrap up now: confir
                 "add any action marker, say goodbye and add [CALL_COMPLETED].)")
 
 
-# 880 ms = 0.8 s of silence ends the customer's turn. At 0.27 s, scenario tests showed sentences
-# cut into pieces and words lost (hearing 55% -> 96% in English, 83% -> 99% when interrupting).
-DEFAULT_WAIT_MS = int(os.getenv("VOICE_REPLY_WAIT_MS", "880"))
+# Silence before Smart Turn decides whether the customer has finished. Pipecat 1.14 runs Smart Turn v3 on
+# every turn: after this silence it judges the sentence complete (reply now) or incomplete (keep waiting).
+# 7 Nov, before Smart Turn: a bare 0.27 s silence cut sentences into pieces, so 0.8 s was used. With Smart
+# Turn judging completeness, 0.5 s is enough and saves 0.3 s on every reply (25 Nov, Shreya 2.0).
+DEFAULT_WAIT_MS = int(os.getenv("VOICE_REPLY_WAIT_MS", "580"))
+# When Smart Turn says "not finished", how long to wait for more speech. Pipecat's default is 3 s; on our
+# Telugu calls (18-20 Nov logs) 20 of 173 turns were judged unfinished although the customer was done, and
+# each waited the full 3 s before Shreya answered. 1.5 s still lets a thinking customer go on.
+SMART_TURN_MAX_WAIT_SECS = float(os.getenv("VOICE_SMART_TURN_MAX_WAIT", "1.5"))
+
+
+def turn_strategies() -> UserTurnStrategies:
+    """Default turn start (voice or words), and Smart Turn v3 for the end, with our shorter fallback wait."""
+    analyzer = LocalSmartTurnAnalyzerV3(params=SmartTurnParams(stop_secs=SMART_TURN_MAX_WAIT_SECS))
+    return UserTurnStrategies(stop=[TurnAnalyzerUserTurnStopStrategy(turn_analyzer=analyzer)])
 
 
 def wait_ms_to_vad_stop_secs(wait_ms: Optional[int]) -> float:
@@ -583,7 +601,13 @@ class BaseCallSession:
         self.knowledge = KnowledgeBase.for_employee(self.employee, docs)
 
         self.transcript: List[Dict[str, str]] = []
+        # Shreya 2.0 context engine: what is known, asked and decided so far (sent with every customer message)
+        lead_name = (lead or {}).get("name") or ""
+        self.state = CallState(name="" if is_placeholder_name(lead_name) else lead_name, language=self.language)
+        self._price_guide_sent = False
         self.latencies: List[float] = []
+        # time to first result of each step per reply (stt / llm / tts), to see where the wait goes
+        self.step_ms: Dict[str, List[int]] = {}
         self.started_at = time.time()
         self._greeting_in_progress = True
         self._greeting_started_at = 0.0
@@ -653,6 +677,7 @@ class BaseCallSession:
 
     async def _on_reply(self, text: str, interrupted: bool):
         self.transcript.append({"role": "assistant", "content": text})
+        self.state.on_reply(text)
         self.send_event(
             "transcript", role="assistant", text=text,
             language=detect_text_language(text), interrupted=interrupted,
@@ -679,7 +704,15 @@ class BaseCallSession:
         elif self.on_hold:
             self._set_hold(False)
         said_no_before = self.signals.get("not_interested", 0) > 1
-        parts = [caller_hints(text, said_no_before), self.repeat_hint(), self.knowledge.relevant(text)]
+        self.state.on_customer(text, self.current_language, signals)
+        price_guide = None
+        if asks_about_price(text):
+            self.state.price_asked = True
+            if not self._price_guide_sent:  # the full price guide, once: it stays in the conversation after
+                self._price_guide_sent = True
+                price_guide = price_guide_hint()
+        parts = [caller_hints(text, said_no_before), self.repeat_hint(), self.knowledge.relevant(text),
+                 self.state.summary(), price_guide]
         return " ".join(p for p in parts if p) or None
 
     def repeat_hint(self) -> Optional[str]:
@@ -758,6 +791,7 @@ class BaseCallSession:
         return True
 
     async def on_action(self, tag: str, arg: str):
+        self.state.on_action(tag, arg)
         record = await run_action(tag, arg, self.lead, self.current_language)
         self.actions.append(record)
         self.send_event("action", action=record["action"], arg=arg, ok=bool(record["result"].get("ok")))
@@ -794,11 +828,12 @@ class BaseCallSession:
     # ------------------------------------------------------------------ prompt
     async def _build_prompt_and_greeting(self) -> tuple[str, str]:
         unknown_caller = self.direction == "in" and (not self.lead or is_placeholder_name(self.lead.get("name")))
-        system_prompt = (
-            sales_agent._build_system_prompt(None if unknown_caller else self.lead)
-            + employee_prompt(self.employee)
-            + self.knowledge.prompt_section()
-            + live_rules(self.lead, self.direction)
+        # Shreya 2.0: master + business + memory + employee + knowledge + runtime (voice_agent/shreya_prompt.py)
+        company = get_company_profile().get("agency_name", "S P Associates Software Company")
+        system_prompt = build_voice_prompt(
+            None if unknown_caller else self.lead, live_rules(self.lead, self.direction),
+            employee_section=employee_prompt(self.employee), knowledge_section=self.knowledge.prompt_section(),
+            company=company,
         )
         employee_greeting = (self.employee or {}).get("greeting") or ""
         if self.direction == "in":
@@ -966,6 +1001,7 @@ class BaseCallSession:
             user_params=LLMUserAggregatorParams(
                 vad_analyzer=SileroVADAnalyzer(params=VADParams(stop_secs=self.vad_stop_secs)),
                 user_idle_timeout=SILENCE_SECS,
+                user_turn_strategies=turn_strategies(),
             ),
         )
 
@@ -1014,6 +1050,8 @@ class BaseCallSession:
                 name = metric.processor.split("#")[0].replace("Sarvam", "").replace("Service", "").lower()
                 parts[name] = int(metric.duration_secs * 1000)
             if parts:
+                for name, ms in parts.items():
+                    self.step_ms.setdefault(name, []).append(ms)
                 self.send_event("breakdown", **parts)
 
         self.task = PipelineTask(
@@ -1098,6 +1136,7 @@ class BaseCallSession:
             "user_talk_s": round(self.user_talk_secs, 1),
             "avg_reply_gap_s": round(sum(self.latencies) / len(self.latencies), 2) if self.latencies else None,
             "max_reply_gap_s": round(max(self.latencies), 2) if self.latencies else None,
+            "step_ms_avg": {k: int(sum(v) / len(v)) for k, v in self.step_ms.items() if v},
             "actions": self.actions,
             "employee": (self.employee or {}).get("name"),
             "knowledge_docs": len(self.knowledge.sections),
@@ -1127,6 +1166,7 @@ class BaseCallSession:
         logger.info(
             f"{self.call_type.title()} call {self.session_id} ended by {self.ended_by} "
             f"({analytics['end_reason']}) · {duration}s · {len(self.latencies)} turns · avg reply gap {avg_latency}s"
+            + (f" · steps ms {analytics['step_ms_avg']}" if analytics["step_ms_avg"] else "")
         )
 
         if self.service_failed:

@@ -1,0 +1,136 @@
+"""
+Shreya 2.0 (25 Nov): layered prompt, context engine (CALL STATE), price guide only when asked, turn timing.
+Offline: no Sarvam calls.
+"""
+
+from voice_agent.call_state import CallState
+from voice_agent.session import (SMART_TURN_MAX_WAIT_SECS, BaseCallSession, live_rules, turn_strategies,
+                                 wait_ms_to_vad_stop_secs)
+from voice_agent.shreya_prompt import MASTER_PROMPT, asks_about_price, build_voice_prompt
+
+
+# --- prompt layers
+
+def test_prompt_has_the_four_layers_and_is_much_lighter():
+    prompt = build_voice_prompt({"name": "Ravi"}, live_rules({"name": "Ravi"}, "out"))
+    assert "SHREYA 2.0: WHO YOU ARE" in prompt and "THINK BEFORE EACH REPLY" in prompt      # master
+    assert "Gayatri Heights" in prompt and "WHAT WE OFFER" in prompt                         # business
+    assert "WHO THIS IS (from our records; notes to confirm" in prompt                      # memory
+    assert "LIVE PHONE CONVERSATION RULES" in prompt                                         # runtime
+    assert len(prompt) < 24000  # was about 34,500 characters on every reply
+
+
+def test_prices_are_not_in_the_prompt_until_asked():
+    prompt = build_voice_prompt({"name": "Ravi"}, live_rules({"name": "Ravi"}, "out"))
+    assert "₹3,00,000" not in prompt and "₹24,500" not in prompt
+    assert "only when the customer asks" in prompt
+
+
+def test_owner_rules_win_over_the_generic_master_prompt():
+    # never ask the budget, start-up discount, AI only when asked, Tenglish
+    rules = live_rules({"name": "Ravi"}, "out")
+    assert "Never ask for their budget" in rules and "never bring up being a virtual assistant or AI yourself" in rules
+    assert "start-ups get a good discount" in MASTER_PROMPT
+    assert "budget" not in MASTER_PROMPT.split("UNDERSTAND THE NEED")[1].split("READ THE PERSON")[0].lower()
+
+
+def test_test_lead_details_are_notes_not_facts():
+    prompt = build_voice_prompt({"name": "Ravi", "company": "Sharma Logistics"}, "")
+    assert "notes to confirm, not facts to state" in prompt and "Sharma Logistics" in prompt
+
+
+def test_price_question_detection():
+    for text in ("how much will it cost?", "ఎంత అవుతుంది అండి?", "प्राइस क्या है?", "app ki charges entha", "budget ekkuva"):
+        assert asks_about_price(text), text
+    for text in ("మాకు ఒక app కావాలి", "I need a website", "రేపు call చేయండి"):
+        assert not asks_about_price(text), text
+
+
+# --- context engine
+
+def test_whatsapp_yes_is_remembered_and_not_asked_again():
+    # 18 Nov call 92: "same number?" -> "అవును", asked again twice
+    s = CallState(name="mahesh")
+    s.on_reply("సరే అండి. ఈ number WhatsApp లో ఉందా sir?")
+    s.on_customer("అవును.")
+    assert s.whatsapp_confirmed
+    summary = s.summary()
+    assert "WhatsApp confirmed (don't ask again)" in summary and "name mahesh (don't ask)" in summary
+
+
+def test_needs_platform_and_timeline_are_collected():
+    s = CallState()
+    s.on_customer("నాకు ఒక mobile app కావాలి, Android and iPhone both, within 2 months")
+    summary = s.summary()
+    assert "mobile app" in summary and "Android + iPhone" in summary and "start: 2 months" in summary
+
+
+def test_a_question_asked_twice_is_flagged():
+    s = CallState()
+    for _ in range(2):
+        s.on_reply("Sure sir. Which day and time is convenient for you?")
+        s.on_customer("hmm")
+    assert "Don't ask again: day and time" in s.summary()
+
+
+def test_actions_update_the_state():
+    s = CallState()
+    s.on_action("CONTACT", "Giri | same")
+    s.on_action("MEETING", "2026-11-26 15:00")
+    summary = s.summary()
+    assert "name Giri" in summary and "WhatsApp confirmed" in summary and "meeting 2026-11-26 15:00" in summary
+
+
+def test_engine_sends_state_and_price_guide_once():
+    session = BaseCallSession(lead={"id": None, "name": "Ravi", "phone": "+919000000001"}, language="te-IN")
+    first = session.message_hints("మాకు website కావాలి") or ""
+    assert "CALL STATE" in first and "website" in first and "PRICE GUIDE" not in first
+    second = session.message_hints("దానికి ఎంత అవుతుంది?") or ""
+    assert "PRICE GUIDE" in second and "they asked about price" in second
+    third = session.message_hints("GST extra aa?") or ""
+    assert "PRICE GUIDE" not in third  # sent once; it stays in the conversation
+
+
+# --- natural voice timing
+
+def test_turn_timing_is_shorter():
+    assert wait_ms_to_vad_stop_secs(None) == 0.5           # was 0.8
+    assert SMART_TURN_MAX_WAIT_SECS == 1.5                  # Pipecat default 3
+    analyzer = turn_strategies().stop[0]._turn_analyzer
+    assert analyzer._params.stop_secs == 1.5
+
+
+# --- evaluation engine (offline, with a fake AI)
+
+def test_evaluation_set_has_the_agreed_100_scenarios():
+    from collections import Counter
+    from eval.scenarios import SCENARIOS
+    assert len(SCENARIOS) == 100
+    assert Counter(s["group"] for s in SCENARIOS) == {"normal": 20, "tenglish": 15, "angry": 15, "pricing": 10,
+                                                      "topic_change": 10, "interruptions": 10, "appointments": 10,
+                                                      "unclear": 10}
+
+
+def test_evaluator_scores_good_and_bad_replies():
+    import asyncio
+    from eval.run_eval import run_scenario
+    angry = {"id": 1, "group": "angry", "lang": "te-IN", "ends": True,
+             "turns": ["ఎవరు మీరు?", "మళ్ళీ మళ్ళీ call చేస్తున్నారు, చిరాకుగా ఉంది."]}
+    replies = iter(["నేను S P Associates నుండి Shreya అండి. మీ business కి website అవసరం ఉందా అండి?",
+                    "Sorry sir, మీకు ఇబ్బంది కలిగించినందుకు. Please don't worry, మా team మీకు later call చేస్తారు. "
+                    "Thank you sir, have a nice day! [CALL_COMPLETED]"])
+
+    async def fake_llm(messages):
+        return next(replies)
+    result = asyncio.run(run_scenario(angry, fake_llm))
+    assert result["final"] == {"call_ended": True}
+    assert all(all(t["checks"].values()) for t in result["turns"])
+
+    bad = iter(["Our website plan is ₹6,700 and app is 2 lakh rupees. What is your budget? When to start?"])
+
+    async def bad_llm(messages):
+        return next(bad)
+    sc = {"id": 2, "group": "normal", "lang": "en-IN", "turns": ["I need a website."]}
+    checks = asyncio.run(run_scenario(sc, bad_llm))["turns"][0]["checks"]
+    assert not checks["numbers_in_words"] and not checks["one_question"]
+    assert not checks["no_budget_question"] and not checks["price_only_when_asked"]
