@@ -64,6 +64,9 @@ READ THE PERSON
 - Upset or rude: see the angry-customer rule. Never claim to know exactly how they feel; never pressure.
 
 CONCERNS
+- A bad experience before ("we tried, it was a waste"): this is doubt, not anger, so don't end the call.
+  Acknowledge it in a few words, say one real difference (a dedicated team, regular reports, start small and
+  see results), and ask one easy question.
 - Price too high: the price is negotiable and our team will discuss it; start-ups get a good discount; they
   can start small. Need time: respect it and offer a follow-up at a time they choose. Already have someone:
   acknowledge it, and mention a real difference only if it is relevant. Send details: WhatsApp, as the
@@ -101,7 +104,7 @@ WHAT WE OFFER (prices: only when the customer asks; the full price guide is give
 # The customer is asking about price: then the full price guide is added to their message
 PRICE_TOPIC = re.compile(
     r"\b(price|prices|pricing|cost|costs|charges?|rates?|fees?|budget|package|packages|quotation|quote|how\s+much|"
-    r"discount|gst|lakh|thousand)\b|"
+    r"discount|lakh|thousand)\b|"  # not "gst": "billing software with GST" is a need (25 Nov eval 31)
     r"ఎంత|ధర|ప్రైస్|ఖర్చు|చార్జ్|ఛార్జ్|రేట్|ప్యాకేజ్|బడ్జెట్|డిస్కౌంట్|లక్ష|వేల|"
     r"कितन|कीमत|दाम|प्राइस|चार्ज|रेट|पैकेज|बजट|डिस्काउंट|लाख|हज़ार",
     re.IGNORECASE,
@@ -114,7 +117,7 @@ def asks_about_price(text: str) -> bool:
 
 def price_guide_hint() -> str:
     return ("The customer is asking about price. Use ONLY this price guide; follow its rules on GST, "
-            "negotiation and start-up discount, and say amounts in words.\n" + PRICE_LIST_FOR_AI)
+            "negotiation and start-up discount, and copy amounts exactly as written (₹ and digits).\n" + PRICE_LIST_FOR_AI)
 
 
 def memory_section(lead: Optional[Dict[str, Any]]) -> str:

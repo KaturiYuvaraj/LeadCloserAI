@@ -66,7 +66,7 @@ def test_monthly_amounts_stay_out():
 
 
 def test_guide_rules_are_in_the_prompt():
-    for text in ("I understand your requirement", "free consultation", "server and hosting", "in lakhs and thousands",
+    for text in ("I understand your requirement", "free consultation", "server and hosting", "copy each amount exactly as written",
                  "Why is the ad budget separate", "Never promise a shorter time", "[CONTACT: name | number]"):
         assert text.lower() in PRICE_LIST_FOR_AI.lower(), text
 

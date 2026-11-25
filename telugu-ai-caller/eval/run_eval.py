@@ -77,6 +77,7 @@ def _in_office_hours(arg: str) -> bool:
 async def run_scenario(sc: Dict[str, Any], llm) -> Dict[str, Any]:
     from voice_agent.conclusion import guard_actions, split_actions
     from voice_agent.language import LanguageRouter
+    from services.price_list import PRICE_LIST_FOR_AI
     from voice_agent.numbers import spoken_numbers
     from voice_agent.session import AGENT_GREETING, BaseCallSession
 
@@ -110,7 +111,11 @@ async def run_scenario(sc: Dict[str, Any], llm) -> Dict[str, Any]:
             session.state.on_action(tag, arg)
         ended = any(tag == "CALL_COMPLETED" for tag, _ in actions)
         checks = check_reply(spoken, ctx)
-        checks["numbers_in_words"] = not DIGITS.search(model_text)  # the AI itself, before the safety net
+        # the AI itself, before the safety net. Prices come as "₹66,500" copied from the guide, and must be real
+        # (25 Nov: she wrote ₹66,500 in words herself as "one lakh sixty-six thousand five hundred")
+        amounts = re.findall(r"₹\s?[\d,]+\d", model_text)
+        checks["numbers_in_words"] = not DIGITS.search(re.sub(r"₹\s?[\d,]+\d", "", model_text))
+        checks["price_from_guide"] = all(a.replace(" ", "") in PRICE_LIST_FOR_AI for a in amounts)
         # 25 Nov first run: "when do you want to start?" twice in a row; a 4 PM callback saved as 04:00
         checks["no_repeated_question"] = not (topics & previous_topics)
         previous_topics = topics
