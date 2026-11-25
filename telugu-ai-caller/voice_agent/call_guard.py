@@ -169,6 +169,14 @@ NOT_INTERESTED_AGAIN = ("They have said no again. Don't try again. Close warmly 
                         "think it over and contact us if anything comes up, thank them for their valuable time, say goodbye "
                         "and add [CALL_COMPLETED].")
 _NOT_INTERESTED = [re.compile(p, re.IGNORECASE) for p in NOT_INTERESTED_PATTERNS]
+# A plain "no" on its own. It means "not interested" only as the answer to "do you need a website or app?"
+# (the session decides that); to other questions ("do you have a website?") it is just an answer.
+_BARE_NO = re.compile(r"^\W*(no+|nope|no\s+sir|nahi+|nahin|नहीं(\s*जी)?|ना|లేదు|లేదండి|లేదు\s*అండి|లేవు|లేవండి|"
+                      r"ledu|ledandi)\W*(sir|madam|అండి|सर|जी)?\W*$", re.IGNORECASE)
+
+
+def is_bare_no(text: str) -> bool:
+    return bool(_BARE_NO.match(text or ""))
 _ASKS_SOMETHING = re.compile(ASKS_SOMETHING, re.IGNORECASE)
 # "call me tomorrow at 4": a time word and a call-me-back request together
 CALLBACK_PATTERNS = [

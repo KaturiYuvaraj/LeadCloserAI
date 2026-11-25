@@ -260,3 +260,29 @@ def test_price_answers_are_short_and_payment_terms_left_to_the_team():
     assert "With every package, say" not in PRICE_LIST_FOR_AI
     assert "payment terms, EMI, milestones" in MASTER_PROMPT
     assert "many restaurants" not in MASTER_PROMPT
+
+
+# --- 25 Nov call 122 (first live call on Shreya 2.0)
+
+def test_bare_no_to_the_greeting_counts_as_the_first_no():
+    from voice_agent.call_guard import is_bare_no
+    assert is_bare_no("లేదండి.") and is_bare_no("No sir") and is_bare_no("नहीं जी")
+    assert not is_bare_no("లేదండి, website ఉంది కానీ app కావాలి")
+    session = BaseCallSession(lead={"id": None, "name": "Ravi"}, language="te-IN")
+    first = session.message_hints("లేదండి.")
+    assert "This is their first no" in first
+    second = session.message_hints("వద్దండి మాకు.")
+    assert "They have said no again" in second and "[CALL_COMPLETED]" in second
+
+
+def test_bare_no_later_in_the_call_is_just_an_answer():
+    session = BaseCallSession(lead={"id": None, "name": "Ravi"}, language="te-IN")
+    session.message_hints("Restaurant business అండి.")
+    session.state.on_reply("మీకు already website ఉందా?")
+    hints = session.message_hints("లేదండి.") or ""
+    assert "first no" not in hints and "said no again" not in hints
+
+
+def test_prompt_says_not_to_echo_garbled_words_or_state_records():
+    assert "never repeat it back" in MASTER_PROMPT
+    assert "ask, don't state it" in MASTER_PROMPT

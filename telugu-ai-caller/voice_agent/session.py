@@ -99,7 +99,8 @@ from services.sales_agent import sales_agent
 from voice_agent import credits
 from voice_agent.actions import run_action
 from voice_agent.background import background_mixer
-from voice_agent.call_guard import CallGuard, caller_hints, caller_signals, is_closing_word, is_foreign_noise
+from voice_agent.call_guard import (NOT_INTERESTED_AGAIN, NOT_INTERESTED_FIRST, CallGuard, caller_hints,
+                                    caller_signals, is_bare_no, is_closing_word, is_foreign_noise)
 from voice_agent.conclusion import CallConclusionFilter
 from voice_agent.knowledge import KnowledgeBase, list_docs
 from voice_agent.language import VOICES, LanguageRouter, pace_for
@@ -607,6 +608,7 @@ class BaseCallSession:
         self.state = CallState(name="" if is_placeholder_name(lead_name) else lead_name, language=self.language)
         self.state.on_reply("మీ business కి website లేదా mobile app అవసరం ఉందా? website or app need?")  # the greeting
         self._price_guide_sent = False
+        self._customer_turns = 0
         self.latencies: List[float] = []
         # time to first result of each step per reply (stt / llm / tts), to see where the wait goes
         self.step_ms: Dict[str, List[int]] = {}
@@ -699,6 +701,13 @@ class BaseCallSession:
     def message_hints(self, text: str) -> Optional[str]:
         """Called for every caller message: behaviour hints + relevant knowledge, sent with it to the LLM."""
         signals = caller_signals(text)
+        # 25 Nov call 122: a bare "లేదండి" to "do you need a website or app?" was not counted as a no, so the
+        # second no got "try once more" again and she pitched three times
+        bare_no = ("not_interested" not in signals and is_bare_no(text)
+                   and (self._customer_turns == 0 or "what they need" in self.state.last_asked))
+        if bare_no:
+            signals.append("not_interested")
+        self._customer_turns += 1
         for name in signals:
             self.signals[name] = self.signals.get(name, 0) + 1
         if "hold" in signals:
@@ -707,13 +716,14 @@ class BaseCallSession:
             self._set_hold(False)
         said_no_before = self.signals.get("not_interested", 0) > 1
         self.state.on_customer(text, self.current_language, signals)
+        no_hint = (NOT_INTERESTED_AGAIN if said_no_before else NOT_INTERESTED_FIRST) if bare_no else None
         price_guide = None
         if asks_about_price(text):
             self.state.price_asked = True
             if not self._price_guide_sent:  # the full price guide, once: it stays in the conversation after
                 self._price_guide_sent = True
                 price_guide = price_guide_hint()
-        parts = [caller_hints(text, said_no_before), self.repeat_hint(), self.knowledge.relevant(text),
+        parts = [caller_hints(text, said_no_before), no_hint, self.repeat_hint(), self.knowledge.relevant(text),
                  self.state.summary(), price_guide]
         return " ".join(p for p in parts if p) or None
 
