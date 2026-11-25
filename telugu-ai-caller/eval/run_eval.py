@@ -62,6 +62,16 @@ def check_reply(reply: str, ctx: Dict[str, Any]) -> Dict[str, bool]:
     }
 
 
+def _in_office_hours(arg: str) -> bool:
+    from voice_agent.actions import parse_when
+    from voice_agent.rules import IST
+    when = parse_when(arg)
+    if not when:
+        return True
+    hour = when.astimezone(IST).hour + when.astimezone(IST).minute / 60
+    return 9.5 <= hour <= 19
+
+
 async def run_scenario(sc: Dict[str, Any], llm) -> Dict[str, Any]:
     from voice_agent.conclusion import guard_actions, split_actions
     from voice_agent.language import LanguageRouter
@@ -73,6 +83,7 @@ async def run_scenario(sc: Dict[str, Any], llm) -> Dict[str, Any]:
     router = LanguageRouter(sc["lang"], hint_provider=session.message_hints)
     messages = [{"role": "system", "content": system_prompt}, {"role": "assistant", "content": greeting}]
     turns, ended, ctx = [], False, {"lang": sc["lang"], "price_asked": False, "ai_asked": False}
+    previous_topics = set(session.state.last_asked)
     for i, text in enumerate(sc["turns"]):
         if ended:
             break
@@ -89,10 +100,16 @@ async def run_scenario(sc: Dict[str, Any], llm) -> Dict[str, Any]:
         spoken = spoken.strip()
         messages.append({"role": "assistant", "content": spoken})
         session.state.on_reply(spoken)
+        topics = set(session.state.last_asked)
         for tag, arg in actions:
             session.state.on_action(tag, arg)
         ended = any(tag == "CALL_COMPLETED" for tag, _ in actions)
         checks = check_reply(spoken, ctx)
+        # 25 Nov first run: "when do you want to start?" twice in a row; a 4 PM callback saved as 04:00
+        checks["no_repeated_question"] = not (topics & previous_topics)
+        previous_topics = topics
+        checks["booking_in_office_hours"] = all(_in_office_hours(arg) for tag, arg in actions
+                                                if tag in ("MEETING", "CALLBACK"))
         if sc.get("hold_turn") == i:
             checks["hold_is_short"] = len(spoken.split()) <= 10 and "?" not in spoken
         turns.append({"customer": text, "shreya": spoken, "actions": actions, "seconds": seconds, "checks": checks})

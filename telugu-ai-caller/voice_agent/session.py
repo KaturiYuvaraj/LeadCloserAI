@@ -604,6 +604,7 @@ class BaseCallSession:
         # Shreya 2.0 context engine: what is known, asked and decided so far (sent with every customer message)
         lead_name = (lead or {}).get("name") or ""
         self.state = CallState(name="" if is_placeholder_name(lead_name) else lead_name, language=self.language)
+        self.state.on_reply("మీ business కి website లేదా mobile app అవసరం ఉందా? website or app need?")  # the greeting
         self._price_guide_sent = False
         self.latencies: List[float] = []
         # time to first result of each step per reply (stt / llm / tts), to see where the wait goes

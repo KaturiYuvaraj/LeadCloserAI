@@ -116,7 +116,7 @@ def test_evaluator_scores_good_and_bad_replies():
     from eval.run_eval import run_scenario
     angry = {"id": 1, "group": "angry", "lang": "te-IN", "ends": True,
              "turns": ["ఎవరు మీరు?", "మళ్ళీ మళ్ళీ call చేస్తున్నారు, చిరాకుగా ఉంది."]}
-    replies = iter(["నేను S P Associates నుండి Shreya అండి. మీ business కి website అవసరం ఉందా అండి?",
+    replies = iter(["నేను S P Associates నుండి Shreya అండి. మేము businesses కి online లో customers తెచ్చే help చేస్తాం. మీ business ఏంటి అండి?",
                     "Sorry sir, మీకు ఇబ్బంది కలిగించినందుకు. Please don't worry, మా team మీకు later call చేస్తారు. "
                     "Thank you sir, have a nice day! [CALL_COMPLETED]"])
 
@@ -134,3 +134,43 @@ def test_evaluator_scores_good_and_bad_replies():
     checks = asyncio.run(run_scenario(sc, bad_llm))["turns"][0]["checks"]
     assert not checks["numbers_in_words"] and not checks["one_question"]
     assert not checks["no_budget_question"] and not checks["price_only_when_asked"]
+
+
+# --- fixes from the first 10-scenario run (25 Nov)
+
+def test_afternoon_times_are_not_booked_in_the_morning():
+    from voice_agent.actions import parse_when
+    from voice_agent.rules import IST
+    def hhmm(arg):
+        return parse_when(arg).astimezone(IST).strftime("%H:%M")
+    assert hhmm("2026-11-26 04:00") == "16:00"      # "कल शाम चार बजे" came back as 04:00
+    assert hhmm("2026-11-26 03:00 PM") == "15:00"
+    assert hhmm("2026-11-26 11:00 AM") == "11:00"
+    assert hhmm("2026-11-26 15:00") == "15:00" and hhmm("2026-11-26 10:30") == "10:30"
+
+
+def test_the_greetings_question_is_not_asked_again_right_away():
+    session = BaseCallSession(lead={"id": None, "name": "Ravi", "phone": "+919000000001"}, language="te-IN")
+    hint = session.message_hints("చెప్పండి.") or ""
+    assert "Your last reply asked about what they need" in hint
+
+
+def test_master_prompt_covers_the_first_run_findings():
+    assert "don't ask that again: in one line say why you called" in MASTER_PROMPT
+    assert "Never ask the same thing in two replies in a row" in MASTER_PROMPT
+    assert "about ten\nminutes; never give it another length" in MASTER_PROMPT
+    assert "e-commerce is for selling products online" in MASTER_PROMPT
+
+
+def test_scorer_catches_repeats_and_impossible_times():
+    import asyncio
+    from eval.run_eval import run_scenario
+    replies = iter(["Sure sir. When do you want to start?", "Okay sir. When do you want to start this?",
+                    "Sure sir, our team will call you at four. Thank you, have a nice day! [CALLBACK: 2026-11-26 23:00]"])
+
+    async def llm(messages):
+        return next(replies)
+    sc = {"id": 3, "group": "normal", "lang": "en-IN", "turns": ["I need a website.", "For my shop.", "Call me."]}
+    turns = asyncio.run(run_scenario(sc, llm))["turns"]
+    assert turns[0]["checks"]["no_repeated_question"] and not turns[1]["checks"]["no_repeated_question"]
+    assert not turns[2]["checks"]["booking_in_office_hours"]

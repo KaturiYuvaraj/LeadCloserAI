@@ -50,6 +50,14 @@ def parse_when(arg: str, now_utc: Optional[datetime] = None) -> Optional[datetim
             return None
         hour, minute = (int(time_m.group(1)), int(time_m.group(2))) if time_m else (
             DEFAULT_CALLBACK_TIME.hour, DEFAULT_CALLBACK_TIME.minute)
+        if time_m:
+            after = text[text.find(time_m.group(0)) + len(time_m.group(0)):].strip().lower()
+            if after.startswith(("pm", "p.m")) and hour < 12:
+                hour += 12
+            elif not after.startswith(("am", "a.m")) and 1 <= hour <= 7:
+                # 25 Nov eval: "కల్ శాం चार बजे" (4 PM) came back as [CALLBACK: 2026-11-26 04:00]. Business
+                # calls are never booked at 1-7 in the morning (office 9:30 AM - 7 PM): read them as PM.
+                hour += 12
         when = day.replace(hour=hour, minute=minute)
     except ValueError:
         return None

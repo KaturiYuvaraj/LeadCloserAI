@@ -129,6 +129,10 @@ class CallState:
                 or (t == "name" and self.name)]
         if stop:
             parts.append("Don't ask again: " + ", ".join(stop) + ".")
+        recent = [t for t in self.last_asked if t not in stop]
+        if recent:
+            parts.append("Your last reply asked about " + ", ".join(recent)
+                         + ": don't ask it again in this reply; if they didn't answer it, answer them and move on.")
         if self.decided:
             parts.append("Decided: " + "; ".join(self.decided) + ".")
         flags = []
