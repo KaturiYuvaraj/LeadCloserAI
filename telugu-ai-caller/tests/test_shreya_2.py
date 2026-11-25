@@ -286,3 +286,18 @@ def test_bare_no_later_in_the_call_is_just_an_answer():
 def test_prompt_says_not_to_echo_garbled_words_or_state_records():
     assert "never repeat it back" in MASTER_PROMPT
     assert "ask, don't state it" in MASTER_PROMPT
+
+
+# --- pronunciation for the voice only (25 Nov: "whatsssssapp")
+
+def test_voice_hears_whatsapp_the_local_way():
+    from voice_agent.pronounce import for_voice
+    assert for_voice("ఈ number WhatsApp లో ఉందా sir?", "te-IN") == "ఈ number వాట్సాప్ లో ఉందా sir?"
+    assert for_voice("क्या यह number WhatsApp पर है?", "hi-IN") == "क्या यह number व्हाट्सऐप पर है?"
+    assert for_voice("Is this number on WhatsApp?", "en-IN") == "Is this number on WhatsApp?"
+
+
+def test_pronunciation_is_wired_to_the_voice_only():
+    import asyncio
+    session = BaseCallSession(lead={"id": None, "name": "Ravi"}, language="te-IN")
+    assert asyncio.run(session._for_voice("WhatsApp లో పంపిస్తారు", "sentence")) == "వాట్సాప్ లో పంపిస్తారు"

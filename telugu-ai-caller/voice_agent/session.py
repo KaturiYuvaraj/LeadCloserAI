@@ -104,6 +104,7 @@ from voice_agent.call_guard import (NOT_INTERESTED_AGAIN, NOT_INTERESTED_FIRST, 
 from voice_agent.conclusion import CallConclusionFilter
 from voice_agent.knowledge import KnowledgeBase, list_docs
 from voice_agent.language import VOICES, LanguageRouter, pace_for
+from voice_agent.pronounce import for_voice
 from voice_agent.rules import IST
 from voice_agent.call_state import CallState
 from voice_agent.shreya_prompt import asks_about_price, build_voice_prompt, price_guide_hint
@@ -697,6 +698,10 @@ class BaseCallSession:
     def current_language(self) -> str:
         return self.router.current_language if self.router else self.language
 
+    async def _for_voice(self, text: str, text_type) -> str:
+        """Words the voice says better written the local way ("WhatsApp" -> "వాట్సాప్"); the transcript keeps them."""
+        return for_voice(text, self.current_language)
+
     # ------------------------------------------------------------------ caller behaviour
     def message_hints(self, text: str) -> Optional[str]:
         """Called for every caller message: behaviour hints + relevant knowledge, sent with it to the LLM."""
@@ -998,6 +1003,7 @@ class BaseCallSession:
                 min_buffer_size=TTS_MIN_BUFFER_CHARS,
                 max_chunk_length=TTS_MAX_CHUNK_CHARS,
             ),
+            text_transforms=[("*", self._for_voice)],
         )
         tts._pause_frame_processing = False
 
