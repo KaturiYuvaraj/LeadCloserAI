@@ -6,195 +6,461 @@
   <title>Sign In — GeniusBot</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="/static/img/favicon.png">
+  <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
   <style>
     :root {
-      --bg-page: #f8fafc;
-      --bg-card: #ffffff;
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
-      --text-muted: #64748b;
-      --accent: #1d4ed8;
-      --accent-hover: #1e3a8a;
-      --border: #e2e8f0;
+      --navy-900: #01122f;
+      --navy-800: #022a66;
+      --navy-text: #0b1f4d;
+      --blue: #1d4ed8;
+      --blue-deep: #1e3a8a;
+      --teal: #2ee6b0;
+      --teal-2: #14c4a0;
+      --gold: #f59e0b;
+      --gold-2: #fbbf24;
+      --field-bg: #eef2fb;
+      --field-border: #c9d5f0;
+      --text: #0f172a;
+      --text-soft: #334155;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: radial-gradient(circle at top right, #eff6ff 0%, #f8fafc 55%, #f1f5f9 100%);
-      color: var(--text-primary);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .login-card {
-      width: 100%;
-      max-width: 430px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 36px 32px;
-      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
-    }
-    .brand-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .brand-logo { display: block; width: 220px; max-width: 70%; height: auto; margin: 0 auto 6px; }
-    .brand-row { justify-content: center; }
-    .brand-badge-unused {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #1d4ed8, #2563eb);
       color: #fff;
-      font-weight: 800;
-      font-size: 1.1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 6px 16px rgba(29, 78, 216, 0.25);
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 60% 45% at 100% 0%, rgba(20, 196, 160, 0.55), transparent 70%),
+        radial-gradient(ellipse 55% 60% at 15% 55%, rgba(29, 120, 255, 0.35), transparent 70%),
+        radial-gradient(ellipse 80% 50% at 50% 110%, rgba(29, 78, 216, 0.55), transparent 70%),
+        linear-gradient(160deg, #013a86 0%, var(--navy-900) 45%, #021c4a 100%);
+      overflow-x: hidden;
+      position: relative;
     }
-    .brand-title {
-      font-size: 1.2rem;
-      font-weight: 800;
-      color: var(--text-primary);
+    /* faint circuit lines */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(56, 189, 248, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.06) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 70% 70% at 25% 45%, #000 20%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 70% at 25% 45%, #000 20%, transparent 75%);
+      pointer-events: none;
+    }
+    /* teal wave at the bottom */
+    .wave {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      height: 34vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 56px 32px 40px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 520px);
+      gap: 48px;
+      align-items: center;
+    }
+
+    /* ---------- left: headline + robot ---------- */
+    .hero h2 {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-size: clamp(2.2rem, 3.6vw, 3.25rem);
+      font-weight: 700;
+      line-height: 1.16;
       letter-spacing: -0.02em;
     }
-    .brand-sub {
-      font-size: 0.76rem;
-      color: var(--text-muted);
+    .hero h2 .accent { color: var(--teal); }
+    .hero .tags {
+      margin-top: 22px;
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      font-size: 1.2rem;
+      color: rgba(226, 236, 255, 0.85);
       font-weight: 500;
     }
-    h1 {
-      font-size: 1.35rem;
-      font-weight: 800;
-      margin-bottom: 6px;
-      color: var(--text-primary);
+    .hero .tags .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 10px var(--teal);
     }
-    p.subtitle {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      margin-bottom: 24px;
-      line-height: 1.45;
-    }
-    .form-group {
-      margin-bottom: 16px;
-    }
-    label {
+    .robot {
       display: block;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #334155;
-      margin-bottom: 6px;
+      width: min(100%, 480px);
+      height: auto;
+      margin-top: 34px;
+      margin-left: -24px;
+      filter: drop-shadow(0 0 40px rgba(46, 230, 176, 0.18));
     }
-    input {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      color: var(--text-primary);
+
+    /* ---------- right: the card ---------- */
+    .card {
+      position: relative;
       background: #ffffff;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      color: var(--text);
+      border-radius: 34px;
+      padding: 44px 46px 36px;
+      box-shadow: 0 30px 80px rgba(0, 10, 40, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.6);
+      overflow: hidden;
     }
-    input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+    .card::before { /* teal glow in the top-right corner */
+      content: "";
+      position: absolute;
+      top: -90px; right: -90px;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, rgba(46, 230, 176, 0.55), rgba(46, 230, 176, 0) 65%);
+      pointer-events: none;
     }
-    .btn-submit {
-      width: 100%;
-      padding: 12px 18px;
-      border: none;
-      border-radius: 10px;
-      background: var(--accent);
-      color: #ffffff;
-      font-size: 0.92rem;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 6px;
-      transition: background 0.15s ease;
+    .card::after { /* soft blue wash at the bottom-left */
+      content: "";
+      position: absolute;
+      bottom: -120px; left: -80px;
+      width: 300px; height: 240px;
+      background: radial-gradient(circle, rgba(29, 78, 216, 0.08), transparent 70%);
+      pointer-events: none;
     }
-    .btn-submit:hover {
-      background: var(--accent-hover);
+    .card > * { position: relative; }
+
+    .brand { text-align: center; }
+    .brand-mark { width: 196px; height: auto; display: block; margin: 0 auto -4px; }
+    .brand-name {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-size: 3.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      color: var(--navy-text);
     }
-    .btn-submit:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
+    .brand-name .bot {
+      background: linear-gradient(180deg, var(--gold-2) 0%, var(--gold) 55%, #ea8a0c 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
+    .brand-tag {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: 1.02rem;
+      font-weight: 500;
+      color: var(--navy-text);
+    }
+    .brand-tag::before, .brand-tag::after {
+      content: "";
+      width: 32px; height: 1.5px;
+      background: var(--navy-text);
+      opacity: 0.8;
+    }
+
+    h1 {
+      margin-top: 30px;
+      text-align: center;
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-size: 2.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--navy-text);
+    }
+    h1 .accent {
+      background: linear-gradient(90deg, #12b886, var(--teal-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .subtitle {
+      margin: 12px auto 26px;
+      text-align: center;
+      font-size: 1.02rem;
+      line-height: 1.5;
+      color: var(--text-soft);
+      max-width: 430px;
+    }
+
     .error-box {
       display: none;
       background: #fef2f2;
       border: 1px solid #fecaca;
       color: #b91c1c;
-      padding: 10px 12px;
-      border-radius: 10px;
-      font-size: 0.8rem;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.86rem;
       font-weight: 600;
       margin-bottom: 16px;
     }
-    .demo-hint {
-      margin-top: 20px;
-      padding: 12px 14px;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 10px;
-      font-size: 0.76rem;
-      color: #172554;
-      line-height: 1.45;
+
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.08rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 10px;
     }
-    .footer-links {
-      margin-top: 18px;
+    .field label svg { width: 24px; height: 24px; flex-shrink: 0; }
+    .input-wrap { position: relative; }
+    .input-wrap svg {
+      position: absolute;
+      left: 22px; top: 50%;
+      transform: translateY(-50%);
+      width: 22px; height: 22px;
+      color: #334155;
+      pointer-events: none;
+    }
+    .input-wrap input {
+      width: 100%;
+      height: 64px;
+      padding: 0 20px 0 64px;
+      border: 1.5px solid var(--field-border);
+      border-radius: 16px;
+      background: var(--field-bg);
+      font-family: inherit;
+      font-size: 1.06rem;
+      color: var(--text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+    .input-wrap input::placeholder { color: #64748b; }
+    .input-wrap input[type="password"]::placeholder { letter-spacing: 0.2em; }
+    .input-wrap input:focus {
+      outline: none;
+      background: #fff;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.12);
+    }
+
+    .btn-submit {
+      margin-top: 8px;
+      width: 100%;
+      height: 68px;
+      border: none;
+      border-radius: 18px;
+      background: linear-gradient(90deg, #19d39b 0%, #0e9fb4 42%, #1d4ed8 78%, #1e3a8a 100%);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1.22rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      cursor: pointer;
+      box-shadow: 0 14px 30px rgba(14, 116, 180, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+    .btn-submit svg { width: 24px; height: 24px; }
+    .btn-submit:hover { transform: translateY(-1px); filter: brightness(1.05); box-shadow: 0 18px 36px rgba(14, 116, 180, 0.42); }
+    .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+    .or {
+      margin: 28px 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+    .or::before, .or::after { content: ""; flex: 1; height: 1px; background: #dbe2ef; }
+
+    .links {
       display: flex;
       justify-content: space-between;
-      font-size: 0.78rem;
+      align-items: center;
+      gap: 12px;
+      font-size: 1rem;
     }
-    .footer-links a {
-      color: var(--text-secondary);
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 500;
     }
-    .footer-links a:hover {
-      color: var(--accent);
+    .links a svg { width: 20px; height: 20px; }
+    .links .back { color: var(--text-soft); }
+    .links .back:hover { color: var(--text); }
+    .links .crm { color: var(--blue); }
+    .links .crm:hover { color: var(--blue-deep); }
+
+    /* ---------- bottom: features bar ---------- */
+    .features {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid rgba(148, 197, 255, 0.28);
+      border-radius: 26px;
+      background: rgba(4, 30, 80, 0.38);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 26px 10px;
+    }
+    .feature {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      font-size: 1.08rem;
+      font-weight: 500;
+      line-height: 1.3;
+      color: #f1f5ff;
+    }
+    .feature + .feature { border-left: 1px solid rgba(148, 197, 255, 0.25); }
+    .feature svg { width: 40px; height: 40px; flex-shrink: 0; }
+
+    /* ---------- smaller screens ---------- */
+    @media (max-width: 1080px) {
+      .main { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+      .hero { text-align: center; }
+      .hero .tags { justify-content: center; }
+      .robot { margin: 18px auto 0; width: min(70%, 360px); }
+      .card { max-width: 540px; margin: 0 auto; width: 100%; }
+      .features { grid-template-columns: repeat(2, 1fr); row-gap: 22px; }
+      .feature:nth-child(3) { border-left: none; }
+    }
+    @media (max-width: 560px) {
+      .page { padding: 28px 16px 28px; }
+      .main { align-content: start; flex: 0 0 auto; }
+      .brand-tag::before, .brand-tag::after { width: 18px; }
+      .brand-tag { gap: 8px; white-space: nowrap; font-size: 0.8rem; }
+      .robot { display: none; }
+      .hero h2 { font-size: 1.9rem; }
+      .hero .tags { font-size: 1rem; gap: 16px; }
+      .card { padding: 30px 22px 26px; border-radius: 26px; }
+      .brand-mark { width: 150px; }
+      .brand-name { font-size: 2.5rem; }
+      .brand-tag { font-size: 0.86rem; }
+      h1 { font-size: 1.85rem; margin-top: 22px; }
+      .subtitle { font-size: 0.92rem; }
+      .input-wrap input { height: 56px; }
+      .btn-submit { height: 58px; font-size: 1.08rem; }
+      .links { font-size: 0.9rem; flex-wrap: wrap; }
+      .features { grid-template-columns: 1fr 1fr; padding: 18px 6px; }
+      .feature { gap: 10px; font-size: 0.9rem; }
+      .feature svg { width: 30px; height: 30px; }
     }
   </style>
-  <link rel="icon" type="image/png" href="/static/img/favicon.png">
-  <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
 </head>
 <body>
-  <div class="login-card">
-    <div class="brand-row">
-      <img class="brand-logo" src="/static/img/geniusbot-logo.png" alt="GeniusBot - AI Powered Auto Calling Solution">
+  <svg class="wave" viewBox="0 0 1440 360" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="waveTeal" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#16c9a2" stop-opacity="0.75" />
+        <stop offset="0.55" stop-color="#0b7fc0" stop-opacity="0.35" />
+        <stop offset="1" stop-color="#1d4ed8" stop-opacity="0.15" />
+      </linearGradient>
+      <linearGradient id="waveBlue" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#0a3f9c" stop-opacity="0.55" />
+        <stop offset="1" stop-color="#5b8cff" stop-opacity="0.35" />
+      </linearGradient>
+    </defs>
+    <path d="M0,150 C240,40 460,60 700,150 C930,235 1180,250 1440,170 L1440,360 L0,360 Z" fill="url(#waveTeal)" />
+    <path d="M0,230 C280,150 520,170 760,230 C1000,290 1220,280 1440,230 L1440,360 L0,360 Z" fill="url(#waveBlue)" />
+  </svg>
+
+  <div class="page">
+    <div class="main">
+      <section class="hero">
+        <h2>Smarter Solutions.<br><span class="accent">Powered</span> by AI.</h2>
+        <div class="tags">
+          <span>Automate</span><span class="dot"></span><span>Innovate</span><span class="dot"></span><span>Grow</span>
+        </div>
+        <img class="robot" src="/static/img/geniusbot-robot.png" alt="" aria-hidden="true">
+      </section>
+
+      <main class="card">
+        <div class="brand">
+          <img class="brand-mark" src="/static/img/geniusbot-mark.png" alt="">
+          <div class="brand-name">Genius<span class="bot">Bot</span></div>
+          <div class="brand-tag">AI Powered Auto Calling Solution</div>
+        </div>
+
+        <h1>Team <span class="accent">Sign In</span></h1>
+        <p class="subtitle">Sign in with your account credentials to access the Calling Station, Campaign Queue &amp; Pipeline Board.</p>
+
+        <div id="loginErrorBox" class="error-box" role="alert"></div>
+
+        <form id="loginForm">
+          <div class="field">
+            <label for="loginEmail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              Work Email
+            </label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              <input type="email" id="loginEmail" name="email" required autocomplete="username" placeholder="you@company.com" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="loginPassword">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Zm3 4a1.6 1.6 0 0 1 .8 3v1.5h-1.6V17a1.6 1.6 0 0 1 .8-3Z"/></svg>
+              Password
+            </label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.2"/></svg>
+              <input type="password" id="loginPassword" name="password" required autocomplete="current-password" placeholder="••••••••" />
+            </div>
+          </div>
+
+          <button type="submit" id="loginSubmitBtn" class="btn-submit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>
+            <span id="loginSubmitText">Sign In to Workspace</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+          </button>
+        </form>
+
+        <div class="or">or</div>
+
+        <div class="links">
+          <a class="back" href="/">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
+            Back to Homepage
+          </a>
+          <a class="crm" href="/crm">
+            Open CRM Workspace
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+          </a>
+        </div>
+      </main>
     </div>
 
-    <h1>Team Sign In</h1>
-    <p class="subtitle">Sign in with your account credentials to access the Calling Station, Campaign Queue & Pipeline Board.</p>
-
-    <div id="loginErrorBox" class="error-box"></div>
-
-    <form id="loginForm">
-      <div class="form-group">
-        <label for="loginEmail">Work Email</label>
-        <input type="email" id="loginEmail" name="email" required placeholder="you@company.com" />
+    <div class="features">
+      <div class="feature">
+        <svg viewBox="0 0 24 24"><defs><linearGradient id="fg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#bfe8ff"/></linearGradient></defs><path d="M13.5 2 4 13.5h6.5L9 22l10-12.5h-6.6L13.5 2Z" fill="url(#fg1)"/></svg>
+        <span>Powerful<br>AI Engine</span>
       </div>
-
-      <div class="form-group">
-        <label for="loginPassword">Password</label>
-        <input type="password" id="loginPassword" name="password" required placeholder="••••••••" />
+      <div class="feature">
+        <svg viewBox="0 0 24 24"><defs><linearGradient id="fg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cf7d4"/><stop offset="1" stop-color="#22b8e6"/></linearGradient></defs><rect x="3" y="13" width="4" height="8" rx="1" fill="url(#fg2)"/><rect x="10" y="9" width="4" height="12" rx="1" fill="url(#fg2)"/><rect x="17" y="5" width="4" height="16" rx="1" fill="url(#fg2)"/><path d="M3 10 9 5l4 3 7-6" stroke="#7cf7d4" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Real-Time<br>Analytics</span>
       </div>
-
-      <button type="submit" id="loginSubmitBtn" class="btn-submit">Sign In to Workspace →</button>
-    </form>
-
-
-    <div class="footer-links">
-      <a href="/">← Back to Homepage</a>
-      <a href="/crm">Open CRM Workspace ↗</a>
+      <div class="feature">
+        <svg viewBox="0 0 24 24"><defs><linearGradient id="fg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cf7d4"/><stop offset="1" stop-color="#1fb6e0"/></linearGradient></defs><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" fill="url(#fg3)"/><path d="m8.5 12 2.5 2.5 4.5-5" stroke="#0b2a66" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Secure &amp;<br>Reliable</span>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="13" width="4" height="6" rx="1.5" fill="#ffffff"/><rect x="17" y="13" width="4" height="6" rx="1.5" fill="#ffffff"/><path d="M19 19c0 1.7-2 3-5 3h-1"/></svg>
+        <span>Dedicated<br>Support</span>
+      </div>
     </div>
   </div>
 
@@ -202,12 +468,19 @@
     const form = document.getElementById("loginForm");
     const errBox = document.getElementById("loginErrorBox");
     const submitBtn = document.getElementById("loginSubmitBtn");
+    const submitText = document.getElementById("loginSubmitText");
+
+    // only go back to a page on this site after signing in (never to another website)
+    function safeNext() {
+      const next = new URLSearchParams(window.location.search).get("next") || "/crm";
+      return next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : "/crm";
+    }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       errBox.style.display = "none";
       submitBtn.disabled = true;
-      submitBtn.textContent = "Signing in...";
+      submitText.textContent = "Signing in...";
 
       try {
         const email = document.getElementById("loginEmail").value.trim();
@@ -229,17 +502,15 @@
           window.location.href = "/set-password";
           return;
         }
-        const nextUrl = new URLSearchParams(window.location.search).get("next") || "/crm";
-        window.location.href = nextUrl;
+        window.location.href = safeNext();
       } catch (err) {
         errBox.textContent = err.message;
         errBox.style.display = "block";
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = "Sign In to Workspace →";
+        submitText.textContent = "Sign In to Workspace";
       }
     });
   </script>
 </body>
 </html>
-
