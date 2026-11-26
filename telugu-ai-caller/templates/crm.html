@@ -3303,6 +3303,7 @@ input[type="checkbox"] {
 
 </style>
   <link rel="stylesheet" href="/static/css/calling-station.css?v=1.6">
+  <link rel="stylesheet" href="/static/css/geniusbot-dashboard.css?v=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&family=Noto+Sans+Malayalam:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -3346,6 +3347,7 @@ input[type="checkbox"] {
     <div class="crm-app-shell">
       <!-- 1. LEFT SIDEBAR (PERSISTENT ~220px) -->
             <!-- 1. LEFT SIDEBAR (~240px Outpero Standard, Collapsible to 68px) -->
+      <div class="gb-sidebar-overlay" id="gbSidebarOverlay" onclick="window.toggleSidebar(false)"></div>
       <aside class="crm-app-sidebar" id="crmAppSidebar">
         <div>
           <!-- Brand Header Row -->
@@ -6174,7 +6176,7 @@ input[type="checkbox"] {
   <script src="/api/voice/config.js"></script>
   <script src="/static/js/call_client.js"></script>
   <script src="/static/js/pipecat_call_client.js?v=2.0"></script>
-  <script src="/static/js/app.js?v=5.7.0"></script>
+  <script src="/static/js/app.js?v=5.8.0"></script>
   <script>
     // Initialize lead selection safely once DOMContentLoaded has finished
     document.addEventListener("DOMContentLoaded", function() {

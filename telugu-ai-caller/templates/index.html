@@ -3883,7 +3883,7 @@ input[type="checkbox"] {
 
 </style>
   <link rel="stylesheet" href="/static/css/calling-station.css?v=1.6">
-  <link rel="stylesheet" href="/static/css/geniusbot-home.css?v=1.0">
+  <link rel="stylesheet" href="/static/css/geniusbot-home.css?v=1.1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -3977,8 +3977,23 @@ input[type="checkbox"] {
       <button class="btn-nav-trial" onclick="window.location.href='/crm'">
         <span id="navLaunchCrmText">Start Free Trial ↗</span>
       </button>
+
+      <button class="gb-menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="gbMobileMenu"
+              onclick="var m=document.getElementById('gbMobileMenu');var o=m.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
     </div>
   </header>
+
+  <!-- phone menu (the desktop links are hidden below 860px) -->
+  <nav class="gb-mobile-menu" id="gbMobileMenu" onclick="if(event.target.tagName==='A'){this.classList.remove('open')}">
+    <a href="javascript:void(0)" onclick="window.switchMainTab('landing', 'voiceSection')">Voices</a>
+    <a href="javascript:void(0)" onclick="window.scrollToSection('pricingSection')">Pricing</a>
+    <a href="javascript:void(0)" onclick="window.openDiscoverLeadsModal()">Contact</a>
+    <a href="/docs" target="_blank">Docs</a>
+    <a href="/crm">API</a>
+    <a href="/login">Login</a>
+  </nav>
 
   <div id="viewLanding" class="view-landing-wrapper">
     
@@ -3996,7 +4011,7 @@ input[type="checkbox"] {
 
           <h1 class="hero-h1-headline">
             Turn Leads into<br>
-            Revenue with <span class="text-orange">AI</span> <span class="hero-sparkle-star">✦</span><br>
+            Revenue with <span class="gb-nowrap"><span class="text-orange">AI</span> <span class="hero-sparkle-star">✦</span></span><br>
             Voice Employees
           </h1>
 

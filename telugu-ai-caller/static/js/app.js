@@ -4139,12 +4139,30 @@ Lead updated to DEMO_BOOKED.`);
   // ===================================================================
 
   // 1. Sidebar Collapse Toggle & State Persistence
-  window.toggleSidebar = () => {
+  // Tablets and phones (<= 1024px): the menu is a slide-in drawer; larger screens: collapse to icons
+  const isDrawerScreen = () => window.matchMedia("(max-width: 1024px)").matches;
+  window.toggleSidebar = (open) => {
     const sidebar = document.getElementById("crmAppSidebar");
     if (!sidebar) return;
+    if (isDrawerScreen()) {
+      const show = typeof open === "boolean" ? open : !sidebar.classList.contains("mobile-open");
+      sidebar.classList.toggle("mobile-open", show);
+      const overlay = document.getElementById("gbSidebarOverlay");
+      if (overlay) overlay.classList.toggle("open", show);
+      return;
+    }
     const isCollapsed = sidebar.classList.toggle("collapsed");
     localStorage.setItem("lc_sidebar_collapsed", isCollapsed ? "1" : "0");
   };
+  // picking a page in the drawer closes it
+  if (typeof window.switchCrmView === "function" && !window.switchCrmView.__closesDrawer) {
+    const originalSwitch = window.switchCrmView;
+    window.switchCrmView = function (...args) {
+      if (isDrawerScreen()) window.toggleSidebar(false);
+      return originalSwitch.apply(this, args);
+    };
+    window.switchCrmView.__closesDrawer = true;
+  }
 
   // Restore sidebar state only on narrower screens or if user explicitly requested
   if (localStorage.getItem("lc_sidebar_collapsed") === "1" && window.innerWidth < 1024) {

@@ -1,0 +1,113 @@
+/* =====================================================================
+   GeniusBot dashboard: works on every screen size (26 Nov 2026).
+   Checked with Playwright at 12 sizes from 1920x950 down to 360x740.
+   Loaded last on the dashboard, so it only adjusts what doesn't fit.
+   ===================================================================== */
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+.crm-app-main { min-width: 0; }
+.crm-app-main img, .crm-app-main video { max-width: 100%; }
+
+/* ---------- top bar: never wider than the screen ---------- */
+.crm-topbar { min-width: 0; }
+.crm-topbar-left { flex: 1 1 auto; min-width: 0; }
+.crm-top-search-wrap { width: auto !important; flex: 1 1 260px; max-width: 440px; min-width: 0; }
+.crm-topbar-right { flex: 0 0 auto; min-width: 0; }
+
+@media (max-width: 1440px) { .crm-account-meta, .crm-account-chevron { display: none !important; } }
+@media (max-width: 1280px) {
+  .crm-topbar-right > .crm-icon-circle-btn:nth-of-type(1),
+  .crm-topbar-right > .crm-icon-circle-btn:nth-of-type(2) { display: none !important; }
+}
+@media (max-width: 1100px) { .crm-telemetry-pill { display: none !important; } }
+@media (max-width: 640px) {
+  .crm-top-search-wrap { display: none !important; }
+  .crm-topbar { gap: 8px; padding-bottom: 10px; }
+  .crm-topbar-right { gap: 8px; margin-left: auto; }
+  .crm-usage-pill { padding: 4px 8px !important; font-size: 0.72rem !important; }
+  .crm-kbd-shortcut { display: none !important; }
+}
+
+/* ---------- menu: a slide-in drawer on tablets and phones ---------- */
+.gb-sidebar-overlay { display: none; }
+@media (max-width: 1024px) {
+  .crm-app-sidebar,
+  .crm-app-sidebar.collapsed {
+    position: fixed !important;
+    top: 0; left: 0; bottom: 0;
+    width: 264px !important;
+    min-width: 264px !important;
+    height: 100vh; height: 100dvh;
+    padding: 14px 10px !important;
+    transform: translateX(-105%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 20px 50px rgba(2, 8, 30, 0.35);
+    z-index: 1000 !important;
+  }
+  .crm-app-sidebar.mobile-open { transform: translateX(0); }
+  /* in the drawer, always show the full menu (labels too) */
+  .crm-app-sidebar.collapsed .crm-brand-text-block,
+  .crm-app-sidebar.collapsed .crm-sidebar-section-title,
+  .crm-app-sidebar.collapsed .crm-nav-item span,
+  .crm-app-sidebar.collapsed .crm-nav-badge,
+  .crm-app-sidebar.collapsed .crm-team-widget,
+  .crm-app-sidebar.collapsed .crm-sidebar-legal-links { display: revert !important; }
+  .crm-app-sidebar.collapsed .crm-nav-item { width: auto; justify-content: flex-start; padding: 9px 12px; margin: 0; }
+  .crm-sidebar-toggle-btn { display: none !important; }
+  .gb-sidebar-overlay.open {
+    display: block;
+    position: fixed; inset: 0;
+    background: rgba(2, 10, 30, 0.45);
+    z-index: 999;
+  }
+  .crm-topbar-collapse-btn { display: flex !important; }
+  .crm-app-main { width: 100%; padding: 12px 16px 18px !important; }
+}
+@media (max-width: 640px) { .crm-app-main { padding: 10px 12px 16px !important; } }
+
+/* ---------- calling station: three columns -> two -> one ---------- */
+@media (max-width: 1100px) {
+  .crm-three-col-grid { grid-template-columns: 260px minmax(0, 1fr) !important; }
+  .crm-three-col-grid > :nth-child(3) { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .crm-three-col-grid { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+/* ---------- grids written into the page: fewer columns on smaller screens ---------- */
+@media (max-width: 1200px) {
+  .crm-app-main [style*="grid-template-columns: repeat(4"],
+  .crm-app-main [style*="grid-template-columns: repeat(5"],
+  .crm-app-main [style*="grid-template-columns: repeat(6"],
+  .crm-app-main [style*="grid-template-columns:repeat(4"],
+  .crm-app-main [style*="grid-template-columns:repeat(5"],
+  .crm-app-main [style*="grid-template-columns:repeat(6"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 900px) {
+  .crm-app-main [style*="grid-template-columns"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .crm-app-main [style*="grid-template-columns: 1fr"][style*="grid-template-columns: 1fr;"] { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (max-width: 640px) {
+  .crm-app-main [style*="grid-template-columns"] { grid-template-columns: minmax(0, 1fr) !important; }
+  .crm-app-main [style*="display: flex"]:not(.crm-topbar):not([style*="flex-direction: column"]) { flex-wrap: wrap; }
+  .crm-app-main [style*="width: 4"], .crm-app-main [style*="width: 5"], .crm-app-main [style*="width: 6"] { max-width: 100%; }
+  .crm-app-main [style*="min-width"] { min-width: 0 !important; }
+}
+
+/* ---------- cards and tables: never push the page sideways ---------- */
+.crm-panel-card, .crm-kpi-card, .crm-view-section > * { min-width: 0; }
+@media (max-width: 1200px) {
+  .crm-app-main table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ---------- pop-ups fit the screen ---------- */
+.modal-card { max-width: calc(100vw - 24px) !important; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; }
+@media (max-width: 640px) {
+  .modal-card { width: calc(100vw - 24px) !important; border-radius: 16px !important; }
+  .crm-account-dropdown { right: 0; max-width: calc(100vw - 24px); }
+}
