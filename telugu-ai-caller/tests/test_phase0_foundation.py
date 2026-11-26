@@ -30,7 +30,7 @@ client = TestClient(app)
 def test_login_page_and_unauthenticated_me():
     resp_page = client.get("/login")
     assert resp_page.status_code == 200
-    assert "Team Sign In" in resp_page.text
+    assert "Team <span class=\"accent\">Sign In</span>" in resp_page.text
 
     resp_me = client.get("/api/auth/me")
     assert resp_me.status_code == 401
