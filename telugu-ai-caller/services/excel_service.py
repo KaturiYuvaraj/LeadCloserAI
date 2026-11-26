@@ -120,11 +120,30 @@ def extract_business_and_owner(raw_name: str, raw_company: str = "", raw_owner: 
     return company_name, owner_name
 
 
+# The sample rows of the downloadable template. Their values (other than name and phone) are never stored
+# on a lead: people edit the name and phone and leave the rest, and the AI then told a real customer
+# "మీది Sharma Logistics business అండి" (26 Nov call 125).
+TEMPLATE_SAMPLE_ROWS = [
+    ["రమేష్ నాయుడు (Ramesh Naidu)", "+91 9848011223", "Naidu Supermarkets", "Mobile App & Billing", "₹75,000", "Immediate", "Telugu", "Looking for grocery ordering mobile app."],
+    ["अमित शर्मा (Amit Sharma)", "+91 9811002233", "Sharma Logistics", "Fleet Tracking & Billing Web", "₹1,20,000", "2 Weeks", "Hindi", "Wants automated customer dispatch system."],
+    ["Rajesh Nair", "+91 9895001122", "Apex Diagnostic Labs", "AI Voice Caller & Chatbot", "₹50,000", "1 Month", "English", "Needs AI phone calling agent for appointment confirmation."]
+]
+_TEMPLATE_SAMPLE_VALUES = {str(v).strip().lower() for row in TEMPLATE_SAMPLE_ROWS for v in row[2:4] + row[7:]}  # company, service, notes
+
+
+def drop_template_samples(lead: Dict[str, Any]) -> Dict[str, Any]:
+    for key, value in list(lead.items()):
+        if isinstance(value, str) and value.strip().lower() in _TEMPLATE_SAMPLE_VALUES:
+            lead[key] = ""
+    return lead
+
+
 def enrich_lead_record(lead: Dict[str, Any]) -> Dict[str, Any]:
     """
     Enrich a parsed lead dictionary with inferred business profile, owner details,
     website audit, and targeted sales pitch angle.
     """
+    drop_template_samples(lead)
     raw_name = lead.get("name", "")
     raw_company = lead.get("company", "")
     raw_owner = lead.get("owner_name", "")
@@ -175,9 +194,9 @@ def enrich_lead_record(lead: Dict[str, Any]) -> Dict[str, Any]:
     # Sales pitch talking points
     if not lead.get("pitch"):
         if lead["has_website"] == "No":
-            lead["pitch"] = "No website found. Pitch a modern, mobile-responsive NGO website with donation portal, mission showcase, and 80G tax exemption info."
+            lead["pitch"] = "No website found. A mobile-friendly website would help customers find them online."
         else:
-            lead["pitch"] = "Website active. Pitch Google review boosting, donor testimonials showcase, and volunteer enrollment automations."
+            lead["pitch"] = "Website active. Ask how they get customers today; reviews, ads or an app may help."
 
     return lead
 
@@ -393,11 +412,7 @@ def generate_sample_excel_template() -> bytes:
     ]
     ws.append(headers)
 
-    sample_rows = [
-        ["రమేష్ నాయుడు (Ramesh Naidu)", "+91 9848011223", "Naidu Supermarkets", "Mobile App & Billing", "₹75,000", "Immediate", "Telugu", "Looking for grocery ordering mobile app."],
-        ["अमित शर्मा (Amit Sharma)", "+91 9811002233", "Sharma Logistics", "Fleet Tracking & Billing Web", "₹1,20,000", "2 Weeks", "Hindi", "Wants automated customer dispatch system."],
-        ["Rajesh Nair", "+91 9895001122", "Apex Diagnostic Labs", "AI Voice Caller & Chatbot", "₹50,000", "1 Month", "English", "Needs AI phone calling agent for appointment confirmation."]
-    ]
+    sample_rows = TEMPLATE_SAMPLE_ROWS
 
     for row in sample_rows:
         ws.append(row)

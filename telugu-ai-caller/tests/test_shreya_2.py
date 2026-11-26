@@ -301,3 +301,20 @@ def test_pronunciation_is_wired_to_the_voice_only():
     import asyncio
     session = BaseCallSession(lead={"id": None, "name": "Ravi"}, language="te-IN")
     assert asyncio.run(session._for_voice("WhatsApp లో పంపిస్తారు", "sentence")) == "వాట్సాప్ లో పంపిస్తారు"
+
+
+# --- 26 Nov call 125: template sample data and the NGO pitch on every lead
+
+def test_template_sample_values_are_not_stored_on_leads():
+    from services.excel_service import enrich_lead_record
+    lead = enrich_lead_record({"name": "thimothi", "phone": "+919000000001", "company": "Sharma Logistics",
+                               "service_needed": "Fleet Tracking & Billing Web", "timeline": "Immediate",
+                               "notes": "Wants automated customer dispatch system."})
+    assert lead["company"] != "Sharma Logistics" and "Fleet Tracking" not in lead["service_needed"]
+    assert lead["notes"] == "" and lead["timeline"] == "Immediate"
+
+
+def test_auto_pitch_is_not_about_ngos_for_every_business():
+    from services.excel_service import enrich_lead_record
+    lead = enrich_lead_record({"name": "Ravi", "phone": "+919000000001", "company": "Ravi Textiles"})
+    assert "NGO" not in lead["pitch"] and "80G" not in lead["pitch"]
