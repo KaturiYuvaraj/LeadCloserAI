@@ -530,7 +530,7 @@ async def api_daily_digest(request: Request):
     followups_queued = sum(1 for ld in leads if ld.get("outcome_bucket") == "follow_up")
 
     digest_text = (
-        f"📊 *LeadCloserAI Daily Owner Digest*\n"
+        f"📊 *GeniusBot Daily Owner Digest*\n"
         f"• Calls Made: {total_calls} (Reached: {reached_calls})\n"
         f"• 🔥 Hot Leads: {hot_leads}\n"
         f"• 📄 Quotations Sent: {quotes_sent}\n"

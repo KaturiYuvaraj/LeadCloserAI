@@ -1,5 +1,5 @@
 /* =====================================================================
-   LEADCLOSER AI — PIXEL-PERFECT LUXURY OUTPERO CRM CALLING STATION
+   GENIUSBOT — PIXEL-PERFECT LUXURY OUTPERO CRM CALLING STATION
    Exact reference match: Persistent Left Sidebar, Top Search Bar,
    Sub-header with Action Pills, and 3-Column Calling Station layout.
    ===================================================================== */
@@ -124,7 +124,7 @@ body.crm-mode {
 
 .crm-brand-name .ai-suffix {
   font-weight: 500;
-  color: #ea580c;
+  color: #1d4ed8;
 }
 
 .crm-brand-subtag {
@@ -219,13 +219,13 @@ body.crm-mode {
 
 /* Outpero Luxury Active Nav Item Signature */
 .crm-nav-item.active {
-  background: #fff7ed !important;
-  color: #ea580c !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
   font-weight: 700 !important;
 }
 
 .crm-nav-item.active svg {
-  stroke: #ea580c !important;
+  stroke: #1d4ed8 !important;
 }
 
 .crm-nav-icon {
@@ -248,8 +248,8 @@ body.crm-mode {
 }
 
 .crm-nav-item.active .crm-nav-badge {
-  background: #ffedd5;
-  color: #ea580c;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 /* Bottom "Your team" Widget & Legal Footer */
@@ -316,7 +316,7 @@ body.crm-mode {
 }
 
 .crm-sidebar-legal-links a:hover {
-  color: #ea580c;
+  color: #1d4ed8;
 }
 
 /* ---------- COLLAPSED SIDEBAR STATE (68px) ---------- */
@@ -409,8 +409,8 @@ body.crm-mode {
 }
 
 .crm-top-search-input:focus {
-  border-color: #ea580c;
-  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
 }
 
 .crm-kbd-shortcut {
@@ -465,7 +465,7 @@ body.crm-mode {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ea580c;
+  background: #1d4ed8;
   border: 1.5px solid #ffffff;
 }
 
@@ -475,7 +475,7 @@ body.crm-mode {
   border-radius: 50%;
   overflow: hidden;
   border: 1px solid #e2e8f0;
-  background: #ffedd5;
+  background: #dbeafe;
   cursor: pointer;
 }
 
@@ -556,19 +556,19 @@ body.crm-mode {
   gap: 6px;
   height: 34px;
   padding: 0 16px;
-  background: #ea580c;
+  background: #1d4ed8;
   border: none;
   border-radius: 9px;
   font-size: 0.8rem;
   font-weight: 700;
   color: #ffffff;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(234, 88, 12, 0.25);
+  box-shadow: 0 2px 5px rgba(29, 78, 216, 0.25);
   transition: background 0.15s ease, transform 0.05s ease;
 }
 
 .crm-btn-orange:hover {
-  background: #c2410c;
+  background: #1e3a8a;
 }
 
 .crm-btn-orange svg {
@@ -661,8 +661,8 @@ body.crm-mode {
 }
 
 .crm-stage-tab.active {
-  background: #ffedd5;
-  color: #c2410c;
+  background: #dbeafe;
+  color: #1e3a8a;
   font-weight: 700;
 }
 
@@ -695,7 +695,7 @@ body.crm-mode {
 
 .crm-lead-search-box input:focus {
   background: #ffffff;
-  border-color: #ea580c;
+  border-color: #1d4ed8;
 }
 
 .crm-leads-scroll {
@@ -739,7 +739,7 @@ body.crm-mode {
   line-height: 1;
 }
 
-.dot-orange { color: #ea580c !important; }
+.dot-orange { color: #1d4ed8 !important; }
 .dot-gray { color: #94a3b8 !important; }
 .dot-green { color: #16a34a !important; }
 
@@ -798,7 +798,7 @@ body.crm-mode {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: #ea580c;
+  background: #1d4ed8;
   color: #ffffff;
   font-size: 1.15rem;
   font-weight: 800;
@@ -964,9 +964,9 @@ body.crm-mode {
 }
 
 .crm-lang-pill.active, .lang-pill-btn.active {
-  background: #fff7ed !important;
-  color: #c2410c !important;
-  border-color: #fed7aa !important;
+  background: #eff6ff !important;
+  color: #1e3a8a !important;
+  border-color: #bfdbfe !important;
   font-weight: 700 !important;
 }
 
@@ -1020,7 +1020,7 @@ body.crm-mode {
 }
 
 .crm-toggle-switch input:checked + .crm-toggle-slider {
-  background: #ea580c;
+  background: #1d4ed8;
 }
 
 .crm-toggle-switch input:checked + .crm-toggle-slider::after {
@@ -1044,7 +1044,7 @@ body.crm-mode {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #ea580c;
+  background: #1d4ed8;
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -1052,12 +1052,12 @@ body.crm-mode {
   font-weight: 800;
   padding: 9px 20px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);
   transition: all 0.15s ease;
 }
 
 .crm-btn-start-call:hover {
-  background: #c2410c;
+  background: #1e3a8a;
 }
 
 .crm-btn-start-call svg {
@@ -1201,21 +1201,21 @@ body.crm-mode {
 }
 
 .crm-chat-input:focus {
-  border-color: #ea580c;
+  border-color: #1d4ed8;
 }
 
 .crm-send-btn {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   border: none;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(234, 88, 12, 0.3);
+  box-shadow: 0 2px 5px rgba(29, 78, 216, 0.3);
   transition: transform 0.1s ease;
 }
 
@@ -1317,7 +1317,7 @@ body.crm-mode {
 .crm-recent-dur {
   font-size: 0.78rem;
   font-weight: 800;
-  color: #ea580c;
+  color: #1d4ed8;
 }
 
 .crm-recent-time {
@@ -1521,18 +1521,18 @@ body.crm-mode {
   gap: 6px;
   height: 34px;
   border-radius: 8px;
-  background: #ea580c;
+  background: #1d4ed8;
   color: #ffffff;
   border: none;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.25);
+  box-shadow: 0 1px 3px rgba(29, 78, 216, 0.25);
   transition: all 0.15s ease;
 }
 
 .crm-provider-test-btn:hover {
-  background: #c2410c;
+  background: #1e3a8a;
 }
 
 .crm-provider-config-btn {
@@ -1747,7 +1747,7 @@ body.crm-mode {
 }
 
 .crm-usage-pill:hover {
-  border-color: #fed7aa;
+  border-color: #bfdbfe;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -1762,7 +1762,7 @@ body.crm-mode {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
   color: #ffffff;
   border: none;
   font-size: 14px;
@@ -1783,7 +1783,7 @@ body.crm-mode {
 }
 
 .crm-wallet-add-btn:hover {
-  background: #c2410c;
+  background: #1e3a8a;
   transform: scale(1.08);
 }
 
@@ -1841,7 +1841,7 @@ body.crm-mode {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #ea580c;
+  background: #1d4ed8;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -1914,8 +1914,8 @@ body.crm-mode {
   display: inline-block;
   font-size: 0.64rem;
   font-weight: 700;
-  color: #ea580c;
-  background: #ffedd5;
+  color: #1d4ed8;
+  background: #dbeafe;
   border-radius: 9999px;
   padding: 2px 8px;
 }
@@ -1959,12 +1959,12 @@ body.crm-mode {
 
 /* Optional Setup Reminder Card */
 .crm-setup-reminder-card {
-  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
-  border: 1.5px solid #fed7aa;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+  border: 1.5px solid #bfdbfe;
   border-radius: 16px;
   padding: 20px 24px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.08);
+  box-shadow: 0 4px 16px rgba(29, 78, 216, 0.08);
   position: relative;
 }
 
@@ -1979,7 +1979,7 @@ body.crm-mode {
   display: inline-block;
   font-size: 0.68rem;
   font-weight: 800;
-  color: #ea580c;
+  color: #1d4ed8;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 4px;
@@ -2025,8 +2025,8 @@ body.crm-mode {
 }
 
 .crm-setup-field input:focus {
-  border-color: #ea580c;
-  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
 }
 
 .crm-setup-actions {
@@ -2040,20 +2040,20 @@ body.crm-mode {
   align-items: center;
   gap: 8px;
   padding: 9px 20px;
-  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
   color: #ffffff;
   border: none;
   border-radius: 10px;
   font-size: 0.84rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25);
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.25);
   transition: all 0.15s ease;
 }
 
 .crm-btn-purple:hover, .crm-btn-orange:hover {
-  background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
-  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
   transform: translateY(-1px);
 }
 
@@ -2170,10 +2170,10 @@ body.crm-mode {
 }
 
 .crm-employee-card.active-closer {
-  border: 1.5px solid #fed7aa;
-  border-top: 4px solid #ea580c;
+  border: 1.5px solid #bfdbfe;
+  border-top: 4px solid #1d4ed8;
   background: linear-gradient(180deg, #fffbf7 0%, #ffffff 35%);
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.08);
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.08);
 }
 
 .crm-employee-card.inactive-closer {
@@ -2200,7 +2200,7 @@ body.crm-mode {
 .crm-employee-role {
   font-size: 0.74rem;
   font-weight: 600;
-  color: #ea580c;
+  color: #1d4ed8;
   line-height: 1.3;
 }
 
@@ -2258,4 +2258,13 @@ body.crm-mode {
   border-color: #a7f3d0;
   background: #ecfdf5;
   cursor: default;
+}
+
+/* ===== GeniusBot brand (26 Nov 2026): logo images in place of the old text marks ===== */
+img.crm-sidebar-logo-icon { width: 34px; height: 34px; object-fit: contain; }
+.crm-brand-wordmark { display: block; height: 22px; width: auto; max-width: 150px; object-fit: contain; }
+.brand-wrap .brand-logo-img { display: block; height: 40px; width: auto; max-width: 220px; object-fit: contain; }
+.footer-brand-logo { display: block; width: 220px; max-width: 100%; height: auto; margin-bottom: 10px; }
+@media (max-width: 640px) {
+  .brand-wrap .brand-logo-img { height: 32px; max-width: 170px; }
 }

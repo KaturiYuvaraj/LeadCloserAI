@@ -80,7 +80,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Telugu AI Caller & Lead Closer",
+    title="GeniusBot - AI Powered Auto Calling Solution",
     description="Natural language Multilingual AI calling agent to qualify and close software leads.",
     version="2.0.0",
     lifespan=lifespan,

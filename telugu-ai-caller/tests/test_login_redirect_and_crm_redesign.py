@@ -42,8 +42,8 @@ def test_crm_dashboard_renders_outpero_elements(client):
     html = resp.text
 
     # Sidebar Header & Brand
-    assert "LeadCloser" in html
-    assert "AI Voice Calling" in html
+    assert "GeniusBot" in html and "LeadCloser" not in html
+    assert "AI Auto Calling" in html
     assert "sidebarCollapseBtn" in html
 
     # Outpero Grouped Sections

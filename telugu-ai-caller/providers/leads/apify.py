@@ -129,7 +129,7 @@ class ApifyLeadProvider(BaseLeadDiscoveryProvider):
 
         async with httpx.AsyncClient(timeout=12.0, follow_redirects=True) as client:
             try:
-                resp = await client.get(clean_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) LeadCloser/2.0"})
+                resp = await client.get(clean_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) GeniusBot/2.0"})
                 if resp.status_code == 200:
                     html_content = resp.text
                     lower_content = html_content.lower()

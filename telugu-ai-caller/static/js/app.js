@@ -333,9 +333,9 @@ document.addEventListener("DOMContentLoaded", () => {
               techs.forEach(t => {
                 const tag = document.createElement("span");
                 tag.className = "badge-tag";
-                tag.style.background = "#fff7ed";
-                tag.style.color = "#c2410c";
-                tag.style.border = "1px solid #fed7aa";
+                tag.style.background = "#eff6ff";
+                tag.style.color = "#1e3a8a";
+                tag.style.border = "1px solid #bfdbfe";
                 tag.innerText = t;
                 enrichmentTechTags.appendChild(tag);
               });
@@ -1011,7 +1011,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (callId) {
       const open = document.createElement("button");
       open.textContent = "Open call";
-      open.style.cssText = "background:#ea580c;color:#fff;border:0;border-radius:8px;padding:5px 10px;cursor:pointer;font-weight:600;";
+      open.style.cssText = "background:#1d4ed8;color:#fff;border:0;border-radius:8px;padding:5px 10px;cursor:pointer;font-weight:600;";
       open.onclick = () => window.openCallDetails(callId);
       row.appendChild(open);
     }
@@ -1201,7 +1201,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div id="callNumberError" role="alert" style="color:#dc2626;font-size:13px;" hidden></div>
         <div style="display:flex;gap:8px;justify-content:flex-end;">
           <button type="button" id="callNumberCancel" style="background:#f4f4f5;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;">Cancel</button>
-          <button type="submit" style="background:#ea580c;color:#fff;border:0;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;">Call now</button>
+          <button type="submit" style="background:#1d4ed8;color:#fff;border:0;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;">Call now</button>
         </div>
       </form>`;
     document.body.appendChild(overlay);
@@ -1435,7 +1435,7 @@ document.addEventListener("DOMContentLoaded", () => {
         'weekly_cap_deferred': 'Weekly limit deferred',
       };
       const stageName = stageLabels[stage] || stage.replace(/_/g, ' ');
-      planHtml = `<div style="color: #c2410c; font-weight: 700;" title="${plan.reason || ''}">📅 Next AI call: ${dateFormatted} · ${stageName}</div>`;
+      planHtml = `<div style="color: #1e3a8a; font-weight: 700;" title="${plan.reason || ''}">📅 Next AI call: ${dateFormatted} · ${stageName}</div>`;
     }
 
     if (!planHtml && !waBadge) return '';
@@ -1471,7 +1471,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <tr>
           <td style="font-weight: 700; color: #0f172a; min-width: 180px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <div style="width: 32px; height: 32px; border-radius: 8px; background: #fff7ed; border: 1px solid #fed7aa; color: #ea580c; font-size: 0.82rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; font-size: 0.82rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                 🏢
               </div>
               <div>
@@ -1482,10 +1482,10 @@ document.addEventListener("DOMContentLoaded", () => {
           </td>
           <td style="min-width: 170px;">
             <div style="font-weight: 700; color: #1e293b; font-size: 0.84rem; display: flex; align-items: center; gap: 6px;">
-              <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ea580c;"></span>
+              <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #1d4ed8;"></span>
               <span>${ownerName}</span>
             </div>
-            <div style="font-size: 0.72rem; color: #ea580c; font-weight: 600; margin-top: 2px;">
+            <div style="font-size: 0.72rem; color: #1d4ed8; font-weight: 600; margin-top: 2px;">
               Key Decision Maker
             </div>
           </td>
@@ -1501,7 +1501,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <td style="min-width: 120px;">
             <div style="display: flex; flex-direction: column; gap: 2px;">
               <span style="font-weight: 800; font-size: 0.78rem; color: #0f172a;">
-                Score: <span style="color: #ea580c;">${lead.score || lead.lead_score || '—'}</span>
+                Score: <span style="color: #1d4ed8;">${lead.score || lead.lead_score || '—'}</span>
               </span>
               <span style="font-size: 0.72rem; color: #f59e0b; font-weight: 600;">
                 ★ ${lead.reviews || '0'} Reviews
@@ -1522,7 +1522,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </td>
           <td style="min-width: 140px;">
             <div style="display: flex; gap: 6px;">
-              <button class="crm-action-pill" onclick='window.callLeadNow(${leadJson})' title="Place a real phone call now" style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #ea580c; border-color: #fed7aa; background: #fff7ed; cursor: pointer;">
+              <button class="crm-action-pill" onclick='window.callLeadNow(${leadJson})' title="Place a real phone call now" style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; cursor: pointer;">
                 Call now 📞
               </button>
               <button class="crm-action-pill" onclick='window.openBusinessIntelModal(${leadJson})' style="padding: 4px 8px; height: 28px; font-size: 0.74rem; color: #0284c7; border-color: #bae6fd; background: #f0f9ff; cursor: pointer;" title="View Business & Decision Maker Intel">
@@ -1851,8 +1851,8 @@ document.addEventListener("DOMContentLoaded", () => {
       dropZone.addEventListener(eventName, (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZone.style.borderColor = "#ea580c";
-        dropZone.style.background = "#fff7ed";
+        dropZone.style.borderColor = "#1d4ed8";
+        dropZone.style.background = "#eff6ff";
       }, false);
     });
 
@@ -2067,10 +2067,10 @@ document.addEventListener("DOMContentLoaded", () => {
           <td><strong style="color: #0f172a;">${l.name || 'Unnamed Prospect'}</strong><br><span style="font-size: 0.72rem; color: #64748b;">${l.company || ''}</span></td>
           <td><span style="font-family: monospace; font-size: 0.8rem;">${l.phone || l.phone_e164}</span></td>
           <td><span class="crm-badge ${l.is_hot ? 'hot' : 'live'}" style="font-size: 0.72rem;">${l.last_call_stage || l.status || 'CALLBACK'}</span></td>
-          <td><span style="font-size: 0.78rem; color: #ea580c; font-weight: 600;">${l.callback_at || 'Today'}</span></td>
+          <td><span style="font-size: 0.78rem; color: #1d4ed8; font-weight: 600;">${l.callback_at || 'Today'}</span></td>
           <td><span style="font-size: 0.76rem; color: #64748b;">Day 1 Contact</span></td>
           <td>
-            <button class="crm-action-pill" onclick='window.selectLead(${JSON.stringify(l)}); window.switchCrmView("calling");' style="padding: 4px 10px; font-size: 0.74rem; cursor: pointer; color: #ea580c; border-color: #fed7aa; background: #fff7ed;">
+            <button class="crm-action-pill" onclick='window.selectLead(${JSON.stringify(l)}); window.switchCrmView("calling");' style="padding: 4px 10px; font-size: 0.74rem; cursor: pointer; color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff;">
               📞 Call Now
             </button>
           </td>
@@ -2130,7 +2130,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <td><span style="font-family: monospace; font-size: 0.78rem;">${o.order_id}</span></td>
           <td><span style="font-size: 0.78rem; font-weight: 600;">${o.invoice_number || 'INV-' + o.id}</span></td>
           <td><span style="font-size: 0.78rem;">${o.plan_name}</span></td>
-          <td><strong style="color: #ea580c;">₹${Number(o.amount_inr || 0).toFixed(2)}</strong></td>
+          <td><strong style="color: #1d4ed8;">₹${Number(o.amount_inr || 0).toFixed(2)}</strong></td>
           <td><span style="color: #059669; font-weight: 600;">+${o.minutes_credited} mins</span></td>
           <td><span class="crm-badge live" style="font-size: 0.72rem;">SUCCESS</span></td>
           <td><span style="font-size: 0.75rem; color: #64748b;">${o.created_at ? o.created_at.slice(0, 10) : 'Recent'}</span></td>
@@ -3020,12 +3020,12 @@ Please check your API keys or network connection in Settings.`);
 
     if (provider === "apollo") {
       if (titlesGroup) titlesGroup.style.display = "block";
-      if (labelApollo) { labelApollo.style.borderColor = "var(--primary)"; labelApollo.style.background = "#fff7ed"; }
+      if (labelApollo) { labelApollo.style.borderColor = "var(--primary)"; labelApollo.style.background = "#eff6ff"; }
       if (labelApify) { labelApify.style.borderColor = "var(--border-light)"; labelApify.style.background = "#ffffff"; }
     } else {
       if (titlesGroup) titlesGroup.style.display = "none";
       if (labelApollo) { labelApollo.style.borderColor = "var(--border-light)"; labelApollo.style.background = "#ffffff"; }
-      if (labelApify) { labelApify.style.borderColor = "var(--primary)"; labelApify.style.background = "#fff7ed"; }
+      if (labelApify) { labelApify.style.borderColor = "var(--primary)"; labelApify.style.background = "#eff6ff"; }
     }
   };
 
@@ -3627,7 +3627,7 @@ Would you like to open Integrations Settings now to configure Google Calendar OA
       const successBox = document.getElementById("calendarSuccessBox");
       const meetLinkText = document.getElementById("calendarMeetLinkText");
       if (successBox && meetLinkText) {
-        meetLinkText.innerHTML = `<strong>Google Meet URL:</strong> <a href="${meetLink}" target="_blank" style="color: #ea580c; text-decoration: underline;">${meetLink}</a>`;
+        meetLinkText.innerHTML = `<strong>Google Meet URL:</strong> <a href="${meetLink}" target="_blank" style="color: #1d4ed8; text-decoration: underline;">${meetLink}</a>`;
         successBox.style.display = "block";
       }
 
@@ -3689,11 +3689,11 @@ Lead updated to DEMO_BOOKED.`);
         const won = d.closed_won || 0;
 
         const stages = [
-          { name: "1. Discovered / Ingested Prospects", count: total, pct: 100, color: "#ea580c" },
+          { name: "1. Discovered / Ingested Prospects", count: total, pct: 100, color: "#1d4ed8" },
           { name: "2. Outbound Telephony Attempted", count: calls, pct: Math.min(Math.round((calls / total) * 100), 100), color: "#6366f1" },
           { name: "3. Conversed & Engaged (Voice)", count: connected, pct: Math.min(Math.round((connected / total) * 100), 100), color: "#0d9488" },
           { name: "4. Qualified Requirements & Budget", count: qualified, pct: Math.min(Math.round((qualified / total) * 100), 100), color: "#059669" },
-          { name: "5. Live Demos Scheduled (Google Meet)", count: demos, pct: Math.min(Math.round((demos / total) * 100), 100), color: "#f97316" },
+          { name: "5. Live Demos Scheduled (Google Meet)", count: demos, pct: Math.min(Math.round((demos / total) * 100), 100), color: "#2563eb" },
           { name: "6. Closed Won (High-Ticket Software)", count: won, pct: Math.min(Math.round((won / total) * 100), 100), color: "#7c3aed" }
         ];
 
@@ -3756,7 +3756,7 @@ Lead updated to DEMO_BOOKED.`);
         const totalObj = Object.values(d.objections).reduce((a, b) => a + b, 0) || 1;
         const objItems = [
           { name: "Pricing / High Budget Constraint", count: d.objections.pricing || 0, strategy: "AI pitches milestone flex-payments", color: "#d97706" },
-          { name: "Already Have Website / App In-House", count: d.objections.existing_solution || 0, strategy: "AI offers 5-min free performance audit", color: "#ea580c" },
+          { name: "Already Have Website / App In-House", count: d.objections.existing_solution || 0, strategy: "AI offers 5-min free performance audit", color: "#1d4ed8" },
           { name: "Send Details on WhatsApp / Busy Now", count: d.objections.send_whatsapp_timing || 0, strategy: "AI triggers instant Meta Cloud WhatsApp PDF", color: "#059669" },
           { name: "Custom ERP & Specialized Features", count: d.objections.custom_requirements || 0, strategy: "AI locks tech lead architectural scoping", color: "#7c3aed" }
         ];
@@ -3827,7 +3827,7 @@ Lead updated to DEMO_BOOKED.`);
             <td style="padding: 10px 12px; color: var(--text-secondary);">${emp.role}</td>
             <td style="padding: 10px 12px;"><span class="badge-tag">${({'te-IN':'Telugu','hi-IN':'Hindi','en-IN':'English','ta-IN':'Tamil','kn-IN':'Kannada','ml-IN':'Malayalam'}[emp.language] || emp.language)}</span></td>
             <td style="padding: 10px 12px; font-weight: 600;">${emp.calls_handled}</td>
-            <td style="padding: 10px 12px; font-weight: 700; color: #ea580c;">${emp.demos_booked}</td>
+            <td style="padding: 10px 12px; font-weight: 700; color: #1d4ed8;">${emp.demos_booked}</td>
             <td style="padding: 10px 12px; font-weight: 700; color: #059669;">${emp.success_rate}%</td>
             <td style="padding: 10px 12px;">
               <span class="badge-tag ${emp.is_active ? 'live' : ''}">${emp.is_active ? 'Active' : emp.status.toUpperCase()}</span>
@@ -3889,9 +3889,9 @@ Lead updated to DEMO_BOOKED.`);
       if (btn) {
         if (d === Number(days)) {
           btn.classList.add("active-badge-btn");
-          btn.style.background = "#ea580c";
+          btn.style.background = "#1d4ed8";
           btn.style.color = "#ffffff";
-          btn.style.borderColor = "#ea580c";
+          btn.style.borderColor = "#1d4ed8";
         } else {
           btn.classList.remove("active-badge-btn");
           btn.style.background = "#ffffff";
@@ -3939,7 +3939,7 @@ Lead updated to DEMO_BOOKED.`);
       }
 
       // 3. Update Small Bar Lists
-      renderAnalyticsBarList("analyticsOutcomesList", data.outcomes, "#ea580c");
+      renderAnalyticsBarList("analyticsOutcomesList", data.outcomes, "#1d4ed8");
       renderAnalyticsBarList("analyticsLanguagesList", data.languages, "#0d9488");
       renderAnalyticsBarList("analyticsActionsList", data.actions, "#7c3aed");
     } catch (err) {
@@ -4054,10 +4054,10 @@ Lead updated to DEMO_BOOKED.`);
           };
           const stageName = stageLabels[plan.stage] || (plan.stage || '').replace(/_/g, ' ');
           planTextEl.innerText = `Next AI call: ${dateFormatted} · ${stageName}`;
-          planTextEl.style.color = "#c2410c";
+          planTextEl.style.color = "#1e3a8a";
         } else {
           planTextEl.innerText = "Next AI call: Scheduled";
-          planTextEl.style.color = "#c2410c";
+          planTextEl.style.color = "#1e3a8a";
         }
         if (planReasonEl) planReasonEl.innerText = plan.reason || "Automatic cadence follow-up";
       } else {
@@ -4283,7 +4283,7 @@ Lead updated to DEMO_BOOKED.`);
       if (streamBox) {
         streamBox.innerHTML = `
           <div style="padding: 10px 14px; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0; align-self: flex-start; max-width: 80%;">
-            <strong>AI Rep:</strong> నమస్కారం! నేను LeadCloser AI నుండి మాట్లాడుతున్నాను. మీ వ్యాపారం కోసం మేము ఎలా సహాయపడగలం?
+            <strong>AI Rep:</strong> నమస్కారం! నేను S P Associates నుండి మాట్లాడుతున్నాను. మీ వ్యాపారం కోసం మేము ఎలా సహాయపడగలం?
           </div>
         `;
       }
@@ -4297,7 +4297,7 @@ Lead updated to DEMO_BOOKED.`);
         if (data && streamBox) {
           const reply = data.reply || data.response || "Our AI sales employee is connected on the live audio channel.";
           const msgDiv = document.createElement("div");
-          msgDiv.style.cssText = "padding: 10px 14px; background: #fff7ed; border-radius: 8px; border: 1px solid #fed7aa; align-self: flex-start; max-width: 80%; margin-top: 8px;";
+          msgDiv.style.cssText = "padding: 10px 14px; background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe; align-self: flex-start; max-width: 80%; margin-top: 8px;";
           msgDiv.innerHTML = `<strong>AI Rep (${data.language || 'te-IN'}):</strong> ${reply}`;
           streamBox.appendChild(msgDiv);
         }
@@ -4307,9 +4307,9 @@ Lead updated to DEMO_BOOKED.`);
     } else {
       window._sandboxActive = false;
       if (btn) {
-        btn.style.background = "#fff7ed";
-        btn.style.borderColor = "#ea580c";
-        btn.style.color = "#ea580c";
+        btn.style.background = "#eff6ff";
+        btn.style.borderColor = "#1d4ed8";
+        btn.style.color = "#1d4ed8";
         btn.innerText = "🎙️";
       }
       if (status) status.innerText = "Call ended · Ready to test";

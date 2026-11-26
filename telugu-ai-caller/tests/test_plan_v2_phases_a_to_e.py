@@ -338,5 +338,5 @@ def test_phase_d_and_e_meetings_pipeline_board_todays_work_roi_and_digest():
 
     dd = client.get("/api/admin/daily-digest").json()
     assert dd["status"] == "success"
-    assert "LeadCloserAI Daily Owner Digest" in dd["digest_text"]
+    assert "GeniusBot Daily Owner Digest" in dd["digest_text"]
     assert dd["kpi_targets"]["rep_response_on_hot_minutes"] == 15

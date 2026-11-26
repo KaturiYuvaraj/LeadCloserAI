@@ -41,7 +41,7 @@ VALID_ROLES = {"owner", "admin", "manager", "salesperson", "member"}
 
 @router.get("/login", response_class=HTMLResponse)
 async def serve_login_page(request: Request):
-    """Serve the LeadCloser AI team login page. Redirects authenticated users to CRM."""
+    """Serve the GeniusBot team login page. Redirects authenticated users to CRM."""
     try:
         user = get_optional_user(request)
     except HTTPException:  # AUTH_STRICT=true raises 401 for a logged-out visitor: they need this page
