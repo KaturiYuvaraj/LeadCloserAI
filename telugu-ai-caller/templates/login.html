@@ -52,15 +52,20 @@
       -webkit-mask-image: radial-gradient(ellipse 70% 70% at 25% 45%, #000 20%, transparent 75%);
       pointer-events: none;
     }
-    .wave { position: fixed; left: 0; right: 0; bottom: 0; height: 30vh; pointer-events: none; z-index: 0; }
+    .wave { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; height: 30vh; pointer-events: none; z-index: 0; }  /* width: the wave stopped halfway across */
 
     /* ---------- layout: the same design on every screen ---------- */
+    /* desktop: the whole design is laid out once at 1160 x 860 and scaled to fit the window,
+       so every part keeps its place and proportions at any size or zoom (the script below sets --s) */
     .page {
-      position: relative;
+      position: absolute;
       z-index: 1;
-      height: 100%;
-      max-width: 1160px;
-      margin: 0 auto;
+      left: 50%;
+      top: 50%;
+      width: 1160px;
+      height: 860px;
+      transform: translate(-50%, -50%) scale(var(--s, 1));
+      transform-origin: center center;
       padding: 28px 40px 24px;
       display: flex;
       flex-direction: column;
@@ -98,7 +103,7 @@
     .robot {
       display: block;
       width: auto;
-      height: min(440px, calc(100vh - 330px));
+      height: 430px;
       max-width: 100%;
       object-fit: contain;
       object-position: left center;
@@ -249,7 +254,7 @@
     .feature svg { width: 32px; height: 32px; flex-shrink: 0; }
 
     /* ---------- shorter windows: the same design, a little tighter ---------- */
-    @media (max-height: 820px) {
+    @media (max-width: 960px) and (max-height: 820px) {
       .page { padding-top: 18px; padding-bottom: 16px; gap: 16px; }
       .brand-mark { height: 66px; }
       .brand-name { font-size: 36px; }
@@ -262,15 +267,15 @@
       .or { margin: 12px 0 9px; }
       .card { padding: 24px 34px 20px; }
     }
-    @media (max-height: 740px) { .features { display: none; } }
-    @media (max-height: 660px) {
+    @media (max-width: 960px) and (max-height: 740px) { .features { display: none; } }
+    @media (max-width: 960px) and (max-height: 660px) {
       .subtitle { display: none; }
       .brand-mark { height: 54px; }
       .brand-name { font-size: 32px; }
       h1 { margin: 10px 0 12px; font-size: 24px; }
       .hero .tags { display: none; }
     }
-    @media (max-height: 560px) {
+    @media (max-width: 960px) and (max-height: 560px) {
       .or { display: none; }
       .links { margin-top: 12px; }
       .brand-tag { display: none; }
@@ -278,7 +283,7 @@
       .btn-submit { height: 46px; }
     }
 
-    @media (max-height: 460px) {  /* phones turned sideways */
+    @media (max-width: 960px) and (max-height: 460px) {  /* phones turned sideways */
       .page { padding-top: 10px; padding-bottom: 10px; }
       .brand-mark { display: none; }
       .brand-name { font-size: 28px; }
@@ -293,7 +298,7 @@
 
     /* ---------- narrow screens: tablets and phones, card in the middle ---------- */
     @media (max-width: 960px) {
-      .page { padding: 20px 16px; gap: 16px; }
+      .page { position: relative; left: auto; top: auto; width: auto; height: 100%; transform: none; padding: 20px 16px; gap: 16px; }
       .main { grid-template-columns: minmax(0, 1fr); gap: 16px; justify-items: center; }
       .hero { text-align: center; align-items: center; }
       .hero h2 { font-size: 28px; }
@@ -424,6 +429,19 @@
     </div>
   </div>
 
+  <script>
+    // desktop: scale the whole design to fit the window (same look at every size and browser zoom)
+    (function () {
+      var page = document.querySelector(".page");
+      function fit() {
+        if (window.innerWidth <= 960) { page.style.removeProperty("--s"); return; }
+        var s = Math.min(window.innerWidth / 1160, window.innerHeight / 860);
+        page.style.setProperty("--s", Math.min(s, 1.4).toFixed(4));
+      }
+      fit();
+      window.addEventListener("resize", fit);
+    })();
+  </script>
   <script>
     const form = document.getElementById("loginForm");
     const errBox = document.getElementById("loginErrorBox");
