@@ -1,0 +1,189 @@
+/* =====================================================================
+   GeniusBot homepage (26 Nov 2026): the login page's look on the landing page.
+   Dark-blue hero with teal glow, robot, glass cards, green-to-blue buttons.
+   Loaded last on the homepage only; the dashboard is not affected.
+   ===================================================================== */
+
+:root {
+  --gb-navy-900: #01122f;
+  --gb-navy-text: #0b1f4d;
+  --gb-blue: #1d4ed8;
+  --gb-blue-deep: #1e3a8a;
+  --gb-teal: #2ee6b0;
+  --gb-teal-2: #14c4a0;
+  --gb-gold: #f59e0b;
+  --gb-gold-2: #fbbf24;
+  --gb-glass: rgba(6, 34, 88, 0.42);
+  --gb-glass-border: rgba(148, 197, 255, 0.28);
+  --gb-gradient: linear-gradient(90deg, #19d39b 0%, #0e9fb4 42%, #1d4ed8 78%, #1e3a8a 100%);
+}
+
+body { background-color: #f6f8fc !important; }
+
+/* ---------- the dark backdrop behind the menu bar, hero and stats ---------- */
+.gb-hero-backdrop {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: var(--gb-hero-h, 1040px);
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 45% 50% at 100% 0%, rgba(20, 196, 160, 0.5), transparent 70%),
+    radial-gradient(ellipse 50% 60% at 72% 45%, rgba(29, 120, 255, 0.32), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 10% 20%, rgba(29, 78, 216, 0.35), transparent 70%),
+    linear-gradient(160deg, #013a86 0%, var(--gb-navy-900) 48%, #021c4a 100%);
+}
+.gb-hero-backdrop::before { /* faint circuit grid */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.06) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 70% 70% at 60% 40%, #000 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 60% 40%, #000 20%, transparent 75%);
+}
+.gb-hero-backdrop svg { position: absolute; left: 0; bottom: -1px; width: 100%; height: 190px; }
+.navbar, #viewLanding { position: relative; z-index: 2; }
+.navbar { z-index: 50 !important; }
+
+/* ---------- menu bar: dark glass ---------- */
+.navbar {
+  background: rgba(3, 24, 66, 0.62) !important;
+  border: 1px solid var(--gb-glass-border) !important;
+  box-shadow: 0 12px 30px rgba(0, 8, 30, 0.35) !important;
+}
+.gb-nav-brand { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.gb-nav-brand img { width: 46px; height: 38px; object-fit: contain; }
+.gb-nav-brand .gb-name {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  line-height: 1;
+}
+.gb-bot {
+  background: linear-gradient(180deg, var(--gb-gold-2) 0%, var(--gb-gold) 55%, #ea8a0c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.nav-link-item, .nav-link-item > span { color: rgba(236, 243, 255, 0.92) !important; }
+.nav-link-item:hover, .nav-link-item:hover > span { color: var(--gb-teal) !important; background: rgba(255, 255, 255, 0.06) !important; }
+.nav-link-item > svg { color: rgba(236, 243, 255, 0.8) !important; }
+.btn-nav-login { color: #ffffff !important; background: transparent !important; }
+.btn-nav-login:hover { color: var(--gb-teal) !important; }
+.btn-nav-trial {
+  background: var(--gb-gradient) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 8px 20px rgba(14, 116, 180, 0.4) !important;
+}
+.btn-nav-trial:hover { filter: brightness(1.06); }
+
+/* ---------- hero: left ---------- */
+.hero-wrapper { padding-top: 56px !important; }
+.hero-sales-pill {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--gb-glass-border) !important;
+  color: #e6efff !important;
+}
+.hero-sales-pill .soundwave-icon { color: var(--gb-teal) !important; }
+.hero-h1-headline {
+  color: #ffffff !important;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+}
+.hero-h1-headline .text-orange { color: var(--gb-teal) !important; }
+.hero-sparkle-star { color: var(--gb-teal) !important; }
+.hero-desc-p { color: rgba(226, 236, 255, 0.82) !important; }
+.hero-desc-p strong { color: #ffffff; }
+.btn-hero-dark-pill {
+  background: var(--gb-gradient) !important;
+  box-shadow: 0 14px 30px rgba(14, 116, 180, 0.4) !important;
+  padding: 14px 26px !important;
+}
+.btn-hero-dark-pill:hover { filter: brightness(1.06); }
+.btn-phone-orange-circle { background: #ffffff !important; color: var(--gb-blue) !important; box-shadow: none !important; }
+.btn-hero-white-pill {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+  padding: 14px 26px !important;
+}
+.btn-hero-white-pill svg { fill: #ffffff !important; }
+.btn-hero-white-pill:hover { background: rgba(255, 255, 255, 0.16) !important; }
+.hero-checklist-row { color: rgba(226, 236, 255, 0.85) !important; }
+.check-orange { color: var(--gb-teal) !important; }
+
+/* ---------- hero: right (robot + glass cards) ---------- */
+.hero-visual-col { min-height: 520px !important; }
+.gb-hero-robot {
+  display: block;
+  width: min(100%, 520px);
+  height: auto;
+  margin: 0 auto;
+  filter: drop-shadow(0 0 40px rgba(46, 230, 176, 0.18));
+  animation: gbFloat 6s ease-in-out infinite alternate;
+}
+@keyframes gbFloat { from { transform: translateY(-6px); } to { transform: translateY(6px); } }
+.floating-calling-pod {
+  left: 14% !important;
+  top: 78% !important;
+  width: 210px !important;
+  background: rgba(6, 34, 88, 0.6) !important;
+  border: 1px solid var(--gb-glass-border) !important;
+  box-shadow: 0 20px 45px rgba(0, 10, 40, 0.45) !important;
+}
+.pod-wave-bar { background: linear-gradient(180deg, var(--gb-teal) 0%, #22b8e6 100%) !important; }
+.pod-agent-title { color: #ffffff !important; }
+.pod-agent-subtitle { color: rgba(226, 236, 255, 0.75) !important; }
+.pod-action-circle { background: rgba(255, 255, 255, 0.12) !important; border-color: var(--gb-glass-border) !important; color: #ffffff !important; }
+.floating-3d-stack { right: -10px !important; }
+.floating-3d-card {
+  background: rgba(6, 34, 88, 0.55) !important;
+  border: 1px solid var(--gb-glass-border) !important;
+  box-shadow: 0 10px 25px rgba(0, 10, 40, 0.35) !important;
+}
+.floating-3d-card:hover { background: rgba(10, 50, 120, 0.75) !important; }
+.float-card-badge { background: rgba(46, 230, 176, 0.14) !important; border-color: rgba(46, 230, 176, 0.45) !important; color: var(--gb-teal) !important; }
+.float-card-label { color: #ffffff !important; }
+
+/* ---------- stats bar: glass, like the login page's features bar ---------- */
+.kpi-ribbon-card {
+  background: var(--gb-glass) !important;
+  border: 1px solid var(--gb-glass-border) !important;
+  box-shadow: 0 20px 50px rgba(0, 10, 40, 0.35) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  margin-bottom: 90px !important;
+}
+.kpi-metric-icon { color: var(--gb-teal) !important; }
+.kpi-metric-val { color: #ffffff !important; }
+.kpi-metric-lbl { color: rgba(226, 236, 255, 0.78) !important; }
+
+/* ---------- light sections below: same accents ---------- */
+.process-corner-plant { display: none !important; }
+.process-heading-h2, .section-title-h2, h2 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+.btn-explore-pill {
+  background: var(--gb-gradient) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 10px 24px rgba(14, 116, 180, 0.3) !important;
+}
+.saas-footer { background: linear-gradient(160deg, #021c4a 0%, var(--gb-navy-900) 60%, #013a86 100%) !important; border-top: 3px solid var(--gb-teal-2); }
+
+/* ---------- smaller screens ---------- */
+@media (max-width: 1024px) {
+  .floating-calling-pod { left: 50% !important; top: 88% !important; }
+  .floating-3d-stack { display: none !important; }
+}
+@media (max-width: 640px) {
+  .gb-nav-brand img { width: 36px; height: 30px; }
+  .gb-nav-brand .gb-name { font-size: 1.15rem; }
+  .hero-visual-col { min-height: 0 !important; }
+  .gb-hero-robot { width: 78%; }
+  .floating-calling-pod { display: none !important; }
+}

@@ -3883,6 +3883,7 @@ input[type="checkbox"] {
 
 </style>
   <link rel="stylesheet" href="/static/css/calling-station.css?v=1.6">
+  <link rel="stylesheet" href="/static/css/geniusbot-home.css?v=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -3891,9 +3892,27 @@ input[type="checkbox"] {
 </head>
 <body>
 
+  <!-- GeniusBot dark hero backdrop (sized to the hero by the script at the end of the page) -->
+  <div class="gb-hero-backdrop" aria-hidden="true">
+    <svg viewBox="0 0 1440 190" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="gbWaveTeal" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#16c9a2" stop-opacity="0.7" />
+          <stop offset="0.55" stop-color="#0b7fc0" stop-opacity="0.35" />
+          <stop offset="1" stop-color="#1d4ed8" stop-opacity="0.2" />
+        </linearGradient>
+      </defs>
+      <path d="M0,70 C240,10 470,20 720,80 C960,135 1200,140 1440,85 L1440,190 L0,190 Z" fill="url(#gbWaveTeal)" />
+      <path d="M0,130 C300,85 560,95 800,135 C1040,170 1240,165 1440,135 L1440,190 L0,190 Z" fill="#f6f8fc" />
+    </svg>
+  </div>
+
   <header class="navbar">
     <div class="brand-wrap" onclick="window.switchMainTab('landing')">
-      <img class="brand-logo-img" src="/static/img/geniusbot-wordmark.png" alt="GeniusBot - AI Powered Auto Calling Solution">
+      <span class="gb-nav-brand" title="GeniusBot - AI Powered Auto Calling Solution">
+        <img src="/static/img/geniusbot-mark.png" alt="">
+        <span class="gb-name">Genius<span class="gb-bot">Bot</span></span>
+      </span>
     </div>
 
     <!-- Center Navigation Links (Product ⌵, Voices, Pricing, Contact, Docs, API) -->
@@ -4009,7 +4028,7 @@ input[type="checkbox"] {
         <!-- Right Column: 3D Architectural Scene with Floating Pod & Tilted Cards -->
         <div class="hero-visual-col">
           <!-- Realistic 3D Archway Render Backdrop -->
-          <img src="/static/img/hero-archway.jpg" alt="AI Voice Architecture" class="hero-archway-backdrop" />
+          <img src="/static/img/geniusbot-robot.png" alt="GeniusBot AI calling assistant" class="gb-hero-robot" />
 
           <!-- Center Floating Frosted Glass Calling Pod -->
           <div class="floating-calling-pod">
@@ -4114,7 +4133,6 @@ input[type="checkbox"] {
       <!-- ============================================================= -->
       <section class="process-section-wrap">
         <!-- Corner Plant & Stones Asset (Matching Reference) -->
-        <img src="/static/img/corner-plant.jpg" alt="Botanical Corner Accent" class="process-corner-plant" />
 
         <div style="z-index: 2;">
           <h2 class="process-heading-h2">
@@ -4787,6 +4805,21 @@ input[type="checkbox"] {
       };
       window.addEventListener('scroll', onScroll, { passive: true });
       onScroll();
+    })();
+  </script>
+  <script>
+    // the dark backdrop covers the menu bar, the hero and the stats bar
+    (function () {
+      function sizeBackdrop() {
+        var kpi = document.querySelector(".kpi-ribbon-card");
+        var bg = document.querySelector(".gb-hero-backdrop");
+        if (!kpi || !bg) return;
+        var bottom = kpi.getBoundingClientRect().top + window.scrollY + kpi.offsetHeight;
+        bg.style.setProperty("--gb-hero-h", Math.round(bottom + 110) + "px");
+      }
+      window.addEventListener("load", sizeBackdrop);
+      window.addEventListener("resize", sizeBackdrop);
+      document.addEventListener("DOMContentLoaded", sizeBackdrop);
     })();
   </script>
 </body>
