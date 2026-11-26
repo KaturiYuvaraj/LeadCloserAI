@@ -269,3 +269,10 @@ img, svg, video { max-width: 100%; }
   .hero-h1-headline { font-size: 2rem !important; }
   .gb-hero-robot { width: min(45%, 260px); }
 }
+
+/* menu bar after scrolling: stays dark (an old rule turned it white, and the white links vanished) */
+.navbar.scrolled {
+  background: rgba(3, 24, 66, 0.92) !important;
+  border-color: var(--gb-glass-border) !important;
+  box-shadow: 0 14px 34px rgba(0, 8, 30, 0.35) !important;
+}
