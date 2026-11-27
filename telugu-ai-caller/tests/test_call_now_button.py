@@ -27,7 +27,7 @@ def api(queue, monkeypatch):
     monkeypatch.setattr(queue, "start", lambda: None)
     credits.clear("test")
     client = TestClient(main.app)
-    client.headers["Authorization"] = "Bearer " + create_access_token(1, 1, "admin@leadcloser.ai", "owner")
+    client.headers["Authorization"] = "Bearer " + create_access_token(1, 1, "admin@geniusbot.co.in", "owner")
     yield client
     credits.clear("test")
 
@@ -107,7 +107,7 @@ def test_no_consent_needs_the_admins_explicit_confirmation(api, queue):
     done = api.post(f"/api/dialer/call-now/{lead}", json={"consent_confirmed": True}).json()
     assert done["success"] and done["status"] == "queued"
     # the consent record names who confirmed it, not a made-up campaign
-    assert lead_row(lead).consent_source.startswith("confirmed_by admin@leadcloser.ai ")
+    assert lead_row(lead).consent_source.startswith("confirmed_by admin@geniusbot.co.in ")
 
 
 def test_opted_out_lead_is_never_called(api, queue):
@@ -213,7 +213,7 @@ def test_legacy_outbound_route_needs_login_and_a_lead_when_vobiz_is_the_phone_li
     monkeypatch.setenv("DIALER_PROVIDER", "vobiz")
     client = TestClient(main.app)
     assert client.post("/api/call/outbound", json={"phone": "+919812300816"}).status_code == 401
-    client.headers["Authorization"] = "Bearer " + create_access_token(1, 1, "admin@leadcloser.ai", "owner")
+    client.headers["Authorization"] = "Bearer " + create_access_token(1, 1, "admin@geniusbot.co.in", "owner")
     # no lead_id: it must not turn a raw number into a lead and dial it
     assert client.post("/api/call/outbound", json={"phone": "+919812300816"}).status_code == 400
     session = SessionLocal()

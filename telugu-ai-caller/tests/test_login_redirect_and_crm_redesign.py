@@ -18,7 +18,7 @@ def test_crm_redirects_unauthenticated_to_login(client):
 
 def test_login_page_redirects_authenticated_to_crm(client):
     """Authenticated user opening /login must be redirected directly to /crm."""
-    token = create_access_token(user_id=1, email="admin@leadcloser.ai", role="owner", account_id=1)
+    token = create_access_token(user_id=1, email="admin@geniusbot.co.in", role="owner", account_id=1)
     resp = client.get("/login", cookies={"lc_access_token": token}, follow_redirects=False)
     assert resp.status_code == 302
     assert resp.headers.get("location") == "/crm"
@@ -26,7 +26,7 @@ def test_login_page_redirects_authenticated_to_crm(client):
 
 def test_login_api_returns_token_and_crm_access(client):
     """POST /api/auth/login validates credentials and sets session cookie."""
-    resp = client.post("/api/auth/login", json={"email": "admin@leadcloser.ai", "password": "admin123"})
+    resp = client.post("/api/auth/login", json={"email": "admin@geniusbot.co.in", "password": "admin123"})
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True
@@ -36,7 +36,7 @@ def test_login_api_returns_token_and_crm_access(client):
 
 def test_crm_dashboard_renders_outpero_elements(client):
     """CRM shell renders Outpero layout: brand, sections, topbar telemetry, and account dropdown."""
-    token = create_access_token(user_id=1, email="admin@leadcloser.ai", role="owner", account_id=1)
+    token = create_access_token(user_id=1, email="admin@geniusbot.co.in", role="owner", account_id=1)
     resp = client.get("/crm", cookies={"lc_access_token": token})
     assert resp.status_code == 200
     html = resp.text
@@ -82,7 +82,7 @@ def test_crm_dashboard_renders_outpero_elements(client):
 
 def test_save_quick_setup_profile(client):
     """Optional setup reminder saves business profile without mandatory blocking page."""
-    token = create_access_token(user_id=1, email="admin@leadcloser.ai", role="owner", account_id=1)
+    token = create_access_token(user_id=1, email="admin@geniusbot.co.in", role="owner", account_id=1)
     resp = client.post(
         "/api/profile",
         json={

@@ -20,7 +20,7 @@ def client():
 def test_login_returns_must_change_password_when_default_hash(client):
     """Seeded admin using placeholder hash returns must_change_password=True on login."""
     resp = client.post("/api/auth/login", json={
-        "email": "admin@leadcloser.ai",
+        "email": "admin@geniusbot.co.in",
         "password": "admin123"
     })
     assert resp.status_code == 200
@@ -38,7 +38,7 @@ def test_set_password_page_route(client):
     assert "/login" in resp_unauth.headers["location"]
 
     # Authenticated with placeholder hash
-    token = create_access_token(user_id=1, email="admin@leadcloser.ai", role="owner", account_id=1)
+    token = create_access_token(user_id=1, email="admin@geniusbot.co.in", role="owner", account_id=1)
     resp_auth = client.get("/set-password", cookies={"lc_access_token": token})
     assert resp_auth.status_code == 200
     assert "Set Your Secure Password" in resp_auth.text
@@ -47,7 +47,7 @@ def test_set_password_page_route(client):
 
 def test_change_password_validations(client):
     """Validation guards on current password, length, and presence."""
-    token = create_access_token(user_id=1, email="admin@leadcloser.ai", role="owner", account_id=1)
+    token = create_access_token(user_id=1, email="admin@geniusbot.co.in", role="owner", account_id=1)
     headers = {"Authorization": f"Bearer {token}"}
 
     # Missing fields
@@ -86,7 +86,7 @@ def test_change_password_success_revokes_default_passwords(client):
     try:
         # Verify default password works before change
         resp_before = client.post("/api/auth/login", json={
-            "email": "admin@leadcloser.ai",
+            "email": "admin@geniusbot.co.in",
             "password": "admin123"
         })
         assert resp_before.status_code == 200
@@ -104,14 +104,14 @@ def test_change_password_success_revokes_default_passwords(client):
         # Try default passwords -> all must fail with 401
         for default_pw in ["admin123", "admin@123", "password", "spassociates"]:
             failed_resp = client.post("/api/auth/login", json={
-                "email": "admin@leadcloser.ai",
+                "email": "admin@geniusbot.co.in",
                 "password": default_pw
             })
             assert failed_resp.status_code == 401, f"Default password {default_pw} should be revoked!"
 
         # Login with the new password -> must succeed with must_change_password=False
         success_resp = client.post("/api/auth/login", json={
-            "email": "admin@leadcloser.ai",
+            "email": "admin@geniusbot.co.in",
             "password": new_secret
         })
         assert success_resp.status_code == 200
@@ -130,7 +130,7 @@ def test_change_password_success_revokes_default_passwords(client):
 
 def test_team_crud_for_settings_ui(client):
     """List team members, invite new colleague, and remove team member."""
-    token = create_access_token(user_id=1, email="admin@leadcloser.ai", role="owner", account_id=1)
+    token = create_access_token(user_id=1, email="admin@geniusbot.co.in", role="owner", account_id=1)
     headers = {"Authorization": f"Bearer {token}"}
 
     # 1. List team

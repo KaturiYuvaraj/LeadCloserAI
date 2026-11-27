@@ -34,7 +34,7 @@ def test_empty_call_fields_render_neutral_placeholders(client, monkeypatch):
     ]
     monkeypatch.setattr(pages_mod, "get_call_history", lambda *args, **kwargs: mock_calls)
 
-    token = create_access_token(user_id=1, email="admin@leadcloser.ai", role="owner", account_id=1)
+    token = create_access_token(user_id=1, email="admin@geniusbot.co.in", role="owner", account_id=1)
     resp = client.get("/crm", cookies={"lc_access_token": token})
     assert resp.status_code == 200
     html = resp.text

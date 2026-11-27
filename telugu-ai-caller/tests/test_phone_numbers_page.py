@@ -22,7 +22,7 @@ def client():
 
 @pytest.fixture
 def auth_headers():
-    token = create_access_token(user_id=1, email="admin@leadcloser.ai", role="owner", account_id=1)
+    token = create_access_token(user_id=1, email="admin@geniusbot.co.in", role="owner", account_id=1)
     return {"Authorization": f"Bearer {token}"}
 
 

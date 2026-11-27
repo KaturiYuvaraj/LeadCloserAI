@@ -1,7 +1,7 @@
 """
 Sets a new password for a dashboard login, when it has been forgotten. Run it on the server:
 
-    venv\\Scripts\\python.exe scripts\\reset_password.py admin@leadcloser.ai
+    venv\\Scripts\\python.exe scripts\\reset_password.py admin@geniusbot.co.in
 
 The password is typed at a hidden prompt (nothing appears while typing), so it never reaches a
 chat, a log or the command history. Only its scrambled form is stored.

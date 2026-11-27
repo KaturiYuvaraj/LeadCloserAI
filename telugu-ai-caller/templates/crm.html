@@ -3522,8 +3522,8 @@ input[type="checkbox"] {
                 </div>
                 <div class="crm-account-meta">
                   <span class="crm-account-title">Account</span>
-                  <span class="crm-account-email" title="{{ current_user.email if current_user else 'katuriyuvaraj@gmail.com' }}">
-                    {{ current_user.email if current_user else 'katuriyuvaraj@gmail.com' }}
+                  <span class="crm-account-email" title="{{ current_user.email if current_user else 'Account' }}">
+                    {{ current_user.email if current_user else 'Account' }}
                   </span>
                 </div>
                 <svg class="crm-account-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -3533,7 +3533,7 @@ input[type="checkbox"] {
               <div class="crm-account-dropdown" id="crmAccountDropdown" style="display: none;">
                 <div class="crm-account-dropdown-header">
                   <div class="crm-dropdown-user-name">{{ current_user.full_name or 'Account Owner' if current_user else 'Sales Director' }}</div>
-                  <div class="crm-dropdown-user-email">{{ current_user.email if current_user else 'katuriyuvaraj@gmail.com' }}</div>
+                  <div class="crm-dropdown-user-email">{{ current_user.email if current_user else 'Account' }}</div>
                   <span class="crm-role-tag">{{ current_user.role|upper if current_user else 'OWNER' }}</span>
                 </div>
                 <div class="crm-account-dropdown-divider"></div>

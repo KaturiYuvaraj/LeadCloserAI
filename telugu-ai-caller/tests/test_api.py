@@ -69,7 +69,7 @@ class CrmApiTests(unittest.IsolatedAsyncioTestCase):
         try:
             response = await self.client.post(
                 "/api/call/outbound", json={"phone": "+919999999999", "lead_id": 1},
-                headers={"Authorization": "Bearer " + create_access_token(1, 1, "admin@leadcloser.ai", "owner")},
+                headers={"Authorization": "Bearer " + create_access_token(1, 1, "admin@geniusbot.co.in", "owner")},
             )
         finally:
             telephony_service.initiate_outbound_call = original

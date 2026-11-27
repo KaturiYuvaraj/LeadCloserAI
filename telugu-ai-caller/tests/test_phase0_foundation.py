@@ -37,16 +37,16 @@ def test_login_page_and_unauthenticated_me():
 
 
 def test_login_and_role_permissions():
-    # 1. Login as seeded owner (admin@leadcloser.ai)
+    # 1. Login as seeded owner (admin@geniusbot.co.in)
     login_resp = client.post(
         "/api/auth/login",
-        json={"email": "admin@leadcloser.ai", "password": "admin123"},
+        json={"email": "admin@geniusbot.co.in", "password": "admin123"},
     )
     assert login_resp.status_code == 200
     data = login_resp.json()
     assert data["success"] is True
     token = data["access_token"]
-    assert data["user"]["email"] == "admin@leadcloser.ai"
+    assert data["user"]["email"] == "admin@geniusbot.co.in"
 
     # 2. Verify /api/auth/me with Bearer token
     me_resp = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
@@ -110,7 +110,7 @@ def test_multi_account_isolation():
         session.close()
 
     # Account 1 token
-    token_a = create_access_token(1, 1, "admin@leadcloser.ai", "owner")
+    token_a = create_access_token(1, 1, "admin@geniusbot.co.in", "owner")
 
     # Create a lead in Account A
     phone_a = f"+919848{uuid.uuid4().int % 1000000:06d}"

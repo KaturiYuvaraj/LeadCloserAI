@@ -88,7 +88,7 @@ def run_migration():
         user = User(
             id=1,
             account_id=account.id,
-            email="admin@leadcloser.ai",
+            email="admin@geniusbot.co.in",
             password_hash="pbkdf2:sha256:default_hash_for_admin",
             role="owner"
         )

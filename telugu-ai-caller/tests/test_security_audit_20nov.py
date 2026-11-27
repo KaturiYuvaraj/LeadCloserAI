@@ -135,6 +135,6 @@ def test_campaign_can_choose_the_engine(monkeypatch):
         return True
     monkeypatch.setattr(campaigns.campaign_service, "start_campaign", fake_start)
     c = TestClient(main.app)
-    c.headers["Authorization"] = "Bearer " + create_access_token(1, 1, "admin@leadcloser.ai", "owner")
+    c.headers["Authorization"] = "Bearer " + create_access_token(1, 1, "admin@geniusbot.co.in", "owner")
     assert c.post("/api/campaign/start", json={"target": "new", "engine": "pipecat", "consent_confirmed": True}).status_code == 200
     assert chosen == ["pipecat"]

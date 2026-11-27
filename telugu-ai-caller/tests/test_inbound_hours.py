@@ -86,7 +86,7 @@ def test_incoming_call_inside_ai_hours_and_our_own_calls_reach_the_ai(night_shif
 def test_dashboard_api_saves_and_reports():
     assert TestClient(main.app).get("/api/inbound/hours").status_code == 401
     client = TestClient(main.app)
-    client.headers["Authorization"] = "Bearer " + create_access_token(1, 1, "admin@leadcloser.ai", "owner")
+    client.headers["Authorization"] = "Bearer " + create_access_token(1, 1, "admin@geniusbot.co.in", "owner")
     r = client.post("/api/inbound/hours", json={"enabled": True, "start": "20:00", "end": "10:00",
                                                 "transfer_number": "7780236242"})
     assert r.status_code == 200, r.text
