@@ -4,7 +4,7 @@ AI Employees Router - Persona Management, Draft Generation & Lifecycle
 from typing import Dict, Any, Optional
 from fastapi import Depends
 from fastapi import APIRouter, HTTPException, Request
-from core.auth import get_request_account_id, login_when_strict
+from core.auth import get_current_user, get_request_account_id, login_when_strict
 
 from database import (
     get_all_ai_employees,
@@ -18,6 +18,15 @@ from database import (
 from services.employee_builder import employee_builder
 
 router = APIRouter(tags=["employees"], dependencies=[Depends(login_when_strict)])
+
+
+def _own(emp_id: int, user: Dict[str, Any]) -> Dict[str, Any]:
+    """The employee, only if it belongs to the signed-in company (28 Nov: any company's could be read,
+    edited, approved, activated or deleted). Another company's employee answers 404, as if it didn't exist."""
+    emp = get_ai_employee_by_id(emp_id, account_id=int(user["account_id"]))
+    if not emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return emp
 
 
 @router.get("/api/employees")
@@ -49,11 +58,9 @@ async def api_generate_employee_draft(payload: Dict[str, Any]):
 
 
 @router.post("/api/employees")
-async def api_create_employee(payload: Dict[str, Any], request: Request):
-    acc_id = get_request_account_id(request) or 1
-    if "account_id" not in payload:
-        payload["account_id"] = acc_id
-    """Create a new AI employee (draft or approved)."""
+async def api_create_employee(payload: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):
+    """Create a new AI employee (draft or approved) in the signed-in company."""
+    payload["account_id"] = int(user["account_id"])  # never from the request
     if not payload.get("name") or not payload.get("greeting"):
         raise HTTPException(status_code=400, detail="Name and greeting are required.")
 
@@ -62,41 +69,31 @@ async def api_create_employee(payload: Dict[str, Any], request: Request):
 
 
 @router.get("/api/employees/{emp_id}")
-async def api_get_employee(emp_id: int):
-    emp = get_ai_employee_by_id(emp_id)
-    if not emp:
-        raise HTTPException(status_code=404, detail="Employee not found")
-    return {"employee": emp}
+async def api_get_employee(emp_id: int, user: Dict[str, Any] = Depends(get_current_user)):
+    return {"employee": _own(emp_id, user)}
 
 
 @router.put("/api/employees/{emp_id}")
-async def api_update_employee(emp_id: int, payload: Dict[str, Any], request: Request):
-    acc_id = get_request_account_id(request)
-    emp = get_ai_employee_by_id(emp_id)
-    if not emp:
-        raise HTTPException(status_code=404, detail="Employee not found")
-
+async def api_update_employee(emp_id: int, payload: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):
+    _own(emp_id, user)
+    payload.pop("account_id", None)  # an employee cannot be moved to another company
     success = update_ai_employee(emp_id, payload)
     return {"success": success, "employee": get_ai_employee_by_id(emp_id)}
 
 
 @router.post("/api/employees/{emp_id}/approve")
-async def api_approve_employee(emp_id: int):
+async def api_approve_employee(emp_id: int, user: Dict[str, Any] = Depends(get_current_user)):
     """Approve a draft employee so it can be activated in production."""
-    emp = get_ai_employee_by_id(emp_id)
-    if not emp:
-        raise HTTPException(status_code=404, detail="Employee not found")
+    _own(emp_id, user)
 
     update_ai_employee(emp_id, {"status": "approved"})
     return {"success": True, "employee": get_ai_employee_by_id(emp_id)}
 
 
 @router.post("/api/employees/{emp_id}/activate")
-async def api_activate_employee(emp_id: int):
-    """Set an employee as the primary active caller for inbound/outbound sales."""
-    emp = get_ai_employee_by_id(emp_id)
-    if not emp:
-        raise HTTPException(status_code=404, detail="Employee not found")
+async def api_activate_employee(emp_id: int, user: Dict[str, Any] = Depends(get_current_user)):
+    """Set an employee as the company's primary active caller for inbound/outbound sales."""
+    emp = _own(emp_id, user)
 
     if emp.get("status") == "draft":
         raise HTTPException(status_code=400, detail="Draft employee must be reviewed and approved by an administrator before activation.")
@@ -110,26 +107,21 @@ async def api_activate_employee(emp_id: int):
 
 
 @router.delete("/api/employees/{emp_id}")
-async def api_delete_employee(emp_id: int, request: Request):
-    acc_id = get_request_account_id(request)
-    emp = get_ai_employee_by_id(emp_id)
-    if not emp:
-        raise HTTPException(status_code=404, detail="Employee not found")
+async def api_delete_employee(emp_id: int, user: Dict[str, Any] = Depends(get_current_user)):
+    emp = _own(emp_id, user)
     if emp.get("is_active"):
         raise HTTPException(status_code=400, detail="Cannot delete currently active employee. Activate another employee first.")
 
-    delete_ai_employee(emp_id)
+    delete_ai_employee(emp_id, account_id=int(user["account_id"]))
     return {"success": True, "message": "Employee deleted successfully."}
 
 
 
 @router.post("/api/employees/{emp_id}/duplicate")
-async def api_duplicate_employee(emp_id: int, request: Request):
-    """Duplicate an existing AI employee persona with a '(Copy)' suffix."""
-    acc_id = get_request_account_id(request) or 1
-    emp = get_ai_employee_by_id(emp_id)
-    if not emp:
-        raise HTTPException(status_code=404, detail="Employee not found")
+async def api_duplicate_employee(emp_id: int, user: Dict[str, Any] = Depends(get_current_user)):
+    """Duplicate one of the company's AI employees with a '(Copy)' suffix."""
+    acc_id = int(user["account_id"])
+    emp = _own(emp_id, user)
 
     clone_payload = {
         "account_id": acc_id,
@@ -158,14 +150,13 @@ async def api_duplicate_employee(emp_id: int, request: Request):
 
 
 @router.post("/api/employees/{emp_id}/test")
-async def api_test_employee_voice(emp_id: int, payload: Optional[Dict[str, Any]] = None):
+async def api_test_employee_voice(emp_id: int, payload: Optional[Dict[str, Any]] = None,
+                                  user: Dict[str, Any] = Depends(get_current_user)):
     """
     Synthesize the employee's greeting or custom test phrase via Sarvam TTS
     and return base64-encoded audio for instant in-browser auditioning.
     """
-    emp = get_ai_employee_by_id(emp_id)
-    if not emp:
-        raise HTTPException(status_code=404, detail="Employee not found")
+    emp = _own(emp_id, user)
 
     text = (payload or {}).get("text") or emp.get("greeting") or "Hello, this is a voice test."
     lang = emp.get("primary_language", "te-IN")

@@ -75,3 +75,11 @@ async def async_client():
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
         yield client
+
+
+def platform_owner_headers():
+    """Sign in as the platform owner (S P Associates, account 1): shared controls such as the dialer queue,
+    the call engine and provider keys are for the platform owner only (28 Nov)."""
+    from core.auth import create_access_token
+    token = create_access_token(user_id=1, account_id=1, email="admin@geniusbot.co.in", role="owner")
+    return {"Authorization": f"Bearer {token}"}

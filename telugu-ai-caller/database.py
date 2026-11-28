@@ -1538,11 +1538,12 @@ def update_ai_employee(emp_id: int, updates: Dict[str, Any], account_id: Optiona
 def set_active_ai_employee(emp_id: int) -> bool:
     session = SessionLocal()
     try:
-        session.query(Employee).update({Employee.status: "approved"})
         emp = session.query(Employee).filter_by(id=emp_id).first()
         if not emp:
             session.rollback()
             return False
+        # only this company's other employees step down (28 Nov: it reset every company's employees)
+        session.query(Employee).filter(Employee.account_id == emp.account_id, Employee.status == "live")             .update({Employee.status: "approved"})
         emp.status = "live"
         session.commit()
         return True
@@ -1712,7 +1713,11 @@ def update_lead_enrichment(lead_id: int, enrichment_data: Dict[str, Any], extra:
 def get_daily_provider_usage(provider_name: str) -> float:
     session = SessionLocal()
     try:
-        today_start = datetime.combine(datetime.now().date(), time.min)
+        # the India day, in the database's UTC (29 Nov: local midnight against UTC times read 0 until 5:30 AM)
+        from datetime import timedelta, timezone as _tz
+        ist = _tz(timedelta(hours=5, minutes=30))
+        ist_midnight = datetime.combine(datetime.now(ist).date(), time.min, tzinfo=ist)
+        today_start = ist_midnight.astimezone(_tz.utc).replace(tzinfo=None)
         total = session.query(func.coalesce(func.sum(ProviderUsageLog.credits_used), 0.0)).filter(
             ProviderUsageLog.provider_name == provider_name,
             ProviderUsageLog.timestamp >= today_start
@@ -1812,7 +1817,8 @@ def get_api_key_by_token(token: str) -> Optional[Dict[str, Any]]:
             "rate_per_min": k.rate_per_min,
             "total_calls": k.total_calls,
             "total_minutes": k.total_minutes,
-            "status": k.status
+            "status": k.status,
+            "account_id": k.account_id,
         }
     finally:
         session.close()
@@ -1823,7 +1829,7 @@ def create_api_key(key_data: Dict[str, Any], account_id: int = 1) -> Dict[str, A
     try:
         import secrets
         raw_token = f"lc_live_{secrets.token_hex(16)}"
-        acc_id = int(key_data.get("account_id", account_id) or 1)
+        acc_id = int(account_id)  # never taken from the request: a customer could create keys in another account
         ak = ApiKey(
             account_id=acc_id,
             key_name=key_data.get("key_name", "Developer Key"),
@@ -1831,7 +1837,7 @@ def create_api_key(key_data: Dict[str, Any], account_id: int = 1) -> Dict[str, A
             company_name=key_data.get("company_name", "Enterprise Client"),
             api_key=raw_token,
             plan_tier=key_data.get("plan_tier", "Business Growth (₹5/min)"),
-            credits_inr=float(key_data.get("initial_credits_inr", 2500.0)),
+            credits_inr=0.0,  # credits come only from a verified payment, never with a new key
             rate_per_min=float(key_data.get("rate_per_min", 5.0)),
             status="active"
         )
@@ -1852,10 +1858,14 @@ def create_api_key(key_data: Dict[str, Any], account_id: int = 1) -> Dict[str, A
         session.close()
 
 
-def revoke_api_key(api_key_token: str) -> bool:
+def revoke_api_key(api_key_token: str = "", key_id: Optional[int] = None, account_id: Optional[int] = None) -> bool:
     session = SessionLocal()
     try:
-        ak = session.query(ApiKey).filter_by(api_key=api_key_token).first()
+        query = session.query(ApiKey)
+        query = query.filter_by(id=int(key_id)) if key_id is not None else query.filter_by(api_key=api_key_token)
+        if account_id is not None:
+            query = query.filter_by(account_id=int(account_id))
+        ak = query.first()
         if not ak:
             return False
         ak.status = "revoked"

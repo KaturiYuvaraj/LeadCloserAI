@@ -538,10 +538,14 @@ class CallQueue:
             session.close()
 
     # ------------------------------------------------------------------ status
-    def status(self) -> Dict[str, Any]:
+    def status(self, account_id: Optional[int] = None) -> Dict[str, Any]:
+        """The queue's state. With account_id: only that company's jobs and calls (a customer must not see
+        other companies' names and numbers); the event log has no company tag, so it is left out then."""
         session = SessionLocal()
         try:
             query = session.query(CallJob)
+            if account_id is not None:
+                query = query.filter(CallJob.account_id == int(account_id))
             if self.run_started_at:
                 query = query.filter(CallJob.created_at >= db_time(session, self.run_started_at - timedelta(seconds=5)))
             jobs = query.all()
@@ -577,7 +581,7 @@ class CallQueue:
             "outcomes": outcomes,
             "active_calls": active,
             "next_call_at": min(next_due).astimezone(IST).isoformat() if next_due else None,
-            "events": list(self.events)[-40:],
+            "events": list(self.events)[-40:] if account_id is None else [],
         }
 
 

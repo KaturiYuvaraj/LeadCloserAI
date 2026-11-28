@@ -217,9 +217,10 @@ def test_campaign_start_uses_real_queue_not_simulation():
     phone = f"+919611{uuid.uuid4().int % 1000000:06d}"
     lead_id = client.post("/api/leads", json={"name": "Queue Test Lead", "phone": phone}).json()["lead_id"]
 
+    from tests.conftest import platform_owner_headers  # the shared campaign queue is the platform owner's (28 Nov)
     start_resp = client.post(
         "/api/campaign/start",
-        json={"lead_ids": [lead_id], "consent_confirmed": True},
+        json={"lead_ids": [lead_id], "consent_confirmed": True}, headers=platform_owner_headers(),
     )
     assert start_resp.status_code == 200
     body = start_resp.json()
@@ -227,7 +228,7 @@ def test_campaign_start_uses_real_queue_not_simulation():
     assert body["mode"] == "phone"
     assert "provider" in body
 
-    status_resp = client.get("/api/campaign/status")
+    status_resp = client.get("/api/campaign/status", headers=platform_owner_headers())
     assert status_resp.status_code == 200
     assert status_resp.json()["mode"] == "phone"
 

@@ -4,7 +4,7 @@ Pages Router - Separate Landing Page (Homepage) and Dedicated CRM Dashboard
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
-from core.auth import get_optional_user, get_request_account_id
+from core.auth import get_optional_user, get_request_account_id, is_platform_admin
 from core.web import templates
 from database import (
     get_company_profile,
@@ -30,23 +30,41 @@ def _user_or_none(request: Request):
         return None
 
 
+# The public homepage shows these sample AI employees. It never reads a customer's records: before 28 Nov it
+# listed the AI employees stored in the database (prompts and all), so a company's private setup was public.
+SHOWCASE_EMPLOYEES = [
+    {"id": 1, "name": "Shreya - Real Estate Sales", "role": "Telugu property sales caller",
+     "description": "Calls property enquiries, shares project details and books site visits.",
+     "language": "te-IN", "voice_speaker": "pooja_te_conversation", "working_hours": "09:00 - 19:00",
+     "status": "live", "is_active": True,
+     "greeting": "నమస్కారం అండి! మీరు అడిగిన ఫ్లాట్ వివరాల కోసం కాల్ చేస్తున్నాను. ఇప్పుడు మాట్లాడవచ్చా?"},
+    {"id": 2, "name": "Kavya - Clinic Appointments", "role": "Hindi patient appointment assistant",
+     "description": "Confirms and reschedules appointments and answers common questions about the clinic.",
+     "language": "hi-IN", "voice_speaker": "kavya_hi_conversational", "working_hours": "08:00 - 20:00",
+     "status": "approved", "is_active": False,
+     "greeting": "नमस्ते! मैं क्लिनिक से बात कर रही हूँ। आपकी कल की अपॉइंटमेंट कन्फर्म करने के लिए कॉल किया है।"},
+    {"id": 3, "name": "Simran - Admissions Counsellor", "role": "English admissions caller",
+     "description": "Follows up course enquiries, explains fees and batches, and books counselling sessions.",
+     "language": "en-IN", "voice_speaker": "simran_en_sales", "working_hours": "10:00 - 19:00",
+     "status": "approved", "is_active": False,
+     "greeting": "Hello! This is Simran calling about the course you enquired about. Is this a good time to talk?"},
+    {"id": 4, "name": "Priya - Order Follow-up", "role": "Telugu customer follow-up caller",
+     "description": "Calls customers after an order to confirm delivery, collect feedback and offer repeat deals.",
+     "language": "te-IN", "voice_speaker": "kavitha_te_conversation", "working_hours": "09:30 - 18:30",
+     "status": "approved", "is_active": False,
+     "greeting": "నమస్కారం అండి! మీ ఆర్డర్ డెలివరీ అయిందా అని కనుక్కోవడానికి కాల్ చేస్తున్నాను."},
+]
+
+
 @router.get("/", response_class=HTMLResponse)
 async def serve_landing(request: Request):
-    """
-    Public SaaS Marketing Homepage (Outpero luxury architectural design).
-    Features AI voice synthesizer demo, 5 AI personas, feature highlights & pricing.
-    """
-    profile = get_company_profile()
-    api_keys = get_all_api_keys()
-    primary_key = get_primary_api_key()
-    employees = get_all_ai_employees()
-    active_emp = get_active_ai_employee()
+    """Public homepage: sample AI employees only, never a customer's data."""
     return templates.TemplateResponse(request, "index.html", {
-        "profile": profile,
-        "api_keys": api_keys,
-        "primary_key": primary_key,
-        "employees": employees,
-        "active_employee": active_emp
+        "profile": {},
+        "api_keys": [],
+        "primary_key": None,
+        "employees": SHOWCASE_EMPLOYEES,
+        "active_employee": SHOWCASE_EMPLOYEES[0],
     })
 
 
@@ -79,16 +97,18 @@ async def serve_crm(request: Request):
     if not current_user:
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url="/login?next=" + request.url.path, status_code=302)
-    account_id = get_request_account_id(request)
-    profile = get_company_profile()
+    # every lookup is limited to the signed-in company (28 Nov: these were not, so a new customer saw
+    # S P Associates' AI employees, API keys and orders)
+    account_id = int(current_user["account_id"])
+    profile = get_company_profile(account_id=account_id)
     leads = get_all_leads(account_id=account_id)
     calls = get_call_history(limit=20, account_id=account_id)
     outcome_summary = get_outcome_bucket_summary(account_id=account_id)
-    api_keys = get_all_api_keys()
-    primary_key = get_primary_api_key()
-    billing_orders = get_billing_orders()
-    employees = get_all_ai_employees()
-    active_emp = get_active_ai_employee()
+    api_keys = get_all_api_keys(account_id=account_id)
+    primary_key = get_primary_api_key(account_id=account_id)
+    billing_orders = get_billing_orders(account_id=account_id)
+    employees = get_all_ai_employees(account_id=account_id)
+    active_emp = get_active_ai_employee(account_id=account_id)
     phone_numbers = get_phone_numbers(account_id=account_id)
 
     import os
@@ -99,6 +119,8 @@ async def serve_crm(request: Request):
     vobiz_auth_id = os.getenv("VOBIZ_AUTH_ID", VOBIZ_AUTH_ID)
     vobiz_auth_id_masked = vobiz_auth_id[:4] + "****" + vobiz_auth_id[-4:] if len(vobiz_auth_id) > 8 else "Active"
     dialer_provider = os.getenv("DIALER_PROVIDER", DIALER_PROVIDER)
+    if not is_platform_admin(current_user):  # the platform's own provider accounts are for the platform owner only
+        vobiz_caller_id, sarvam_key_masked, vobiz_auth_id_masked = "", "Managed by GeniusBot", "Managed by GeniusBot"
 
     return templates.TemplateResponse(request, "crm.html", {
         "profile": profile,
@@ -134,12 +156,7 @@ _demo_audio: dict = {}
 
 
 def demo_text_allowed(text: str) -> bool:
-    if text in HOMEPAGE_DEMO_TEXTS:
-        return True
-    try:
-        return any((e.get("greeting") or "").strip() == text for e in get_all_ai_employees())
-    except Exception:
-        return False
+    return text in HOMEPAGE_DEMO_TEXTS or any(e["greeting"] == text for e in SHOWCASE_EMPLOYEES)
 
 
 @router.post("/api/tts/demo")

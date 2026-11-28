@@ -10,6 +10,7 @@ import unittest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from fastapi.testclient import TestClient
+from tests.conftest import platform_owner_headers
 from main import app
 from database import (
     create_lead,
@@ -24,7 +25,7 @@ from schemas.lead import UnifiedLead, LeadSource, LeadStatus, LeadPriority, Lead
 
 class LeadDiscoveryTests(unittest.TestCase):
     def setUp(self):
-        self.client = TestClient(app)
+        self.client = TestClient(app, headers=platform_owner_headers())
 
     def test_unconfigured_discovery_returns_clean_guidance(self):
         """

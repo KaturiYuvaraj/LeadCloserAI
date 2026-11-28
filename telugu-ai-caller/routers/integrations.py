@@ -4,7 +4,7 @@ Integrations Router - Third-Party Providers, Company Profile & Voice Testing
 from typing import Dict, Any
 from fastapi import Depends
 from fastapi import APIRouter, HTTPException, Response, Request
-from core.auth import get_request_account_id, login_when_strict
+from core.auth import get_request_account_id, login_when_strict, require_platform_admin
 from loguru import logger
 
 from config import DEFAULT_TTS_SPEAKER, DEFAULT_TTS_MODEL
@@ -54,7 +54,7 @@ async def api_test_tts(payload: Dict[str, Any]):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/integrations/providers")
+@router.get("/api/integrations/providers", dependencies=[Depends(require_platform_admin)])
 async def api_list_providers():
     """
     List all third-party providers with configuration status, activation, and recent test results.
@@ -81,7 +81,7 @@ def _resolve_provider_type(pt_str: str) -> ProviderType:
     return ProviderType(s)
 
 
-@router.post("/api/integrations/providers/{provider_type}/{provider_name}")
+@router.post("/api/integrations/providers/{provider_type}/{provider_name}", dependencies=[Depends(require_platform_admin)])
 async def api_update_provider(
     provider_type: str,
     provider_name: str,
@@ -128,7 +128,7 @@ async def api_update_provider(
     }
 
 
-@router.post("/api/integrations/providers/{provider_type}/{provider_name}/test")
+@router.post("/api/integrations/providers/{provider_type}/{provider_name}/test", dependencies=[Depends(require_platform_admin)])
 async def api_test_provider_connection(provider_type: str, provider_name: str):
     """Execute a live diagnostic connection test against the third-party provider API."""
     try:

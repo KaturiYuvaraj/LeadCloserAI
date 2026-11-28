@@ -12,6 +12,7 @@ from unittest.mock import patch, AsyncMock
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from fastapi.testclient import TestClient
+from tests.conftest import platform_owner_headers
 from main import app
 from database import (
     create_lead,
@@ -28,7 +29,7 @@ from providers import registry, ProviderType
 
 class MasterE2EVerificationGate(unittest.TestCase):
     def setUp(self):
-        self.client = TestClient(app)
+        self.client = TestClient(app, headers=platform_owner_headers())
 
     def test_01_provider_registry_initialized(self):
         """Module 2: Provider registry supports all domain types."""

@@ -3,6 +3,7 @@ import sys
 import asyncio
 import unittest
 import httpx
+from tests.conftest import platform_owner_headers
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from main import app
@@ -12,7 +13,7 @@ class ProviderEndpointTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_providers_endpoint(self):
         transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test", headers=platform_owner_headers()) as client:
             resp = await client.get("/api/integrations/providers")
             self.assertEqual(resp.status_code, 200)
             data = resp.json()
@@ -28,7 +29,7 @@ class ProviderEndpointTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_provider_test_endpoint(self):
         transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test", headers=platform_owner_headers()) as client:
             # Test Exotel (should return structured result with UNCONFIGURED message if unconfigured)
             resp = await client.post("/api/integrations/providers/telephony/exotel/test")
             self.assertEqual(resp.status_code, 200)
@@ -39,7 +40,7 @@ class ProviderEndpointTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_provider_update_endpoint(self):
         transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test", headers=platform_owner_headers()) as client:
             resp = await client.post(
                 "/api/integrations/providers/leads/apollo",
                 json={"is_enabled": True, "config": {"daily_credit_limit": 75}}

@@ -10,13 +10,14 @@ import unittest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from fastapi.testclient import TestClient
+from tests.conftest import platform_owner_headers
 from main import app
 from database import get_all_ai_employees, get_active_ai_employee, set_active_ai_employee
 
 
 class AiEmployeeBuilderTests(unittest.TestCase):
     def setUp(self):
-        self.client = TestClient(app)
+        self.client = TestClient(app, headers=platform_owner_headers())
 
     def test_seeded_employees_exist(self):
         """

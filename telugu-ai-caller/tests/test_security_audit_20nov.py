@@ -28,7 +28,7 @@ def anon(monkeypatch):
     ("POST", "/api/calendar/book"), ("GET", "/api/calendar/availability"), ("POST", "/api/messaging/whatsapp/send"),
     ("GET", "/api/v1/keys"), ("POST", "/api/v1/keys"), ("DELETE", "/api/v1/keys/1"),
     ("GET", "/api/v1/billing/orders"), ("POST", "/api/v1/billing/purchase-credits"),
-    ("GET", "/api/v1/calls/1/intelligence"), ("POST", "/api/v1/calls/dispatch"),
+    ("GET", "/api/v1/calls/1/intelligence"),
     ("POST", "/api/dialer/campaigns"), ("POST", "/api/dialer/stop"),
 ])
 def test_closed_without_login(anon, method, path):
@@ -38,7 +38,8 @@ def test_closed_without_login(anon, method, path):
 def test_dispatch_needs_a_real_key_not_the_primary_one(anon):
     # it used to fall back to the account's primary key when the caller sent none or a wrong one
     r = anon.post("/api/v1/calls/dispatch", json={"phone": "+919000000001"}, headers={"x-api-key": "lc_live_wrong"})
-    assert r.status_code == 401
+    # 28 Nov: the endpoint never placed a real call (it invented one and charged credits), so it is switched off
+    assert r.status_code == 501
 
 
 def test_sign_up_is_closed_by_default(anon):

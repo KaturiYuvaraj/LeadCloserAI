@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from loguru import logger
 
-from core.auth import get_current_user, get_optional_user, get_request_account_id
+from core.auth import get_current_user, get_optional_user, get_request_account_id, is_platform_admin, require_platform_admin
 from core.db import SessionLocal
 from database import clean_phone, create_lead
 from models import Call, CallJob, Lead
@@ -199,13 +199,13 @@ async def dialer_call_now(lead_id: int, payload: Optional[Dict[str, Any]] = None
     return await start_manual_call(lead_id, user, payload or {})
 
 
-@router.get("/api/dialer/engine")
+@router.get("/api/dialer/engine", dependencies=[Depends(require_platform_admin)])
 async def dialer_engine(user: Dict[str, Any] = Depends(get_current_user)):
     """Which engine places the next calls: our engine, or Sarvam's own agent."""
     return samvaad.engine_options()
 
 
-@router.post("/api/dialer/engine")
+@router.post("/api/dialer/engine", dependencies=[Depends(require_platform_admin)])
 async def dialer_set_engine(payload: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):
     try:
         samvaad.set_engine(str(payload.get("engine") or ""))
@@ -215,13 +215,13 @@ async def dialer_set_engine(payload: Dict[str, Any], user: Dict[str, Any] = Depe
     return samvaad.engine_options()
 
 
-@router.get("/api/inbound/hours")
+@router.get("/api/inbound/hours", dependencies=[Depends(require_platform_admin)])
 async def get_inbound_hours(user: Dict[str, Any] = Depends(get_current_user)):
     """When the AI answers incoming calls, and where other calls are forwarded."""
     return inbound_hours.status()
 
 
-@router.post("/api/inbound/hours")
+@router.post("/api/inbound/hours", dependencies=[Depends(require_platform_admin)])
 async def set_inbound_hours(payload: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):
     try:
         inbound_hours.save_settings(payload or {})
@@ -232,9 +232,11 @@ async def set_inbound_hours(payload: Dict[str, Any], user: Dict[str, Any] = Depe
 
 
 @router.get("/api/dialer/status")
-async def dialer_status():
+async def dialer_status(user: Dict[str, Any] = Depends(get_current_user)):
+    """The platform owner sees the whole queue; a customer only its own calls (28 Nov: everyone saw the
+    names and numbers on every company's live calls)."""
     call_queue.start()
-    return call_queue.status()
+    return call_queue.status(account_id=None if is_platform_admin(user) else int(user["account_id"]))
 
 
 @router.get("/api/dialer/jobs")
@@ -261,19 +263,19 @@ async def dialer_jobs(request: Request, state: Optional[str] = None, lead_id: Op
         session.close()
 
 
-@router.post("/api/dialer/pause")
+@router.post("/api/dialer/pause", dependencies=[Depends(require_platform_admin)])
 async def dialer_pause():
     call_queue.pause()
     return {"success": True}
 
 
-@router.post("/api/dialer/resume")
+@router.post("/api/dialer/resume", dependencies=[Depends(require_platform_admin)])
 async def dialer_resume():
     call_queue.resume()
     return {"success": True}
 
 
-@router.post("/api/dialer/stop")
+@router.post("/api/dialer/stop", dependencies=[Depends(require_platform_admin)])
 async def dialer_stop():
     cancelled = call_queue.cancel_waiting()
     return {"success": True, "cancelled": cancelled}

@@ -167,6 +167,16 @@ def get_current_user(request: Request) -> Dict[str, Any]:
     return user
 
 
+def _user_for_api_key(raw: str) -> Dict[str, Any]:
+    """A valid, active API key signs in as its company with the lowest role; anything else is refused."""
+    from database import get_api_key_by_token
+    key = get_api_key_by_token(raw)
+    if not key or key.get("status") != "active" or not key.get("account_id"):
+        raise HTTPException(status_code=401, detail="Invalid or revoked API key.")
+    return {"id": None, "account_id": int(key["account_id"]), "email": key.get("user_email") or "",
+            "role": "member", "via_api_key": True, "api_key_id": key.get("id")}
+
+
 def get_optional_user(request: Request) -> Optional[Dict[str, Any]]:
     """
     Returns the authenticated user if a token/cookie is present.
@@ -177,14 +187,16 @@ def get_optional_user(request: Request) -> Optional[Dict[str, Any]]:
     cookie_token = request.cookies.get(COOKIE_NAME) or request.cookies.get("lc_access_token")
     strict_mode = (
         os.getenv("AUTH_STRICT", "false").lower() == "true"
+        or os.getenv("APP_ENV", "").lower() == "production"  # production is always strict, whatever AUTH_STRICT says
         or request.headers.get("X-Require-Auth") == "1"
     )
 
     if auth_header and auth_header.lower().startswith("bearer "):
         raw = auth_header.split(" ", 1)[1].strip()
-        # Allow developer API keys (lc_live_*) to pass through on developer routes
+        # A developer API key acts for its own company only. 28 Nov: ANY "lc_live_..." text was let through as
+        # "no user", and routes then returned every company's leads, calls and employees with no sign-in.
         if raw.startswith("lc_live_"):
-            return None
+            return _user_for_api_key(raw)
         payload = decode_access_token(raw)
         if not payload:
             raise HTTPException(status_code=401, detail="Invalid or expired Bearer token.")
@@ -223,6 +235,24 @@ def get_request_account_id(request: Request) -> Optional[int]:
     """
     user = get_optional_user(request)
     return int(user["account_id"]) if user else None
+
+
+PLATFORM_ACCOUNT_ID = int(os.getenv("PLATFORM_ACCOUNT_ID", "1"))
+
+
+def is_platform_admin(user: Optional[Dict[str, Any]]) -> bool:
+    """The platform owner (S P Associates' owner or admin): approves customers and sees the platform's own
+    provider settings. Every other company is a customer and sees only its own data."""
+    return bool(user) and int(user.get("account_id") or 0) == PLATFORM_ACCOUNT_ID         and str(user.get("role") or "").lower() in ("owner", "admin")
+
+
+def require_platform_admin(request: Request) -> Dict[str, Any]:
+    """Dependency: only the platform owner. Shared settings (the call engine, the dialer queue, provider keys,
+    the business WhatsApp number) affect every company, so customers can't change them (28 Nov)."""
+    user = get_current_user(request)
+    if not is_platform_admin(user):
+        raise HTTPException(status_code=403, detail="Only the GeniusBot platform administrator can do this.")
+    return user
 
 
 def require_role(*allowed_roles: str) -> Callable:

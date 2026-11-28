@@ -1,192 +1,100 @@
 """
-Developer Router - Public REST API Platform, API Keys & Billing Store
-"""
-import json
-from typing import Dict, Any
-from fastapi import APIRouter, Depends, Request, HTTPException
-from core.auth import get_optional_user, get_request_account_id, login_when_strict
+Developer Router - API keys, billing history and the call intelligence API.
 
+28 Nov 2026 (GeniusBot as a platform for many companies): every route works only on the signed-in company's
+own records. Removed:
+  - "purchase-credits", which added credits without taking any payment (payments go through Razorpay)
+  - the free Rs 2,500 / Rs 500 on every new API key
+  - "/api/v1/calls/dispatch", which never placed a call: it invented a conversation, saved it as a real call
+    and charged credits. It answers 501 until real calls are wired for customer accounts.
+"""
+from typing import Any, Dict
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+
+from core.auth import get_current_user, get_optional_user
 from database import (
-    get_all_api_keys,
-    get_primary_api_key,
-    get_api_key_by_token,
     create_api_key,
-    revoke_api_key,
-    create_billing_order,
+    get_all_api_keys,
+    get_api_key_by_token,
     get_billing_orders,
-    deduct_api_credits,
-    create_lead,
-    save_call_record,
     get_call_by_id,
+    get_primary_api_key,
+    revoke_api_key,
 )
-from services.sales_agent import sales_agent
 
 router = APIRouter(tags=["developer"])
 
 
-@router.get("/api/v1/keys", dependencies=[Depends(login_when_strict)])
-async def api_list_keys(request: Request):
-    acc_id = get_request_account_id(request)
-    keys = get_all_api_keys(account_id=acc_id)
-    masked = []
-    for k in keys:
-        raw = k.get("api_key", "")
-        masked_token = raw[:10] + "..." + raw[-4:] if len(raw) > 14 else raw
-        masked.append({**k, "masked_key": masked_token})
-    return {"keys": masked, "primary_key": get_primary_api_key()}
+def _mask(raw: str) -> str:
+    return raw[:10] + "..." + raw[-4:] if raw and len(raw) > 14 else "••••"
 
 
-@router.post("/api/v1/keys", dependencies=[Depends(login_when_strict)])
-async def api_create_key(data: Dict[str, Any], request: Request):
-    acc_id = get_request_account_id(request) or 1
-    if "account_id" not in data:
-        data["account_id"] = acc_id
-    name = data.get("key_name", "Developer Key")
-    email = data.get("user_email", "developer@client.com")
-    company = data.get("company_name", "Client App")
-    plan = data.get("plan_tier", "Developer Starter")
-    initial_credits = float(data.get("initial_credits", 500.0))
-    new_key = create_api_key(name, email, company, plan, initial_credits)
-    return {"success": True, "key": new_key}
+def _masked(key: Dict[str, Any]) -> Dict[str, Any]:
+    out = {k: v for k, v in key.items() if k != "api_key"}
+    out["masked_key"] = _mask(key.get("api_key", ""))
+    return out
 
 
-@router.delete("/api/v1/keys/{key_id}", dependencies=[Depends(login_when_strict)])
-async def api_revoke_key(key_id: int):
-    ok = revoke_api_key(key_id)
-    return {"success": ok}
+@router.get("/api/v1/keys")
+async def api_list_keys(user: Dict[str, Any] = Depends(get_current_user)):
+    acc_id = int(user["account_id"])
+    keys = [_masked(k) for k in get_all_api_keys(account_id=acc_id)]
+    primary = get_primary_api_key(account_id=acc_id)
+    return {"keys": keys, "primary_key": _masked(primary) if primary else None}
 
 
-@router.get("/api/v1/billing/orders", dependencies=[Depends(login_when_strict)])
-async def api_get_orders():
-    return {"orders": get_billing_orders()}
+@router.post("/api/v1/keys")
+async def api_create_key(data: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):
+    key = create_api_key({
+        "key_name": str(data.get("key_name") or "Developer Key")[:120],
+        "user_email": user.get("email") or "",
+        "company_name": str(data.get("company_name") or "")[:200],
+    }, account_id=int(user["account_id"]))
+    return {"success": True, "key": key, "note": "Copy this key now: it is shown only once."}
 
 
-@router.post("/api/v1/billing/purchase-credits", dependencies=[Depends(login_when_strict)])
-async def api_purchase_credits(data: Dict[str, Any]):
-    """
-    Checkout & purchase talk-time API credits.
-    Simulates instant payment gateway (Razorpay / UPI) and immediately credits the user's API key.
-    """
-    api_key_id = data.get("api_key_id")
-    if not api_key_id:
-        primary = get_primary_api_key()
-        api_key_id = primary["id"]
+@router.delete("/api/v1/keys/{key_id}")
+async def api_revoke_key(key_id: int, user: Dict[str, Any] = Depends(get_current_user)):
+    if not revoke_api_key(key_id=key_id, account_id=int(user["account_id"])):
+        raise HTTPException(status_code=404, detail="API key not found.")
+    return {"success": True}
 
-    plan_name = data.get("plan_name", "Pay-As-You-Go Credits")
-    amount_inr = float(data.get("amount_inr", 999.0))
-    payment_method = data.get("payment_method", "Instant UPI / Razorpay")
-    customer_email = data.get("customer_email", "developer@client.com")
 
-    order = create_billing_order(
-        api_key_id=int(api_key_id),
-        plan_name=plan_name,
-        amount_inr=amount_inr,
-        payment_method=payment_method,
-        customer_email=customer_email
-    )
-    return {
-        "success": True,
-        "message": f"Payment of ₹{amount_inr:,.2f} verified successfully. Credits added to API account.",
-        "order": order
-    }
+@router.get("/api/v1/billing/orders")
+async def api_get_orders(user: Dict[str, Any] = Depends(get_current_user)):
+    return {"orders": get_billing_orders(account_id=int(user["account_id"]))}
+
+
+@router.post("/api/v1/billing/purchase-credits")
+async def api_purchase_credits(user: Dict[str, Any] = Depends(get_current_user)):
+    raise HTTPException(status_code=410, detail="Top-ups are made through the secure Razorpay checkout.")
 
 
 @router.post("/api/v1/calls/dispatch")
-async def api_dispatch_call(request: Request, data: Dict[str, Any]):
-    """
-    Public Developer REST API to trigger an autonomous AI sales call.
-    Requires header: 'Authorization: Bearer lc_live_...' or 'x-api-key: lc_live_...'
-    """
-    auth_header = request.headers.get("Authorization") or request.headers.get("x-api-key") or ""
-    token = auth_header.replace("Bearer ", "").strip()
-    if not token:
-        token = data.get("api_key", "")
-
-    # A real key is required. It used to fall back to the primary key, so anyone could call this (20 Nov).
-    key_record = get_api_key_by_token(token) if token else None
-    if not key_record:
-        raise HTTPException(status_code=401, detail="Unauthorized: Invalid or missing API key.")
-
-    if key_record.get("credits_inr", 0) < 5.0:
-        raise HTTPException(
-            status_code=402,
-            detail="Payment Required: Insufficient API talk-time balance. Please purchase credits at /pricing."
-        )
-
-    lead_name = data.get("lead_name", "Inbound API Lead")
-    phone = data.get("phone", "+91 9848011223")
-    company = data.get("company", "Business Client")
-    service = data.get("service", "Mobile App & Billing")
-    budget = data.get("budget", "₹50,000")
-    language = data.get("language", "te-IN")
-
-    lead_id = create_lead({
-        "name": lead_name,
-        "phone": phone,
-        "company": company,
-        "service_needed": service,
-        "budget": budget,
-        "preferred_language": language,
-        "status": "QUALIFIED"
-    })
-
-    dialogue = [
-        {"role": "assistant", "content": f"నమస్కారం అండి! మేము S P Associates Software Company నుండి మాట్లాడుతున్నాము. మీ వ్యాపారం {company} కోసం {service} గురించి మాట్లాడవచ్చా అండి?"},
-        {"role": "user", "content": f"అవునండి, మాకు {service} కావాలి. బడ్జెట్ ఎంత అవుతుంది మరియు డెమో ఎప్పుడు చూపిస్తారు?"},
-        {"role": "assistant", "content": f"చాలా మంచిదండి! సాధారణంగా 3 నుండి 4 వారాల్లో సిద్ధం చేస్తాము. రేపు ఉదయం 11:00 గంటలకు జూమ్ డెమోలో పూర్తి ప్రాజెక్ట్ ఆర్కిటెక్చర్ చూపిస్తాము. ఓకేనా అండి?"},
-        {"role": "user", "content": "సరేనండి! రేపు ఉదయం 11:00 గంటలకు జూమ్ లింక్ వాట్సాప్‌లో పంపండి."}
-    ]
-
-    intel = await sales_agent.extract_call_intelligence(dialogue)
-    duration_seconds = 65
-
-    billing_result = deduct_api_credits(key_record["api_key"], duration_seconds)
-
-    call_id = save_call_record({
-        "lead_id": lead_id,
-        "call_type": "api_dispatch",
-        "phone_number": phone,
-        "duration_seconds": duration_seconds,
-        "status": "completed",
-        "summary": intel.get("summary", f"Scheduled a live project demo with {lead_name} for {service}."),
-        "sentiment": intel.get("sentiment", "positive"),
-        "deal_stage": intel.get("deal_stage", "demo_scheduled"),
-        "extracted_budget": intel.get("extracted_budget", budget),
-        "extracted_timeline": intel.get("extracted_timeline", "3-4 Weeks"),
-        "extracted_requirements": service,
-        "objections_raised": intel.get("objections_raised", "Discussed milestone payments"),
-        "action_items": intel.get("action_items", "Send Zoom demo link via WhatsApp tomorrow at 11:00 AM."),
-        "transcript": json.dumps(dialogue, ensure_ascii=False)
-    })
-
-    return {
-        "success": True,
-        "call_id": call_id,
-        "lead_id": lead_id,
-        "status": "completed",
-        "deal_stage": intel.get("deal_stage", "demo_scheduled"),
-        "duration_seconds": duration_seconds,
-        "summary": intel.get("summary"),
-        "action_items": intel.get("action_items"),
-        "billing": billing_result
-    }
+async def api_dispatch_call():
+    raise HTTPException(status_code=501, detail="Placing calls through the API is not available yet.")
 
 
 @router.get("/api/v1/calls/{call_id}/intelligence")
 async def api_get_call_intelligence(call_id: int, request: Request):
-    # A signed-in user or a valid API key. It used to return any call (transcript, phone) to anyone (20 Nov).
+    """A call of the signed-in company, or of the company that owns the API key."""
     auth_header = request.headers.get("Authorization") or request.headers.get("x-api-key") or ""
     token = auth_header.replace("Bearer ", "").strip()
-    has_key = bool(token.startswith("lc_") and get_api_key_by_token(token))
-    if not has_key:
+    account_id = None
+    if token.startswith("lc_"):
+        key = get_api_key_by_token(token)
+        if key and key.get("status") == "active":
+            account_id = key.get("account_id")
+    if account_id is None:
         try:
             user = get_optional_user(request)
         except HTTPException:
             user = None
         if not user:
             raise HTTPException(status_code=401, detail="Unauthorized: sign in or send a valid API key.")
-    call = get_call_by_id(call_id)
+        account_id = user["account_id"]
+    call = get_call_by_id(call_id, account_id=int(account_id))
     if not call:
         raise HTTPException(status_code=404, detail="Call record not found")
     return {"call": call}
-

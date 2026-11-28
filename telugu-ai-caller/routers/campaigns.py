@@ -12,7 +12,7 @@ The legacy fake in-memory simulation mode is removed from the campaign flow.
 """
 from typing import Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Request
-from core.auth import get_request_account_id, login_when_strict
+from core.auth import get_request_account_id, login_when_strict, require_platform_admin
 
 from services.campaign_service import campaign_service
 
@@ -28,7 +28,7 @@ def _dialer():
         return None
 
 
-@router.post("/api/campaign/start")
+@router.post("/api/campaign/start", dependencies=[Depends(require_platform_admin)])
 async def api_start_campaign(payload: Dict[str, Any], request: Request):
     account_id = get_request_account_id(request) or 1
     engine = str(payload.get("engine") or "").strip()
@@ -63,7 +63,7 @@ async def api_start_campaign(payload: Dict[str, Any], request: Request):
     return {"success": True, "mode": "phone", "message": "Outbound calling campaign started."}
 
 
-@router.get("/api/campaign/status")
+@router.get("/api/campaign/status", dependencies=[Depends(require_platform_admin)])
 async def api_campaign_status():
     dialer = _dialer()
     if dialer is not None:
@@ -71,7 +71,7 @@ async def api_campaign_status():
     return campaign_service.get_status()
 
 
-@router.post("/api/campaign/pause")
+@router.post("/api/campaign/pause", dependencies=[Depends(require_platform_admin)])
 async def api_pause_campaign():
     dialer = _dialer()
     if dialer is not None:
@@ -81,7 +81,7 @@ async def api_pause_campaign():
     return {"success": True}
 
 
-@router.post("/api/campaign/resume")
+@router.post("/api/campaign/resume", dependencies=[Depends(require_platform_admin)])
 async def api_resume_campaign():
     dialer = _dialer()
     if dialer is not None:
@@ -91,7 +91,7 @@ async def api_resume_campaign():
     return {"success": True}
 
 
-@router.post("/api/campaign/stop")
+@router.post("/api/campaign/stop", dependencies=[Depends(require_platform_admin)])
 async def api_stop_campaign():
     dialer = _dialer()
     if dialer is not None:
